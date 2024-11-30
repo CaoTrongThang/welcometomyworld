@@ -104,7 +104,15 @@ public class IntroOfTheWorldHandler {
             }
         };
 
+        if(!playerClass.firstTeleportedToSky && (!player.isOnGround() || !player.isTouchingWater())){
+            playerClass.firstTeleportedToSky = true;
+        }
+
+
         if (playerClass.firstTouchGround || !playerClass.firstTeleportedToSky) return;
+
+        LOGGER.info("Touch Ground: " + playerClass.firstTouchGround);
+        LOGGER.info("Telport Sky: " + playerClass.firstTeleportedToSky);
 
         if (playerClass.completeOriginSelectingScreen && !playerClass.completeSpawningParticles) {
             Utils.spawnCircleParticles(player);
@@ -124,6 +132,7 @@ public class IntroOfTheWorldHandler {
             }
 
             if (player.isOnGround() || player.isTouchingWater()) {
+                LOGGER.info("Here");
                 // Create an explosion at the player's landing position
                 ServerWorld world = player.getServerWorld();
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
@@ -224,6 +233,7 @@ public class IntroOfTheWorldHandler {
 
         if (!isDeath) {
             Utils.UTILS.sendTextAfter(player, "Whew, that was close!", 20);
+            Utils.UTILS.sendTextAfter(player, "That was a hard land, try pull your self together.", 4 * 20);
             Utils.UTILS.sendTextAfter(player, "Feeling less dizzy now? It looks like you're done with your old world... so welcome to this new one!", 13 * 20);
             Utils.UTILS.sendTextAfter(player, "Oh, and here's a small gift for you. Sorry about the botched summoning ritual.", 17 * 20);
 

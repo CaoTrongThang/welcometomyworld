@@ -105,15 +105,6 @@ public class WelcomeToMyWorld implements ModInitializer {
     public void onInitialize() {
         compatityChecker.OriginCheck();
 
-        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-            if (entity != null && player instanceof PlayerEntity) {
-                System.out.println(player.getName().getString() + " attacked " + entity.getName().getString());
-                // Add custom damage handling here
-            }
-            return ActionResult.PASS;
-        });
-
-
         ServerLifecycleEvents.SERVER_STARTING.register((t) -> {
             introOfTheWorldHandler.alreadySpawnedPhantom = false;
             dataHandler.initializeWorldData(t);

@@ -20,13 +20,15 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Arm;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 import java.util.List;
+
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class ALivingLog extends PathAwareEntity {
 
@@ -34,6 +36,9 @@ public class ALivingLog extends PathAwareEntity {
     private int counter = 0;
     private boolean canCooldown = false;
     private boolean isMovingToTargetPos = false;
+
+    private int stuckCheckCooldown = 40;
+    private int counterStuckCheck = 0;
 
     private java.util.Random rand = new java.util.Random();
 
@@ -63,6 +68,17 @@ public class ALivingLog extends PathAwareEntity {
     @Override
     public void tick() {
         super.tick();
+        counterStuckCheck++;
+        if(counterStuckCheck > stuckCheckCooldown){
+            counterStuckCheck = 0;
+            boolean isStuck = isStuck();
+            if(isStuck){
+                resetSkill();
+                navigateOutOfStuckBlock();
+                return;
+            }
+        }
+
         if (!this.getWorld().isClient) {
             // Only proceed if targetPos is not null
             tryFloatingOnWater();
@@ -116,6 +132,11 @@ public class ALivingLog extends PathAwareEntity {
     }
 
     @Override
+    public boolean canBreatheInWater(){
+        return true;
+    }
+
+    @Override
     public Arm getMainArm() {
         return Arm.RIGHT;
     }
@@ -143,6 +164,51 @@ public class ALivingLog extends PathAwareEntity {
         }
     }
 
+    private boolean isStuck() {
+        BlockPos pos = this.getBlockPos();
+        BlockState blockState = this.getWorld().getBlockState(pos);
+
+        // Check if the block is solid (meaning the entity is stuck in or against it)
+        return blockState.isFullCube(this.getWorld(), pos);  // Checks if the block is solid
+    }
+
+    public void navigateOutOfStuckBlock() {
+        BlockPos currentPos = this.getBlockPos();
+        World world = this.getWorld();
+
+        // Define the radius of the search area (in blocks)
+        int radius = 1;
+
+        // Check all blocks within the 3x3x3 area centered around the current position
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    // Offset the current position by the coordinates in the loop
+                    BlockPos checkPos = currentPos.add(x, y, z);
+
+                    // Check if the block at the position is air (free space)
+                    if (world.getBlockState(checkPos).isAir()) {
+                        // Calculate the direction vector to the free space position
+                        Vec3d direction = new Vec3d(checkPos.getX() - currentPos.getX(),
+                                checkPos.getY() - currentPos.getY(),
+                                checkPos.getZ() - currentPos.getZ());
+
+                        // Normalize the direction vector
+                        direction = direction.normalize();
+
+                        // Set the velocity towards the target position
+                        this.setVelocity(direction.x * 1, direction.y * 0.52, direction.z * 1);
+
+                        // Optionally, you can add some damping to the velocity if necessary.
+                        this.velocityDirty = true;
+
+                        return; // Exit after setting the velocity to move the entity
+                    }
+                }
+            }
+        }
+    }
+
     public boolean canNavigateTo(BlockPos targetPos) {
         EntityNavigation navigation = this.getNavigation();
 
@@ -161,7 +227,6 @@ public class ALivingLog extends PathAwareEntity {
 
                 if (sapling.canGrow(serverWorld, random, pos, state)) {
                     Random random = this.getRandom();
-                    sapling.grow(serverWorld, random, pos, state);
                     sapling.grow(serverWorld, random, pos, state);
                 }
             }
