@@ -6,8 +6,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.*;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.DefaultParticleType;
@@ -178,5 +178,13 @@ public class Utils {
 
     public static void SpawnItem(ServerWorld serverWorld, Vec3d pos, ItemStack itemStack) {
         serverWorld.spawnEntity(new ItemEntity(serverWorld, pos.getX(), pos.getY(), pos.getZ(), itemStack));
+    }
+
+    // Summon lightning at the mob's position
+    public static void summonLightning(BlockPos pos, ServerWorld world) {
+        LightningEntity lightning = new LightningEntity(EntityType.LIGHTNING_BOLT, world);
+        lightning.refreshPositionAfterTeleport(pos.getX(), pos.getY(), pos.getZ());
+        lightning.setCosmetic(true); // Makes the lightning deal no damage
+        world.spawnEntity(lightning);
     }
 }

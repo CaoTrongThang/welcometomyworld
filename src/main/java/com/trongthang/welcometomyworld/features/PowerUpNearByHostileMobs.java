@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import static com.trongthang.welcometomyworld.Utils.summonLightning;
+
 public class PowerUpNearByHostileMobs {
 
     private static final Random randomGenerator = new Random();
@@ -96,7 +98,7 @@ public class PowerUpNearByHostileMobs {
     // Power up a specific mob by giving it a random effect
     private void powerUpMob(MobEntity mob, ServerWorld world) {
 
-        summonLightning(mob, world);
+        summonLightning(mob.getBlockPos(), world);
         //Apply effects 3 times
         applyEffect(mob, 3);
     }
@@ -123,15 +125,6 @@ public class PowerUpNearByHostileMobs {
                 mob.addStatusEffect(new StatusEffectInstance(effect, mobEffectDuration, 0)); // Duration: 600 ticks (30 seconds)
             }
         }
-    }
-
-    // Summon lightning at the mob's position
-    private void summonLightning(MobEntity mob, ServerWorld world) {
-        BlockPos pos = mob.getBlockPos();
-        LightningEntity lightning = new LightningEntity(EntityType.LIGHTNING_BOLT, world);
-        lightning.refreshPositionAfterTeleport(pos.getX(), pos.getY(), pos.getZ());
-        lightning.setCosmetic(true); // Makes the lightning deal no damage
-        world.spawnEntity(lightning);
     }
 
 

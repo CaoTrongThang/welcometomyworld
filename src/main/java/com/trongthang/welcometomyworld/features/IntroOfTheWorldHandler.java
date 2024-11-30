@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -84,6 +85,12 @@ public class IntroOfTheWorldHandler {
                 }
                 playerClass.completeSpawningParticles = true;
 
+                for(int x = 0; x < rand.nextInt(10, 20); x++){
+                    Utils.addRunAfter(() -> {
+                        Utils.summonLightning(player.getBlockPos(), player.getServerWorld());
+                    }, rand.nextInt(5, 20));
+                }
+
                 if(!alreadySpawnedPhantom) {
                     spawnPhantom(player.getServerWorld(), player);
                     alreadySpawnedPhantom = true;
@@ -111,9 +118,6 @@ public class IntroOfTheWorldHandler {
 
         if (playerClass.firstTouchGround || !playerClass.firstTeleportedToSky) return;
 
-        LOGGER.info("Touch Ground: " + playerClass.firstTouchGround);
-        LOGGER.info("Telport Sky: " + playerClass.firstTeleportedToSky);
-
         if (playerClass.completeOriginSelectingScreen && !playerClass.completeSpawningParticles) {
             Utils.spawnCircleParticles(player);
             for(int x = 1 ; x < 40; x++){
@@ -132,7 +136,6 @@ public class IntroOfTheWorldHandler {
             }
 
             if (player.isOnGround() || player.isTouchingWater()) {
-                LOGGER.info("Here");
                 // Create an explosion at the player's landing position
                 ServerWorld world = player.getServerWorld();
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
@@ -240,7 +243,6 @@ public class IntroOfTheWorldHandler {
             Utils.addRunAfter(() -> {
                 giveStartingItemsHandler.giveMoreItems(player);
             }, 20 * 20);
-
 
             Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 24 * 20);
             Utils.UTILS.sendTextAfter(player, "Well, I think that's it for now.", 28 * 20);
