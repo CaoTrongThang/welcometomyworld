@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_900",
+  "display": {
+    "title": {
+      "text": "A Thousand Suns"
+    },
+    "description": {
+      "text": "1000 days survived. You are now a true master of this world."
+    },
+    "icon": {
+      "item": "minecraft:beacon"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

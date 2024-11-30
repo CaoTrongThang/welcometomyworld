@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "First Day Is So Easy!"
+    },
+    "description": {
+      "text": "Nice try!"
+    },
+    "icon": {
+      "item": "minecraft:skeleton_skull"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

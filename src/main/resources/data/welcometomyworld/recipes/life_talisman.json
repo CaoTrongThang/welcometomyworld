@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "ADA",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "welcometomyworld:ancient_fragment"
+    },
+    "D": {
+      "item": "minecraft:netherite_leggings"
+    }
+  },
+  "result": {
+    "item": "welcometomyworld:life_talisman",
+    "count": 1
+  }
+}

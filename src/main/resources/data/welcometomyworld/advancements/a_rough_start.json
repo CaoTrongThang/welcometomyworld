@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "A Rough Start"
+    },
+    "description": {
+      "text": "Arrive in style. Well, sort of."
+    },
+    "icon": {
+      "item": "minecraft:skeleton_skull"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "landed_from_sky": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:add",
+  "conditions": [
+    {
+      "condition": "minecraft:entity_properties",
+      "predicate": {
+        "type": "#minecraft:hostile"
+      },
+      "entity": "this"
+    },
+    {
+      "condition": "minecraft:random_chance",
+      "chance": 1.0
+    }
+  ],
+  "item": "welcometomyworld:ancient_fragment",
+  "count": 1
+}

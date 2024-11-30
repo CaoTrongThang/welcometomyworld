@@ -1,0 +1,19 @@
+{
+  "itemGroup.welcometomyworld.general": "Welcome to My World",
+
+  "item.welcometomyworld.repair_knowledge": "Repair Knowledge",
+
+  "item.welcometomyworld.repair_talisman_iron": "Iron Repair Talisman",
+  "item.welcometomyworld.repair_talisman_gold": "Gold Repair Talisman",
+  "item.welcometomyworld.repair_talisman_emerald": "Emerald Repair Talisman",
+
+  "item.welcometomyworld.ancient_fragment": "Ancient Fragment",
+  "item.welcometomyworld.power_talisman": "Power Talisman",
+  "item.welcometomyworld.speed_talisman": "Speed Talisman",
+  "item.welcometomyworld.life_talisman": "Life Talisman",
+  "item.welcometomyworld.resistance_talisman": "Resistance Talisman",
+
+  "item.welcometomyworld.a_living_log": "A Living Log Spawn Egg",
+
+  "entity.welcometomyworld.a_living_log": "A Living Log"
+}

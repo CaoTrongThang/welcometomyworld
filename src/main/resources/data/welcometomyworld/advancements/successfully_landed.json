@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Successfully Landed"
+    },
+    "description": {
+      "text": "it was scare, wasn't it?"
+    },
+    "icon": {
+      "item": "minecraft:feather"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "landed_from_sky": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

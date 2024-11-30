@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_100",
+  "display": {
+    "title": {
+      "text": "Veteran of the Wilds"
+    },
+    "description": {
+      "text": "200 days in the wild. You're no stranger to this world."
+    },
+    "icon": {
+      "item": "minecraft:shield"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

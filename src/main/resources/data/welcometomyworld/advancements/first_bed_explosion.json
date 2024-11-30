@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Your Bed Exploded"
+    },
+    "description": {
+      "text": "My beds sometimes explode too."
+    },
+    "icon": {
+      "item": "minecraft:red_bed"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "bed_explosion": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

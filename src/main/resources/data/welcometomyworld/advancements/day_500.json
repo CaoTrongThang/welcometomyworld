@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_400",
+  "display": {
+    "title": {
+      "text": "Half a Millennium"
+    },
+    "description": {
+      "text": "500 days lived. Half a millennium in this relentless world."
+    },
+    "icon": {
+      "item": "minecraft:totem_of_undying"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Hydrophobic Irony"
+    },
+    "description": {
+      "text": "How did you manage to lose to water?"
+    },
+    "icon": {
+      "item": "minecraft:blue_ice"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "landed_from_sky": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

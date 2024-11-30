@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_200",
+  "display": {
+    "title": {
+      "text": "Hardened Adventurer"
+    },
+    "description": {
+      "text": "300 days and counting. You stand unyielding against time."
+    },
+    "icon": {
+      "item": "minecraft:diamond_sword"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

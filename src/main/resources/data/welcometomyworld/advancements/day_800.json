@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_700",
+  "display": {
+    "title": {
+      "text": "Legend of the Land"
+    },
+    "description": {
+      "text": "800 days have passed. Your name is etched in the world's memory."
+    },
+    "icon": {
+      "item": "minecraft:nether_star"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

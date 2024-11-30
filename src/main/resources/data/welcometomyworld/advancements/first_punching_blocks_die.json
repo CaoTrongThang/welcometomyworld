@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "You're Even Harder Than That Block"
+    },
+    "description": {
+      "text": "Stop punching blocks, use something, please!"
+    },
+    "icon": {
+      "item": "minecraft:cobblestone"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "landed_from_sky": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

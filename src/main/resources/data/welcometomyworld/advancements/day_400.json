@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_300",
+  "display": {
+    "title": {
+      "text": "Pillar of Survival"
+    },
+    "description": {
+      "text": "400 days of survival. Your tenacity has become legend."
+    },
+    "icon": {
+      "item": "minecraft:golden_apple"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

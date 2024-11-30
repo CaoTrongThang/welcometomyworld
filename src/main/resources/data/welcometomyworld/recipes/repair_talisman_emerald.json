@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "IRI",
+    "AAA"
+
+  ],
+  "key": {
+    "A": {
+      "item": "welcometomyworld:ancient_fragment"
+    },"I": {
+      "item": "minecraft:emerald_block"
+    },"R": {
+      "item": "welcometomyworld:repair_knowledge"
+    }
+  },
+  "result": {
+    "item": "welcometomyworld:repair_talisman_emerald",
+    "count": 1
+  }
+}

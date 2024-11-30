@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_1",
+  "display": {
+    "title": {
+      "text": "Seasoned Survivor"
+    },
+    "description": {
+      "text": "You've survived 50 days. Your resilience grows with each passing day."
+    },
+    "icon": {
+      "item": "minecraft:stone_sword"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

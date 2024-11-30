@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_50",
+  "display": {
+    "title": {
+      "text": "Centennial Explorer"
+    },
+    "description": {
+      "text": "100 days of adventure. The land remembers your footsteps."
+    },
+    "icon": {
+      "item": "minecraft:iron_sword"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

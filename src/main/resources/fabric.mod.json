@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "welcometomyworld",
+	"version": "2.6",
+	"name": "Welcome To My World",
+	"description": "adds tons of things for my modpack...",
+	"authors": [
+		"TrongThang"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/welcome-to-my-world",
+		"sources": ""
+	},
+	"license": "MIT",
+	"icon": "assets/welcometomyworld/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.trongthang.welcometomyworld.WelcomeToMyWorld"
+		],
+		"client": [
+			"com.trongthang.welcometomyworld.client.WelcomeToMyWorldClient"
+		]
+	},
+	"mixins": [
+		"welcometomyworld.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.7",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

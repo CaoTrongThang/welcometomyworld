@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_600",
+  "display": {
+    "title": {
+      "text": "The Timeworn Wandere"
+    },
+    "description": {
+      "text": "700 days and still exploring. Your journey has become an odyssey."
+    },
+    "icon": {
+      "item": "minecraft:elytra"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

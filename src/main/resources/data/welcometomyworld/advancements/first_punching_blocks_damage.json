@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Ouch, This Block Is Tough!"
+    },
+    "description": {
+      "text": "You really thought your fists could handle that?"
+    },
+    "icon": {
+      "item": "minecraft:oak_log"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "landed_from_sky": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

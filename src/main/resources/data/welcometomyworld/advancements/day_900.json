@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_800",
+  "display": {
+    "title": {
+      "text": "Chronicle of Survival"
+    },
+    "description": {
+      "text": "900 days of tales untold. Your story is woven into the fabric of this realm."
+    },
+    "icon": {
+      "item": "minecraft:dragon_egg"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

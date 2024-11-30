@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:day_500",
+  "display": {
+    "title": {
+      "text": "Enduring Spirit"
+    },
+    "description": {
+      "text": "600 days endured. Your legacy grows with each sunrise."
+    },
+    "icon": {
+      "item": "minecraft:enchanted_golden_apple"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
