@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
+import static com.trongthang.welcometomyworld.GlobalConfig.canZombieAI;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
 import static com.trongthang.welcometomyworld.BlocksPlacedAndBrokenByMobsHandler.ZOMBIE_BLOCK_DESPAWN_TICK;
 
@@ -31,6 +32,7 @@ public class ZombieAIMixin {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void onTickMovement(CallbackInfo ci) {
+        if(!canZombieAI) return;
 
         if (counter < cooldown) {
             counter++;
@@ -105,7 +107,7 @@ public class ZombieAIMixin {
 //        BlockPos upBlock = currentPos.add(dx, 1, dz);
 
         if (path == null && distance <= 10 && counter >= cooldown) {
-            boolean anyBlockUpHead = Utils.anyBlockUpHead(world, zombieEntity.getBlockPos(), 20);
+            boolean anyBlockUpHead = zombieEntity.getWorld().isSkyVisible(currentPos);
             if (!anyBlockUpHead && ((lastTargetPlayer.getY() > zombieEntity.getY()) && (lastTargetPlayer.isOnGround() && Math.abs(zombieEntity.getY() - lastTargetPlayer.getY()) >= 2))) {
 
                 if (zombieEntity.getY() < lastTargetPlayer.getY()) {

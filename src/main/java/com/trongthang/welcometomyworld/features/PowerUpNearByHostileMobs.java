@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld.features;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.EndermanEntity;
@@ -104,7 +105,7 @@ public class PowerUpNearByHostileMobs {
     }
 
     // Apply the effect to the mob (either increase level or apply new effect)
-    public static void applyEffect(MobEntity mob, int howManyEffects) {
+    public static void applyEffect(LivingEntity mob, int howManyEffects) {
         // Use a HashSet to select unique effects
         Set<StatusEffect> selectedEffects = new HashSet<>();
 

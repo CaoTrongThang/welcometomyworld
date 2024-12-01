@@ -7,6 +7,8 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.BlockStateParticleEffect;
@@ -24,6 +26,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -163,19 +167,6 @@ public class Utils {
         );
     }
 
-    public static boolean anyBlockUpHead(World world, BlockPos pos, int upDistance) {
-
-        var checkUp = upDistance - pos.getY();
-
-        for (int x = 1; x < checkUp; x++) {
-            if (!world.getBlockState(pos.up(x)).isAir()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public static void SpawnItem(ServerWorld serverWorld, Vec3d pos, ItemStack itemStack) {
         serverWorld.spawnEntity(new ItemEntity(serverWorld, pos.getX(), pos.getY(), pos.getZ(), itemStack));
     }
@@ -186,5 +177,20 @@ public class Utils {
         lightning.refreshPositionAfterTeleport(pos.getX(), pos.getY(), pos.getZ());
         lightning.setCosmetic(true); // Makes the lightning deal no damage
         world.spawnEntity(lightning);
+    }
+
+    public static void giveEffect(LivingEntity entity, StatusEffect effect, int timeInTick) {
+
+        StatusEffectInstance currentEffect = entity.getStatusEffect(effect);
+
+        if (currentEffect != null) {
+            // Increase effect level
+            int newAmplifier = Math.min(currentEffect.getAmplifier() + 1, 24);
+            entity.addStatusEffect(new StatusEffectInstance(effect, currentEffect.getDuration(), newAmplifier));
+        } else {
+            // Apply new effect
+            entity.addStatusEffect(new StatusEffectInstance(effect, timeInTick, 0));
+        }
+
     }
 }

@@ -1,7 +1,9 @@
-package com.trongthang.welcometomyworld.items;
+package com.trongthang.welcometomyworld;
 
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.CustomEntitiesManager;
+import com.trongthang.welcometomyworld.items.BuffTalisman;
+import com.trongthang.welcometomyworld.items.RepairBox;
+import com.trongthang.welcometomyworld.items.RepairTalisman;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -31,6 +33,7 @@ public class ItemsManager {
     public static final Item RESISTANCE_TALISMAN = registerItem(new BuffTalisman(new FabricItemSettings(), StatusEffects.RESISTANCE, 2), "resistance_talisman");
 
     public static final Item A_LIVING_LOG_SPAWN_EGG = registerSpawnEgg(CustomEntitiesManager.A_LIVING_LOG, "a_living_log");
+    public static final Item A_LIVING_FLOWER_SPAWN_EGG = registerSpawnEgg(CustomEntitiesManager.A_LIVING_FLOWER, "a_living_flower");
 
     public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
             .displayName(Text.translatable("itemGroup.welcometomyworld.general"))
@@ -81,6 +84,7 @@ public class ItemsManager {
                     itemGroup.add(ItemsManager.REPAIR_TALISMAN_EMERALD);
 
                     itemGroup.add(ItemsManager.A_LIVING_LOG_SPAWN_EGG);
+                    itemGroup.add(ItemsManager.A_LIVING_FLOWER_SPAWN_EGG);
                 });
     }
 }

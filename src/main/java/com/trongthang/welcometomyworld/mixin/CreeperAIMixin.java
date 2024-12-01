@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.mixin;
 
+import com.trongthang.welcometomyworld.GlobalConfig;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
+import static com.trongthang.welcometomyworld.GlobalConfig.*;
 
 @Mixin(CreeperEntity.class)
 public class CreeperAIMixin {
@@ -25,6 +27,8 @@ public class CreeperAIMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTickMovement(CallbackInfo ci) {
+        if(!canCreeperAI) return;
+
         if(canCooldown){
             counter++;
             if(counter >= cooldown){

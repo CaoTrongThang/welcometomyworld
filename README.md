@@ -11,6 +11,7 @@ I uploaded this mod here for me to make it easier to update the mod, could make 
 1. Swimming underwater without a helmet can lead to nausea.
 1. There's a small chance a strong mob will be spawned near the players, It'll drop the Materials that can be used to craft Ancient Items.
 1. Lightnings strike players when in the rain.
+1. Hostile Mobs now immune to sunlight.
 
 
 **AI:**
@@ -21,6 +22,7 @@ I uploaded this mod here for me to make it easier to update the mod, could make 
 
 **Entities:**
 1. Oak log: it's just a block but can move around and use meal bone on saplings
+1. Peony flower: a flower than can move and give players luck buff.
 
 **Not really impact the gameplay features:**
 1. Day and night counter with a little animation.

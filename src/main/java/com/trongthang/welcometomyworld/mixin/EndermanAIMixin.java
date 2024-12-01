@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.trongthang.welcometomyworld.GlobalConfig.canEndermanAI;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 import java.util.Random;
@@ -60,7 +61,7 @@ public abstract class EndermanAIMixin extends Entity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     public void onTickMovement(CallbackInfo ci) {
-
+        if(canEndermanAI) return;
         if (!isUsingSkill) {
             if (!canUseTeleportSkill) {
                 counter++;

@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.client;
 
+import com.trongthang.welcometomyworld.entities.ALivingFlowerRenderer;
 import com.trongthang.welcometomyworld.entities.CustomEntitiesManager;
 import com.trongthang.welcometomyworld.entities.ALivingLogRenderer;
 import net.fabricmc.api.ClientModInitializer;
@@ -30,7 +31,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         EntityRendererRegistry.register(CustomEntitiesManager.A_LIVING_LOG, ALivingLogRenderer::new);
-//        EntityRendererRegistry.register(CustomEntitiesManager.STONE_ENTITY, StoneRenderer::new);
+        EntityRendererRegistry.register(CustomEntitiesManager.A_LIVING_FLOWER, ALivingFlowerRenderer::new);
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             stopSendingOriginsScreen = false;

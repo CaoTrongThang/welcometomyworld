@@ -1,7 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.items.ItemsManager;
+import com.trongthang.welcometomyworld.ItemsManager;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
@@ -13,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
@@ -21,7 +19,7 @@ import net.minecraft.world.Heightmap;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
+import static com.trongthang.welcometomyworld.GlobalConfig.*;
 
 public class BossesSpawningHandler {
     public int checkInterval = 6000;
@@ -207,7 +205,7 @@ public class BossesSpawningHandler {
 
 
     public void bossDropsRegister() {
-        if (!WelcomeToMyWorld.canBossesSpawningHanlder) return;
+        if (!canBossesSpawningHanlder) return;
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, world1) -> {
             if (entity instanceof MobEntity) {
                 if (entity.getCustomName() != null && ancientMobs.containsKey((entity.getCustomName().getString()))) {

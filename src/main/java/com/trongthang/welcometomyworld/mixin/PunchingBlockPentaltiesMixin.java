@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.PLAYER_BREAKING_BLOCK;
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.canPunchingBlockPenalties;
+import static com.trongthang.welcometomyworld.GlobalConfig.*;
 
 @Mixin(MinecraftClient.class)
 public class PunchingBlockPentaltiesMixin {

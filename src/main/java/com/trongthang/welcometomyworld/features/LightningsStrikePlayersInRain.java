@@ -10,6 +10,8 @@ import net.minecraft.util.math.BlockPos;
 import java.util.List;
 import java.util.Random;
 
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
+
 public class LightningsStrikePlayersInRain {
     private int upDistance = 64;
 

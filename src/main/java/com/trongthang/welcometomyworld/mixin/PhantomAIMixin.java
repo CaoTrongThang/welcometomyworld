@@ -15,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.trongthang.welcometomyworld.GlobalConfig.canPhantomAI;
+
 
 // TODO: Make Phantom spawn like neutral
 @Mixin(PhantomEntity.class)
@@ -35,6 +37,8 @@ public abstract class PhantomAIMixin extends Entity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     public void onTickMovement(CallbackInfo ci) {
+        if(!canPhantomAI) return;
+        
         PhantomEntity phantom = (PhantomEntity) (Object) this;
         if (phantom.getPhantomSize() < 9) return;
 

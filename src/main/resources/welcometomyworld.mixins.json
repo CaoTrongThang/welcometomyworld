@@ -3,7 +3,7 @@
 	"package": "com.trongthang.welcometomyworld.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"MobEntityMixin",
+		"SunBurnImmuneMixin",
 		"PunchingBlockPentaltiesMixin",
 		"PhantomAIMixin",
 		"SpiderAIMixin",

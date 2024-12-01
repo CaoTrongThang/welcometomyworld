@@ -14,6 +14,8 @@
   "item.welcometomyworld.resistance_talisman": "Resistance Talisman",
 
   "item.welcometomyworld.a_living_log": "A Living Log Spawn Egg",
+  "item.welcometomyworld.a_living_flower": "A Living Flower Spawn Egg",
 
-  "entity.welcometomyworld.a_living_log": "A Living Log"
+  "entity.welcometomyworld.a_living_log": "A Living Log",
+  "entity.welcometomyworld.a_living_flower": "A Living Flower"
 }

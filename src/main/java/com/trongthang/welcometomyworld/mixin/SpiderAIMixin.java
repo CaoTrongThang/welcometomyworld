@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.trongthang.welcometomyworld.BlocksPlacedAndBrokenByMobsHandler.SPIDER_COBWEB_DESPAWN_TICK;
+import static com.trongthang.welcometomyworld.GlobalConfig.canSpiderAI;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
 
 @Mixin(SpiderEntity.class)
@@ -28,6 +29,8 @@ public abstract class SpiderAIMixin extends Entity {
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void onTickMovement(CallbackInfo ci) {
+        if(!canSpiderAI) return;
+
         SpiderEntity spider = (SpiderEntity) (Object) this;
 
         PlayerEntity targetPlayer = null;

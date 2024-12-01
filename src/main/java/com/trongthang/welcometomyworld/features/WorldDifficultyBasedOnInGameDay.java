@@ -24,7 +24,7 @@ public class WorldDifficultyBasedOnInGameDay {
         }
         Difficulty currentDifficulty = server.getOverworld().getDifficulty();
 
-        if(dayAndNightCounterAnimationHandler.currentDay >= 0 &&  dayAndNightCounterAnimationHandler.currentDay < 5 && currentDifficulty != Difficulty.EASY){
+        if(dayAndNightCounterAnimationHandler.currentDay >= 0 &&  dayAndNightCounterAnimationHandler.currentDay < 3 && currentDifficulty != Difficulty.EASY){
             server.setDifficulty(Difficulty.EASY, true);
         }
 

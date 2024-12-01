@@ -2,40 +2,26 @@ package com.trongthang.welcometomyworld;
 
 import com.trongthang.welcometomyworld.entities.CustomEntitiesManager;
 import com.trongthang.welcometomyworld.features.*;
-import com.trongthang.welcometomyworld.items.ItemsManager;
 import com.trongthang.welcometomyworld.items.RepairTalisman;
 import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.saveData.PlayerClass;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.trongthang.welcometomyworld.GlobalConfig.*;
+
 import java.util.*;
 
-
-/*
- * FEATURES IN THE MOD:
- * - Teleport Players To The Sky when first creating the new world
- * - Send Message And Title when first creating the new world
- * - Play Sound to the new player when first creating the new world
- * - SWITCH TO THIRD PERSON WHEN DEAD (AND SWITCH BACK WHEN RESPAWN) (in the Client class)
- * - water fall damage
- * - Bed explode when sleep
- * - Day counter animation
- * */
-//
 
 //! TODO: some events when playing progressing the world like: mobs could be spawned when players break leaves or stones, punching blocks with bare hand will get damaged
 
@@ -64,26 +50,6 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     public static DeathCounter deathCounter = new DeathCounter();
 
-    //======================================== FEATURES ======================================================
-    public static boolean canIntroOfTheWorld = true;
-    public static boolean canClearItemsBeforeGivingStartingItems = true;
-    public static boolean canGiveStartingItems = true;
-
-    public static boolean canSwitchPerspective = true;
-
-
-    public static boolean canWaterFallDamage = true;
-    public static boolean canBreakBlockSpawnMobs = true;
-    public static boolean canBedsExplode = true;
-    public static boolean canDayCounter = true;
-    public static boolean canPowerUpNearbyHostileMobs = true;
-    public static boolean canPunchingBlockPenalties = true;
-    public static boolean canWorldDifficultyBasedOnDay = false;
-    public static boolean canAchievementHandler = true;
-    public static boolean canNauseaInWater = true;
-    public static boolean canBossesSpawningHanlder = true;
-    public static boolean canLightningsStrikePlayersInRain = true;
-    //======================================== FEATURES ======================================================
 
     public static FallingToWaterDamage fallingToWaterDamage = new FallingToWaterDamage();
     public static GiveStartingItemsHandler giveStartingItemsHandler = new GiveStartingItemsHandler();
@@ -100,6 +66,7 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static BossesSpawningHandler bossesSpawningHandler = new BossesSpawningHandler();
     public static LightningsStrikePlayersInRain lightningsStrikePlayersInRain = new LightningsStrikePlayersInRain();
     public static PhantomSpawnHandler phantomSpawnHandler = new PhantomSpawnHandler();
+
 
     @Override
     public void onInitialize() {
