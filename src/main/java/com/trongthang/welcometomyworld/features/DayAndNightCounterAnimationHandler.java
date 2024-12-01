@@ -27,10 +27,11 @@ public class DayAndNightCounterAnimationHandler {
     private boolean isAnimatingDay = false;
     private boolean isAnimatingNight = false;
 
-    private boolean canAnimateNight = true;
+    private boolean dayAnimationComplete = false;
+    private boolean nightAnimationComplete = false;
 
-    private int tickRandomBound = 20;
-    private int tickRandomMin = 10;
+    private int tickRandomBound = 30;
+    private int tickRandomMin = 15;
     private int delayTick = 0;
     private int currentTick = 0;
 
@@ -84,24 +85,26 @@ public class DayAndNightCounterAnimationHandler {
 
         long currentTime = world.getTimeOfDay();  // Get the current time in the world (in ticks)
 
-
-
         long currentTimeInDay = currentTime % 24000;
 
         // Check if it's the start of a new day
-        if (currentTimeInDay < 13000 && currentTime / TICKS_IN_DAY > currentDay && !isAnimatingDay) {
+        if (currentTimeInDay < 13000 && !isAnimatingDay && (currentTime / TICKS_IN_DAY > currentDay || !dayAnimationComplete)) {
             currentDay = (int) (currentTime / TICKS_IN_DAY);
+            dayAnimationComplete = true;
+            nightAnimationComplete = false;
             startDayAnimation(world, currentDay);
         }
 
-        if(currentTime / TICKS_IN_DAY > currentDay){
-            canAnimateNight = true;
-        }
+        LOGGER.info("current Time: " + String.valueOf((currentTimeInDay >= 13000 && currentTimeInDay < 23999)));
+        LOGGER.info("isAnimatingNight: " + isAnimatingNight);
+        LOGGER.info("C DAY: " + String.valueOf(currentTime / TICKS_IN_DAY > currentDay));
+        LOGGER.info("NIGHT COMPLETED: " + nightAnimationComplete);
 
-        if (canAnimateNight && currentTimeInDay >= 13000 && currentTimeInDay < 23999 && !isAnimatingNight) {
+        if ((currentTimeInDay >= 13000 && currentTimeInDay < 23999) && !isAnimatingNight && (currentTime / TICKS_IN_DAY > currentDay || !nightAnimationComplete)) {
             startNightAnimation(world);
             currentDay = (int) (currentTime / TICKS_IN_DAY);
-            canAnimateNight = false;
+            dayAnimationComplete = false;
+            nightAnimationComplete = true;
         }
     }
 
@@ -133,7 +136,7 @@ public class DayAndNightCounterAnimationHandler {
         }
 
         if (nighttime) {
-            delayTick = rand.nextInt(tickRandomMin * 2, tickRandomBound * 2); // Random delay for animation
+            delayTick = rand.nextInt(tickRandomMin * 3, tickRandomBound * 3); // Random delay for animation
         } else {
             delayTick = rand.nextInt(tickRandomMin, tickRandomBound); // Random delay for animation
         }
