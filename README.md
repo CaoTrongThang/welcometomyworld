@@ -11,7 +11,7 @@ I uploaded this mod here for me to make it easier to update the mod, could make 
 1. Swimming underwater without a helmet can lead to nausea.
 1. There's a small chance a strong mob will be spawned near the players, It'll drop the Materials that can be used to craft Ancient Items.
 1. Lightnings strike players when in the rain.
-1. Hostile Mobs now immune to sunlight.
+1. Hostile Mobs are now immune to sunlight.
 
 
 **AI:**
