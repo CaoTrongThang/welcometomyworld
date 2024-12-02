@@ -178,6 +178,8 @@ public abstract class EndermanAIMixin extends Entity {
         if (enderman.distanceTo(targetPlayer) > 6) {
             playSoundAndSpawnParticles(enderman.getBlockPos(), ParticleTypes.ANGRY_VILLAGER, SoundEvents.ENTITY_ENDERMAN_HURT);
             enderman.setTarget(targetPlayer);
+            playerPos = null;
+            liftingPlayer = null;
             return;
         }
         playSoundAndSpawnParticles(enderman.getBlockPos(), ParticleTypes.CLOUD, SoundEvents.BLOCK_ANVIL_PLACE);

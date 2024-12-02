@@ -41,7 +41,7 @@ public class CustomEntitiesManager {
 
         FabricDefaultAttributeRegistry.register(A_LIVING_FLOWER, LivingEntity.createLivingAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 6.0)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.1)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 10));
 

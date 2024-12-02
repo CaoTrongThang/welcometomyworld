@@ -31,25 +31,4 @@ public class FallingToWaterDamage {
             });
         });
     }
-
-    private boolean hasLandedWater(ServerPlayerEntity player) {
-        // Check if the player has landed (on the ground or on any block or water below them)
-        BlockPos below = player.getBlockPos().down();
-        BlockState blockState = player.getWorld().getBlockState(below);
-
-        // Check if the player is on the ground or touching a water block
-        return blockState.isLiquid() && !player.getWorld().isAir(below);
-    }
-
-    private boolean hasLandedGround(ServerPlayerEntity player) {
-        // Check if the player has landed (on the ground or on any block or water below them)
-        BlockPos below = player.getBlockPos().down();
-
-        // Check if the player is on the ground or touching a water block
-        return player.isOnGround() && !player.getWorld().isAir(below);
-    }
-
-    private float calculateFallDamage(Vec3d veloc) {
-        return (float) (((veloc.getY() - -3) * -1) * 3F);
-    }
 }

@@ -29,7 +29,7 @@ public class IntroOfTheWorldHandler {
     Random rand = new Random();
     double playersDeathChanceInTheIntro = 0.25;
     byte phantomSpawnAmount = 7;
-    public boolean alreadySpawnedPhantom =  false;
+    public boolean alreadySpawnedPhantom = false;
 
     private int slownessTimeInTickAfterLand = 240;
 
@@ -78,47 +78,49 @@ public class IntroOfTheWorldHandler {
         if (!playerClass.firstTeleportedToSky && (player.isOnGround() || player.isTouchingWater())) {
             if (player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
                 teleportPlayersToSkyFirstJoin(player);
-                playerClass.firstTeleportedToSky = true;
 
-                for(int x = 1 ; x < 40; x++){
+                for (int x = 1; x < 40; x++) {
                     Utils.addRunAfter(() -> {
                         Utils.spawnCircleParticles(player);
                     }, x);
                 }
                 playerClass.completeSpawningParticles = true;
 
-                for(int x = 0; x < rand.nextInt(10, 20); x++){
+                for (int x = 0; x < rand.nextInt(10, 20); x++) {
                     Utils.addRunAfter(() -> {
                         Utils.summonLightning(player.getBlockPos(), player.getServerWorld());
                     }, rand.nextInt(5, 20));
                 }
 
-                if(!alreadySpawnedPhantom) {
+                if (!alreadySpawnedPhantom) {
                     spawnPhantom(player.getServerWorld(), player);
                     alreadySpawnedPhantom = true;
                 }
 
-
-                //Ensure player must in the air at first join to keep doing the intro
-                if (player.getWorld().getBlockState(player.getBlockPos().down()).isAir()) {
-                    dataHandler.playerDataMap.get(player.getUuid()).firstTeleportedToSky = true;
-
-                    ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
-                }
+//                //Ensure player must in the air at first join to keep doing the intro
+//                if (player.getWorld().getBlockState(player.getBlockPos().down()).isAir()) {
+//                    dataHandler.playerDataMap.get(player.getUuid()).firstTeleportedToSky = true;
+//
+//                }
 
             } else {
                 playerClass.firstTouchGround = true;
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerClass.CreateExistPlayer());
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
             }
-        };
+        }
+        ;
 
+        if (!playerClass.firstTeleportedToSky && isAir) {
+            playerClass.firstTeleportedToSky = true;
+            ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
+        }
 
         if (playerClass.firstTouchGround || !playerClass.firstTeleportedToSky) return;
 
         if (playerClass.completeOriginSelectingScreen && !playerClass.completeSpawningParticles) {
             Utils.spawnCircleParticles(player);
-            for(int x = 1 ; x < 40; x++){
+            for (int x = 1; x < 40; x++) {
                 Utils.addRunAfter(() -> {
                     Utils.spawnCircleParticles(player);
                 }, x);
@@ -181,7 +183,7 @@ public class IntroOfTheWorldHandler {
     }
 
     public void registerIntroEvents() {
-        if(GlobalConfig.canIntroOfTheWorld){
+        if (GlobalConfig.canIntroOfTheWorld) {
             ServerPlayerEvents.AFTER_RESPAWN.register((serverPlayerEntity1, serverPlayerEntity, c) -> {
                 PlayerClass playerClass = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
                 if (playerClass == null) return;
@@ -225,7 +227,6 @@ public class IntroOfTheWorldHandler {
                 });
             });
         }
-
     }
 
 
@@ -321,7 +322,7 @@ public class IntroOfTheWorldHandler {
 
         for (int x = 0; x < phantomSpawnAmount; x++) {
             double offsetX = (world.getRandom().nextDouble() - 0.5) * 2 * distance;
-            double offsetY = world.getRandom().nextDouble() * 5 - rand.nextInt(0,40);
+            double offsetY = world.getRandom().nextDouble() * 5 - rand.nextInt(0, 40);
             double offsetZ = (world.getRandom().nextDouble() - 0.5) * 2 * distance;
 
             // Calculate the spawn position
@@ -330,7 +331,7 @@ public class IntroOfTheWorldHandler {
             // Create and spawn the Phantom entity
             PhantomEntity phantom = EntityType.PHANTOM.create(world.toServerWorld());
 
-            if(!world.getBlockState(spawnPos).isAir()) continue;
+            if (!world.getBlockState(spawnPos).isAir()) continue;
 
             if (phantom != null) {
                 phantom.setPhantomSize(rand.nextInt(50, 200));
@@ -342,12 +343,12 @@ public class IntroOfTheWorldHandler {
         }
 
         double offsetX = (world.getRandom().nextDouble() - 0.5) * 2 * 80;
-        double offsetY = world.getRandom().nextDouble() * 5 - rand.nextInt(100,180);
+        double offsetY = world.getRandom().nextDouble() * 5 - rand.nextInt(100, 180);
         double offsetZ = (world.getRandom().nextDouble() - 0.5) * 2 * 80;
 
         // Calculate the spawn position
         BlockPos spawnPos = new BlockPos((int) (playerPos.x + offsetX), (int) (playerPos.y + offsetY), (int) (playerPos.z + offsetZ));
-        if(!world.getBlockState(spawnPos).isAir()) return;
+        if (!world.getBlockState(spawnPos).isAir()) return;
 
         // Create and spawn the Phantom entity
         PhantomEntity phantom = EntityType.PHANTOM.create(world.toServerWorld());
