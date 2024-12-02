@@ -61,7 +61,8 @@ public abstract class EndermanAIMixin extends Entity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     public void onTickMovement(CallbackInfo ci) {
-        if(canEndermanAI) return;
+        if(!canEndermanAI) return;
+
         if (!isUsingSkill) {
             if (!canUseTeleportSkill) {
                 counter++;

@@ -95,11 +95,6 @@ public class DayAndNightCounterAnimationHandler {
             startDayAnimation(world, currentDay);
         }
 
-        LOGGER.info("current Time: " + String.valueOf((currentTimeInDay >= 13000 && currentTimeInDay < 23999)));
-        LOGGER.info("isAnimatingNight: " + isAnimatingNight);
-        LOGGER.info("C DAY: " + String.valueOf(currentTime / TICKS_IN_DAY > currentDay));
-        LOGGER.info("NIGHT COMPLETED: " + nightAnimationComplete);
-
         if ((currentTimeInDay >= 13000 && currentTimeInDay < 23999) && !isAnimatingNight && (currentTime / TICKS_IN_DAY > currentDay || !nightAnimationComplete)) {
             startNightAnimation(world);
             currentDay = (int) (currentTime / TICKS_IN_DAY);

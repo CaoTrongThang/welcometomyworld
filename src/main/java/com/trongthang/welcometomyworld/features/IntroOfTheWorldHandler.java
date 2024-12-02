@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.GlobalConfig;
 import com.trongthang.welcometomyworld.saveData.PlayerClass;
 import com.trongthang.welcometomyworld.Utils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -74,9 +75,10 @@ public class IntroOfTheWorldHandler {
             }
         }
 
-        if (!playerClass.firstTeleportedToSky) {
+        if (!playerClass.firstTeleportedToSky && (player.isOnGround() || player.isTouchingWater())) {
             if (player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
                 teleportPlayersToSkyFirstJoin(player);
+                playerClass.firstTeleportedToSky = true;
 
                 for(int x = 1 ; x < 40; x++){
                     Utils.addRunAfter(() -> {
@@ -110,10 +112,6 @@ public class IntroOfTheWorldHandler {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
             }
         };
-
-        if(!playerClass.firstTeleportedToSky && (!player.isOnGround() || !player.isTouchingWater())){
-            playerClass.firstTeleportedToSky = true;
-        }
 
 
         if (playerClass.firstTouchGround || !playerClass.firstTeleportedToSky) return;
@@ -183,50 +181,51 @@ public class IntroOfTheWorldHandler {
     }
 
     public void registerIntroEvents() {
+        if(GlobalConfig.canIntroOfTheWorld){
+            ServerPlayerEvents.AFTER_RESPAWN.register((serverPlayerEntity1, serverPlayerEntity, c) -> {
+                PlayerClass playerClass = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
+                if (playerClass == null) return;
 
-        ServerPlayerEvents.AFTER_RESPAWN.register((serverPlayerEntity1, serverPlayerEntity, c) -> {
-
-            PlayerClass playerClass = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
-            if (playerClass == null) return;
-
-            if (!playerClass.introMessageAfterDeath) {
-                playerClass.introMessageAfterDeath = true;
-                introMessages(serverPlayerEntity1, true);
-            }
-        });
-
-        ServerPlayNetworking.registerGlobalReceiver(FIRST_ORIGIN_CHOOSING_SCREEN, (server, p, handler, buf, responseSender) -> {
-            // Read all data from the buffer immediately
-            int state = buf.readInt();
-
-            server.execute(() -> {
-                // Validate that the player exists
-                if (p == null) {
-                    System.err.println("Received packet for unknown player");
-                    return;
-                }
-
-                // Access player data
-                PlayerClass playerClass = dataHandler.playerDataMap.get(p.getUuid());
-
-                if (playerClass == null) {
-                    System.err.println("No data found for player UUID: " + p.getUuid());
-                    return;
-                }
-
-                if (playerClass.completeOriginSelectingScreen) return;
-
-                // Update player state based on packet data
-                if (state == 1) {
-                    playerClass.firstOriginSelectingScreen = true;
-                }
-
-                if (state == 0 && playerClass.firstOriginSelectingScreen) {
-                    playerClass.completeOriginSelectingScreen = true;
-                    ServerPlayNetworking.send(p, STOP_SENDING_ORIGINS_SCREEN, PacketByteBufs.empty());
+                if (!playerClass.introMessageAfterDeath) {
+                    playerClass.introMessageAfterDeath = true;
+                    introMessages(serverPlayerEntity1, true);
                 }
             });
-        });
+
+            ServerPlayNetworking.registerGlobalReceiver(FIRST_ORIGIN_CHOOSING_SCREEN, (server, p, handler, buf, responseSender) -> {
+                // Read all data from the buffer immediately
+                int state = buf.readInt();
+
+                server.execute(() -> {
+                    // Validate that the player exists
+                    if (p == null) {
+                        System.err.println("Received packet for unknown player");
+                        return;
+                    }
+
+                    // Access player data
+                    PlayerClass playerClass = dataHandler.playerDataMap.get(p.getUuid());
+
+                    if (playerClass == null) {
+                        System.err.println("No data found for player UUID: " + p.getUuid());
+                        return;
+                    }
+
+                    if (playerClass.completeOriginSelectingScreen) return;
+
+                    // Update player state based on packet data
+                    if (state == 1) {
+                        playerClass.firstOriginSelectingScreen = true;
+                    }
+
+                    if (state == 0 && playerClass.firstOriginSelectingScreen) {
+                        playerClass.completeOriginSelectingScreen = true;
+                        ServerPlayNetworking.send(p, STOP_SENDING_ORIGINS_SCREEN, PacketByteBufs.empty());
+                    }
+                });
+            });
+        }
+
     }
 
 

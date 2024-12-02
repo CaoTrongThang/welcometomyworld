@@ -17,7 +17,7 @@ public class NauseaInWaterHandler {
     public int effectDuration = 120;
     public int amplifier = 0;
 
-    public double chance = 0.1;
+    public double chance = 0.3;
 
     Random rand = new Random();
     public void onServerTick(MinecraftServer server){

@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.canZombieAI;
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
 import static com.trongthang.welcometomyworld.BlocksPlacedAndBrokenByMobsHandler.ZOMBIE_BLOCK_DESPAWN_TICK;
 
@@ -32,7 +33,7 @@ public class ZombieAIMixin {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void onTickMovement(CallbackInfo ci) {
-        if(!canZombieAI) return;
+        if (!canZombieAI) return;
 
         if (counter < cooldown) {
             counter++;
@@ -82,7 +83,6 @@ public class ZombieAIMixin {
         World world = zombieEntity.getWorld();
 
         checkIfPlayerTooHighThenPlaceBlocksToChase(zombieEntity, world);
-
     }
 
     private void checkIfPlayerTooHighThenPlaceBlocksToChase(ZombieEntity zombieEntity, World world) {
@@ -106,29 +106,25 @@ public class ZombieAIMixin {
         BlockPos firstNextBlockPos = downPos.add(dx, 0, dz);
 //        BlockPos upBlock = currentPos.add(dx, 1, dz);
 
-        if (path == null && distance <= 10 && counter >= cooldown) {
+        if (path == null && Math.abs(zombieEntity.getX() - lastTargetPlayer.getX()) <= 5 && counter >= cooldown) {
+            counter = 0;
             boolean anyBlockUpHead = zombieEntity.getWorld().isSkyVisible(currentPos);
-            if (!anyBlockUpHead && ((lastTargetPlayer.getY() > zombieEntity.getY()) && (lastTargetPlayer.isOnGround() && Math.abs(zombieEntity.getY() - lastTargetPlayer.getY()) >= 2))) {
 
-                if (zombieEntity.getY() < lastTargetPlayer.getY()) {
-                    if (zombieEntity.isOnGround()) {
-                        tryJumpUp(zombieEntity);
-                        Utils.addRunAfter(() -> {
-                            placeBlock(world, currentPos);
-                            zombieEntity.swingHand(zombieEntity.preferredHand);
-                        }, 5);
+            if (anyBlockUpHead && ((lastTargetPlayer.getY() > zombieEntity.getY()) && Math.abs(zombieEntity.getY() - lastTargetPlayer.getY()) >= 2)) {
 
-                        return;
-                    }
+                if (zombieEntity.isOnGround()) {
+                    tryJumpUp(zombieEntity);
+                    Utils.addRunAfter(() -> {
+                        placeBlock(world, currentPos);
+                    }, 5);
+                    return;
                 }
+
             }
 
             if (Math.abs(zombieEntity.getY() - lastTargetPlayer.getY()) <= 2 && zombieEntity.getY() >= lastTargetPlayer.getY() - 1 && distance >= 2.5) {
                 placeBlock(world, firstNextBlockPos);
-                zombieEntity.swingHand(zombieEntity.preferredHand);
             }
-
-            counter = 0;
         }
 
 //        if (!canPlaceBlockUp && canPlaceBlockSides) {
