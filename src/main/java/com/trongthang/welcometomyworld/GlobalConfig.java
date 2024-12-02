@@ -3,9 +3,9 @@ package com.trongthang.welcometomyworld;
 public class GlobalConfig {
 
     //======================================== FEATURES ======================================================
-    public static boolean canIntroOfTheWorld = false;
-    public static boolean canClearItemsBeforeGivingStartingItems = false;
-    public static boolean canGiveStartingItems = false;
+    public static boolean canIntroOfTheWorld = true;
+    public static boolean canClearItemsBeforeGivingStartingItems = true;
+    public static boolean canGiveStartingItems = true;
 
     public static boolean canSwitchPerspective = true;
 

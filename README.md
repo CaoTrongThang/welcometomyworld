@@ -13,7 +13,6 @@ I uploaded this mod here for me to make it easier to update the mod, could make 
 1. Lightnings strike players when in the rain.
 1. Hostile Mobs are now immune to sunlight.
 
-
 **AI:**
 1. Phantoms can grab players up to the sky and immune to sunlight.
 1. Spiders can shoot cobweb to stop players from moving.
