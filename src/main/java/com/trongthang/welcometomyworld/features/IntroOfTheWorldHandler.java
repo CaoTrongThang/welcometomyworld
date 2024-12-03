@@ -44,7 +44,8 @@ public class IntroOfTheWorldHandler {
 
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
         PlayerClass playerClass = dataHandler.playerDataMap.get(player.getUuid());
-        Boolean isAir = player.getWorld().getBlockState(player.getBlockPos().down(25)).isAir();
+        World world =  player.getWorld();
+        boolean isAir = world.getBlockState(player.getBlockPos().down(25)).isAir();
 
         if (!playerClass.firstTouchGround || !playerClass.firstTeleportedToSky || !playerClass.completeOriginSelectingScreen) {
             if (player.isCreative()) {
@@ -102,7 +103,6 @@ public class IntroOfTheWorldHandler {
 //                    dataHandler.playerDataMap.get(player.getUuid()).firstTeleportedToSky = true;
 //
 //                }
-
             } else {
                 playerClass.firstTouchGround = true;
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerClass.CreateExistPlayer());
@@ -137,7 +137,6 @@ public class IntroOfTheWorldHandler {
 
             if (player.isOnGround() || player.isTouchingWater()) {
                 // Create an explosion at the player's landing position
-                ServerWorld world = player.getServerWorld();
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
                 world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6.5F, World.ExplosionSourceType.TNT);
 

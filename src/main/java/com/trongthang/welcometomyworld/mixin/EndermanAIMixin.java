@@ -107,7 +107,10 @@ public abstract class EndermanAIMixin extends Entity {
             enderman.setPitch((float) (pitch * (180 / Math.PI))); // Convert radians to degrees
         }
 
-        if (targetPlayer == null) return;
+        if (targetPlayer == null) {
+            liftingPlayer = null;
+            return;
+        }
 
 
         if (targetPlayer != null && enderman.isAngry() && canUseTeleportSkill) {
