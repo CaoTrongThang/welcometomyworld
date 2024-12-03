@@ -16,6 +16,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -74,6 +75,8 @@ public abstract class EndermanAIMixin extends Entity {
 
         EndermanEntity enderman = (EndermanEntity) (Object) this;
         PlayerEntity targetPlayer;
+
+        if(enderman.getWorld().getRegistryKey().getValue().equals(new Identifier("minecraft:the_end"))) return;
 
         // Check if Enderman has a player target
         if (enderman.getTarget() instanceof PlayerEntity) {
@@ -157,6 +160,8 @@ public abstract class EndermanAIMixin extends Entity {
     }
 
     private void teleportToPlayer(PlayerEntity targetPlayer, EndermanEntity enderman) {
+        if(enderman.getHealth() <= 0) return;
+
         ServerPlayerEntity player = null;
         if (targetPlayer != null) {
             player = targetPlayer.getServer().getPlayerManager().getPlayer(targetPlayer.getUuid());
@@ -171,11 +176,14 @@ public abstract class EndermanAIMixin extends Entity {
     }
 
     private void pickPlayerUp(PlayerEntity targetPlayer, EndermanEntity enderman) {
+        if(enderman.getHealth() <= 0) return;
+
         ServerPlayerEntity player = null;
         if (targetPlayer != null) {
             player = targetPlayer.getServer().getPlayerManager().getPlayer(targetPlayer.getUuid());
         }
         if (player == null) return;
+
 
         if (enderman.distanceTo(targetPlayer) > 6) {
             playSoundAndSpawnParticles(enderman.getBlockPos(), ParticleTypes.ANGRY_VILLAGER, SoundEvents.ENTITY_ENDERMAN_HURT);
@@ -190,6 +198,8 @@ public abstract class EndermanAIMixin extends Entity {
     }
 
     private void teleportToSkyWithPlayer(PlayerEntity targetPlayer, EndermanEntity enderman) {
+        if(enderman.getHealth() <= 0) return;
+
         ServerPlayerEntity player = null;
         if (liftingPlayer != null) {
             player = liftingPlayer.getServer().getPlayerManager().getPlayer(liftingPlayer.getUuid());
@@ -200,7 +210,7 @@ public abstract class EndermanAIMixin extends Entity {
 
         enderman.setTarget(null);
 
-        if (liftingPlayer == null) return;
+        if (liftingPlayer == null) return;if(enderman.getHealth() <= 0) return;
 
 
         BlockPos targetPos = targetPlayer.getBlockPos().add(0, rand.nextInt(100, 140), 0); // Calculate new position high in the sky
@@ -216,6 +226,7 @@ public abstract class EndermanAIMixin extends Entity {
     }
 
     private void placeBlockBelowPlayer(EndermanEntity enderman) {
+        if(enderman.getHealth() <= 0) return;
 
         ServerPlayerEntity player = null;
         if (liftingPlayer != null) {

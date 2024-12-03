@@ -128,8 +128,6 @@ public class WelcomeToMyWorld implements ModInitializer {
                 player.sendMessage(
                         Text.literal("Easycraft - Creator: TrongThang").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
                 );
-
-                switchPerspectiveFirsJoin.swichPerspective(player);
             }
         }
     }
