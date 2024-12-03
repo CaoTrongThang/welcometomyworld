@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.mixin;
 
-import com.trongthang.welcometomyworld.Utils;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.canZombieAI;
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
 import static com.trongthang.welcometomyworld.BlocksPlacedAndBrokenByMobsHandler.ZOMBIE_BLOCK_DESPAWN_TICK;
 

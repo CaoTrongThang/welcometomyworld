@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.mixin;
 
-import com.trongthang.welcometomyworld.Utils;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -25,7 +25,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.canEndermanAI;
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 import java.util.Random;
 

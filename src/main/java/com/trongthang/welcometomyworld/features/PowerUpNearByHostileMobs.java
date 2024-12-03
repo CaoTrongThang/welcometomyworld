@@ -1,20 +1,15 @@
 package com.trongthang.welcometomyworld.features;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 
@@ -23,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import static com.trongthang.welcometomyworld.Utils.summonLightning;
+import static com.trongthang.welcometomyworld.Utilities.Utils.summonLightning;
 
 public class PowerUpNearByHostileMobs {
 

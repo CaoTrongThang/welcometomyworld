@@ -1,8 +1,9 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.GlobalConfig;
+import com.trongthang.welcometomyworld.Utilities.SpawnParticiles;
 import com.trongthang.welcometomyworld.saveData.PlayerClass;
-import com.trongthang.welcometomyworld.Utils;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -15,7 +16,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -44,7 +44,7 @@ public class IntroOfTheWorldHandler {
 
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
         PlayerClass playerClass = dataHandler.playerDataMap.get(player.getUuid());
-        World world =  player.getWorld();
+        ServerWorld world =  player.getServerWorld();
         boolean isAir = world.getBlockState(player.getBlockPos().down(25)).isAir();
 
         if (!playerClass.firstTouchGround || !playerClass.firstTeleportedToSky || !playerClass.completeOriginSelectingScreen) {
@@ -111,7 +111,7 @@ public class IntroOfTheWorldHandler {
         }
         ;
 
-        if (!playerClass.firstTeleportedToSky && isAir) {
+        if (!playerClass.firstTeleportedToSky && player.getY() >= 350) {
             playerClass.firstTeleportedToSky = true;
             ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
         }
@@ -135,7 +135,7 @@ public class IntroOfTheWorldHandler {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 80, 128));
             }
 
-            if (player.isOnGround() || player.isTouchingWater()) {
+            if (!world.isAir(player.getBlockPos().down())) {
                 // Create an explosion at the player's landing position
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
                 world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6.5F, World.ExplosionSourceType.TNT);
@@ -146,7 +146,7 @@ public class IntroOfTheWorldHandler {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
 
                 spawnLandEffect(player);
-
+                SpawnParticiles.spawnExpandingParticleSquare(world, player, 2 ,5, 20, ParticleTypes.END_ROD);
                 // Set the player’s "firstLandFromSky" to true
                 playerClass.firstTouchGround = true;
                 playerClass.firstTeleportedToSky = true;
@@ -159,7 +159,7 @@ public class IntroOfTheWorldHandler {
             if (player.isOnGround() || player.isTouchingWater()) {
 
                 if (player.getHealth() <= 0 && !playerClass.introDeathByGod) {
-                    Utils.UTILS.sendTextAfter(player, "That was... bad.", 1);
+                    Utils.UTILS.sendTextAfter(player, "That was... bad.", 5);
                     playerClass.firstTouchGround = true;
                     playerClass.firstTeleportedToSky = true;
                 }
@@ -235,7 +235,7 @@ public class IntroOfTheWorldHandler {
 
         if (!isDeath) {
             Utils.UTILS.sendTextAfter(player, "Whew, that was close!", 20);
-            Utils.UTILS.sendTextAfter(player, "That was a hard land, try pull your self together.", 4 * 20);
+            Utils.UTILS.sendTextAfter(player, "That was a hard land, try pulling your self together.", 4 * 20);
             Utils.UTILS.sendTextAfter(player, "Feeling less dizzy now? It looks like you're done with your old world... so welcome to this new one!", 13 * 20);
             Utils.UTILS.sendTextAfter(player, "Oh, and here's a small gift for you. Sorry about the botched summoning ritual.", 17 * 20);
 

@@ -1,15 +1,13 @@
-package com.trongthang.welcometomyworld;
+package com.trongthang.welcometomyworld.Utilities;
 
-import com.trongthang.welcometomyworld.saveData.BlockProgress;
+import com.trongthang.welcometomyworld.RunAfter;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.DefaultParticleType;
@@ -24,10 +22,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -140,7 +135,7 @@ public class Utils {
 
     public static void spawnParticles(ServerWorld serverWorld, BlockPos pos, DefaultParticleType particle) {
 
-        for (int i = 0; i < 10; i++) { // Create 10 flame particles
+        for (int i = 0; i < 10; i++) {
             double offsetX = (serverWorld.getRandom().nextDouble() - 0.5) * 2; // Random X offset
             double offsetY = serverWorld.getRandom().nextDouble() * 2;         // Random Y offset
             double offsetZ = (serverWorld.getRandom().nextDouble() - 0.5) * 2; // Random Z offset

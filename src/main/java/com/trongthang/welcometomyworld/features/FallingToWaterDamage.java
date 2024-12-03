@@ -1,11 +1,8 @@
 package com.trongthang.welcometomyworld.features;
 
-import com.trongthang.welcometomyworld.Utils;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.block.BlockState;
 
 import java.util.UUID;
 

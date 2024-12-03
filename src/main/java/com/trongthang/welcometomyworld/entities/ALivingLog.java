@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.entities;
 
-import com.trongthang.welcometomyworld.Utils;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.minecraft.block.*;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.FleeEntityGoal;
@@ -20,15 +20,12 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Arm;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 
 import java.util.List;
-
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class ALivingLog extends PathAwareEntity {
 
