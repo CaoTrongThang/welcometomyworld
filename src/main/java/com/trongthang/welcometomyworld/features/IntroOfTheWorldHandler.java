@@ -27,7 +27,7 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class IntroOfTheWorldHandler {
 
     Random rand = new Random();
-    double playersDeathChanceInTheIntro = 0.25;
+    double playersDeathChanceInTheIntro = 0.3;
     byte phantomSpawnAmount = 7;
     public boolean alreadySpawnedPhantom = false;
 

@@ -20,8 +20,10 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
 @Mixin(SpiderEntity.class)
 public abstract class SpiderAIMixin extends Entity {
 
-    public int attackSpiderWebCooldown = 60;
-    public int counter = 60;
+    public int attackSpiderWebCooldown = 120;
+    public int minShootDistance = 3;
+    public int maxShootDistance = 8;
+    public int counter = attackSpiderWebCooldown;
 
     public SpiderAIMixin(EntityType<?> type, World world) {
         super(type, world);
@@ -49,7 +51,7 @@ public abstract class SpiderAIMixin extends Entity {
                     placeCobwebBlock(spider.getWorld(), targetPlayer.getBlockPos());
                     counter = 0;
                 }
-            } else if ((spider.distanceTo(targetPlayer) < 10 && spider.distanceTo(targetPlayer) > 4) && counter > attackSpiderWebCooldown) {
+            } else if ((spider.distanceTo(targetPlayer) < maxShootDistance && spider.distanceTo(targetPlayer) > minShootDistance) && counter > attackSpiderWebCooldown) {
                 placeCobwebBlock(spider.getWorld(), targetPlayer.getBlockPos());
                 counter = 0;
             }
