@@ -89,7 +89,6 @@ public class BreakingBlocksSpawnMobsHandler {
                     new MobWithSpawnChance("wildlife:meadowlark", 0.03),
                     new MobWithSpawnChance("wildlife:king_snake", 0.03),
                     new MobWithSpawnChance("minecraft:creeper", 0.07),
-                    new MobWithSpawnChance("minecraft:phantom", 0.1),
                     new MobWithSpawnChance("minecraft:chicken", 0.03),
                     new MobWithSpawnChance("netherexp:wisp", 0.01)
             ), true, 5),

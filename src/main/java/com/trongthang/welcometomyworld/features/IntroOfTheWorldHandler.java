@@ -243,13 +243,13 @@ public class IntroOfTheWorldHandler {
                 giveStartingItemsHandler.giveMoreItems(player);
             }, 23 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 28 * 20);
-            Utils.UTILS.sendTextAfter(player, "Well, I think that's it for now.", 33 * 20);
-            Utils.UTILS.sendTextAfter(player, "I'll just... uh... head up there learn some cooking. Have fun!", 37 * 20);
+            Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 26 * 20);
+            Utils.UTILS.sendTextAfter(player, "Well, I think that's it for now.", 31 * 20);
+            Utils.UTILS.sendTextAfter(player, "I'll just... uh... head up there learn some cooking. Have fun!", 35 * 20);
 
             Utils.addRunAfter(() -> {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
-            }, 41 * 20);
+            }, 40 * 20);
 
         } else {
             if (player.getWorld().getLevelProperties().isHardcore()) {
@@ -273,7 +273,7 @@ public class IntroOfTheWorldHandler {
             Utils.UTILS.sendTextAfter(player, "There's more, i think there's something for you to eat...", 21 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:blt", 1); // Change to mod's item ID and quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:cheese_wheel", 1); // Change to mod's item ID and quantity
                 if (food != null) {
                     GiveStartingItemsHandler.dropItemToPlayer(player, food);
                 }

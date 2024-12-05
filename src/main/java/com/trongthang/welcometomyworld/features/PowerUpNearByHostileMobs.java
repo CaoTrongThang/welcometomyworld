@@ -23,7 +23,7 @@ import static com.trongthang.welcometomyworld.Utilities.Utils.summonLightning;
 public class PowerUpNearByHostileMobs {
 
     private static final Random randomGenerator = new Random();
-    private static final double POWER_UP_CHANCE = 0.2; // Chance for a mob to power up
+    private static final double POWER_UP_CHANCE = 0.17; // Chance for a mob to power up
     private static final int MAX_RADIUS = 8;  // Max radius to search for mobs (10 blocks around player)
 
     private static final int mobEffectDuration = 1200;
