@@ -237,19 +237,19 @@ public class IntroOfTheWorldHandler {
             Utils.UTILS.sendTextAfter(player, "Whew, that was close!", 20);
             Utils.UTILS.sendTextAfter(player, "That was a hard land, try pulling your self together.", 4 * 20);
             Utils.UTILS.sendTextAfter(player, "Feeling less dizzy now? It looks like you're done with your old world... so welcome to this new one!", 13 * 20);
-            Utils.UTILS.sendTextAfter(player, "Oh, and here's a small gift for you. Sorry about the botched summoning ritual.", 20 * 20);
+            Utils.UTILS.sendTextAfter(player, "Oh, and here's a small gift for you. Sorry about the botched summoning ritual.", 18 * 20);
 
             Utils.addRunAfter(() -> {
                 giveStartingItemsHandler.giveMoreItems(player);
-            }, 23 * 20);
+            }, 21 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 26 * 20);
-            Utils.UTILS.sendTextAfter(player, "Well, I think that's it for now.", 31 * 20);
-            Utils.UTILS.sendTextAfter(player, "I'll just... uh... head up there learn some cooking. Have fun!", 35 * 20);
+            Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 24 * 20);
+            Utils.UTILS.sendTextAfter(player, "Well, I think that's it for now.", 29 * 20);
+            Utils.UTILS.sendTextAfter(player, "I'll just... uh... head up there learn some cooking. Have fun!", 33 * 20);
 
             Utils.addRunAfter(() -> {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
-            }, 40 * 20);
+            }, 38 * 20);
 
         } else {
             if (player.getWorld().getLevelProperties().isHardcore()) {
