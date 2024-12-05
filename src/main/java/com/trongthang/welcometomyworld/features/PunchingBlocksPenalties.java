@@ -62,7 +62,6 @@ public class PunchingBlocksPenalties {
                 }
 
                 if (finalDamageIfHasSomethingOnHand > 1.1) {
-                    LOGGER.info("Final damage: " + finalDamageIfHasSomethingOnHand);
                     player.damage(player.getWorld().getDamageSources().generic(), finalDamageIfHasSomethingOnHand);
                 }
 
