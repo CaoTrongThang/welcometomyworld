@@ -1,7 +1,9 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Random;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
+import static com.trongthang.welcometomyworld.features.FallingToWaterDamage.isUmbrella;
 
 public class LightningsStrikePlayersInRain {
     private int upDistance = 64;
@@ -18,11 +21,11 @@ public class LightningsStrikePlayersInRain {
 
     //Lightnings can strike up to 3 times;
 
-    List<Double> strikeChances = List.of(0.3, 0.2, 0.1);
+    List<Double> strikeChances = List.of(0.8, 0.7, 0.5);
 
     Random rand = new Random();
 
-    private int checkInterval = 80;
+    private int checkInterval = 20;
     private int counter = 0;
 
     public void onServerTick(MinecraftServer server) {
@@ -32,18 +35,21 @@ public class LightningsStrikePlayersInRain {
 
         ServerWorld world = server.getOverworld();
 
-        for(ServerPlayerEntity player : world.getPlayers()){
+        for (ServerPlayerEntity player : world.getPlayers()) {
 
-            if(player.isSpectator() || player.isCreative()) return;
+            if (player.isSpectator() || player.isCreative()) return;
 
-            if(!player.isTouchingWater() && player.isTouchingWaterOrRain()){
-                if(!isAnyThingAbovePlayerHead(world, player)){
+            if (!player.isTouchingWater() && player.isTouchingWaterOrRain()) {
+                if (!isAnyThingAbovePlayerHead(world, player)) {
                     double r = rand.nextDouble();
 
-                    for(double d : strikeChances){
-                        if(r <= d){
-                            summonLightning(player, world);
+                    for (double d : strikeChances) {
+                        if (r <= d) {
+                            if (!isUmbrella(player)) {
+                                summonLightning(player, world);
+                            }
                         }
+
                     }
                 }
             }

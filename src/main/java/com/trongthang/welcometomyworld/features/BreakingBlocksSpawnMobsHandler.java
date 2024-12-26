@@ -1,7 +1,9 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -15,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
+import static com.trongthang.welcometomyworld.Utilities.Utils.spawnMob;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class BreakingBlocksSpawnMobsHandler {
@@ -74,7 +77,7 @@ public class BreakingBlocksSpawnMobsHandler {
                     new MobWithSpawnChance("wildlife:rainbow_trout", 0.03),
                     new MobWithSpawnChance("minecraft:cod", 0.03),
                     new MobWithSpawnChance("minecraft:salmon", 0.03),
-                    new MobWithSpawnChance("iceandfire:sea_serpent", 0.03),
+                    new MobWithSpawnChance("iceandfire:sea_serpent", 0.8),
                     new MobWithSpawnChance("iceandfire:siren", 0.03)
             ), true, 5),
             new BlockToMobConfig(List.of("minecraft:obsidian"), List.of(
@@ -88,7 +91,7 @@ public class BreakingBlocksSpawnMobsHandler {
                     new MobWithSpawnChance("wildlife:monkey", 0.03),
                     new MobWithSpawnChance("wildlife:meadowlark", 0.03),
                     new MobWithSpawnChance("wildlife:king_snake", 0.03),
-                    new MobWithSpawnChance("minecraft:creeper", 0.07),
+                    new MobWithSpawnChance("minecraft:creeper", 0.08),
                     new MobWithSpawnChance("minecraft:chicken", 0.03),
                     new MobWithSpawnChance("netherexp:wisp", 0.01)
             ), true, 5),
@@ -145,46 +148,17 @@ public class BreakingBlocksSpawnMobsHandler {
                 int randomMob = rand.nextInt(0, config.mobs.size());
                 MobWithSpawnChance mob = config.mobs.get(randomMob);
                 if (rand.nextDouble() < mob.spawnChance) {
-                    spawnMob(world, blockPos, config.mobs.get(randomMob).mobId, player);
+                    Entity entity = spawnMob(world, blockPos, config.mobs.get(randomMob).mobId);
+                    ((MobEntity) entity).setTarget(player);
                     return;
                 }
             }
         } else {
             for (MobWithSpawnChance mobWithChance : config.mobs) {
                 if (rand.nextDouble() < mobWithChance.spawnChance) {
-                    spawnMob(world, blockPos, mobWithChance.mobId, player);
+                    Entity entity = spawnMob(world, blockPos, mobWithChance.mobId);
+                    ((MobEntity) entity).setTarget(player);
                 }
-            }
-        }
-    }
-
-    // Spawns a mob entity at the given block position
-    private void spawnMob(World world, BlockPos blockPos, String mobId, PlayerEntity player) {
-        Identifier mobIdentifier = new Identifier(mobId.toLowerCase());
-        EntityType<?> entityType = Registries.ENTITY_TYPE.get(mobIdentifier);
-
-        if (entityType != null) {
-//            entityType.spawn(player.getServer().getWorld(player.getWorld().getRegistryKey()), blockPos, null);
-
-            // Create the entity instance
-            var entity = entityType.create(world);
-
-            if (entity instanceof MobEntity mobEntity) {
-                // Set the mob's position
-                mobEntity.refreshPositionAndAngles(
-                        blockPos.getX() + 0.5,
-                        blockPos.getY(),
-                        blockPos.getZ() + 0.5,
-                        world.random.nextFloat() * 360F, 0
-                );
-
-                // Set the mob's target to the player
-                mobEntity.setTarget(player);
-
-                // Add the mob to the world
-                world.spawnEntity(mobEntity);
-            } else {
-                LOGGER.info("Entity type " + mobId + " not found. Check if mod ID or entity ID is correct.");
             }
         }
     }

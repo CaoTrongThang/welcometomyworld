@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.ItemsManager;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
@@ -134,7 +135,7 @@ public class BossesSpawningHandler {
 
                     mob.setHealth(mob.getMaxHealth());
 
-                    PowerUpNearByHostileMobs.applyEffect(mob, 3);
+                    Utils.applyEffect(mob, 3, 200);
 
                     Text message = Text.literal("☠").styled(style -> style.withColor(Formatting.DARK_PURPLE))
                             .append(Text.literal(" An").styled(style -> style.withColor(Formatting.WHITE))

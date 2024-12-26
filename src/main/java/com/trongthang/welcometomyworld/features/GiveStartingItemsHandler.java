@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
-import com.trongthang.welcometomyworld.saveData.PlayerClass;
+import com.trongthang.welcometomyworld.classes.PlayerData;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -14,7 +14,7 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
 public class GiveStartingItemsHandler {
     public static void giveItemHandler(ServerPlayerEntity player, boolean clearItem) {
-        PlayerClass p = dataHandler.playerDataMap.get(player.getUuid());
+        PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
         if (!p.firstRemoveStartingItems) {
             if (hasAnyItemInInventory(player)) {
                 if(clearItem){
@@ -29,7 +29,7 @@ public class GiveStartingItemsHandler {
     private static void giveItems(ServerPlayerEntity player) {
         // Modded items - using Identifiers for mod items
         if (player == null) return;
-        PlayerClass p = dataHandler.playerDataMap.get(player.getUuid());
+        PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
 
         if(p.firstGivingStartingItems) return;
         p.firstGivingStartingItems = true;

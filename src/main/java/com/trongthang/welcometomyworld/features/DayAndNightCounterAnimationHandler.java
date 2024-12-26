@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.GlobalConfig;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -47,7 +48,6 @@ public class DayAndNightCounterAnimationHandler {
 
     // Main method that checks for day changes every tick
     public void onServerTick(ServerPlayerEntity player) {
-
         ServerWorld world = player.getServerWorld();
 
         if (isAnimatingDay || isAnimatingNight) {
@@ -92,11 +92,19 @@ public class DayAndNightCounterAnimationHandler {
             currentDay = (int) (currentTime / TICKS_IN_DAY);
             dayAnimationComplete = true;
             nightAnimationComplete = false;
-            startDayAnimation(world, currentDay);
+
+            if(currentDay > 0){
+                startDayAnimation(world, currentDay);
+            }
         }
 
         if ((currentTimeInDay >= 13000 && currentTimeInDay < 23999) && !isAnimatingNight && (currentTime / TICKS_IN_DAY > currentDay || !nightAnimationComplete)) {
             startNightAnimation(world);
+
+            if(GlobalConfig.canSpawnMonstersAtNight){
+                SpawnMonstersAtNight.spawnMonsters(world, currentDay);
+            }
+
             currentDay = (int) (currentTime / TICKS_IN_DAY);
             dayAnimationComplete = false;
             nightAnimationComplete = true;

@@ -18,7 +18,10 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
@@ -32,6 +35,10 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     public void onInitializeClient() {
         EntityRendererRegistry.register(CustomEntitiesManager.A_LIVING_LOG, ALivingLogRenderer::new);
         EntityRendererRegistry.register(CustomEntitiesManager.A_LIVING_FLOWER, ALivingFlowerRenderer::new);
+
+        ClientPlayConnectionEvents.JOIN.register((handler, client, c) -> {
+            preRenderChunks(c);
+        });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             stopSendingOriginsScreen = false;
@@ -109,16 +116,6 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             client.execute(() -> {
                 // Play sound locally
                 client.player.playSound(SoundEvents.BLOCK_LEVER_CLICK, SoundCategory.PLAYERS, 0.6f, 1f);
-            });
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(CHANGE_PERSPECTIVE, (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                client.execute(() -> {
-                            client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
-                            previousPerspective = client.options.getPerspective();
-                        }
-                );
             });
         });
     }
@@ -206,6 +203,35 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             ClientPlayNetworking.send(FIRST_ORIGIN_CHOOSING_SCREEN, buf);
         } else {
             System.err.println("Player object is null, unable to send packet!");
+        }
+    }
+
+    private void preRenderChunks(MinecraftClient client) {
+
+        LOGGER.info("Pre render chunks...");
+
+        if (client.world == null || client.player == null) {
+            return;
+        }
+
+        // Get the world's spawn position and corresponding chunk position
+        BlockPos spawn = client.world.getSpawnPos();
+        ChunkPos spawnChunk = new ChunkPos(spawn);
+
+        // Loop through a 5x5 chunk area centered around the spawn
+        for (int dx = -5; dx <= 5; dx++) {
+            for (int dz = -5; dz <= 5; dz++) {
+                ChunkPos chunkPos = new ChunkPos(spawnChunk.x + dx, spawnChunk.z + dz);
+                // Ensure the chunk is fully loaded
+                Chunk chunk = client.world.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.FULL, false);
+                if (chunk != null) { // Check if chunk exists
+                    // Mark the chunk's range for rendering
+                    client.worldRenderer.scheduleBlockRenders(
+                            chunkPos.getStartX(), 0, chunkPos.getStartZ(),
+                            chunkPos.getStartX() + 15, client.world.getHeight(), chunkPos.getStartZ() + 15
+                    );
+                }
+            }
         }
     }
 }

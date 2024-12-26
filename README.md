@@ -12,6 +12,7 @@ I uploaded this mod here for me to make it easier to update the mod, could make 
 1. There's a small chance a strong mob will be spawned near the players, It'll drop the Materials that can be used to craft Ancient Items.
 1. Lightnings strike players when in the rain.
 1. Hostile Mobs are now immune to sunlight.
+1. Random Spawn
 
 **AI:**
 1. Phantoms can grab players up to the sky and immune to sunlight.
@@ -29,7 +30,6 @@ I uploaded this mod here for me to make it easier to update the mod, could make 
 1. Give players starting items when first joining the world.
 1. Dramatic Intro.
 1. Many New Achievements.
-
 
 **New recipes and drops:**
 1. 4 sticks -> oak planks

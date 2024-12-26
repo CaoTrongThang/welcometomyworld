@@ -5,7 +5,7 @@ import com.trongthang.welcometomyworld.entities.CustomEntitiesManager;
 import com.trongthang.welcometomyworld.features.*;
 import com.trongthang.welcometomyworld.items.RepairTalisman;
 import com.trongthang.welcometomyworld.items.BuffTalisman;
-import com.trongthang.welcometomyworld.saveData.PlayerClass;
+import com.trongthang.welcometomyworld.classes.PlayerData;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -20,13 +20,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.*;
+import static com.trongthang.welcometomyworld.Utilities.Utils.preloadHorizontalChunksAtSpawn;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 //! TODO: some events when playing progressing the world like: mobs could be spawned when players break leaves or stones, punching blocks with bare hand will get damaged
 
 public class WelcomeToMyWorld implements ModInitializer {
+    public static Random random = new Random();
     public static final String MOD_ID = "welcometomyworld";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
@@ -51,10 +54,8 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     public static DeathCounter deathCounter = new DeathCounter();
 
-
     public static FallingToWaterDamage fallingToWaterDamage = new FallingToWaterDamage();
     public static GiveStartingItemsHandler giveStartingItemsHandler = new GiveStartingItemsHandler();
-    public static SwitchPerspectiveFirstJoin switchPerspectiveFirsJoin = new SwitchPerspectiveFirstJoin();
     public static IntroOfTheWorldHandler introOfTheWorldHandler = new IntroOfTheWorldHandler();
     public static BreakingBlocksSpawnMobsHandler breakingBlocksSpawnMobsHandler = new BreakingBlocksSpawnMobsHandler();
     public static BedExplosionHandler bedExplosionHandler = new BedExplosionHandler();
@@ -68,7 +69,6 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static LightningsStrikePlayersInRain lightningsStrikePlayersInRain = new LightningsStrikePlayersInRain();
     public static PhantomSpawnHandler phantomSpawnHandler = new PhantomSpawnHandler();
 
-
     @Override
     public void onInitialize() {
         compatityChecker.OriginCheck();
@@ -78,15 +78,22 @@ public class WelcomeToMyWorld implements ModInitializer {
             dataHandler.initializeWorldData(t);
 
             dayAndNightCounterAnimationHandler.resetFields();
-
             registerEvents();
         });
 
+        ServerLifecycleEvents.SERVER_STARTED.register((t) -> {
+            preloadHorizontalChunksAtSpawn(t.getOverworld());
+        });
+
         ServerLifecycleEvents.SERVER_STOPPING.register((t) -> {
+            IntroOfTheWorldHandler.firstTimeLoadChunkIntro = false;
             dataHandler.saveData(t);
         });
 
-        ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> performAllActionsFirstJoin(serverPlayNetworkHandler.getPlayer()));
+        ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) ->
+        {
+            performAllActionsFirstJoin(serverPlayNetworkHandler.getPlayer());
+        });
 
         PlayerBlockBreakEvents.AFTER.register((world, playerEntity, blockPos, blockState, blockEntity) -> {
             if (!canBreakBlockSpawnMobs) return;
@@ -116,7 +123,7 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         if (!dataHandler.playerDataMap.containsKey(playerUUID)) {
             LOGGER.info("Player {} is joining for the first time in this world. Adding to firstTimePlayers set and teleporting.", player.getName().getString());
-            dataHandler.playerDataMap.put(playerUUID, new PlayerClass(true));
+            dataHandler.playerDataMap.put(playerUUID, new PlayerData(true));
         } else {
             LOGGER.info("Player {} has already joined before in this world. Skipping teleport.", player.getName().getString());
 
@@ -137,12 +144,11 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     private void onEndServerTick(MinecraftServer server) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-
             if (canBedsExplode) {
                 bedExplosionHandler.checkAndExplodeIfSleeping(player);
             }
 
-            if (canDayCounter) {
+            if (canDayAndNightCounterAnimation) {
                 dayAndNightCounterAnimationHandler.onServerTick(player);
             }
 
@@ -176,6 +182,10 @@ public class WelcomeToMyWorld implements ModInitializer {
             ((BuffTalisman) ItemsManager.RESISTANCE_TALISMAN).onServerTick(player, ItemsManager.RESISTANCE_TALISMAN);
         }
 
+        if(canEventsOfTheWorld){
+            EventsOfTheWorld.onServerTick(server);
+        }
+
         if (canWorldDifficultyBasedOnDay) {
             worldDifficultyBasedOnInGameDay.onServerTick(server);
         }
@@ -198,5 +208,4 @@ public class WelcomeToMyWorld implements ModInitializer {
         bossesSpawningHandler.bossDropsRegister();
         introOfTheWorldHandler.registerIntroEvents();
     }
-
 }

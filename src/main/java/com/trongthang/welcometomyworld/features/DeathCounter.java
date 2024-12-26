@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
-import com.trongthang.welcometomyworld.saveData.PlayerClass;
+import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.player.PlayerEntity;
@@ -17,7 +17,7 @@ public class DeathCounter {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof PlayerEntity) {
                 ServerPlayerEntity player = entity.getServer().getPlayerManager().getPlayer(entity.getUuid());
-                PlayerClass p = dataHandler.playerDataMap.get(entity.getUuid());
+                PlayerData p = dataHandler.playerDataMap.get(entity.getUuid());
 
                 p.deaths++;  // Increment death counter
 

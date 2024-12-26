@@ -1,28 +1,33 @@
 package com.trongthang.welcometomyworld.features;
 
-import com.trongthang.welcometomyworld.saveData.PlayerClass;
+import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.item.Items;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 
 public class BedExplosionHandler {
 
-    private static final Random randomGenerator = new Random();
-    private static final double BASE_EXPLOSION_CHANCE = 0.8; // Base chance of explosion
+    private static final double BASE_EXPLOSION_CHANCE = 1; // Base chance of explosion
 
     // Variables to modify the explosion chance
     private double havingLuckEffectChanceDecrease = 1.0;
-    private double nearASleepingFriendChanceDecrease = 0.4;
-    private double nearACampfireChanceDecrease = 0.2;
-    private double holdingFlowerChanceDecrease = 0.4;
+
+//    private double nearASleepingFriendChanceDecrease = 0.4;
+//    private double nearACampfireChanceDecrease = 0.2;
+//    private double holdingFlowerChanceDecrease = 0.4;
 
     // Interval to check if player is sleeping (in ticks)
     public int checkInterval = 60;
@@ -30,7 +35,38 @@ public class BedExplosionHandler {
 
     public BedExplosionHandler() {}
 
+    private static final double GIVE_LUCK_EFFECT_CHANCE = 0.4;
+    private static final int LUCK_EFFECT_DURATION = 6000;
+    private static final Set<ServerWorld> appliedWorlds = new HashSet<>();
+
+    public static void checkAndApplyLuckEffect(ServerWorld world) {
+        long timeOfDay = world.getTimeOfDay() % 24000; // Get current in-game time (0-23999)
+
+        // Check if it's 8 PM (18,000 ticks) and the effect hasn't been applied yet
+        if (timeOfDay == 18000 && !appliedWorlds.contains(world)) {
+            applyLuckEffectToAllPlayers(world);
+            appliedWorlds.add(world); // Mark this world as having applied the effect
+        }
+
+        // Reset the flag after 8 PM has passed
+        if (timeOfDay > 18000 && timeOfDay < 19000) {
+            appliedWorlds.remove(world); // Ready for the next day's check
+        }
+    }
+
+    private static void applyLuckEffectToAllPlayers(ServerWorld world) {
+        for (ServerPlayerEntity player : world.getPlayers()) {
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, LUCK_EFFECT_DURATION, 0));
+        }
+        System.out.println("Applied Luck effect to all players at 8 PM in world: " + world.getRegistryKey().getValue());
+    }
+
     public void checkAndExplodeIfSleeping(ServerPlayerEntity player) {
+
+        if(random.nextDouble() < GIVE_LUCK_EFFECT_CHANCE){
+            checkAndApplyLuckEffect(player.getServerWorld());
+        };
+
         counter++;
         if (counter < checkInterval) return;
             counter = 0;
@@ -41,11 +77,10 @@ public class BedExplosionHandler {
                 double effectiveExplosionChance = calculateExplosionChance(player);
 
                 // Check if explosion happens based on the effective chance
-                if (randomGenerator.nextDouble() < effectiveExplosionChance) {
+                if (random.nextDouble() < effectiveExplosionChance) {
                     triggerExplosion(player);
                 }
             }
-
     }
 
     // Method to calculate the explosion chance based on various factors
@@ -57,26 +92,26 @@ public class BedExplosionHandler {
             effectiveChance -= havingLuckEffectChanceDecrease;
         }
 
-        // Apply the near friends effect
-        if (isNearOtherPlayers(player)) {
-            effectiveChance -= nearASleepingFriendChanceDecrease;
-        }
-
-        // Apply the holding flower effect
-        if (player.getMainHandStack().getItem() == Items.POPPY
-                || player.getMainHandStack().getItem() == Items.DANDELION
-                || player.getMainHandStack().getItem() == Items.OXEYE_DAISY
-                || player.getMainHandStack().getItem() == Items.CORNFLOWER
-                || player.getMainHandStack().getItem() == Items.CHORUS_FLOWER
-                || player.getMainHandStack().getItem() == Items.SUNFLOWER
-                || player.getMainHandStack().getItem() == Items.TORCHFLOWER) {
-            effectiveChance -= holdingFlowerChanceDecrease;
-        }
-
-        // Apply the near campfire effect
-        if (isNearCampfire(player)) {
-            effectiveChance -= nearACampfireChanceDecrease;
-        }
+//        // Apply the near friends effect
+//        if (isNearOtherPlayers(player)) {
+//            effectiveChance -= nearASleepingFriendChanceDecrease;
+//        }
+//
+//        // Apply the holding flower effect
+//        if (player.getMainHandStack().getItem() == Items.POPPY
+//                || player.getMainHandStack().getItem() == Items.DANDELION
+//                || player.getMainHandStack().getItem() == Items.OXEYE_DAISY
+//                || player.getMainHandStack().getItem() == Items.CORNFLOWER
+//                || player.getMainHandStack().getItem() == Items.CHORUS_FLOWER
+//                || player.getMainHandStack().getItem() == Items.SUNFLOWER
+//                || player.getMainHandStack().getItem() == Items.TORCHFLOWER) {
+//            effectiveChance -= holdingFlowerChanceDecrease;
+//        }
+//
+//        // Apply the near campfire effect
+//        if (isNearCampfire(player)) {
+//            effectiveChance -= nearACampfireChanceDecrease;
+//        }
 
         // Ensure the chance doesn't go below 0
         return Math.max(0, effectiveChance);
@@ -125,7 +160,7 @@ public class BedExplosionHandler {
             World world = player.getWorld();
             world.createExplosion(null, bedPos.getX(), bedPos.getY(), bedPos.getZ(), 4.0F, World.ExplosionSourceType.TNT);
 
-            PlayerClass p = dataHandler.playerDataMap.get(player.getUuid());
+            PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
             if(!p.firstBedExplosion){
                 Utils.grantAdvancement(player, "first_bed_explosion");
                 p.firstBedExplosion = true;

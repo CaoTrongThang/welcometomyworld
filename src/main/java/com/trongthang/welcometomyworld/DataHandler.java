@@ -2,7 +2,7 @@ package com.trongthang.welcometomyworld;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
-import com.trongthang.welcometomyworld.saveData.PlayerClass;
+import com.trongthang.welcometomyworld.classes.PlayerData;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
@@ -30,8 +30,8 @@ public class DataHandler {
             .create();
 
     public Path playerDataSavePath;
-    public static final Type PLAYER_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerClass>>() {}.getType();
-    public ConcurrentHashMap<UUID, PlayerClass> playerDataMap = new ConcurrentHashMap<>();
+    public static final Type PLAYER_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerData>>() {}.getType();
+    public ConcurrentHashMap<UUID, PlayerData> playerDataMap = new ConcurrentHashMap<>();
 
     public Path blocksPlacedByMobs;
     public static final Type BLOCKS_PLACED_BY_MOBS_DATA_TYPE = new TypeToken<ConcurrentHashMap<BlockPos, Integer>>() {}.getType();
@@ -86,10 +86,10 @@ public class DataHandler {
                             // Extract the UUID from the file name (without the ".dat" extension)
                             UUID uuid = UUID.fromString(fileName.substring(0, fileName.length() - 4));
 
-                            // If the player is not in the map, add them with a new PlayerClass entry
+                            // If the player is not in the map, add them with a new PlayerData entry
                             if (!playerDataMap.containsKey(uuid)) {
                                 LOGGER.info("Found new player with UUID: {}, adding to player data map.", uuid);
-                                playerDataMap.put(uuid, PlayerClass.CreateExistPlayer());
+                                playerDataMap.put(uuid, PlayerData.CreateExistPlayer());
                             }
                         } catch (IllegalArgumentException e) {
                             LOGGER.warn("Invalid UUID found in playerdata file name: {}", fileName);
@@ -105,7 +105,7 @@ public class DataHandler {
 
         if (Files.exists(playerDataSavePath)) {
             try (Reader reader = Files.newBufferedReader(playerDataSavePath)) {
-                ConcurrentHashMap<UUID, PlayerClass> loadedData = GSON.fromJson(reader, PLAYER_DATA_TYPE);
+                ConcurrentHashMap<UUID, PlayerData> loadedData = GSON.fromJson(reader, PLAYER_DATA_TYPE);
                 if (loadedData != null) {
                     playerDataMap.putAll(loadedData);
                 }

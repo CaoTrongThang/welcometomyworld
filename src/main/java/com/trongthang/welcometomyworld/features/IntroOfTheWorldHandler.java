@@ -2,7 +2,7 @@ package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.GlobalConfig;
 import com.trongthang.welcometomyworld.Utilities.SpawnParticiles;
-import com.trongthang.welcometomyworld.saveData.PlayerClass;
+import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -17,8 +17,10 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.Random;
 
@@ -27,56 +29,62 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class IntroOfTheWorldHandler {
 
     Random rand = new Random();
-    double playersDeathChanceInTheIntro = 0.3;
+    double playersDeathChanceInTheIntro = 40;
     byte phantomSpawnAmount = 7;
     public boolean alreadySpawnedPhantom = false;
 
     private int slownessTimeInTickAfterLand = 240;
 
+    public static boolean firstTimeLoadChunkIntro = false;
+
     public void teleportPlayersToSkyFirstJoin(ServerPlayerEntity player) {
         //teleport player to the sky
         Vec3d skyPosition = new Vec3d(player.getX(), 400, player.getZ());
         player.teleport(skyPosition.x, skyPosition.y, skyPosition.z);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, 128));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 100, 128));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 60, 0));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 120, 4));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 100, 4));
     }
 
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
-        PlayerClass playerClass = dataHandler.playerDataMap.get(player.getUuid());
-        ServerWorld world =  player.getServerWorld();
+        PlayerData playerData = dataHandler.playerDataMap.get(player.getUuid());
+        ServerWorld world = player.getServerWorld();
         boolean isAir = world.getBlockState(player.getBlockPos().down(25)).isAir();
 
-        if (!playerClass.firstTouchGround || !playerClass.firstTeleportedToSky || !playerClass.completeOriginSelectingScreen) {
+        if (!firstTimeLoadChunkIntro) {
+            firstTimeLoadChunkIntro = true;
+        }
+
+        if (!playerData.firstTouchGround || !playerData.firstTeleportedToSky || !playerData.completeOriginSelectingScreen) {
             if (player.isCreative()) {
-                dataHandler.playerDataMap.put(player.getUuid(), PlayerClass.CreateExistPlayer());
+                dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 return;
             }
-            playerClass.introTimeLimit--;
-            if (playerClass.introTimeLimit <= 0) {
-                dataHandler.playerDataMap.put(player.getUuid(), PlayerClass.CreateExistPlayer());
+            playerData.introTimeLimit--;
+            if (playerData.introTimeLimit <= 0) {
+                dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 return;
             }
             ;
         }
 
-        if (playerClass.playerFirstIntroDeathChance == 0) {
-            playerClass.playerFirstIntroDeathChance = rand.nextDouble();
+        if (playerData.playerFirstIntroDeathChance == 0) {
+            playerData.playerFirstIntroDeathChance = rand.nextDouble(0, 100);
         }
 
         if (compatityChecker.originMod) {
-            if (!playerClass.completeOriginSelectingScreen) {
+            if (!playerData.completeOriginSelectingScreen) {
                 teleportPlayersToSkyFirstJoin(player);
 
-                if (playerClass.firstTouchGround) {
-                    playerClass.completeOriginSelectingScreen = true;
+                if (playerData.firstTouchGround) {
+                    playerData.completeOriginSelectingScreen = true;
                 }
 
                 return;
             }
         }
 
-        if (!playerClass.firstTeleportedToSky && (player.isOnGround() || player.isTouchingWater())) {
+        if (!playerData.firstTeleportedToSky && (player.isOnGround() || player.isTouchingWater())) {
             if (player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
                 teleportPlayersToSkyFirstJoin(player);
 
@@ -85,7 +93,7 @@ public class IntroOfTheWorldHandler {
                         Utils.spawnCircleParticles(player);
                     }, x);
                 }
-                playerClass.completeSpawningParticles = true;
+                playerData.completeSpawningParticles = true;
 
                 for (int x = 0; x < rand.nextInt(10, 20); x++) {
                     Utils.addRunAfter(() -> {
@@ -104,21 +112,21 @@ public class IntroOfTheWorldHandler {
 //
 //                }
             } else {
-                playerClass.firstTouchGround = true;
-                dataHandler.playerDataMap.put(player.getUuid(), PlayerClass.CreateExistPlayer());
+                playerData.firstTouchGround = true;
+                dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
             }
         }
         ;
 
-        if (!playerClass.firstTeleportedToSky && player.getY() >= 350) {
-            playerClass.firstTeleportedToSky = true;
+        if (!playerData.firstTeleportedToSky && player.getY() >= 350) {
+            playerData.firstTeleportedToSky = true;
             ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
         }
 
-        if (playerClass.firstTouchGround || !playerClass.firstTeleportedToSky) return;
+        if (playerData.firstTouchGround || !playerData.firstTeleportedToSky) return;
 
-        if (playerClass.completeOriginSelectingScreen && !playerClass.completeSpawningParticles) {
+        if (playerData.completeOriginSelectingScreen && !playerData.completeSpawningParticles) {
             Utils.spawnCircleParticles(player);
             for (int x = 1; x < 40; x++) {
                 Utils.addRunAfter(() -> {
@@ -126,13 +134,12 @@ public class IntroOfTheWorldHandler {
                 }, x);
             }
 
-            playerClass.completeSpawningParticles = true;
+            playerData.completeSpawningParticles = true;
         }
 
-        if (playerClass.playerFirstIntroDeathChance >= playersDeathChanceInTheIntro) {
+        if (playerData.playerFirstIntroDeathChance >= playersDeathChanceInTheIntro) {
             if (!isAir) {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 240, 255));
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 80, 128));
             }
 
             if (!world.isAir(player.getBlockPos().down())) {
@@ -146,11 +153,11 @@ public class IntroOfTheWorldHandler {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
 
                 spawnLandEffect(player);
-                SpawnParticiles.spawnExpandingParticleSquare(world, player, 2 ,5, 20, ParticleTypes.END_ROD);
+                SpawnParticiles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
                 // Set the player’s "firstLandFromSky" to true
-                playerClass.firstTouchGround = true;
-                playerClass.firstTeleportedToSky = true;
-                playerClass.introMessageAfterDeath = true;
+                playerData.firstTouchGround = true;
+                playerData.firstTeleportedToSky = true;
+                playerData.introMessageAfterDeath = true;
 
                 Utils.grantAdvancement(player, "successfully_landed");
                 introMessages(player, false);
@@ -158,10 +165,10 @@ public class IntroOfTheWorldHandler {
         } else {
             if (player.isOnGround() || player.isTouchingWater()) {
 
-                if (player.getHealth() <= 0 && !playerClass.introDeathByGod) {
+                if (player.getHealth() <= 0 && !playerData.introDeathByGod) {
                     Utils.UTILS.sendTextAfter(player, "That was... bad.", 5);
-                    playerClass.firstTouchGround = true;
-                    playerClass.firstTeleportedToSky = true;
+                    playerData.firstTouchGround = true;
+                    playerData.firstTeleportedToSky = true;
                 }
             }
         }
@@ -184,11 +191,11 @@ public class IntroOfTheWorldHandler {
     public void registerIntroEvents() {
         if (GlobalConfig.canIntroOfTheWorld) {
             ServerPlayerEvents.AFTER_RESPAWN.register((serverPlayerEntity1, serverPlayerEntity, c) -> {
-                PlayerClass playerClass = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
-                if (playerClass == null) return;
+                PlayerData playerData = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
+                if (playerData == null) return;
 
-                if (!playerClass.introMessageAfterDeath) {
-                    playerClass.introMessageAfterDeath = true;
+                if (!playerData.introMessageAfterDeath) {
+                    playerData.introMessageAfterDeath = true;
                     introMessages(serverPlayerEntity1, true);
                 }
             });
@@ -205,22 +212,22 @@ public class IntroOfTheWorldHandler {
                     }
 
                     // Access player data
-                    PlayerClass playerClass = dataHandler.playerDataMap.get(p.getUuid());
+                    PlayerData playerData = dataHandler.playerDataMap.get(p.getUuid());
 
-                    if (playerClass == null) {
+                    if (playerData == null) {
                         System.err.println("No data found for player UUID: " + p.getUuid());
                         return;
                     }
 
-                    if (playerClass.completeOriginSelectingScreen) return;
+                    if (playerData.completeOriginSelectingScreen) return;
 
                     // Update player state based on packet data
                     if (state == 1) {
-                        playerClass.firstOriginSelectingScreen = true;
+                        playerData.firstOriginSelectingScreen = true;
                     }
 
-                    if (state == 0 && playerClass.firstOriginSelectingScreen) {
-                        playerClass.completeOriginSelectingScreen = true;
+                    if (state == 0 && playerData.firstOriginSelectingScreen) {
+                        playerData.completeOriginSelectingScreen = true;
                         ServerPlayNetworking.send(p, STOP_SENDING_ORIGINS_SCREEN, PacketByteBufs.empty());
                     }
                 });

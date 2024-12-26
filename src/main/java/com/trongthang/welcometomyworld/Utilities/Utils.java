@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.Utilities;
 
-import com.trongthang.welcometomyworld.RunAfter;
+import com.trongthang.welcometomyworld.classes.RunAfter;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.advancement.Advancement;
@@ -8,10 +8,12 @@ import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -21,12 +23,19 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Heightmap;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.ChunkStatus;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.PLAY_EXPERIENCE_ORB_PICK_UP;
+import static com.trongthang.welcometomyworld.GlobalVariables.POSSIBLE_EFFECTS_FOR_MOBS;
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
 public class Utils {
     public static final Utils UTILS = new Utils();
@@ -187,5 +196,114 @@ public class Utils {
             entity.addStatusEffect(new StatusEffectInstance(effect, timeInTick, 0));
         }
 
+    }
+
+    public static void preloadHorizontalChunksAtSpawn(ServerWorld world) {
+        // Get the default spawn point of the world
+        if(world == null) return;
+
+        int radius = 8;
+
+        BlockPos spawnPos = world.getSpawnPos();
+        ChunkPos spawnChunk = new ChunkPos(spawnPos);
+
+        LOGGER.info("Preloading horizontal chunks around the world spawn point...");
+
+        // Load a 10x10 grid of chunks horizontally around the spawn point
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+
+                ChunkPos chunkPos = new ChunkPos(spawnChunk.x + dx, spawnChunk.z + dz);
+
+                if(!world.getChunkManager().isChunkLoaded(chunkPos.x, chunkPos.z)){
+                    world.getChunkManager().getChunk(chunkPos.x, chunkPos.z, ChunkStatus.FULL, true);
+                    LOGGER.info(MOD_ID + " Loaded chunk at {} (dx={}, dz={})", chunkPos, dx, dz);
+                }
+            }
+        }
+    }
+
+    // Spawns a mob entity at the given block position
+    public static Entity spawnMob(World world, BlockPos blockPos, String mobId) {
+        if(blockPos == null) return null;
+
+        Identifier mobIdentifier = new Identifier(mobId.toLowerCase());
+        EntityType<?> entityType = Registries.ENTITY_TYPE.get(mobIdentifier);
+        Entity entity = null;
+
+        if (entityType != null) {
+//            entityType.spawn(player.getServer().getWorld(player.getWorld().getRegistryKey()), blockPos, null);
+
+            // Create the entity instance
+            entity = entityType.create(world);
+
+            if (entity instanceof MobEntity mobEntity) {
+                // Set the mob's position
+                mobEntity.refreshPositionAndAngles(
+                        blockPos.getX() + 0.5,
+                        blockPos.getY(),
+                        blockPos.getZ() + 0.5,
+                        world.random.nextFloat() * 360F, 0
+                );
+
+
+                // Add the mob to the world
+                world.spawnEntity(mobEntity);
+            } else {
+                LOGGER.info("Entity type " + mobId + " not found. Check if mod ID or entity ID is correct.");
+            }
+        }
+
+        return entity;
+    }
+
+    public static BlockPos findSafeSpawnPositionAroundTheCenterPos(ServerWorld world, Vec3d centerPos, int spawnDistance) {
+        int maxTries = 15;
+
+        for (int i = 0; i < maxTries; i++) {
+            double angle = random.nextDouble() * 2 * Math.PI;
+            double distance = spawnDistance + random.nextDouble() * 10; // Random offset beyond minimum distance
+            int x = (int) (centerPos.x + Math.cos(angle) * distance);
+            int z = (int) (centerPos.z + Math.sin(angle) * distance);
+            int y = world.getTopY(Heightmap.Type.WORLD_SURFACE, x, z); // Get the topmost block
+
+            BlockPos potentialPos = new BlockPos(x, y, z);
+
+            if (isSafeSpawn(world, potentialPos)) {
+                return potentialPos;
+            }
+        }
+        return null; // No safe position found
+    }
+
+    public static boolean isSafeSpawn(ServerWorld world, BlockPos pos) {
+        // Check that the block below is solid and the spawn block is air
+        return world.getBlockState(pos.down()).isSolidBlock(world, pos.down()) &&
+                world.getBlockState(pos).isAir() &&
+                world.getBlockState(pos.up()).isAir();
+    }
+
+    // Apply the effect to the mob (either increase level or apply new effect)
+    public static void applyEffect(LivingEntity mob, int howManyEffects, int durationInTicks) {
+        // Use a HashSet to select unique effects
+        Set<StatusEffect> selectedEffects = new HashSet<>();
+
+        while (selectedEffects.size() < howManyEffects) {
+            StatusEffect randomEffect = POSSIBLE_EFFECTS_FOR_MOBS.get(random.nextInt(POSSIBLE_EFFECTS_FOR_MOBS.size()));
+            selectedEffects.add(randomEffect);
+        }
+
+        for (StatusEffect effect : selectedEffects) {
+            StatusEffectInstance currentEffect = mob.getStatusEffect(effect);
+
+            if (currentEffect != null) {
+                // Increase effect level
+                int newAmplifier = Math.min(currentEffect.getAmplifier() + 1, 24);
+                mob.addStatusEffect(new StatusEffectInstance(effect, currentEffect.getDuration(), newAmplifier));
+            } else {
+                // Apply new effect
+                mob.addStatusEffect(new StatusEffectInstance(effect, durationInTicks, 0)); // Duration: 600 ticks (30 seconds)
+            }
+        }
     }
 }

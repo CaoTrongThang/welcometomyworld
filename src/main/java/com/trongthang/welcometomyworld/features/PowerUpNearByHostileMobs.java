@@ -1,28 +1,22 @@
 package com.trongthang.welcometomyworld.features;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 
+import static com.trongthang.welcometomyworld.Utilities.Utils.applyEffect;
 import static com.trongthang.welcometomyworld.Utilities.Utils.summonLightning;
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 
 public class PowerUpNearByHostileMobs {
 
-    private static final Random randomGenerator = new Random();
     private static final double POWER_UP_CHANCE = 0.17; // Chance for a mob to power up
     private static final int MAX_RADIUS = 8;  // Max radius to search for mobs (10 blocks around player)
 
@@ -31,17 +25,6 @@ public class PowerUpNearByHostileMobs {
     private int checkInterval = 60; // Interval in ticks to check for mobs
     private int counter = 0; // Counter for checking
 
-    // Static list of possible effects - initialized once
-    private static final List<StatusEffect> POSSIBLE_EFFECTS = List.of(
-            StatusEffects.SPEED,
-            StatusEffects.STRENGTH,
-            StatusEffects.HASTE,
-            StatusEffects.REGENERATION,
-            StatusEffects.RESISTANCE
-    );
-
-    // Reusable random instance
-    private static final Random RANDOM = new Random();
 
     public PowerUpNearByHostileMobs() {}
 
@@ -67,9 +50,9 @@ public class PowerUpNearByHostileMobs {
 
                 // If the mob is targeting the player, check if it should be powered up
                 if (isAggroedToPlayer(mobEntity, player)) {
-                    if (randomGenerator.nextDouble() < POWER_UP_CHANCE) {
+                    if (random.nextDouble() < POWER_UP_CHANCE) {
                         powerUpMob(mobEntity, world);
-                        spawnParticles(mobEntity);
+                        spawnFlamesParticles(mobEntity);
                     }
                 }
             }
@@ -96,35 +79,10 @@ public class PowerUpNearByHostileMobs {
 
         summonLightning(mob.getBlockPos(), world);
         //Apply effects 3 times
-        applyEffect(mob, 3);
+        applyEffect(mob, 3, mobEffectDuration);
     }
 
-    // Apply the effect to the mob (either increase level or apply new effect)
-    public static void applyEffect(LivingEntity mob, int howManyEffects) {
-        // Use a HashSet to select unique effects
-        Set<StatusEffect> selectedEffects = new HashSet<>();
-
-        while (selectedEffects.size() < howManyEffects) {
-            StatusEffect randomEffect = POSSIBLE_EFFECTS.get(RANDOM.nextInt(POSSIBLE_EFFECTS.size()));
-            selectedEffects.add(randomEffect);
-        }
-
-        for (StatusEffect effect : selectedEffects) {
-            StatusEffectInstance currentEffect = mob.getStatusEffect(effect);
-
-            if (currentEffect != null) {
-                // Increase effect level
-                int newAmplifier = Math.min(currentEffect.getAmplifier() + 1, 24);
-                mob.addStatusEffect(new StatusEffectInstance(effect, currentEffect.getDuration(), newAmplifier));
-            } else {
-                // Apply new effect
-                mob.addStatusEffect(new StatusEffectInstance(effect, mobEffectDuration, 0)); // Duration: 600 ticks (30 seconds)
-            }
-        }
-    }
-
-
-    private void spawnParticles(Entity entity){
+    private void spawnFlamesParticles(Entity entity){
         ServerWorld serverWorld = entity.getServer().getOverworld();
 
         for (int i = 0; i < 10; i++) { // Create 10 flame particles

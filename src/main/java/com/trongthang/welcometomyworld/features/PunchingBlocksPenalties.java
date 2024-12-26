@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
-import com.trongthang.welcometomyworld.saveData.PlayerClass;
+import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.Block;
@@ -63,17 +63,17 @@ public class PunchingBlocksPenalties {
 
                 if (finalDamageIfHasSomethingOnHand > 1.1) {
                     player.damage(player.getWorld().getDamageSources().generic(), finalDamageIfHasSomethingOnHand);
-                }
 
-                PlayerClass p = dataHandler.playerDataMap.get(player.getUuid());
-                if (!p.firstPunchingBlocksDamage) {
-                    Utils.grantAdvancement(player, "first_punching_blocks_damage");
-                    p.firstPunchingBlocksDamage = true;
-                }
+                    PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
+                    if (!p.firstPunchingBlocksDamage) {
+                        Utils.grantAdvancement(player, "first_punching_blocks_damage");
+                        p.firstPunchingBlocksDamage = true;
+                    }
 
-                if (player.getHealth() <= 0 && !p.firstPunchingBlocksDie) {
-                    Utils.grantAdvancement(player, "first_punching_blocks_die");
-                    p.firstPunchingBlocksDie = true;
+                    if (player.getHealth() <= 0 && !p.firstPunchingBlocksDie) {
+                        Utils.grantAdvancement(player, "first_punching_blocks_die");
+                        p.firstPunchingBlocksDie = true;
+                    }
                 }
             }
         }
@@ -143,7 +143,7 @@ public class PunchingBlocksPenalties {
 //                    player.damage(player.getWorld().getDamageSources().generic(), finalDamage);
 //                }
 //
-//                PlayerClass p = dataHandler.playerDataMap.get(player.getUuid());
+//                PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
 //                if (!p.firstPunchingBlocksDamage) {
 //                    Utils.grantAdvancement(player, "first_punching_blocks_damage");
 //                    p.firstPunchingBlocksDamage = true;

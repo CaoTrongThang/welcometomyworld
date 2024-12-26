@@ -105,7 +105,7 @@ public class ZombieAIMixin {
         BlockPos firstNextBlockPos = downPos.add(dx, 0, dz);
 //        BlockPos upBlock = currentPos.add(dx, 1, dz);
 
-        if (path == null && Math.abs(zombieEntity.getX() - lastTargetPlayer.getX()) <= 5 && counter >= cooldown) {
+        if (path == null && Math.abs(zombieEntity.getX() - lastTargetPlayer.getX()) <= 3 && counter >= cooldown) {
             counter = 0;
             boolean anyBlockUpHead = zombieEntity.getWorld().isSkyVisible(currentPos);
 
