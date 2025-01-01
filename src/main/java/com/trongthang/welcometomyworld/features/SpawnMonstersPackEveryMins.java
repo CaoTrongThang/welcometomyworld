@@ -47,11 +47,8 @@ public class SpawnMonstersPackEveryMins {
 
         if(WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay >= stopSpawningDay) return;
 
-        LOGGER.info("Tried to spawn monsters");
-
         ServerWorld world = server.getOverworld();
         if (world == null) {
-            LOGGER.info("World is null, aborting monster spawn.");
             return;
         }
 
@@ -69,23 +66,18 @@ public class SpawnMonstersPackEveryMins {
         for (int i = 0; i < packSize; i++) {
             BlockPos spawnPos = findSafeSpawnPosition(world, player.getBlockPos());
             if (spawnPos == null) {
-                LOGGER.info("Failed to find a safe spawn position for monster pack.");
                 continue;
             }
 
             MonsterSpawn selectedMonster = getRandomMonster();
             if (selectedMonster == null) {
-                LOGGER.info("Failed to select a monster from the list.");
                 continue;
             }
 
             Entity entity = spawnMob(world, spawnPos, selectedMonster.getId());
             if (entity == null) {
-                LOGGER.info("Failed to spawn entity at: " + spawnPos);
                 continue;
             }
-
-            LOGGER.info("[!] Spawned Monster At: " + spawnPos);
 
             if (entity instanceof MobEntity mob) {
                 mob.setTarget(player);
@@ -98,7 +90,6 @@ public class SpawnMonstersPackEveryMins {
     private static MonsterSpawn getRandomMonster() {
         int totalWeight = MONSTERS.stream().mapToInt(MonsterSpawn::getData).sum();
         if (totalWeight <= 0) {
-            LOGGER.info("Total weight of monsters is zero or negative, cannot select a monster.");
             return null;
         }
 
@@ -112,7 +103,6 @@ public class SpawnMonstersPackEveryMins {
             }
         }
 
-        LOGGER.info("Random value exceeded total weight, this should not happen.");
         return null; // Fallback, though this should never happen.
     }
 
