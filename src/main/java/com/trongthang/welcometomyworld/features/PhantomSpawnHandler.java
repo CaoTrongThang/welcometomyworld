@@ -35,7 +35,7 @@ public class PhantomSpawnHandler {
 
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
             if (entity instanceof PhantomEntity && world instanceof ServerWorld) {
-                entity.teleport((int) entity.getX(), (int) entity.getY() + 40, (int) entity.getZ());
+                entity.teleport((int) entity.getX(), (int) entity.getY() + 64, (int) entity.getZ());
                 ((PhantomEntity) entity).setPhantomSize(random.nextInt(2, 50));
             }
         });

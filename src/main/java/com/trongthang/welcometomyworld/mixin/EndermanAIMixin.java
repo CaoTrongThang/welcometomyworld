@@ -76,7 +76,8 @@ public abstract class EndermanAIMixin extends Entity {
         EndermanEntity enderman = (EndermanEntity) (Object) this;
         PlayerEntity targetPlayer;
 
-        if(enderman.getWorld().getRegistryKey().getValue().equals(new Identifier("minecraft:the_end"))) return;
+        World world = enderman.getWorld();
+        if(world.getRegistryKey().getValue().equals(new Identifier("minecraft:the_end"))) return;
 
         // Check if Enderman has a player target
         if (enderman.getTarget() instanceof PlayerEntity) {
@@ -127,6 +128,11 @@ public abstract class EndermanAIMixin extends Entity {
             canUseTeleportSkill = false;
             counter = 0;
             isUsingSkill = true;
+
+            if(!liftingPlayer.getEntityWorld().isSkyVisible(liftingPlayer.getBlockPos())) {
+                liftingPlayer = null;
+                return;
+            }
 
             enderman.setCarriedBlock(Blocks.DIRT.getDefaultState());
 

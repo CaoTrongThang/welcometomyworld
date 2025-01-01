@@ -202,6 +202,8 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         Utils.onServerTick(server);
 
+        SpawnMonstersPackEveryMins.spawnMonsters(server);
+
     }
 
     public void registerEvents() {

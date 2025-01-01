@@ -20,16 +20,17 @@ import net.minecraft.world.Heightmap;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
 import static com.trongthang.welcometomyworld.GlobalConfig.*;
 
 public class BossesSpawningHandler {
     public int checkInterval = 6000;
     public int counter = 0;
 
-    public double bossSpawnChance = 0.4;
+    public double bossSpawnChance = 0.5;
 
     final int SPAWN_MIN_DISTANCE = 32; // Minimum distance from player
-    final int SPAWN_MAX_DISTANCE = 48; // Maximum distance from player
+    final int SPAWN_MAX_DISTANCE = 64; // Maximum distance from player
 
 
     private final ConcurrentHashMap<String, EntityType> ancientMobs = new ConcurrentHashMap<>();
@@ -39,19 +40,20 @@ public class BossesSpawningHandler {
         private ItemStack dropItem;
         private double chance;
 
-        public AncientMobDrops(Item dropItem, double chance){
+        public AncientMobDrops(Item dropItem, double chance) {
             this.dropItem = new ItemStack(dropItem);
             this.chance = chance;
         }
 
-        public ItemStack getDropItem(){
+        public ItemStack getDropItem() {
             return dropItem;
         }
 
-        public double getDropChance(){
+        public double getDropChance() {
             return chance;
         }
     }
+
     private final Random random = new Random();
 
     public BossesSpawningHandler() {
@@ -129,20 +131,15 @@ public class BossesSpawningHandler {
                     mob.refreshPositionAndAngles(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), 0, 0);
                     mob.setCustomName(Text.literal(randomMobName).styled(style -> style.withColor(Formatting.DARK_PURPLE)));  // Set custom name to the randomly selected name
 
-                    mob.setHealth(mob.getMaxHealth() + 40);  // Adjust health if needed
-
-                    mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 50);
-
-                    mob.setHealth(mob.getMaxHealth());
 
                     Utils.applyEffect(mob, 3, 200);
 
                     Text message = Text.literal("☠").styled(style -> style.withColor(Formatting.DARK_PURPLE))
                             .append(Text.literal(" An").styled(style -> style.withColor(Formatting.WHITE))
-                            .append(Text.literal(" Ancient " + randomMobName)
-                                    .styled(style -> style.withColor(Formatting.DARK_PURPLE)))
-                            .append(Text.literal(" just spawned nearby, be careful...")
-                                    .styled(style -> style.withColor(Formatting.WHITE))));
+                                    .append(Text.literal(" Ancient " + randomMobName)
+                                            .styled(style -> style.withColor(Formatting.DARK_PURPLE)))
+                                    .append(Text.literal(" just spawned nearby, be careful...")
+                                            .styled(style -> style.withColor(Formatting.WHITE))));
 
                     player.sendMessage(message);
 
@@ -153,6 +150,14 @@ public class BossesSpawningHandler {
                     world.spawnEntity(mob);
 
                     spawnParticlesUpToTheSky(world, mob);
+
+                    Utils.addRunAfter(() -> {
+                        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 50);
+                        mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 5);
+                        mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 2);
+
+                        mob.setHealth(mob.getMaxHealth());
+                    }, 30);
                 }
             }
         });
@@ -172,10 +177,7 @@ public class BossesSpawningHandler {
             BlockPos randomOffset = playerPos.add(offsetX, 0, offsetZ);
             BlockPos surfacePos = world.getTopPosition(Heightmap.Type.WORLD_SURFACE, randomOffset);
 
-            // Check light level
-            if (world.getLightLevel(surfacePos) < 6) {
-                return surfacePos;
-            }
+            return surfacePos;
         }
         return null;
     }
@@ -218,7 +220,7 @@ public class BossesSpawningHandler {
                     for (AncientMobDrops i : ancientMobDrops) {
                         double r = random.nextDouble();
                         if (r < i.getDropChance()) {
-                            serverWorld.spawnEntity(new ItemEntity(serverWorld, deathPos.getX(), deathPos.getY(), deathPos.getZ(), i.getDropItem()));
+                            serverWorld.spawnEntity(new ItemEntity(serverWorld, deathPos.getX(), deathPos.getY() + 1, deathPos.getZ(), i.getDropItem()));
                         }
                     }
                 }

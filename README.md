@@ -1,7 +1,5 @@
 # ❗DON'T DOWNLOAD, YOU'LL LOSE YOUR ITEMS, I MADE THIS MOD FOR MY EASYCRAFT MODPACK!!!
 
-I uploaded this mod here for me to make it easier to update the mod, could make it configurable but not right now.
-
 **This mod adds a little spice up to my current modpack, it's included with features:**
 1. Falling into liquid (water, lava,...) still gets damaged.
 1. Punching blocks with barehand gets damaged.
@@ -12,24 +10,28 @@ I uploaded this mod here for me to make it easier to update the mod, could make 
 1. There's a small chance a strong mob will be spawned near the players, It'll drop the Materials that can be used to craft Ancient Items.
 1. Lightnings strike players when in the rain.
 1. Hostile Mobs are now immune to sunlight.
-1. Random Spawn
+1. Packs of monsters have a chance to spawn at night and come to the players
+1. Packs of monsters have a chance to spawn EVERY FEW MINUTES at night and come to the players 
+1. Events have a chance to spawn every few minutes
+
 
 **AI:**
-1. Phantoms can grab players up to the sky and immune to sunlight.
+1. Phantoms can grab players up to the sky.
 1. Spiders can shoot cobweb to stop players from moving.
 1. Endermans can toy with you really hard, just don't look.
 1. Zombies now can place blocks (combine with Improved Mob to break blocks)
 
 **Entities:**
 1. Oak log: it's just a block but can move around and use meal bone on saplings
-1. Peony flower: a flower than can move and give players luck buff.
+1. Peony flower: a flower that can move and give players a luck buff.
 
 **Not really impact the gameplay features:**
-1. Day and night counter with a little animation.
+1. Day and night counter with a little animation. (turned off by default)
 1. Switch to third person when dead. (and switch back to the previous perspective after respawning)
 1. Give players starting items when first joining the world.
 1. Dramatic Intro.
 1. Many New Achievements.
+
 
 **New recipes and drops:**
 1. 4 sticks -> oak planks

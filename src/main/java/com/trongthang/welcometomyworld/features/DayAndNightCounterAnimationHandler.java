@@ -1,6 +1,8 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.GlobalConfig;
+import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -93,7 +95,17 @@ public class DayAndNightCounterAnimationHandler {
             dayAnimationComplete = true;
             nightAnimationComplete = false;
 
-            if(currentDay > 0){
+            if (currentDay == SpawnMonstersAtNight.stopSpawningDay) {
+                for (ServerPlayerEntity p : world.getPlayers()) {
+                    Utils.UTILS.sendTextAfter(p, "You did a great job, The dark will be a little bit easier for you.", 20);
+                }
+            } else if (currentDay == EventsOfTheWorld.stopEventsDay) {
+                for (ServerPlayerEntity p : world.getPlayers()) {
+                    Utils.UTILS.sendTextAfter(p, "I'm tired of summoning random stuff on you.", 20);
+                }
+            }
+
+            if (currentDay > 0) {
                 startDayAnimation(world, currentDay);
             }
         }
@@ -101,7 +113,7 @@ public class DayAndNightCounterAnimationHandler {
         if ((currentTimeInDay >= 13000 && currentTimeInDay < 23999) && !isAnimatingNight && (currentTime / TICKS_IN_DAY > currentDay || !nightAnimationComplete)) {
             startNightAnimation(world);
 
-            if(GlobalConfig.canSpawnMonstersAtNight){
+            if (GlobalConfig.canSpawnMonstersAtNight) {
                 SpawnMonstersAtNight.spawnMonsters(world, currentDay);
             }
 
@@ -136,6 +148,7 @@ public class DayAndNightCounterAnimationHandler {
                 player.sendMessage(Text.literal(textToSend).formatted(Formatting.WHITE), true);
             }
             ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
+
         }
 
         if (nighttime) {
@@ -143,6 +156,5 @@ public class DayAndNightCounterAnimationHandler {
         } else {
             delayTick = rand.nextInt(tickRandomMin, tickRandomBound); // Random delay for animation
         }
-
     }
 }

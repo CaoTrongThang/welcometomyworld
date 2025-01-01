@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
@@ -24,11 +25,13 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 
 public class EventsOfTheWorld {
 
-    public static final int EVENT_COOLDOWN_IN_TICKS = 36000;
+    public static final int EVENT_COOLDOWN_IN_TICKS = 24000;
     public static final double HAPPEN_CHANCE = 0.4;
 
     private static final Map<String, Consumer<ServerWorld>> EVENT_MAP = new HashMap<>();
     private static int ticksSinceLastEvent = 0;
+
+    public static final int stopEventsDay = 500;
 
     // Static block for default event registration
     static {
@@ -51,6 +54,10 @@ public class EventsOfTheWorld {
 
         if (ticksSinceLastEvent >= EVENT_COOLDOWN_IN_TICKS) {
             ticksSinceLastEvent = 0;
+
+            if(WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay >= stopEventsDay){
+                return;
+            }
 
             server.getWorlds().forEach(world -> {
                 if (random.nextDouble() < HAPPEN_CHANCE) {
@@ -121,7 +128,7 @@ public class EventsOfTheWorld {
 
         int numberOfPhantoms = 6; // Number of phantoms in the circle
         double radius = 64.0;     // Radius of the circle
-        double heightOffset = 64.0; // Height above the player
+        double heightOffset = 128; // Height above the player
 
         targetPlayer.sendMessage(
                 Text.literal("Something is coming from the sky...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
