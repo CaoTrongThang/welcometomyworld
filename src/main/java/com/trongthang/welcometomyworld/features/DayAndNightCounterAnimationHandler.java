@@ -101,7 +101,7 @@ public class DayAndNightCounterAnimationHandler {
                 }
             } else if (currentDay == EventsOfTheWorld.stopEventsDay) {
                 for (ServerPlayerEntity p : world.getPlayers()) {
-                    Utils.UTILS.sendTextAfter(p, "I'm tired of summoning random stuff on you.", 20);
+                    Utils.UTILS.sendTextAfter(p, "I'm tired of summoning random things on you.", 20);
                 }
             }
 
@@ -139,22 +139,22 @@ public class DayAndNightCounterAnimationHandler {
     }
 
     private void sendAnimationUpdate(ServerWorld world, String textToSend, boolean nighttime) {
-        // Send the current part of the text to all players
-        for (ServerPlayerEntity player : world.getPlayers()) {
-            if (nighttime) {
-                player.sendMessage(Text.literal(textToSend).formatted(Formatting.DARK_RED), true);
-            } else {
-                textToSend = "- " + textToSend + " -";
-                player.sendMessage(Text.literal(textToSend).formatted(Formatting.WHITE), true);
-            }
-            ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
-
-        }
-
-        if (nighttime) {
-            delayTick = rand.nextInt(tickRandomMin * 3, tickRandomBound * 3); // Random delay for animation
-        } else {
-            delayTick = rand.nextInt(tickRandomMin, tickRandomBound); // Random delay for animation
-        }
+//        // Send the current part of the text to all players
+//        for (ServerPlayerEntity player : world.getPlayers()) {
+//            if (nighttime) {
+//                player.sendMessage(Text.literal(textToSend).formatted(Formatting.DARK_RED), true);
+//            } else {
+//                textToSend = "- " + textToSend + " -";
+//                player.sendMessage(Text.literal(textToSend).formatted(Formatting.WHITE), true);
+//            }
+//            ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
+//
+//        }
+//
+//        if (nighttime) {
+//            delayTick = rand.nextInt(tickRandomMin * 3, tickRandomBound * 3); // Random delay for animation
+//        } else {
+//            delayTick = rand.nextInt(tickRandomMin, tickRandomBound); // Random delay for animation
+//        }
     }
 }

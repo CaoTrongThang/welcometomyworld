@@ -2,9 +2,12 @@ package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -15,12 +18,11 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
 public class BedExplosionHandler {
 
-    private static final double BASE_EXPLOSION_CHANCE = 1; // Base chance of explosion
+    private static final double BASE_EXPLOSION_CHANCE = 0.4; // Base chance of explosion
 
     // Variables to modify the explosion chance
     private double havingLuckEffectChanceDecrease = 1.0;
@@ -35,8 +37,8 @@ public class BedExplosionHandler {
 
     public BedExplosionHandler() {}
 
-    private static final double GIVE_LUCK_EFFECT_CHANCE = 0.4;
-    private static final int LUCK_EFFECT_DURATION = 6000;
+    private static final double GIVE_LUCK_EFFECT_CHANCE = 0.5;
+    private static final int LUCK_EFFECT_DURATION = 600;
     private static final Set<ServerWorld> appliedWorlds = new HashSet<>();
 
     public static void checkAndApplyLuckEffect(ServerWorld world) {
@@ -57,8 +59,8 @@ public class BedExplosionHandler {
     private static void applyLuckEffectToAllPlayers(ServerWorld world) {
         for (ServerPlayerEntity player : world.getPlayers()) {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, LUCK_EFFECT_DURATION, 0));
+            ServerPlayNetworking.send(player, PLAY_EXPERIENCE_ORB_PICK_UP, PacketByteBufs.empty());
         }
-        System.out.println("Applied Luck effect to all players at 8 PM in world: " + world.getRegistryKey().getValue());
     }
 
     public void checkAndExplodeIfSleeping(ServerPlayerEntity player) {
@@ -78,7 +80,18 @@ public class BedExplosionHandler {
 
                 // Check if explosion happens based on the effective chance
                 if (random.nextDouble() < effectiveExplosionChance) {
-                    triggerExplosion(player);
+                    ServerWorld world = player.getServerWorld();
+                    BlockPos pos = player.getSleepingPosition().orElse(null);
+
+                    Utils.summonLightning(pos, world);
+
+                    Utils.spawnParticles(world, pos, ParticleTypes.SMOKE);
+
+                    Utils.addRunAfter(() -> {
+                                triggerExplosion(pos, player);
+                            }
+                    , 60);
+
                 }
             }
     }
@@ -152,19 +165,19 @@ public class BedExplosionHandler {
     }
 
     // Trigger the explosion if the conditions are met
-    private void triggerExplosion(ServerPlayerEntity player) {
+    private void triggerExplosion(BlockPos pos, ServerPlayerEntity player) {
         // Get the player's bed position
-        BlockPos bedPos = player.getSleepingPosition().orElse(null);
-        if (bedPos != null) {
-
+        if (pos != null) {
             World world = player.getWorld();
-            world.createExplosion(null, bedPos.getX(), bedPos.getY(), bedPos.getZ(), 4.0F, World.ExplosionSourceType.TNT);
+            world.createExplosion(null, pos.getX(), pos.getY(), pos.getZ(), 4.0F, World.ExplosionSourceType.TNT);
 
             PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
             if(!p.firstBedExplosion){
                 Utils.grantAdvancement(player, "first_bed_explosion");
                 p.firstBedExplosion = true;
-                Utils.UTILS.sendTextAfter(player,"Seems like the God of Bed doesn't like to let people sleep on beds, might need to follow some rules. Well, better luck next time.");
+                Utils.addRunAfter(() -> {
+                    Utils.UTILS.sendTextAfter(player,"Seems like the God of Beds doesn't like to let people sleep on beds. Better luck next time.");
+                }, 60);
             }
         }
     }

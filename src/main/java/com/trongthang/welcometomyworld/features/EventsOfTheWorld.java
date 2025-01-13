@@ -31,7 +31,7 @@ public class EventsOfTheWorld {
     private static final Map<String, Consumer<ServerWorld>> EVENT_MAP = new HashMap<>();
     private static int ticksSinceLastEvent = 0;
 
-    public static final int stopEventsDay = 500;
+    public static final int stopEventsDay = 300;
 
     // Static block for default event registration
     static {
@@ -302,7 +302,7 @@ public class EventsOfTheWorld {
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
 
-        UTILS.sendTextAfter(targetPlayer, "I think they like you.", 120);
+        UTILS.sendTextAfter(targetPlayer, "It seems like the golden butterflies are welcome you.", 120);
 
         int numberOfGoldenMoths = 30; // Number of mob
         double radius = 15.0;    // Radius of the circle

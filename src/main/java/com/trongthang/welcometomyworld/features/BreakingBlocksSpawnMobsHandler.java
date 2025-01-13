@@ -60,50 +60,50 @@ public class BreakingBlocksSpawnMobsHandler {
                     new MobWithSpawnChance("minecraft:zombie", 0.04)
             ), true, 5),
             new BlockToMobConfig(List.of("minecraft:sand"), List.of(
-                    new MobWithSpawnChance("iceandfire:deathworm", 0.05),
-                    new MobWithSpawnChance("minecraft:skeleton", 0.03)
+                    new MobWithSpawnChance("iceandfire:deathworm", 0.01),
+                    new MobWithSpawnChance("minecraft:skeleton", 0.01)
             ), true, 6),
             new BlockToMobConfig(List.of("minecraft:cobblestone", "minecraft:stone"), List.of(
-                    new MobWithSpawnChance("minecraft:skeleton", 0.03),
-                    new MobWithSpawnChance("creeperoverhaul:hills_creeper", 0.04)
-            ), false, 10),
+                    new MobWithSpawnChance("minecraft:skeleton", 0.01),
+                    new MobWithSpawnChance("creeperoverhaul:hills_creeper", 0.01)
+            ), false, 20),
             new BlockToMobConfig(List.of("minecraft:gravel"), List.of(
-                    new MobWithSpawnChance("wildlife:anglerfish", 0.03),
-                    new MobWithSpawnChance("wildlife:bettafish", 0.03),
-                    new MobWithSpawnChance("wildlife:bluegill", 0.03),
-                    new MobWithSpawnChance("wildlife:catfish", 0.03),
-                    new MobWithSpawnChance("wildlife:goldfish", 0.03),
-                    new MobWithSpawnChance("wildlife:koi", 0.03),
-                    new MobWithSpawnChance("wildlife:rainbow_trout", 0.03),
-                    new MobWithSpawnChance("minecraft:cod", 0.03),
-                    new MobWithSpawnChance("minecraft:salmon", 0.03),
-                    new MobWithSpawnChance("iceandfire:sea_serpent", 0.8),
-                    new MobWithSpawnChance("iceandfire:siren", 0.03)
-            ), true, 5),
+                    new MobWithSpawnChance("wildlife:anglerfish", 0.02),
+                    new MobWithSpawnChance("wildlife:bettafish", 0.02),
+                    new MobWithSpawnChance("wildlife:bluegill", 0.02),
+                    new MobWithSpawnChance("wildlife:catfish", 0.02),
+                    new MobWithSpawnChance("wildlife:goldfish", 0.02),
+                    new MobWithSpawnChance("wildlife:koi", 0.02),
+                    new MobWithSpawnChance("wildlife:rainbow_trout", 0.02),
+                    new MobWithSpawnChance("minecraft:cod", 0.02),
+                    new MobWithSpawnChance("minecraft:salmon", 0.02),
+                    new MobWithSpawnChance("iceandfire:sea_serpent", 0.02),
+                    new MobWithSpawnChance("iceandfire:siren", 0.02)
+            ), true, 6),
             new BlockToMobConfig(List.of("minecraft:obsidian"), List.of(
                     new MobWithSpawnChance("netherexp:wisp", 0.1)
             ), true, 0),
             new BlockToMobConfig(List.of("minecraft:oak_leaves", "minecraft:birch_leaves", "minecraft:jungle_leaves", "minecraft:acacia_leaves", "minecraft:dark_oak_leaves", "minecraft:mangrove_leaves", "minecraft:azalea_leaves", "minecraft:flowering_azalea_leaves", "minecraft:spruce_leaves"), List.of(
-                    new MobWithSpawnChance("wildlife:cottonbird", 0.03),
-                    new MobWithSpawnChance("wildlife:bluebird", 0.03),
-                    new MobWithSpawnChance("wildlife:lark", 0.03),
-                    new MobWithSpawnChance("wildlife:milk_snake", 0.03),
-                    new MobWithSpawnChance("wildlife:monkey", 0.03),
-                    new MobWithSpawnChance("wildlife:meadowlark", 0.03),
-                    new MobWithSpawnChance("wildlife:king_snake", 0.03),
-                    new MobWithSpawnChance("minecraft:creeper", 0.08),
-                    new MobWithSpawnChance("minecraft:chicken", 0.03),
+                    new MobWithSpawnChance("wildlife:cottonbird", 0.01),
+                    new MobWithSpawnChance("wildlife:bluebird", 0.01),
+                    new MobWithSpawnChance("wildlife:lark", 0.01),
+                    new MobWithSpawnChance("wildlife:milk_snake", 0.01),
+                    new MobWithSpawnChance("wildlife:monkey", 0.01),
+                    new MobWithSpawnChance("wildlife:meadowlark", 0.01),
+                    new MobWithSpawnChance("wildlife:king_snake", 0.01),
+                    new MobWithSpawnChance("minecraft:creeper", 0.01),
+                    new MobWithSpawnChance("minecraft:chicken", 0.01),
                     new MobWithSpawnChance("netherexp:wisp", 0.01)
-            ), true, 5),
+            ), true, 10),
 
             new BlockToMobConfig(List.of("minecraft:oak_log", "minecraft:birch_log", "minecraft:jungle_log"), List.of(
-                    new MobWithSpawnChance("knightquest:ratman", 0.04),
+                    new MobWithSpawnChance("knightquest:ratman", 0.02),
                     new MobWithSpawnChance("netherexp:stampede", 0.01)
-            ), true, 3),
+            ), true, 8),
 
             new BlockToMobConfig(List.of("minecraft:redstone_ore", "minecraft:deepslate_redstone_ore"), List.of(
-                    new MobWithSpawnChance("minecraft:skeleton", 0.03)
-            ), true, 5),
+                    new MobWithSpawnChance("minecraft:skeleton", 0.02)
+            ), true, 8),
             new BlockToMobConfig(List.of("minecraft:bamboo"), List.of(
                     new MobWithSpawnChance("creeperoverhaul:bamboo_creeper", 0.1)
             ), true, 5)

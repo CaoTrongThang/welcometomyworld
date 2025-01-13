@@ -23,6 +23,8 @@ public class DeathCounter {
 
                 // First death - Give apple and message
                 if(p.deaths == 1){
+                    if(!p.introMessageAfterDeath) return;
+
                     if(player.getWorld().getLevelProperties().isHardcore()){
                         Utils.UTILS.sendTextAfter(player, "Congrats! Your first death and also your last...");
                     } else {

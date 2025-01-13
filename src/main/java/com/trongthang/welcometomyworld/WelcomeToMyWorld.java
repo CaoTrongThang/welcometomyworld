@@ -13,9 +13,11 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.GameRules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +85,18 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         ServerLifecycleEvents.SERVER_STARTED.register((t) -> {
             preloadHorizontalChunksAtSpawn(t.getOverworld());
+            // Get the main world
+            ServerWorld world = t.getOverworld();
+
+            // Check if it's the first time the world is being created
+            // For simplicity, this example assumes it always sets the gamerule
+            // (You can implement a check to avoid resetting it repeatedly)
+
+            if (world != null) {
+                // Set the keepInventory gamerule to true
+                world.getGameRules().get(GameRules.KEEP_INVENTORY).set(false, t);
+            }
+
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register((t) -> {
@@ -144,6 +158,7 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     private void onEndServerTick(MinecraftServer server) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+
             if (canBedsExplode) {
                 bedExplosionHandler.checkAndExplodeIfSleeping(player);
             }
@@ -182,7 +197,7 @@ public class WelcomeToMyWorld implements ModInitializer {
             ((BuffTalisman) ItemsManager.RESISTANCE_TALISMAN).onServerTick(player, ItemsManager.RESISTANCE_TALISMAN);
         }
 
-        if(canEventsOfTheWorld){
+        if (canEventsOfTheWorld) {
             EventsOfTheWorld.onServerTick(server);
         }
 

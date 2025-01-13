@@ -29,8 +29,8 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class IntroOfTheWorldHandler {
 
     Random rand = new Random();
-    double playersDeathChanceInTheIntro = 40;
-    byte phantomSpawnAmount = 7;
+    double playersDeathChanceInTheIntro = 0.3;
+    byte phantomSpawnAmount = 10;
     public boolean alreadySpawnedPhantom = false;
 
     private int slownessTimeInTickAfterLand = 240;
@@ -69,7 +69,7 @@ public class IntroOfTheWorldHandler {
         }
 
         if (playerData.playerFirstIntroDeathChance == 0) {
-            playerData.playerFirstIntroDeathChance = rand.nextDouble(0, 100);
+            playerData.playerFirstIntroDeathChance = rand.nextDouble();
         }
 
         if (compatityChecker.originMod) {
@@ -94,6 +94,8 @@ public class IntroOfTheWorldHandler {
                     }, x);
                 }
                 playerData.completeSpawningParticles = true;
+
+                Utils.UTILS.sendTextAfter(player, "Finally!", 20);
 
                 for (int x = 0; x < rand.nextInt(10, 20); x++) {
                     Utils.addRunAfter(() -> {
@@ -135,6 +137,8 @@ public class IntroOfTheWorldHandler {
             }
 
             playerData.completeSpawningParticles = true;
+
+            Utils.UTILS.sendTextAfter(player, "Finally!");
         }
 
         if (playerData.playerFirstIntroDeathChance >= playersDeathChanceInTheIntro) {
@@ -142,14 +146,16 @@ public class IntroOfTheWorldHandler {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 240, 255));
             }
 
-            if (!world.isAir(player.getBlockPos().down())) {
+            if (Utils.isPlayerStandingOnBlock(player)) {
                 // Create an explosion at the player's landing position
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
-                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6.5F, World.ExplosionSourceType.TNT);
+                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F, World.ExplosionSourceType.TNT);
 
-                player.setVelocity(player.getVelocity().x, 1.0, player.getVelocity().z); // Small upward bounce
+                player.setVelocity(player.getVelocity().x, 1.2, player.getVelocity().z); // Small upward bounce
                 player.velocityModified = true; // Ensure the velocity is synced to the client
-
+                Utils.addRunAfter(() -> {
+                    player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4));
+                }, 20);
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
 
                 spawnLandEffect(player);
@@ -164,11 +170,11 @@ public class IntroOfTheWorldHandler {
             }
         } else {
             if (player.isOnGround() || player.isTouchingWater()) {
-
                 if (player.getHealth() <= 0 && !playerData.introDeathByGod) {
-                    Utils.UTILS.sendTextAfter(player, "That was... bad.", 5);
+                    Utils.UTILS.sendTextAfter(player, "That was... bad.", 20);
                     playerData.firstTouchGround = true;
                     playerData.firstTeleportedToSky = true;
+                    Utils.grantAdvancement(player, "a_rough_start");
                 }
             }
         }
@@ -252,7 +258,7 @@ public class IntroOfTheWorldHandler {
 
             Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 24 * 20);
             Utils.UTILS.sendTextAfter(player, "Well, I think that's it for now.", 29 * 20);
-            Utils.UTILS.sendTextAfter(player, "I'll just... uh... head up there learn some cooking. Have fun!", 33 * 20);
+            Utils.UTILS.sendTextAfter(player, "Enjoy Your New World!", 33 * 20);
 
             Utils.addRunAfter(() -> {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");

@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -23,6 +24,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Heightmap;
@@ -54,13 +56,13 @@ public class Utils {
     }
 
     public void sendTextAfter(ServerPlayerEntity player, String text) {
-        Text message = Text.literal("<").styled(style -> style.withColor(Formatting.WHITE))
-                .append(Text.literal("Unknown").styled(style -> style.withColor(Formatting.YELLOW)))
-                .append(Text.literal("> " + text).styled(style -> style.withColor(Formatting.WHITE)));
+        Text message = Text.literal("").styled(style -> style.withColor(Formatting.WHITE))
+                .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)).styled(style -> style.withBold(true)))
+                .append(Text.literal(" " + text).styled(style -> style.withColor(Formatting.WHITE)));
 
         player.sendMessage(message);
 
-        ServerPlayNetworking.send(player, PLAY_EXPERIENCE_ORB_PICK_UP, PacketByteBufs.empty());
+        ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
     }
 
     public void sendTextAfter(ServerPlayerEntity player, String text, int ticks
@@ -69,12 +71,12 @@ public class Utils {
             ServerPlayerEntity currentPlayer = player.getServer().getPlayerManager().getPlayer(player.getUuid());
             if (currentPlayer == null) return;
 
-            Text message = Text.literal("<").styled(style -> style.withColor(Formatting.WHITE))
-                    .append(Text.literal("Unknown").styled(style -> style.withColor(Formatting.YELLOW)))
-                    .append(Text.literal("> " + text).styled(style -> style.withColor(Formatting.WHITE)));
+            Text message = Text.literal("").styled(style -> style.withColor(Formatting.WHITE))
+                    .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)).styled(style -> style.withBold(true)))
+                    .append(Text.literal(" " + text).styled(style -> style.withColor(Formatting.WHITE)));
 
             currentPlayer.sendMessage(message);
-            ServerPlayNetworking.send(currentPlayer, PLAY_EXPERIENCE_ORB_PICK_UP, PacketByteBufs.empty());
+            ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
         }, ticks);
     }
 
@@ -305,5 +307,36 @@ public class Utils {
                 mob.addStatusEffect(new StatusEffectInstance(effect, durationInTicks, 0)); // Duration: 600 ticks (30 seconds)
             }
         }
+    }
+
+    public static boolean isPlayerStandingOnBlock(LivingEntity entity) {
+        // Get the world and the player's bounding box
+        World world = entity.getWorld();
+        Box playerBox = entity.getBoundingBox();
+
+        // Define the area to check below the player's feet (slightly below the bounding box)
+        double checkHeight = 0.1; // Small offset below the player's feet
+        Box checkBox = playerBox.offset(0, -checkHeight, 0);
+
+        // Convert bounding box coordinates to integer BlockPos range
+        int minX = (int) Math.floor(checkBox.minX);
+        int minY = (int) Math.floor(checkBox.minY);
+        int minZ = (int) Math.floor(checkBox.minZ);
+        int maxX = (int) Math.floor(checkBox.maxX);
+        int maxY = (int) Math.floor(checkBox.maxY);
+        int maxZ = (int) Math.floor(checkBox.maxZ);
+
+        // Iterate through all blocks in the range
+        for (BlockPos pos : BlockPos.iterate(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ))) {
+            BlockState blockState = world.getBlockState(pos);
+
+            // Check if the block is not air
+            if (!blockState.isAir()) {
+                return true;
+            }
+        }
+
+        // No blocks below the player are solid
+        return false;
     }
 }

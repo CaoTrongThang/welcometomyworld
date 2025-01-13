@@ -5,6 +5,7 @@ import com.trongthang.welcometomyworld.entities.CustomEntitiesManager;
 import com.trongthang.welcometomyworld.entities.ALivingLogRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -23,13 +24,26 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 
+import java.util.List;
+
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
 public class WelcomeToMyWorldClient implements ClientModInitializer {
     private Perspective previousPerspective = Perspective.FIRST_PERSON;
     private boolean wasPlayerDead = false;
     private boolean stopSendingOriginsScreen = false;
-    private boolean isIntro = false;
+
+    private boolean removeMessagesFirstJoin = true;
+
+
+    private int messageCounter = 0;
+    List<String> removeMessages = List.of("Installed datapacks:",
+            "You can return to this menu with /function nucleus:menu",
+            "Nucleus v0.2.0 installed successfully",
+            "Sanguine v0.4.0 (Commands | Wiki)",
+            "has made the advancement [Ice and Fire]",
+            "Manic v1.1.0 (Commands | Wiki)");
+
 
     @Override
     public void onInitializeClient() {
@@ -38,15 +52,17 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.JOIN.register((handler, client, c) -> {
             preRenderChunks(c);
+            removeMessagesFirstJoin = true;
+            messageCounter = 0;
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             stopSendingOriginsScreen = false;
         });
 
-        if(compatityChecker.OriginCheck()){
+        if (compatityChecker.OriginCheck()) {
             ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-                if(stopSendingOriginsScreen) return;
+                if (stopSendingOriginsScreen) return;
                 if (screen != null) {
                     String screenTitle = screen.getTitle() != null ? screen.getTitle().getString() : "No Title";
                     // Check for the Origins screen
@@ -118,6 +134,23 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
                 client.player.playSound(SoundEvents.BLOCK_LEVER_CLICK, SoundCategory.PLAYERS, 0.6f, 1f);
             });
         });
+
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        ClientReceiveMessageEvents.ALLOW_GAME.register((a, b) -> {
+            if(!removeMessagesFirstJoin) return true;
+
+            for(String m : removeMessages){
+                if(a.getString().toLowerCase().contains(m.toLowerCase())){
+                        messageCounter++;
+                        if(messageCounter >= removeMessages.size() - 1){
+                            removeMessagesFirstJoin = false;
+                        }
+                    return false;
+                }
+            }
+            return true;
+        });
     }
 
     private void onTicks(MinecraftClient client) {
@@ -127,7 +160,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         }
     }
 
-    private void switchPerspectiveOnDeath(MinecraftClient client){
+    private void switchPerspectiveOnDeath(MinecraftClient client) {
         boolean isDead = client.player.isDead();
         if (isDead && !wasPlayerDead) {
             // Player has just died, save current perspective only if not already in third-person
@@ -151,7 +184,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         }
     }
 
-    private void fallDamageClient(MinecraftClient client){
+    private void fallDamageClient(MinecraftClient client) {
 
         ClientPlayerEntity player = client.player;
 
@@ -189,7 +222,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     }
 
     private float calculateFallDamage(Vec3d veloc) {
-        return (float) (((Math.abs(veloc.getY() - 3))) * 3F);
+        return (float) (((Math.abs(veloc.getY() - 5))) * 3F);
     }
 
     private void sendPacketToServer(int state) {

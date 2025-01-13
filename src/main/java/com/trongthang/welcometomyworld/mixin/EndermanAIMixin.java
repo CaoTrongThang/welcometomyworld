@@ -129,7 +129,7 @@ public abstract class EndermanAIMixin extends Entity {
             counter = 0;
             isUsingSkill = true;
 
-            if(!liftingPlayer.getEntityWorld().isSkyVisible(liftingPlayer.getBlockPos())) {
+            if(!targetPlayer.getEntityWorld().isSkyVisible(targetPlayer.getBlockPos())) {
                 liftingPlayer = null;
                 return;
             }
@@ -215,6 +215,7 @@ public abstract class EndermanAIMixin extends Entity {
         isUsingSkill = false;
 
         enderman.setTarget(null);
+        enderman.setAngryAt(null);
 
         if (liftingPlayer == null) return;if(enderman.getHealth() <= 0) return;
 
@@ -341,7 +342,9 @@ public abstract class EndermanAIMixin extends Entity {
         playSoundAndSpawnParticles(enderman.getBlockPos(), ParticleTypes.PORTAL, SoundEvents.ENTITY_ENDERMAN_TELEPORT);
         destinationPos = null;
         enderman.teleport(lastPos.getX(), lastPos.getY(), lastPos.getZ()); // Teleport the Enderman back to its last position
+
         enderman.setTarget(null);
+        enderman.setAngryAt(null);
     }
 
     private void teleportPlayerInFrontOfEnderman() {

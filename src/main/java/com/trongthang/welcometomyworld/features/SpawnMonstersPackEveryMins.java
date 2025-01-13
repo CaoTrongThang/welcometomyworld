@@ -23,14 +23,14 @@ public class SpawnMonstersPackEveryMins {
     private static final int COOLDOWN = 6000;
     private static int counter = 0;
 
-    private static final int MONSTER_DESPAWN_AFTER_TICK = 400;
+    private static final int MONSTER_DESPAWN_AFTER_TICK = 6000;
     private static final int PACK_MIN_SIZE = 7;
     private static final int PACK_MAX_SIZE = 15;
 
     private static final int MIN_SPAWN_DISTANCE = 24; // Minimum distance from the player
     private static final int MAX_SPAWN_DISTANCE = 64; // Maximum distance from the player
 
-    public static final int stopSpawningDay = 500;
+    public static final int stopSpawningDay = 369;
 
     private static final List<MonsterSpawn> MONSTERS = List.of(
             new MonsterSpawn("minecraft:zombie", 50),

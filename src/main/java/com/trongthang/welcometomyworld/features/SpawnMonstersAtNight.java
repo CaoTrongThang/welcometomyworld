@@ -25,9 +25,9 @@ public class SpawnMonstersAtNight {
 
     private static int eachPlayerIncreaseMonster = 10;
 
-    private static int monsterDespawnAfterTick = 400;
+    private static int monsterDespawnAfterTick = 6000;
 
-    public static final int stopSpawningDay = 333;
+    public static final int stopSpawningDay = 269;
 
     private static List<MonsterSpawn> monsters = List.of(
             new MonsterSpawn("minecraft:zombie", 0),
