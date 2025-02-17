@@ -19,6 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Arm;
 import net.minecraft.util.math.BlockPos;
@@ -27,6 +28,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -43,7 +45,7 @@ public class ALivingFlower extends PathAwareEntity {
 
     private BlockPos targetPos;
 
-    protected ALivingFlower(EntityType<? extends ALivingFlower> entityType, World world) {
+    public ALivingFlower(EntityType<? extends ALivingFlower> entityType, World world) {
         super(entityType, world);
         this.setCustomNameVisible(true);
         this.goalSelector.add(0, new WanderAroundGoal(this, 0.5D)); // Wander goal
@@ -203,18 +205,14 @@ public class ALivingFlower extends PathAwareEntity {
         super.damage(source, amount);
         ServerWorld world = getServerWorld();
         if (world == null) return false;
-        Utils.playSound(world, this.getBlockPos(), SoundEvents.BLOCK_FLOWERING_AZALEA_STEP);
         this.goalSelector.add(1, new FleeEntityGoal<>(this, LivingEntity.class, 10.0F, 1.0D, 1.5D));
         return false;
     }
 
     @Override
-    protected void playHurtSound(DamageSource source) {
-
-        ServerWorld world = getServerWorld();
-        if (world == null) return;
-
-        Utils.playSound(world, this.getBlockPos(), SoundEvents.BLOCK_FLOWERING_AZALEA_STEP);
+    @Nullable
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return SoundEvents.BLOCK_FLOWERING_AZALEA_STEP;
     }
 
     private ServerWorld getServerWorld() {

@@ -1,0 +1,5 @@
+{
+  "parent": "bettercombat:claymore",
+  "two_handed": true,
+  "attack_range": 3.1
+}

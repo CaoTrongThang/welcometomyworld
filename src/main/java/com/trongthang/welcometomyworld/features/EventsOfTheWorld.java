@@ -13,6 +13,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +32,7 @@ public class EventsOfTheWorld {
     private static final Map<String, Consumer<ServerWorld>> EVENT_MAP = new HashMap<>();
     private static int ticksSinceLastEvent = 0;
 
-    public static final int stopEventsDay = 300;
+    public static final int stopEventsDay = 100;
 
     // Static block for default event registration
     static {
@@ -78,7 +79,6 @@ public class EventsOfTheWorld {
 
         if (eventLogic != null) {
             eventLogic.accept(world);
-            LOGGER.info("Triggered event: " + randomEventName);
         }
     }
 
@@ -96,22 +96,24 @@ public class EventsOfTheWorld {
                 Text.literal("They're around you...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
         );
 
+        World w = targetPlayer.getWorld();
+        if(!(w.getRegistryKey() == World.OVERWORLD)) return;
 
         int numberOfMobs = 20; // Number of zombies in the circle
-        double radius = 48.0;    // Radius of the circle
+        double radius = 36.0;    // Radius of the circle
 
         for (int i = 0; i < numberOfMobs; i++) {
             double angle = 2 * Math.PI * i / numberOfMobs; // Evenly distribute zombies around the circle
             double x = targetPlayer.getX() + radius * Math.cos(angle);
             double z = targetPlayer.getZ() + radius * Math.sin(angle);
 
-            BlockPos spawnPos = new BlockPos((int) x, (int) targetPlayer.getY(), (int) z);
+            BlockPos spawnPos = Utils.findSafeSpawnPositionAroundTheCenterPos(world, new Vec3d(x, targetPlayer.getY(), z), 5) ;
             Entity zombie = spawnMob(world, spawnPos, "minecraft:zombie"); // Custom spawnMob utility
 
             if (zombie != null && zombie instanceof MobEntity mob) {
                 mob.setTarget(targetPlayer); // Make the zombie target the player
 
-                addRunAfter(mob::discard, 3000);
+                addRunAfter(() -> Utils.discardEntity(world, mob), 3000);
             }
         }
     }
@@ -127,8 +129,8 @@ public class EventsOfTheWorld {
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
 
         int numberOfPhantoms = 6; // Number of phantoms in the circle
-        double radius = 64.0;     // Radius of the circle
-        double heightOffset = 128; // Height above the player
+        double radius = 48.0;     // Radius of the circle
+        double heightOffset = 0; // Height above the player
 
         targetPlayer.sendMessage(
                 Text.literal("Something is coming from the sky...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
@@ -148,7 +150,7 @@ public class EventsOfTheWorld {
             if (phantom != null && phantom instanceof MobEntity mob) {
                 mob.setTarget(targetPlayer); // Make the phantom target the player
 
-                addRunAfter(mob::discard, 4000);
+                addRunAfter(() -> Utils.discardEntity(world, mob), 4000);
             }
         }
     }
@@ -163,8 +165,8 @@ public class EventsOfTheWorld {
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
 
-        int numberOfItems = 20; // Total number of food items
-        double spawnRadius = 10.0; // Radius within which food will "rain"
+        int numberOfItems = 30; // Total number of food items
+        double spawnRadius = 48.0; // Radius within which food will "rain"
         double heightOffset = 64.0; // Height from which the food falls
 
         // List of food items to rain
@@ -241,7 +243,7 @@ public class EventsOfTheWorld {
                     mob.setTarget(targetPlayer); // Optional: Animals target the player
 
                     //Mob will despawn after 2000 ticks
-                    addRunAfter(mob::discard, 2000);
+                    addRunAfter(() -> Utils.discardEntity(world, mob), 2000);
                 }
             }
         }
@@ -286,7 +288,7 @@ public class EventsOfTheWorld {
             if (illager != null && illager instanceof MobEntity mob) {
                 mob.setTarget(targetPlayer); // Make illagers target the player
 
-                addRunAfter(mob::discard, 2000);
+                addRunAfter(() -> Utils.discardEntity(world, mob), 2000);
             }
         }
 
@@ -325,10 +327,9 @@ public class EventsOfTheWorld {
 
                 if (goldenMoth != null && goldenMoth instanceof MobEntity mob) {
                     mob.setTarget(targetPlayer); // Make the mob target the player
-                    addRunAfter(mob::discard, 3000);
+                    addRunAfter(() -> Utils.discardEntity(world, mob), 3000);
                 }
             }, counter);
-
         }
 
         LOGGER.info("Field Of Golden Moths triggered for player: " + targetPlayer.getName().getString());

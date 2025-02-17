@@ -31,7 +31,7 @@ public class NauseaInWaterHandler {
         for(ServerPlayerEntity player : server.getPlayerManager().getPlayerList()){
             if(player.isCreative() || player.isSpectator()) return;
             if(player.getInventory().armor.get(3).isEmpty()){
-                if(player.isInsideWaterOrBubbleColumn()){
+                if(player.isInsideWaterOrBubbleColumn() && player.isSubmergedInWater()){
                     StatusEffectInstance currentEffect = player.getStatusEffect(StatusEffects.NAUSEA);
 
                     if (currentEffect != null) {

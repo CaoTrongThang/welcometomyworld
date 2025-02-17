@@ -1,5 +1,7 @@
+
 package com.trongthang.welcometomyworld;
 
+import com.trongthang.welcometomyworld.managers.ItemsManager;
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.minecraft.loot.LootPool;
 import net.minecraft.loot.condition.RandomChanceLootCondition;

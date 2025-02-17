@@ -12,33 +12,40 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.PLAYER_BREAKING_BLOCK;
 import static com.trongthang.welcometomyworld.GlobalConfig.*;
 
 @Mixin(MinecraftClient.class)
 public class PunchingBlockPentaltiesMixin {
-    // Inject right before the method handles block-breaking
+
+    private static final long COOLDOWN_MS = 250; // 1-second cooldown
+    private long lastBlockBreakTime = 0; // Track the last time the block-breaking penalty was applied
+
     @Inject(method = "handleBlockBreaking", at = @At("HEAD"))
     private void handleBlockBreaking(boolean breaking, CallbackInfo ci) {
-        if (canPunchingBlockPenalties && breaking) {
-            MinecraftClient client = MinecraftClient.getInstance();
+        if (!canPunchingBlockPenalties || !breaking) return;
 
-            if(client.player == null) return;
-            if(client.player.isSpectator() || client.player.isCreative()) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null || client.player.isSpectator() || client.player.isCreative()) return;
 
-            if (client.crosshairTarget instanceof BlockHitResult hitResult) {
-                BlockPos blockPos = hitResult.getBlockPos();
-                ClientPlayerEntity player = client.player;
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastBlockBreakTime < COOLDOWN_MS) {
+            return; // Still on cooldown
+        }
 
-                if (player != null) {
-                    PacketByteBuf buf = PacketByteBufs.create();
-                    buf.writeInt(blockPos.getX());
-                    buf.writeInt(blockPos.getY());
-                    buf.writeInt(blockPos.getZ());
-                    buf.writeUuid(player.getUuid());
-                    ClientPlayNetworking.send(PLAYER_BREAKING_BLOCK, buf);
-                }
-            }
+        lastBlockBreakTime = currentTime; // Update the cooldown timer
+
+        if (client.crosshairTarget instanceof BlockHitResult hitResult) {
+            BlockPos blockPos = hitResult.getBlockPos();
+
+            // Send the packet to the server
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeInt(blockPos.getX());
+            buf.writeInt(blockPos.getY());
+            buf.writeInt(blockPos.getZ());
+            buf.writeUuid(client.player.getUuid());
+            ClientPlayNetworking.send(PLAYER_BREAKING_BLOCK, buf);
         }
     }
 }

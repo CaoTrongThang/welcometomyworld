@@ -1,0 +1,17 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "welcometomyworld:the_ender_chest",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/the_ender_chest"
+      },
+      "geometry": {
+        "default": "geometry.the_ender_chest"
+      }
+    }
+  }
+}

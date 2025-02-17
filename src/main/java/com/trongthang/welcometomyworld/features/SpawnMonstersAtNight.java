@@ -1,11 +1,13 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.MonsterSpawn;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import java.util.List;
 
@@ -25,7 +27,7 @@ public class SpawnMonstersAtNight {
 
     private static int eachPlayerIncreaseMonster = 10;
 
-    private static int monsterDespawnAfterTick = 6000;
+    private static int monsterDespawnAfterTick = 3000;
 
     public static final int stopSpawningDay = 269;
 
@@ -49,6 +51,8 @@ public class SpawnMonstersAtNight {
         int monsterWillSpawnForEachPlayer = totalMonstersWillSpawn / players.size();
 
         for (ServerPlayerEntity player : players) {
+            World w = player.getWorld();
+            if(!(w.getRegistryKey() == World.OVERWORLD)) continue;
             for (int y = 0; y <= monsterWillSpawnForEachPlayer; y++) {
 
                 while (true){
@@ -56,17 +60,19 @@ public class SpawnMonstersAtNight {
                     if(mon.data <= currentDay){
                         BlockPos safePos = findSafeSpawnPositionAroundTheCenterPos(world, player.getPos(), SPAWN_DISTANCE);
 
-                        Entity entity = null;
+                        Entity entity;
 
                         if(safePos != null){
                             entity = spawnMob(world, safePos, mon.id);
+                        } else {
+                            entity = null;
                         }
 
                         if(entity == null) return;
 
                         ((MobEntity) entity).setTarget(player);
 
-                        addRunAfter(entity::discard, monsterDespawnAfterTick);
+                        addRunAfter(() -> Utils.discardEntity(world, entity), monsterDespawnAfterTick);
 
                         break;
                     }

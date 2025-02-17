@@ -68,32 +68,25 @@ public class BreakingBlocksSpawnMobsHandler {
                     new MobWithSpawnChance("creeperoverhaul:hills_creeper", 0.01)
             ), false, 20),
             new BlockToMobConfig(List.of("minecraft:gravel"), List.of(
-                    new MobWithSpawnChance("wildlife:anglerfish", 0.02),
-                    new MobWithSpawnChance("wildlife:bettafish", 0.02),
-                    new MobWithSpawnChance("wildlife:bluegill", 0.02),
-                    new MobWithSpawnChance("wildlife:catfish", 0.02),
-                    new MobWithSpawnChance("wildlife:goldfish", 0.02),
-                    new MobWithSpawnChance("wildlife:koi", 0.02),
-                    new MobWithSpawnChance("wildlife:rainbow_trout", 0.02),
-                    new MobWithSpawnChance("minecraft:cod", 0.02),
-                    new MobWithSpawnChance("minecraft:salmon", 0.02),
-                    new MobWithSpawnChance("iceandfire:sea_serpent", 0.02),
-                    new MobWithSpawnChance("iceandfire:siren", 0.02)
+                    new MobWithSpawnChance("minecraft:cod", 0.01),
+                    new MobWithSpawnChance("minecraft:salmon", 0.01),
+                    new MobWithSpawnChance("iceandfire:sea_serpent", 0.01),
+                    new MobWithSpawnChance("iceandfire:siren", 0.01)
             ), true, 6),
             new BlockToMobConfig(List.of("minecraft:obsidian"), List.of(
                     new MobWithSpawnChance("netherexp:wisp", 0.1)
             ), true, 0),
             new BlockToMobConfig(List.of("minecraft:oak_leaves", "minecraft:birch_leaves", "minecraft:jungle_leaves", "minecraft:acacia_leaves", "minecraft:dark_oak_leaves", "minecraft:mangrove_leaves", "minecraft:azalea_leaves", "minecraft:flowering_azalea_leaves", "minecraft:spruce_leaves"), List.of(
-                    new MobWithSpawnChance("wildlife:cottonbird", 0.01),
-                    new MobWithSpawnChance("wildlife:bluebird", 0.01),
-                    new MobWithSpawnChance("wildlife:lark", 0.01),
-                    new MobWithSpawnChance("wildlife:milk_snake", 0.01),
-                    new MobWithSpawnChance("wildlife:monkey", 0.01),
-                    new MobWithSpawnChance("wildlife:meadowlark", 0.01),
-                    new MobWithSpawnChance("wildlife:king_snake", 0.01),
-                    new MobWithSpawnChance("minecraft:creeper", 0.01),
-                    new MobWithSpawnChance("minecraft:chicken", 0.01),
-                    new MobWithSpawnChance("netherexp:wisp", 0.01)
+                    new MobWithSpawnChance("wildlife:cottonbird", 0.1),
+                    new MobWithSpawnChance("wildlife:bluebird", 0.1),
+                    new MobWithSpawnChance("wildlife:lark", 0.1),
+                    new MobWithSpawnChance("wildlife:milk_snake", 0.1),
+                    new MobWithSpawnChance("wildlife:monkey", 0.1),
+                    new MobWithSpawnChance("wildlife:meadowlark", 0.1),
+                    new MobWithSpawnChance("wildlife:king_snake", 0.1),
+                    new MobWithSpawnChance("minecraft:creeper", 0.1),
+                    new MobWithSpawnChance("minecraft:chicken", 0.1),
+                    new MobWithSpawnChance("netherexp:wisp", 0.1)
             ), true, 10),
 
             new BlockToMobConfig(List.of("minecraft:oak_log", "minecraft:birch_log", "minecraft:jungle_log"), List.of(

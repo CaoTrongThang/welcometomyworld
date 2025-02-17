@@ -45,13 +45,13 @@ public class PunchingBlocksPenalties {
         World world = player.getWorld();
         BlockState blockState = world.getBlockState(blockPos);
 
-        if (blockState.isAir()) return;
+        if (blockState.isAir() || blockState.getBlock() == Blocks.WATER) return;
 
         if (!nonDamagingBlocks.contains(blockState.getBlock())){
             float hardness = blockState.getHardness(world, blockPos);
 
             if (hardness > 0) {
-                float damage = calculateDamage(hardness);
+                float damage = Utils.calculateDamageWithArmor(calculateDamage(hardness), player);
 
                 float finalDamageIfHasSomethingOnHand = player.getMainHandStack().isEmpty()
                         ? damage
@@ -60,7 +60,6 @@ public class PunchingBlocksPenalties {
                 if(finalDamageIfHasSomethingOnHand > 20){
                     finalDamageIfHasSomethingOnHand = 20;
                 }
-
                 if (finalDamageIfHasSomethingOnHand > 1.1) {
                     player.damage(player.getWorld().getDamageSources().generic(), finalDamageIfHasSomethingOnHand);
 
@@ -74,6 +73,7 @@ public class PunchingBlocksPenalties {
                         Utils.grantAdvancement(player, "first_punching_blocks_die");
                         p.firstPunchingBlocksDie = true;
                     }
+
                 }
             }
         }
@@ -84,77 +84,4 @@ public class PunchingBlocksPenalties {
         double damage = 1 + 2.5 * Math.log(hardness + 1);
         return (float) Math.min(damage, 10); // Cap damage at 10
     }
-
-
-    //Old Method
-
-    //    class BlockDamage {
-//        String blockId;
-//        float damage;
-//
-//        public BlockDamage(String blockId, float damage) {
-//            this.blockId = blockId;
-//            this.damage = damage;
-//        }
-//    }
-
-//    public List<BlockDamage> blockDamageList = List.of(
-//            // Wood logs
-//            new BlockDamage("minecraft:oak_log", 3),
-//            new BlockDamage("minecraft:spruce_log", 3),
-//            new BlockDamage("minecraft:birch_log", 3),
-//            new BlockDamage("minecraft:jungle_log", 3),
-//            new BlockDamage("minecraft:acacia_log", 3),
-//            new BlockDamage("minecraft:dark_oak_log", 3),
-//            new BlockDamage("croptopia:cinnamon_log", 3),
-//
-//            // Soft block
-//            new BlockDamage("minecraft:grass_block", 2),
-//            new BlockDamage("minecraft:dirt", 2),
-//            new BlockDamage("minecraft:gravel", 2),
-//            new BlockDamage("minecraft:sand", 2),
-//
-//            // Common hard blocks
-//            new BlockDamage("minecraft:cobblestone", 5),
-//            new BlockDamage("minecraft:stone", 8),
-//            new BlockDamage("minecraft:andesite", 4),
-//            new BlockDamage("minecraft:granite", 4),
-//            new BlockDamage("minecraft:diorite", 4),
-//
-//            // Miscellaneous
-//            new BlockDamage("minecraft:glass", 3),
-//            new BlockDamage("minecraft:sandstone", 5),
-//            new BlockDamage("minecraft:terracotta", 5)
-//    );
-
-//    private void applyBlockDamage(MinecraftServer server, ServerPlayerEntity player, BlockPos blockPos) {
-//        World world = player.getWorld();
-//        BlockState blockState = world.getBlockState(blockPos);
-//
-//        if (blockState.isAir()) return;
-
-//        for (BlockDamage b : blockDamageList) {
-//            if (b.blockId.equals(Registries.BLOCK.getId(blockState.getBlock()).toString())) {
-//                float finalDamage = player.getMainHandStack().isEmpty()
-//                        ? b.damage
-//                        : (!player.getMainHandStack().isSuitableFor(blockState) ? b.damage / 2 : 0);
-//
-//                if (finalDamage > 1) {
-//                    player.damage(player.getWorld().getDamageSources().generic(), finalDamage);
-//                }
-//
-//                PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
-//                if (!p.firstPunchingBlocksDamage) {
-//                    Utils.grantAdvancement(player, "first_punching_blocks_damage");
-//                    p.firstPunchingBlocksDamage = true;
-//                }
-//
-//                if (player.getHealth() <= 0 && !p.firstPunchingBlocksDie) {
-//                    Utils.grantAdvancement(player, "first_punching_blocks_die");
-//                    p.firstPunchingBlocksDie = true;
-//                }
-//                return;
-//            }
-//        }
-//    }
 }

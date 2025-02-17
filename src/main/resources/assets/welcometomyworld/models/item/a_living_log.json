@@ -1,6 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "welcometomyworld:item/a_living_log"
-  }
-}

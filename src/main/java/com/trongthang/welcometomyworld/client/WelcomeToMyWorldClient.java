@@ -1,23 +1,28 @@
 package com.trongthang.welcometomyworld.client;
 
-import com.trongthang.welcometomyworld.entities.ALivingFlowerRenderer;
-import com.trongthang.welcometomyworld.entities.CustomEntitiesManager;
-import com.trongthang.welcometomyworld.entities.ALivingLogRenderer;
+import com.trongthang.welcometomyworld.ModKeybindings;
+import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.classes.RequestMobStatsPacket;
+import com.trongthang.welcometomyworld.screen.MobUpgradeScreen;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.Perspective;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
@@ -35,20 +40,30 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
     private boolean removeMessagesFirstJoin = true;
 
+    private int WATER_FALL_DAMAGE_COOLDOWN = 20;
+    private int WATER_FALL_DAMAGE_COUNTER = 0;
+
+    private double lastFallDistance = 0;
 
     private int messageCounter = 0;
-    List<String> removeMessages = List.of("Installed datapacks:",
-            "You can return to this menu with /function nucleus:menu",
-            "Nucleus v0.2.0 installed successfully",
-            "Sanguine v0.4.0 (Commands | Wiki)",
-            "has made the advancement [Ice and Fire]",
-            "Manic v1.1.0 (Commands | Wiki)");
+//    List<String> removeMessages = List.of("Installed datapacks:",
+//            "You can return to this menu with /function nucleus:menu",
+//            "Nucleus v0.2.0 installed successfully",
+//            "Sanguine v0.4.0 (Commands | Wiki)",
+//            "has made the advancement [Ice and Fire]",
+//            "Manic v1.1.0 (Commands | Wiki)");
+
+List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
+        "has made the advancement [Mobs of Mythology]");
+
 
 
     @Override
     public void onInitializeClient() {
-        EntityRendererRegistry.register(CustomEntitiesManager.A_LIVING_LOG, ALivingLogRenderer::new);
-        EntityRendererRegistry.register(CustomEntitiesManager.A_LIVING_FLOWER, ALivingFlowerRenderer::new);
+        ModKeybindings.registerKeybindings();
+        SoundsClientHandler.register();
+        ScreenClientHandler.register();
+        ClientScheduler.init();
 
         ClientPlayConnectionEvents.JOIN.register((handler, client, c) -> {
             preRenderChunks(c);
@@ -89,53 +104,14 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             });
         });
 
-
-        // Handle networking for sounds or other events, this PLAY_BLOCK_PORTAL_TRAVEL only happens once when player first time join the world
-        ClientPlayNetworking.registerGlobalReceiver(PLAY_BLOCK_PORTAL_TRAVEL, (client, handler, buf, responseSender) -> {
+        ClientPlayNetworking.registerGlobalReceiver(CHANGE_PERSPECTIVE, (client, handler, buf, responseSender) -> {
             client.execute(() -> {
-                // Play sound locally
-                assert client.player != null;
-                client.player.playSound(SoundEvents.BLOCK_PORTAL_TRAVEL, SoundCategory.PLAYERS, 0.4f, 1f);
-
+                stopSendingOriginsScreen = true;
+                client.execute(() -> {
+                    client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+                });
             });
         });
-
-        ClientPlayNetworking.registerGlobalReceiver(PLAY_WOLF_HOWL, (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                assert client.player != null;
-                client.player.playSound(SoundEvents.ENTITY_WOLF_HOWL, SoundCategory.BLOCKS, 0.3f, 1f);
-            });
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(PLAY_BELL, (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                assert client.player != null;
-                client.player.playSound(SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS, 0.4f, 1f);
-            });
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(PLAY_EXPERIENCE_ORB_PICK_UP, (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                // Play sound locally
-                client.player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1f);
-            });
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(PLAY_ENTITY_PLAYER_LEVELUP, (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                // Play sound locally
-                client.player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.4f, 1f);
-            });
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(PLAY_BLOCK_LEVER_CLICK, (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                // Play sound locally
-                client.player.playSound(SoundEvents.BLOCK_LEVER_CLICK, SoundCategory.PLAYERS, 0.6f, 1f);
-            });
-        });
-
-        MinecraftClient client = MinecraftClient.getInstance();
 
         ClientReceiveMessageEvents.ALLOW_GAME.register((a, b) -> {
             if(!removeMessagesFirstJoin) return true;
@@ -143,7 +119,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             for(String m : removeMessages){
                 if(a.getString().toLowerCase().contains(m.toLowerCase())){
                         messageCounter++;
-                        if(messageCounter >= removeMessages.size() - 1){
+                        if(messageCounter >= removeMessages.size()){
                             removeMessagesFirstJoin = false;
                         }
                     return false;
@@ -154,9 +130,33 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     }
 
     private void onTicks(MinecraftClient client) {
+
         if (client.player != null) {
-            this.fallDamageClient(client);
+            this.waterFallDamage(client);
             this.switchPerspectiveOnDeath(client);
+        }
+
+        if (ModKeybindings.openMobStats.wasPressed()) {
+            handleOpenMobStats(client);
+        }
+    }
+
+    private void handleOpenMobStats(MinecraftClient client) {
+        if (client.player == null || client.world == null) return;
+
+        HitResult hitResult = client.crosshairTarget;
+        if (hitResult instanceof EntityHitResult entityHitResult) {
+            Entity targetEntity = entityHitResult.getEntity();
+
+            if (targetEntity instanceof TameableEntity tameableEntity) {
+                if (tameableEntity.isTamed() && tameableEntity.getOwnerUuid() != null &&
+                        tameableEntity.getOwnerUuid().equals(client.player.getUuid())) {
+                    RequestMobStatsPacket requestPacket = new RequestMobStatsPacket(tameableEntity.getId());
+                    ClientPlayNetworking.send(REQUEST_MOB_STATS_PACKET, requestPacket.encode(new PacketByteBuf(Unpooled.buffer())));
+
+                    client.setScreen(new MobUpgradeScreen(tameableEntity));
+                }
+            }
         }
     }
 
@@ -184,33 +184,55 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         }
     }
 
-    private void fallDamageClient(MinecraftClient client) {
+    private void waterFallDamage(MinecraftClient client) {
+        if(WATER_FALL_DAMAGE_COUNTER < WATER_FALL_DAMAGE_COOLDOWN)
+        {
+            WATER_FALL_DAMAGE_COUNTER++;
+            return;
+        }
 
         ClientPlayerEntity player = client.player;
 
-        if (player.isCreative() || player.isSpectator()) return;  // Skip if player is creative or spectator
+        assert player != null;
 
-        boolean hasLandedWater = this.hasLandedWater(player);
+        if (player.isCreative() || player.isSpectator() || player.isDead()) return;
+
         Vec3d veloc = player.getVelocity();
 
-        if (hasLandedWater && veloc.getY() < -0.85) {
+        if (veloc.getY() < -0.85) {
+            if(this.hasLandedWater(player)){
+                float damageAmount = Utils.calculateDamageWithArmor(calculateFallDamage(lastFallDistance), player);
 
-            float damageAmount = calculateFallDamage(veloc);
+                if(player.isSneaking()){
+                    damageAmount /= 2;
+                }
 
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeFloat(damageAmount);
-            buf.writeUuid(player.getUuid());
-            ClientPlayNetworking.send(FALLING_TO_WATER, buf);
+                if(damageAmount > 6.5){
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeFloat(damageAmount);
+                    buf.writeUuid(player.getUuid());
+
+                    ClientPlayNetworking.send(FALLING_TO_WATER, buf);
+                    WATER_FALL_DAMAGE_COUNTER = 0;
+                }
+
+                lastFallDistance = 0;
+            }
         }
     }
 
     private boolean hasLandedWater(ClientPlayerEntity player) {
         // Check if the player has landed (on the ground or on any block or water below them)
-        BlockPos below = player.getBlockPos().down();
+        BlockPos below = player.getBlockPos().down(2);
         BlockState blockState = player.getWorld().getBlockState(below);
 
         // Check if the player is on the ground or touching a water block
-        return blockState.isLiquid() && !player.getWorld().isAir(below);
+        boolean land = blockState.isLiquid() && !player.getWorld().isAir(below);
+        if(land){
+            lastFallDistance = player.fallDistance;
+
+        }
+        return land;
     }
 
     private boolean hasLandedGround(ClientPlayerEntity player) {
@@ -221,8 +243,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         return player.isOnGround() && !player.getWorld().isAir(below);
     }
 
-    private float calculateFallDamage(Vec3d veloc) {
-        return (float) (((Math.abs(veloc.getY() - 5))) * 3F);
+    private float calculateFallDamage(double fallDistance) {
+        return (float) (((Math.abs(fallDistance - 5))));
     }
 
     private void sendPacketToServer(int state) {

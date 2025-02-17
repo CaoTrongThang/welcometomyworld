@@ -3,12 +3,6 @@ package com.trongthang.welcometomyworld;
 public class GlobalConfig {
 
     //======================================== FEATURES ======================================================
-    public static boolean canIntroOfTheWorld = true;
-
-    public static boolean canClearItemsBeforeGivingStartingItems = true;
-
-    public static boolean canGiveStartingItems = true;
-
     public static boolean canSwitchPerspective = true;
 
     public static boolean canWaterFallDamage = true;
@@ -18,8 +12,6 @@ public class GlobalConfig {
     public static boolean canBedsExplode = true;
 
     public static boolean canDayAndNightCounterAnimation = true;
-
-    public static boolean canPowerUpNearbyHostileMobs = true;
 
     public static boolean canPunchingBlockPenalties = true;
 

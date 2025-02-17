@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "SXS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:iron_nugget"
+    },
+    "X": {
+      "item": "minecraft:iron_bars"
+    }
+  },
+  "result": {
+    "item": "welcometomyworld:tougher_iron_bars",
+    "count": 1
+  }
+}

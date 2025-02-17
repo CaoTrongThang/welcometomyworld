@@ -1,18 +1,27 @@
 package com.trongthang.welcometomyworld.Utilities;
 
+import com.trongthang.welcometomyworld.classes.AnimationName;
+import com.trongthang.welcometomyworld.classes.CustomPositionedSound;
 import com.trongthang.welcometomyworld.classes.RunAfter;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.*;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.DefaultParticleType;
+import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
@@ -20,6 +29,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -29,9 +39,9 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -135,12 +145,34 @@ public class Utils {
 
     public static void playSound(ServerWorld serverWorld, BlockPos pos, SoundEvent soundEvent) {
         serverWorld.playSound(
-                null,                                   // Player (null = all nearby players hear the sound)
-                pos,                  // Position of the sound
-                soundEvent,      // Sound event (Blaze ambient sound)
-                SoundCategory.HOSTILE,                 // Sound category (hostile mob sounds)
-                0.8F,                                 // Volume (1.0 = normal volume)
-                1.0F                                   // Pitch (1.0 = normal pitch)
+                null,
+                pos,
+                soundEvent,
+                SoundCategory.HOSTILE,
+                0.8F,
+                1.0F
+        );
+    }
+
+    public static void playSound(ServerWorld serverWorld, BlockPos pos, SoundEvent soundEvent, float volume, float pitch) {
+        serverWorld.playSound(
+                null,
+                pos,
+                soundEvent,
+                SoundCategory.HOSTILE,
+                volume,
+                pitch
+        );
+    }
+
+    public static void playSound(World world, BlockPos pos, SoundEvent soundEvent) {
+        world.playSound(
+                null,
+                pos,
+                soundEvent,
+                SoundCategory.HOSTILE,
+                1f,
+                1f
         );
     }
 
@@ -178,10 +210,10 @@ public class Utils {
     }
 
     // Summon lightning at the mob's position
-    public static void summonLightning(BlockPos pos, ServerWorld world) {
+    public static void summonLightning(BlockPos pos, ServerWorld world, boolean cosmetic) {
         LightningEntity lightning = new LightningEntity(EntityType.LIGHTNING_BOLT, world);
         lightning.refreshPositionAfterTeleport(pos.getX(), pos.getY(), pos.getZ());
-        lightning.setCosmetic(true); // Makes the lightning deal no damage
+        lightning.setCosmetic(cosmetic); // Makes the lightning deal no damage
         world.spawnEntity(lightning);
     }
 
@@ -200,34 +232,9 @@ public class Utils {
 
     }
 
-    public static void preloadHorizontalChunksAtSpawn(ServerWorld world) {
-        // Get the default spawn point of the world
-        if(world == null) return;
-
-        int radius = 8;
-
-        BlockPos spawnPos = world.getSpawnPos();
-        ChunkPos spawnChunk = new ChunkPos(spawnPos);
-
-        LOGGER.info("Preloading horizontal chunks around the world spawn point...");
-
-        // Load a 10x10 grid of chunks horizontally around the spawn point
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-
-                ChunkPos chunkPos = new ChunkPos(spawnChunk.x + dx, spawnChunk.z + dz);
-
-                if(!world.getChunkManager().isChunkLoaded(chunkPos.x, chunkPos.z)){
-                    world.getChunkManager().getChunk(chunkPos.x, chunkPos.z, ChunkStatus.FULL, true);
-                    LOGGER.info(MOD_ID + " Loaded chunk at {} (dx={}, dz={})", chunkPos, dx, dz);
-                }
-            }
-        }
-    }
-
     // Spawns a mob entity at the given block position
     public static Entity spawnMob(World world, BlockPos blockPos, String mobId) {
-        if(blockPos == null) return null;
+        if (blockPos == null) return null;
 
         Identifier mobIdentifier = new Identifier(mobId.toLowerCase());
         EntityType<?> entityType = Registries.ENTITY_TYPE.get(mobIdentifier);
@@ -286,11 +293,11 @@ public class Utils {
     }
 
     // Apply the effect to the mob (either increase level or apply new effect)
-    public static void applyEffect(LivingEntity mob, int howManyEffects, int durationInTicks) {
+    public static void applyEffectForMobs(LivingEntity mob, int howManyEffects, int durationInTicks) {
         // Use a HashSet to select unique effects
         Set<StatusEffect> selectedEffects = new HashSet<>();
 
-        while (selectedEffects.size() < howManyEffects) {
+        for (int x = 0; x < howManyEffects; x++) {
             StatusEffect randomEffect = POSSIBLE_EFFECTS_FOR_MOBS.get(random.nextInt(POSSIBLE_EFFECTS_FOR_MOBS.size()));
             selectedEffects.add(randomEffect);
         }
@@ -338,5 +345,181 @@ public class Utils {
 
         // No blocks below the player are solid
         return false;
+    }
+
+    public static float calculateDamageWithArmor(float initialDamage, LivingEntity entity) {
+        // Get the entity's armor value
+        double armor = entity.getAttributeValue(EntityAttributes.GENERIC_ARMOR);
+        double toughness = entity.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
+
+        // Calculate reduction factor
+        float reductionFactor = (float) (armor / (5.0 + armor + (toughness / 2.0)));
+
+        // Calculate final damage
+        return initialDamage * (1 - reductionFactor);
+    }
+
+    public static BlockPos checkFireDirection(BlockState fireBlock, BlockPos pos) {
+        if (fireBlock.isOf(Blocks.FIRE)) {
+            boolean isEastBurning = fireBlock.get(Properties.EAST);
+            boolean isWestBurning = fireBlock.get(Properties.WEST);
+            boolean isNorthBurning = fireBlock.get(Properties.NORTH);
+            boolean isSouthBurning = fireBlock.get(Properties.SOUTH);
+            boolean isUpBurning = fireBlock.get(Properties.UP);
+
+            BlockPos checkPos = null;
+
+            if (isEastBurning) {
+                checkPos = pos.east();
+            } else if (isWestBurning) {
+                checkPos = pos.west();
+            } else if (isNorthBurning) {
+                checkPos = pos.north();
+            } else if (isSouthBurning) {
+                checkPos = pos.south();
+            } else if (isUpBurning) {
+                checkPos = pos.up();
+            }
+
+            return checkPos;
+        }
+
+
+        return null;
+    }
+
+    public static boolean isFireBurningAtTheBlock(World world, BlockPos pos) {
+
+        BlockState block = null;
+        List<BlockState> directions = List.of(
+                world.getBlockState(pos.east()),
+                world.getBlockState(pos.west()),
+                world.getBlockState(pos.south()),
+                world.getBlockState(pos.north()),
+                world.getBlockState(pos.up())
+
+        );
+
+        for (BlockState s : directions) {
+            if (s.isOf(Blocks.FIRE)) {
+                if (checkFireDirection(s, pos) != null) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static void discardEntity(ServerWorld world, Entity entity) {
+        ChunkPos chunkPos = new ChunkPos(entity.getBlockPos());
+        if (!world.isChunkLoaded(chunkPos.x, chunkPos.z)) {
+            return; // Skip if the chunk isn't loaded
+        }
+
+        entity.discard();
+    }
+
+    public static void sendAnimationPacket(World world, LivingEntity entity, AnimationName animation, int timeout){
+        for (ServerPlayerEntity player : ((ServerWorld) world).getPlayers()) {
+            if (player.canSee(entity)) {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeInt(entity.getId());
+                buf.writeEnumConstant(animation);
+                buf.writeInt(timeout);
+                ServerPlayNetworking.send(player, ANIMATION_PACKET, buf);
+            }
+        }
+    }
+
+    public static void sendSoundPacketFromClient(SoundEvent sound, BlockPos pos){
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeDouble(pos.getX())
+                .writeDouble(pos.getY())
+                .writeDouble(pos.getZ());
+        buf.writeIdentifier(sound.getId());
+
+        ClientPlayNetworking.send(
+                SOUND_PACKET_ID,
+                buf
+        );
+    }
+
+    public static void playClientSound(BlockPos pos, SoundEvent sound, int maxDistance) {
+        // Get the client instance
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        // Ensure the client's player exists
+        if (client.player == null) return;
+
+        // Calculate the distance between the player and the sound position
+        Vec3d playerPos = client.player.getPos();
+        double distance = playerPos.distanceTo(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
+
+        // Check if the player is within the maximum range
+        if (distance <= maxDistance) {
+            // Calculate the volume based on the distance
+            float volume = Math.max(0.1F, 1.0F - (float) (distance / maxDistance));
+
+            // Create and play the custom sound instance
+            SoundInstance soundInstance = new CustomPositionedSound(
+                    sound,
+                    pos,
+                    SoundCategory.BLOCKS,
+                    volume, // Dynamically calculated volume
+                    1.0F    // Pitch
+            );
+            client.getSoundManager().play(soundInstance);
+        }
+    }
+
+    public static void playClientSound(BlockPos pos, SoundEvent sound, int maxDistance, float volume, float pitch) {
+        // Get the client instance
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        // Ensure the client's player exists
+        if (client.player == null) return;
+
+        // Calculate the distance between the player and the sound position
+        Vec3d playerPos = client.player.getPos();
+        double distance = playerPos.distanceTo(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
+
+        // Check if the player is within the maximum range
+        if (distance <= maxDistance) {
+            // Create and play the custom sound instance
+            SoundInstance soundInstance = new CustomPositionedSound(
+                    sound,
+                    pos,
+                    SoundCategory.BLOCKS,
+                    volume, // Dynamically calculated volume
+                    pitch    // Pitch
+            );
+            client.getSoundManager().play(soundInstance);
+        }
+    }
+
+    public static void spawnParticleCircle(ServerWorld world, Vec3d center, double radius, int density, ParticleEffect particleType) {
+        // Calculate the angle increment based on the density
+        double angleIncrement = (2 * Math.PI) / density;
+
+        for (int i = 0; i < density; i++) {
+            // Calculate the angle for this particle
+            double angle = i * angleIncrement;
+
+            // Calculate the x and z offsets using trigonometry
+            double xOffset = radius * Math.cos(angle);
+            double zOffset = radius * Math.sin(angle);
+
+            // Spawn the particle at the calculated position
+            world.spawnParticles(
+                    particleType,
+                    center.x + xOffset,
+                    center.y,
+                    center.z + zOffset,
+                    1, // Number of particles to spawn at this position
+                    0, 0, 0, // No random offset
+                    0 // No speed
+            );
+        }
     }
 }

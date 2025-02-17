@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
 import com.trongthang.welcometomyworld.GlobalConfig;
 import com.trongthang.welcometomyworld.Utilities.SpawnParticiles;
 import com.trongthang.welcometomyworld.classes.PlayerData;
@@ -29,11 +30,11 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class IntroOfTheWorldHandler {
 
     Random rand = new Random();
-    double playersDeathChanceInTheIntro = 0.3;
+    double playersDeathChanceInTheIntro = 0.20;
     byte phantomSpawnAmount = 10;
     public boolean alreadySpawnedPhantom = false;
 
-    private int slownessTimeInTickAfterLand = 240;
+    private int slownessTimeInTickAfterLand = 280;
 
     public static boolean firstTimeLoadChunkIntro = false;
 
@@ -47,6 +48,7 @@ public class IntroOfTheWorldHandler {
     }
 
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
+        if(player.getWorld().isClient) return;
         PlayerData playerData = dataHandler.playerDataMap.get(player.getUuid());
         ServerWorld world = player.getServerWorld();
         boolean isAir = world.getBlockState(player.getBlockPos().down(25)).isAir();
@@ -69,7 +71,7 @@ public class IntroOfTheWorldHandler {
         }
 
         if (playerData.playerFirstIntroDeathChance == 0) {
-            playerData.playerFirstIntroDeathChance = rand.nextDouble();
+            playerData.playerFirstIntroDeathChance = rand.nextDouble(0, 1);
         }
 
         if (compatityChecker.originMod) {
@@ -99,7 +101,7 @@ public class IntroOfTheWorldHandler {
 
                 for (int x = 0; x < rand.nextInt(10, 20); x++) {
                     Utils.addRunAfter(() -> {
-                        Utils.summonLightning(player.getBlockPos(), player.getServerWorld());
+                        Utils.summonLightning(player.getBlockPos(), player.getServerWorld(), true);
                     }, rand.nextInt(5, 20));
                 }
 
@@ -141,9 +143,9 @@ public class IntroOfTheWorldHandler {
             Utils.UTILS.sendTextAfter(player, "Finally!");
         }
 
-        if (playerData.playerFirstIntroDeathChance >= playersDeathChanceInTheIntro) {
-            if (!isAir) {
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 240, 255));
+        if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
+            if(!isAir){
+                player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 300, 255));
             }
 
             if (Utils.isPlayerStandingOnBlock(player)) {
@@ -195,7 +197,7 @@ public class IntroOfTheWorldHandler {
     }
 
     public void registerIntroEvents() {
-        if (GlobalConfig.canIntroOfTheWorld) {
+        if (ConfigLoader.getInstance().introOfTheWorld) {
             ServerPlayerEvents.AFTER_RESPAWN.register((serverPlayerEntity1, serverPlayerEntity, c) -> {
                 PlayerData playerData = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
                 if (playerData == null) return;
@@ -257,12 +259,21 @@ public class IntroOfTheWorldHandler {
             }, 21 * 20);
 
             Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 24 * 20);
-            Utils.UTILS.sendTextAfter(player, "Well, I think that's it for now.", 29 * 20);
-            Utils.UTILS.sendTextAfter(player, "Enjoy Your New World!", 33 * 20);
+
+            Utils.UTILS.sendTextAfter(player, "I think I have a book that might help you progress in this magical world...", 28 * 20);
+
+            Utils.addRunAfter(() -> {
+                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item ID and quantity
+                if (book != null) {
+                    GiveStartingItemsHandler.dropItemToPlayer(player, book);
+                }
+            }, 32 * 20);
+
+            Utils.UTILS.sendTextAfter(player, "Well, that's it for now. Enjoy Your New World!", 36 * 20);
 
             Utils.addRunAfter(() -> {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
-            }, 38 * 20);
+            }, 40 * 20);
 
         } else {
             if (player.getWorld().getLevelProperties().isHardcore()) {
@@ -319,6 +330,14 @@ public class IntroOfTheWorldHandler {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
             }, 35 * 20);
 
+            Utils.UTILS.sendTextAfter(player, "Wait, I forgot a really useful book, here you go", 42 * 20);
+
+            Utils.addRunAfter(() -> {
+                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item ID and quantity
+                if (book != null) {
+                    GiveStartingItemsHandler.dropItemToPlayer(player, book);
+                }
+            }, 44 * 20);
         }
     }
 
@@ -333,7 +352,7 @@ public class IntroOfTheWorldHandler {
 
         for (int x = 0; x < phantomSpawnAmount; x++) {
             double offsetX = (world.getRandom().nextDouble() - 0.5) * 2 * distance;
-            double offsetY = world.getRandom().nextDouble() * 5 - rand.nextInt(0, 40);
+            double offsetY = world.getRandom().nextDouble() * 5 - rand.nextInt(0, 20);
             double offsetZ = (world.getRandom().nextDouble() - 0.5) * 2 * distance;
 
             // Calculate the spawn position

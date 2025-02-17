@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "welcometomyworld",
-	"version": "2.9.7",
+	"version": "3.3.1",
 	"name": "Welcome To My World",
 	"description": "adds tons of things for my modpack...",
 	"authors": [
@@ -19,7 +19,12 @@
 			"com.trongthang.welcometomyworld.WelcomeToMyWorld"
 		],
 		"client": [
-			"com.trongthang.welcometomyworld.client.WelcomeToMyWorldClient"
+			"com.trongthang.welcometomyworld.client.WelcomeToMyWorldClient",
+			"com.trongthang.welcometomyworld.client.RendererClient",
+			"com.trongthang.welcometomyworld.client.PacketHandlerClient"
+		],
+		"fabric-datagen": [
+			"com.trongthang.welcometomyworld.WelcomeToMyWorldDataGenerator"
 		]
 	},
 	"mixins": [

@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.trongthang.welcometomyworld.classes.PlayerData;
+import com.trongthang.welcometomyworld.classes.PlayerStatsData;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
@@ -33,6 +34,10 @@ public class DataHandler {
     public static final Type PLAYER_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerData>>() {}.getType();
     public ConcurrentHashMap<UUID, PlayerData> playerDataMap = new ConcurrentHashMap<>();
 
+    public Path playerStatsDataSavePath;
+    public static final Type PLAYER_STATS_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerStatsData>>() {}.getType();
+    public ConcurrentHashMap<UUID, PlayerStatsData> playerStatsData = new ConcurrentHashMap<>();
+
     public Path blocksPlacedByMobs;
     public static final Type BLOCKS_PLACED_BY_MOBS_DATA_TYPE = new TypeToken<ConcurrentHashMap<BlockPos, Integer>>() {}.getType();
     public ConcurrentHashMap<BlockPos, Integer> blocksPlacedByMobWillRemove = new ConcurrentHashMap<>();
@@ -46,12 +51,15 @@ public class DataHandler {
         playerDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerdata.json");
         blocksPlacedByMobs = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksPlacedByMobs.json");
 //        blocksBrokenByMobs = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksBrokenByMobs.json");
+        playerStatsDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerStatsData.json");
 
         playerDataMap.clear();
+        playerStatsData.clear();
         blocksPlacedByMobWillRemove.clear();
 //        blocksBrokenByMobWillRestore.clear();
 
         loadPlayerData();
+        loadPlayerStatsData();
         loadBlocksPlacedByMobsData();
 //        loadBlocksBrokenByMobsData();
 
@@ -60,11 +68,16 @@ public class DataHandler {
 
 
     public void saveData(MinecraftServer server) {
+        if(this.playerDataSavePath == null){
+            playerDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerdata.json");
+        }
         savePlayerData();
+        savePlayerStatsData();
         saveBlocksPlacedByMobsData();
 //        saveBlocksBrokenByMobsData();
 
         playerDataMap.clear();
+        playerStatsData.clear();
         blocksPlacedByMobWillRemove.clear();
         blocksBrokenByMobWillRestore.clear();
     }
@@ -88,7 +101,6 @@ public class DataHandler {
 
                             // If the player is not in the map, add them with a new PlayerData entry
                             if (!playerDataMap.containsKey(uuid)) {
-                                LOGGER.info("Found new player with UUID: {}, adding to player data map.", uuid);
                                 playerDataMap.put(uuid, PlayerData.CreateExistPlayer());
                             }
                         } catch (IllegalArgumentException e) {
@@ -109,7 +121,6 @@ public class DataHandler {
                 if (loadedData != null) {
                     playerDataMap.putAll(loadedData);
                 }
-                LOGGER.info("Loaded {} player entries from data file.", playerDataMap.size());
             } catch (IOException e) {
                 LOGGER.error("Failed to load player data", e);
             }
@@ -130,6 +141,35 @@ public class DataHandler {
         }
     }
 
+    public void loadPlayerStatsData() {
+        LOGGER.info("Loading player stats data from: {}", playerStatsDataSavePath);
+
+        if (Files.exists(playerStatsDataSavePath)) {
+            try (Reader reader = Files.newBufferedReader(playerStatsDataSavePath)) {
+                ConcurrentHashMap<UUID, PlayerStatsData> loadedData = GSON.fromJson(reader, PLAYER_STATS_DATA_TYPE);
+                if (loadedData != null) {
+                    playerStatsData.putAll(loadedData);
+                }
+            } catch (IOException e) {
+                LOGGER.error("Failed to load player stats data", e);
+            }
+        }
+    }
+
+    public void savePlayerStatsData() {
+        LOGGER.info("Saving player stats data to: {}", playerStatsDataSavePath);
+
+        try {
+            Files.createDirectories(playerStatsDataSavePath.getParent());
+            try (Writer writer = Files.newBufferedWriter(playerStatsDataSavePath)) {
+                GSON.toJson(playerStatsData, PLAYER_DATA_TYPE, writer);
+            }
+            LOGGER.info("Saved {} player stats entries to data file.", playerStatsData.size());
+        } catch (IOException e) {
+            LOGGER.error("Failed to save player data", e);
+        }
+    }
+
     public void loadBlocksPlacedByMobsData() {
         LOGGER.info("Loading blocks placed by mobs data from: {}", blocksPlacedByMobs);
 
@@ -139,7 +179,6 @@ public class DataHandler {
                 if (loadedData != null) {
                     blocksPlacedByMobWillRemove.putAll(loadedData);
                 }
-                LOGGER.info("Loaded {} blocks placed by mobs entries from data file.", blocksPlacedByMobWillRemove.size());
             } catch (IOException e) {
                 LOGGER.error("Failed to load blocks placed by mobs data", e);
             }
@@ -157,36 +196,6 @@ public class DataHandler {
             LOGGER.info("Saved {} blocks placed by mobs entries to data file.", blocksPlacedByMobWillRemove.size());
         } catch (IOException e) {
             LOGGER.error("Failed to save blocks placed by mobs data", e);
-        }
-    }
-
-    public void loadBlocksBrokenByMobsData() {
-        LOGGER.info("Loading blocks broken by mobs data from: {}", blocksBrokenByMobs);
-
-        if (Files.exists(blocksBrokenByMobs)) {
-            try (Reader reader = Files.newBufferedReader(blocksBrokenByMobs)) {
-                ConcurrentHashMap<BlockPos, BlockState> loadedData = GSON.fromJson(reader, BLOCKS_BROKEN_BY_MOBS_DATA_TYPE);
-                if (loadedData != null) {
-                    blocksBrokenByMobWillRestore.putAll(loadedData);
-                }
-                LOGGER.info("Loaded {} blocks broken by mobs entries from data file.", blocksBrokenByMobWillRestore.size());
-            } catch (IOException e) {
-                LOGGER.error("Failed to load blocks broken by mobs data", e);
-            }
-        }
-    }
-
-    public void saveBlocksBrokenByMobsData() {
-        LOGGER.info("Saving blocks broken by mobs data to: {}", blocksBrokenByMobs);
-
-        try {
-            Files.createDirectories(blocksBrokenByMobs.getParent());
-            try (Writer writer = Files.newBufferedWriter(blocksBrokenByMobs)) {
-                GSON.toJson(blocksBrokenByMobs, BLOCKS_BROKEN_BY_MOBS_DATA_TYPE, writer);
-            }
-            LOGGER.info("Saved {} blocks broken by mobs entries to data file.", blocksBrokenByMobWillRestore.size());
-        } catch (IOException e) {
-            LOGGER.error("Failed to save blocks broken by mobs data", e);
         }
     }
 

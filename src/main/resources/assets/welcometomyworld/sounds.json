@@ -1,0 +1,185 @@
+{
+  "tired_sound": {
+    "sounds": [
+      "welcometomyworld:tired_sound"
+    ]
+  },
+  "enderchester_ambient1": {
+    "sounds": [
+      "welcometomyworld:enderchester/enderchester_ambient"
+    ]
+  },
+  "enderchester_ambient2": {
+    "sounds": [
+      "welcometomyworld:enderchester/enderchester_ambient2"
+    ]
+  },
+  "enderchester_munch": {
+    "sounds": [
+      "welcometomyworld:enderchester/enderchester_munch"
+    ]
+  },
+  "enderchester_hurt": {
+    "sounds": [
+      "welcometomyworld:enderchester/enderchester_hurt"
+    ]
+  },
+  "portaler_spin": {
+    "sounds": [
+      "welcometomyworld:portaler/portaler_spin"
+    ]
+  },
+  "portaler_step": {
+    "sounds": [
+      "welcometomyworld:portaler/portaler_step"
+    ]
+  },
+  "portaler_portal_change": {
+    "sounds": [
+      "welcometomyworld:portaler/portaler_portal_change"
+    ]
+  },
+  "portaler_hurt": {
+    "sounds": [
+      "welcometomyworld:portaler/portaler_hurt"
+    ]
+  },
+  "portaler_death": {
+    "sounds": [
+      "welcometomyworld:portaler/portaler_death"
+    ]
+  },
+  "ender_pest_shake1": {
+    "sounds": [
+      "welcometomyworld:ender_pest/ender_pest_shake1"
+    ]
+  },
+  "ender_pest_shake2": {
+    "sounds": [
+      "welcometomyworld:ender_pest/ender_pest_shake2"
+    ]
+  },
+  "ender_pest_shake3": {
+    "sounds": [
+      "welcometomyworld:ender_pest/ender_pest_shake3"
+    ]
+  },
+  "ender_pest_mouth_open": {
+    "sounds": [
+      "welcometomyworld:ender_pest/ender_pest_mouth_open"
+    ]
+  },
+  "fallen_knight_armor_shaking": {
+    "sounds": [
+      "welcometomyworld:fallen_knight/fallen_knight_armor_shaking"
+    ]
+  },
+  "fallen_knight_fall": {
+    "sounds": [
+      "welcometomyworld:fallen_knight/fallen_knight_fall"
+    ]
+  },
+  "fallen_knight_swing": {
+    "sounds": [
+      "welcometomyworld:fallen_knight/fallen_knight_swing"
+    ]
+  },
+  "fallen_knight_swing_up": {
+    "sounds": [
+      "welcometomyworld:fallen_knight/fallen_knight_swing_up"
+    ]
+  },
+  "fallen_knight_ground_impact": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:fallen_knight/fallen_knight_ground_impact",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "fallen_knight_ground_impact_no_delay": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:fallen_knight/fallen_knight_ground_impact_no_delay",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "fallen_knight_step": {
+    "sounds": [
+      "welcometomyworld:fallen_knight/fallen_knight_step"
+    ]
+  },
+  "fallen_knight_portal_open": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:fallen_knight/fallen_knight_portal_open",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "fallen_knight_portal_ambient": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:fallen_knight/fallen_knight_portal_ambient",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "wanderer_backflip": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:wanderer/wanderer_backflip",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "wanderer_bow_attack": {
+  "sounds": [
+    {
+      "name": "welcometomyworld:wanderer/wanderer_bow_attack",
+      "attenuation_distance": 64
+    }
+  ]
+},
+  "wanderer_potion_drinking": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:wanderer/wanderer_potion_drinking",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "wanderer_sword_slash": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:wanderer/wanderer_sword_slash",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "wanderer_sword_charge": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:wanderer/wanderer_sword_charge",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "wanderer_walk": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:wanderer/wanderer_walk",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "hostile_mob_buff": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:hostile_mob_buff",
+        "attenuation_distance": 64
+      }
+    ]
+  }
+}

@@ -12,7 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
 
 public class BlocksPlacedAndBrokenByMobsHandler {
-    public static final int SPIDER_COBWEB_DESPAWN_TICK = 150;
+    public static final int SPIDER_COBWEB_DESPAWN_TICK = 100;
     public static final int ZOMBIE_BLOCK_DESPAWN_TICK = 300;
     public static final int BLOCK_BROKEN_RESPAWN_TICK = 300;
 

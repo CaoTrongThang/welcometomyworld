@@ -15,7 +15,37 @@
 
   "item.welcometomyworld.a_living_log": "A Living Log Spawn Egg",
   "item.welcometomyworld.a_living_flower": "A Living Flower Spawn Egg",
+  "item.welcometomyworld.enderchester": "Enderchester Spawn Egg",
+  "item.welcometomyworld.chester": "Chester Spawn Egg",
+  "item.welcometomyworld.portaler": "Portaler Spawn Egg",
+  "item.welcometomyworld.ender_pest": "Ender Pest Spawn Egg",
+  "item.welcometomyworld.fallen_knight": "The Fallen Knight Spawn Egg",
+  "item.welcometomyworld.fallen_hammer": "The Fallen Hammer",
+  "item.welcometomyworld.wanderer": "Wanderer Spawn Egg",
 
   "entity.welcometomyworld.a_living_log": "A Living Log",
-  "entity.welcometomyworld.a_living_flower": "A Living Flower"
+  "entity.welcometomyworld.a_living_flower": "A Living Flower",
+  "entity.welcometomyworld.enderchester": "Enderchester",
+  "entity.welcometomyworld.chester": "Chester",
+  "entity.welcometomyworld.chesterstomach": "Chester's Stomach",
+  "entity.welcometomyworld.portaler": "Portaler",
+  "entity.welcometomyworld.ender_pest": "Ender Pest",
+  "entity.welcometomyworld.fallen_knight": "The Fallen Knight",
+  "entity.welcometomyworld.wanderer": "Wanderer",
+
+  "block.welcometomyworld.tougher_iron_bars": "Tougher Iron Bars",
+  "block.welcometomyworld.rusted_iron_bars": "Weathered Iron Bars",
+
+  "block.welcometomyworld.tougher_iron_block": "Tougher Iron Block",
+  "block.welcometomyworld.rusted_iron_block": "Weathered Iron Block",
+  "block.welcometomyworld.rusted_iron_block_stage2": "Aged Iron Block",
+  "block.welcometomyworld.rusted_iron_block_stage3": "Corroded Iron Block",
+
+  "block.welcometomyworld.burning_plank": "Burning Plank",
+  "block.welcometomyworld.burned_plank": "Burned Plank",
+  "block.welcometomyworld.custom_vine": "Vine",
+
+  "category.welcometomyworld.keys": "Welcome To My World Keys",
+  "key.welcometomyworld.open_mob_stats": "Open Mob Stats"
+
 }

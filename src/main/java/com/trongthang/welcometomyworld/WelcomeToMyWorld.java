@@ -1,20 +1,33 @@
 package com.trongthang.welcometomyworld;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
-import com.trongthang.welcometomyworld.entities.CustomEntitiesManager;
+import com.trongthang.welcometomyworld.classes.ModTagsManager;
+import com.trongthang.welcometomyworld.classes.RequestMobStatsPacket;
+import com.trongthang.welcometomyworld.events.SpawnEvents;
+import com.trongthang.welcometomyworld.screen.MobUpgradeScreen;
+import com.trongthang.welcometomyworld.managers.*;
 import com.trongthang.welcometomyworld.features.*;
 import com.trongthang.welcometomyworld.items.RepairTalisman;
 import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.classes.PlayerData;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
@@ -22,10 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.*;
-import static com.trongthang.welcometomyworld.Utilities.Utils.preloadHorizontalChunksAtSpawn;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 //! TODO: some events when playing progressing the world like: mobs could be spawned when players break leaves or stones, punching blocks with bare hand will get damaged
@@ -39,6 +50,10 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static CompatityChecker compatityChecker = new CompatityChecker();
     public static BlocksPlacedAndBrokenByMobsHandler blocksPlacedAndBrokenByMobsHandler = new BlocksPlacedAndBrokenByMobsHandler();
 
+    public static final Identifier REQUEST_MOB_STATS_PACKET = new Identifier(MOD_ID, "request_mob_stats");
+    public static final Identifier UPDATE_MOB_STAT = new Identifier(MOD_ID, "update_mob_stat");
+    public static final Identifier SYNC_MOB_STATS_CLIENT = new Identifier(MOD_ID, "sync_mob_stats");
+
     public static final Identifier FIRST_ORIGIN_CHOOSING_SCREEN = new Identifier(MOD_ID, "first_origin_choosing_screen");
     public static final Identifier STOP_SENDING_ORIGINS_SCREEN = new Identifier(MOD_ID, "stop_sending_origins_screen");
 
@@ -47,7 +62,21 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static final Identifier PLAY_EXPERIENCE_ORB_PICK_UP = new Identifier(MOD_ID, "play_experience_orb_pick_up");
     public static final Identifier PLAY_ENTITY_PLAYER_LEVELUP = new Identifier(MOD_ID, "play_entity_player_levelup");
     public static final Identifier PLAY_WOLF_HOWL = new Identifier(MOD_ID, "play_wolf_howl");
+    public static final Identifier PLAY_ANVIL_USE = new Identifier(MOD_ID, "play_anvil_use");
+    public static final Identifier TIRED_SOUND = new Identifier(MOD_ID, "tired_sound");
+
+    public static final Identifier A_LIVING_CHEST_EATING_SOUND = new Identifier(MOD_ID, "a_living_chest_eating_sound");
+    public static final Identifier A_LIVING_CHEST_MOUTH_CLOSE = new Identifier(MOD_ID, "a_living_chest_mouth_close");
+    public static final Identifier A_LIVING_CHEST_MOUTH_OPEN = new Identifier(MOD_ID, "a_living_chest_mouth_open");
+    public static final Identifier A_LIVING_CHEST_JUMP = new Identifier(MOD_ID, "a_living_chest_jump");
+    public static final Identifier A_LIVING_CHEST_EAT_ANIMATION = new Identifier(MOD_ID, "eat_animation");
+    public static final Identifier A_LIVING_CHEST_ATTACK = new Identifier(MOD_ID, "a_living_chest_attack");
+
+    public static final Identifier PORTALER_COMPLETE_PORTAL_CHANGING = new Identifier(MOD_ID, "portaler_complete_portal_changing");
     public static final Identifier PLAY_BELL = new Identifier(MOD_ID, "play_bell");
+
+    public static final Identifier SOUND_PACKET_ID = new Identifier(MOD_ID, "sound_packet");
+    public static final Identifier ANIMATION_PACKET = new Identifier(MOD_ID, "animation_packet");
 
     public static final Identifier CHANGE_PERSPECTIVE = new Identifier(MOD_ID, "change_perspective_packet");
     public static final Identifier PLAYER_BREAKING_BLOCK = new Identifier(MOD_ID, "breaking_block");
@@ -60,19 +89,22 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static GiveStartingItemsHandler giveStartingItemsHandler = new GiveStartingItemsHandler();
     public static IntroOfTheWorldHandler introOfTheWorldHandler = new IntroOfTheWorldHandler();
     public static BreakingBlocksSpawnMobsHandler breakingBlocksSpawnMobsHandler = new BreakingBlocksSpawnMobsHandler();
-    public static BedExplosionHandler bedExplosionHandler = new BedExplosionHandler();
+    public static AwakeHandler awakeHandler = new AwakeHandler();
     public static DayAndNightCounterAnimationHandler dayAndNightCounterAnimationHandler = new DayAndNightCounterAnimationHandler();
-    public static PowerUpNearByHostileMobs powerUpNearByHostileMobs = new PowerUpNearByHostileMobs();
     public static PunchingBlocksPenalties punchingBlocksPenalties = new PunchingBlocksPenalties();
     public static WorldDifficultyBasedOnInGameDay worldDifficultyBasedOnInGameDay = new WorldDifficultyBasedOnInGameDay();
     public static AchievementsHandler achievementsHandler = new AchievementsHandler();
     public static NauseaInWaterHandler nauseaInWaterHandler = new NauseaInWaterHandler();
     public static BossesSpawningHandler bossesSpawningHandler = new BossesSpawningHandler();
     public static LightningsStrikePlayersInRain lightningsStrikePlayersInRain = new LightningsStrikePlayersInRain();
-    public static PhantomSpawnHandler phantomSpawnHandler = new PhantomSpawnHandler();
+
+
+    MinecraftServer server;
 
     @Override
     public void onInitialize() {
+        ModTagsManager.registerTags();
+        ConfigLoader.loadConfig();
         compatityChecker.OriginCheck();
 
         ServerLifecycleEvents.SERVER_STARTING.register((t) -> {
@@ -84,24 +116,18 @@ public class WelcomeToMyWorld implements ModInitializer {
         });
 
         ServerLifecycleEvents.SERVER_STARTED.register((t) -> {
-            preloadHorizontalChunksAtSpawn(t.getOverworld());
-            // Get the main world
             ServerWorld world = t.getOverworld();
 
-            // Check if it's the first time the world is being created
-            // For simplicity, this example assumes it always sets the gamerule
-            // (You can implement a check to avoid resetting it repeatedly)
-
             if (world != null) {
-                // Set the keepInventory gamerule to true
-                world.getGameRules().get(GameRules.KEEP_INVENTORY).set(false, t);
+                world.getGameRules().get(GameRules.PLAYERS_SLEEPING_PERCENTAGE).set(100, t);
             }
 
+            server = t;
         });
 
-        ServerLifecycleEvents.SERVER_STOPPING.register((t) -> {
-            IntroOfTheWorldHandler.firstTimeLoadChunkIntro = false;
+        ServerLifecycleEvents.SERVER_STOPPED.register((t) -> {
             dataHandler.saveData(t);
+            server = null;
         });
 
         ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) ->
@@ -126,9 +152,15 @@ public class WelcomeToMyWorld implements ModInitializer {
         }
 
         ItemsManager.initialize();
-        phantomSpawnHandler.register();
-        CustomEntitiesManager.register();
+        EntitiesManager.register();
+        BlocksEntitiesManager.initialize();
+        BlocksManager.registerModBlocks();
+
+        SoundsManager.registerSounds();
+        ServerNetworking.register();
+        SpawnEvents.register();
     }
+
 
     private void performAllActionsFirstJoin(ServerPlayerEntity player) {
         UUID playerUUID = player.getUuid();
@@ -138,9 +170,9 @@ public class WelcomeToMyWorld implements ModInitializer {
         if (!dataHandler.playerDataMap.containsKey(playerUUID)) {
             LOGGER.info("Player {} is joining for the first time in this world. Adding to firstTimePlayers set and teleporting.", player.getName().getString());
             dataHandler.playerDataMap.put(playerUUID, new PlayerData(true));
+            ServerPlayNetworking.send(player, CHANGE_PERSPECTIVE, PacketByteBufs.empty());
         } else {
             LOGGER.info("Player {} has already joined before in this world. Skipping teleport.", player.getName().getString());
-
             return;
         }
 
@@ -157,21 +189,18 @@ public class WelcomeToMyWorld implements ModInitializer {
     }
 
     private void onEndServerTick(MinecraftServer server) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 
-            if (canBedsExplode) {
-                bedExplosionHandler.checkAndExplodeIfSleeping(player);
-            }
+        if (canBedsExplode) {
+            awakeHandler.checkAndExplodeIfSleeping(server);
+        }
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 
             if (canDayAndNightCounterAnimation) {
                 dayAndNightCounterAnimationHandler.onServerTick(player);
             }
 
-            if (canPowerUpNearbyHostileMobs) {
-                powerUpNearByHostileMobs.checkAndPowerUpMobs(server.getOverworld(), player);
-            }
-
-            if (canIntroOfTheWorld) {
+            if (ConfigLoader.getInstance().introOfTheWorld) {
                 introOfTheWorldHandler.handlePlayerFirstJoin(player);
             }
 
@@ -183,19 +212,19 @@ public class WelcomeToMyWorld implements ModInitializer {
                 bossesSpawningHandler.spawnZombieNearPlayers(server.getOverworld());
             }
 
-            if (canGiveStartingItems) {
-                GiveStartingItemsHandler.giveItemHandler(player, canClearItemsBeforeGivingStartingItems);
+            if (ConfigLoader.getInstance().giveStartingItems) {
+                GiveStartingItemsHandler.giveItemHandler(player, ConfigLoader.getInstance().clearItemsBeforeGivingStartingItems);
             }
-
-            ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_IRON).onServerTick(player, ItemsManager.REPAIR_TALISMAN_IRON);
-            ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_GOLD).onServerTick(player, ItemsManager.REPAIR_TALISMAN_GOLD);
-            ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_EMERALD).onServerTick(player, ItemsManager.REPAIR_TALISMAN_EMERALD);
-
-            ((BuffTalisman) ItemsManager.POWER_TALISMAN).onServerTick(player, ItemsManager.POWER_TALISMAN);
-            ((BuffTalisman) ItemsManager.SPEED_TALISMAN).onServerTick(player, ItemsManager.SPEED_TALISMAN);
-            ((BuffTalisman) ItemsManager.LIFE_TALISMAN).onServerTick(player, ItemsManager.LIFE_TALISMAN);
-            ((BuffTalisman) ItemsManager.RESISTANCE_TALISMAN).onServerTick(player, ItemsManager.RESISTANCE_TALISMAN);
         }
+
+        ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_IRON).onServerTick(server, ItemsManager.REPAIR_TALISMAN_IRON);
+        ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_GOLD).onServerTick(server, ItemsManager.REPAIR_TALISMAN_GOLD);
+        ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_EMERALD).onServerTick(server, ItemsManager.REPAIR_TALISMAN_EMERALD);
+
+        ((BuffTalisman) ItemsManager.POWER_TALISMAN).onServerTick(server, ItemsManager.POWER_TALISMAN);
+        ((BuffTalisman) ItemsManager.SPEED_TALISMAN).onServerTick(server, ItemsManager.SPEED_TALISMAN);
+        ((BuffTalisman) ItemsManager.LIFE_TALISMAN).onServerTick(server, ItemsManager.LIFE_TALISMAN);
+        ((BuffTalisman) ItemsManager.RESISTANCE_TALISMAN).onServerTick(server, ItemsManager.RESISTANCE_TALISMAN);
 
         if (canEventsOfTheWorld) {
             EventsOfTheWorld.onServerTick(server);
@@ -216,9 +245,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         blocksPlacedAndBrokenByMobsHandler.onSererTick(server);
 
         Utils.onServerTick(server);
-
         SpawnMonstersPackEveryMins.spawnMonsters(server);
-
     }
 
     public void registerEvents() {

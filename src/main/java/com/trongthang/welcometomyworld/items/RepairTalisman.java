@@ -6,6 +6,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -30,22 +31,24 @@ public class RepairTalisman extends Item {
     private int checkInterval = 60;
     private int counter = 0;
 
-    public void onServerTick(ServerPlayerEntity player, Item compareItem){
+    public void onServerTick(MinecraftServer server, Item compareItem){
         counter++;
         if(counter < checkInterval) return;
         counter = 0;
 
-        if(player.getOffHandStack().getItem() == compareItem || player.getMainHandStack().getItem() == compareItem){
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()){
 
-            for (int i = 0; i < player.getInventory().size(); i++) {
-                ItemStack itemStack = player.getInventory().getStack(i);
+            if(p.getOffHandStack().getItem() == compareItem || p.getMainHandStack().getItem() == compareItem){
+                for (int i = 0; i < p.getInventory().size(); i++) {
+                    ItemStack itemStack = p.getInventory().getStack(i);
 
-                // Check if the item is damageable and has damage
-                if (!itemStack.isEmpty() && itemStack.isDamageable() && itemStack.getDamage() > 0) {
-                    // Repair by subtracting damage
-                    int currentDamage = itemStack.getDamage();
-                    int newDamage = Math.max(0, currentDamage - (int) REPAIR_AMOUNT); // Ensure damage doesn't go below 0
-                    itemStack.setDamage(newDamage);
+                    // Check if the item is damageable and has damage
+                    if (!itemStack.isEmpty() && itemStack.isDamageable() && itemStack.getDamage() > 0) {
+                        // Repair by subtracting damage
+                        int currentDamage = itemStack.getDamage();
+                        int newDamage = Math.max(0, currentDamage - (int) REPAIR_AMOUNT); // Ensure damage doesn't go below 0
+                        itemStack.setDamage(newDamage);
+                    }
                 }
             }
         }

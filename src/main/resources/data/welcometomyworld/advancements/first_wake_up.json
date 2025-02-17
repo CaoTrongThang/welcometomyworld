@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Wake up!"
+    },
+    "description": {
+      "text": "It's not a good time to sleep."
+    },
+    "icon": {
+      "item": "minecraft:red_bed"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "bed_explosion": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

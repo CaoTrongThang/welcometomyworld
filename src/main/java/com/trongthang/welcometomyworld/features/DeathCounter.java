@@ -70,7 +70,7 @@ public class DeathCounter {
                 }
 
                 // Special message if the player died near a specific block (e.g., bed)
-                if (player.getBlockPos().getY() <= 0) {
+                if (player.getBlockPos().getY() <= -50 && player.getWorld().isAir(player.getBlockPos().down())) {
                     Utils.UTILS.sendTextAfter(player, "Did you really think dying in the void would be a good idea?");
                 }
             }

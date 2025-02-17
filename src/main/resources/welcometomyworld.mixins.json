@@ -8,7 +8,15 @@
 		"PhantomAIMixin",
 		"SpiderAIMixin",
 		"EndermanAIMixin",
-		"ZombieAIMixin"
+		"HostileEntityMixin",
+		"AbstractBlockMixinTick",
+		"SpeardableBlockMixin",
+		"NoDaySleepingMixin",
+		"OneShotErrorDebug",
+		"BooleanRuleMixin",
+		"TameableEntityMixin",
+		"TameableEntityKillMobMixin",
+		"MobEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

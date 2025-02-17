@@ -4,6 +4,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.PhantomEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.canPhantomAI;
-
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 // TODO: Make Phantom spawn like neutral
 @Mixin(PhantomEntity.class)
@@ -28,6 +30,8 @@ public abstract class PhantomAIMixin extends Entity {
     private int counter = 0;
     private boolean canLiftPlayer = true;
 
+    private boolean canGrab = true;
+
     public PhantomAIMixin(EntityType<?> type, World world) {
         super(type, world);
     }
@@ -35,12 +39,24 @@ public abstract class PhantomAIMixin extends Entity {
     @Unique
     private PlayerEntity currentLiftPlayer = null;
 
+    @Inject(method = "onSizeChanged", at = @At("HEAD"))
+    private void onSizeChanged(CallbackInfo ci) {
+        this.calculateDimensions();
+
+        PhantomEntity phantom = (PhantomEntity) (Object) this;
+        phantom.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue((phantom.getPhantomSize() / 2));
+    }
+
     @Inject(method = "tickMovement", at = @At("HEAD"))
     public void onTickMovement(CallbackInfo ci) {
-        if(!canPhantomAI) return;
-        
+        if (!canPhantomAI) return;
+        if (!canGrab) return;
+
         PhantomEntity phantom = (PhantomEntity) (Object) this;
-        if (phantom.getPhantomSize() < 9) return;
+        if (phantom.getPhantomSize() < 9) {
+            canGrab = false;
+            return;
+        }
 
 
         if (!canLiftPlayer) {
@@ -53,11 +69,13 @@ public abstract class PhantomAIMixin extends Entity {
         }
 
 
-
         // Lift the player and make the Phantom ascend
         if (currentLiftPlayer != null) {
-            if (phantom.getServer().getPlayerManager().getPlayer(currentLiftPlayer.getUuid()) != null) {
+            if (phantom != null && phantom.getServer() != null &&
+                    phantom.getServer().getPlayerManager().getPlayer(currentLiftPlayer.getUuid()) != null) {
                 liftAndTeleportPlayer(phantom);
+            } else {
+                dropPlayer(phantom); // Player invalid, reset
             }
         }
 
@@ -71,7 +89,7 @@ public abstract class PhantomAIMixin extends Entity {
     }
 
     private void liftAndTeleportPlayer(PhantomEntity phantom) {
-        if (currentLiftPlayer == null || currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator()) {
+        if (currentLiftPlayer == null || currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator() || currentLiftPlayer.isDead()) {
             dropPlayer(phantom);
             return;
         }
@@ -91,6 +109,7 @@ public abstract class PhantomAIMixin extends Entity {
             }
 
             currentLiftPlayer.teleport(phantomPos.getX(), phantomPos.getY() - 1.2, phantomPos.getZ());
+            currentLiftPlayer.setVelocity(0,0,0);
 
         } else {
             currentLiftPlayer = null;

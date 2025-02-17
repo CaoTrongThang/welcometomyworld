@@ -33,8 +33,8 @@ public class DayAndNightCounterAnimationHandler {
     private boolean dayAnimationComplete = false;
     private boolean nightAnimationComplete = false;
 
-    private int tickRandomBound = 30;
-    private int tickRandomMin = 15;
+    private int tickRandomBound = 27;
+    private int tickRandomMin = 12;
     private int delayTick = 0;
     private int currentTick = 0;
 
@@ -62,6 +62,7 @@ public class DayAndNightCounterAnimationHandler {
                         currentCharIndex++;
                     } else {
                         isAnimatingDay = false; // Stop once the animation finishes
+
                         ServerPlayNetworking.send(player, PLAY_BELL, PacketByteBufs.empty());
                     }
                 }
@@ -99,10 +100,6 @@ public class DayAndNightCounterAnimationHandler {
                 for (ServerPlayerEntity p : world.getPlayers()) {
                     Utils.UTILS.sendTextAfter(p, "You did a great job, The dark will be a little bit easier for you.", 20);
                 }
-            } else if (currentDay == EventsOfTheWorld.stopEventsDay) {
-                for (ServerPlayerEntity p : world.getPlayers()) {
-                    Utils.UTILS.sendTextAfter(p, "I'm tired of summoning random things on you.", 20);
-                }
             }
 
             if (currentDay > 0) {
@@ -139,22 +136,22 @@ public class DayAndNightCounterAnimationHandler {
     }
 
     private void sendAnimationUpdate(ServerWorld world, String textToSend, boolean nighttime) {
-//        // Send the current part of the text to all players
-//        for (ServerPlayerEntity player : world.getPlayers()) {
-//            if (nighttime) {
-//                player.sendMessage(Text.literal(textToSend).formatted(Formatting.DARK_RED), true);
-//            } else {
-//                textToSend = "- " + textToSend + " -";
-//                player.sendMessage(Text.literal(textToSend).formatted(Formatting.WHITE), true);
-//            }
-//            ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
-//
-//        }
-//
-//        if (nighttime) {
-//            delayTick = rand.nextInt(tickRandomMin * 3, tickRandomBound * 3); // Random delay for animation
-//        } else {
-//            delayTick = rand.nextInt(tickRandomMin, tickRandomBound); // Random delay for animation
-//        }
+        // Send the current part of the text to all players
+        for (ServerPlayerEntity player : world.getPlayers()) {
+            if (nighttime) {
+                player.sendMessage(Text.literal(textToSend).formatted(Formatting.DARK_RED), true);
+            } else {
+                textToSend = "- " + textToSend + " -";
+                player.sendMessage(Text.literal(textToSend).formatted(Formatting.WHITE), true);
+            }
+            ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
+
+        }
+
+        if (nighttime) {
+            delayTick = rand.nextInt(tickRandomMin * 2, tickRandomBound * 2); // Random delay for animation
+        } else {
+            delayTick = rand.nextInt(tickRandomMin, tickRandomBound); // Random delay for animation
+        }
     }
 }

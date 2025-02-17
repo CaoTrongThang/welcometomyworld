@@ -22,17 +22,17 @@ public class FallingToWaterDamage {
 
             server.execute(() -> {
                 ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerUuid);
-
                 if (player != null) {
-
                     if (isUmbrella(player)) {
                         return;
                     }
 
-                    if ((player.getHealth() - damageAmount) <= 0) {
+                    player.damage(player.getWorld().getDamageSources().fall(), damageAmount);
+
+                    if ((player.getHealth()) <= 0) {
                         Utils.grantAdvancement(player, "first_falling_to_water_die");
                     }
-                    player.damage(player.getWorld().getDamageSources().fall(), damageAmount);
+
                 }
             });
         });
@@ -42,7 +42,7 @@ public class FallingToWaterDamage {
         // Get the "artifacts:umbrella" item
         Item umbrellaItem = Registries.ITEM.get(new Identifier("artifacts", "umbrella"));
         if (umbrellaItem == null) {
-            System.out.println("Umbrella item not found in registry!");
+            LOGGER.info("Umbrella item not found in registry!");
             return false;
         }
 

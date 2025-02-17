@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
-import com.trongthang.welcometomyworld.ItemsManager;
+import com.trongthang.welcometomyworld.managers.ItemsManager;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.EntityType;
@@ -20,11 +20,10 @@ import net.minecraft.world.Heightmap;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.mojang.text2speech.Narrator.LOGGER;
 import static com.trongthang.welcometomyworld.GlobalConfig.*;
 
 public class BossesSpawningHandler {
-    public int checkInterval = 6000;
+    public int checkInterval = 5000;
     public int counter = 0;
 
     public double bossSpawnChance = 0.5;
@@ -101,6 +100,18 @@ public class BossesSpawningHandler {
         ancientMobs.put("Soulflayer", EntityType.ZOMBIE);
         ancientMobs.put("Ender Wraith", EntityType.ENDERMAN);
         ancientMobs.put("Enderenderman", EntityType.ENDERMAN);
+
+        ConcurrentHashMap<String, EntityType> updatedMap = new ConcurrentHashMap<>();
+
+        // Iterate through the map entries
+        ancientMobs.forEach((key, value) -> {
+            String newKey = "Ancient " + key; // Add prefix to the key
+            updatedMap.put(newKey, value); // Add the new key-value pair to the updated map
+        });
+
+        // Replace old map with updated map
+        ancientMobs.clear();
+        ancientMobs.putAll(updatedMap);
     }
 
     // Run in ticks
@@ -132,11 +143,11 @@ public class BossesSpawningHandler {
                     mob.setCustomName(Text.literal(randomMobName).styled(style -> style.withColor(Formatting.DARK_PURPLE)));  // Set custom name to the randomly selected name
 
 
-                    Utils.applyEffect(mob, 3, 200);
+                    Utils.applyEffectForMobs(mob, 3, 200);
 
                     Text message = Text.literal("☠").styled(style -> style.withColor(Formatting.DARK_PURPLE))
-                            .append(Text.literal(" An").styled(style -> style.withColor(Formatting.WHITE))
-                                    .append(Text.literal(" Ancient " + randomMobName)
+                            .append(Text.literal(" An ").styled(style -> style.withColor(Formatting.WHITE))
+                                    .append(Text.literal(randomMobName)
                                             .styled(style -> style.withColor(Formatting.DARK_PURPLE)))
                                     .append(Text.literal(" just spawned nearby, be careful...")
                                             .styled(style -> style.withColor(Formatting.WHITE))));
@@ -152,9 +163,9 @@ public class BossesSpawningHandler {
                     spawnParticlesUpToTheSky(world, mob);
 
                     Utils.addRunAfter(() -> {
-                        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 50);
-                        mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 5);
-                        mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 2);
+                        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 200);
+                        mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 10);
+                        mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 10);
 
                         mob.setHealth(mob.getMaxHealth());
                     }, 30);

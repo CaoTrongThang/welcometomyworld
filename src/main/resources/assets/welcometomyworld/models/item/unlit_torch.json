@@ -1,0 +1,6 @@
+{
+  "parent": "welcometomyworld:block/unlit_torch",
+  "textures": {
+    "torch": "welcometomyworld:block/unlit_torch"
+  }
+}

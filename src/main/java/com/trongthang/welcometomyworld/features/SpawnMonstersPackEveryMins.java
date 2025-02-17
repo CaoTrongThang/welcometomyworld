@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.MonsterSpawn;
 import net.minecraft.entity.Entity;
@@ -8,6 +9,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import java.util.List;
 import java.util.Random;
@@ -20,15 +22,15 @@ public class SpawnMonstersPackEveryMins {
 
     private static final double CHANCE_TO_HAPPEN = 69;
 
-    private static final int COOLDOWN = 6000;
+    private static final int COOLDOWN = 4000;
     private static int counter = 0;
 
-    private static final int MONSTER_DESPAWN_AFTER_TICK = 6000;
+    private static final int MONSTER_DESPAWN_AFTER_TICK = 4000;
     private static final int PACK_MIN_SIZE = 7;
     private static final int PACK_MAX_SIZE = 15;
 
-    private static final int MIN_SPAWN_DISTANCE = 24; // Minimum distance from the player
-    private static final int MAX_SPAWN_DISTANCE = 64; // Maximum distance from the player
+    private static final int MIN_SPAWN_DISTANCE = 24;
+    private static final int MAX_SPAWN_DISTANCE = 64;
 
     public static final int stopSpawningDay = 369;
 
@@ -41,6 +43,7 @@ public class SpawnMonstersPackEveryMins {
     private static final Random RANDOM = new Random();
 
     public static void spawnMonsters(MinecraftServer server) {
+        
         counter++;
         if (counter <= COOLDOWN) return;
         counter = 0;
@@ -48,6 +51,7 @@ public class SpawnMonstersPackEveryMins {
         if(WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay >= stopSpawningDay) return;
 
         ServerWorld world = server.getOverworld();
+
         if (world == null) {
             return;
         }
@@ -59,6 +63,9 @@ public class SpawnMonstersPackEveryMins {
         if (players.isEmpty()) return;
 
         ServerPlayerEntity player = players.get(RANDOM.nextInt(players.size()));
+
+        World w = player.getWorld();
+        if(!(w.getRegistryKey() == World.OVERWORLD)) return;
 
         if(player.isCreative() || player.isSpectator()) return;
 
@@ -83,7 +90,7 @@ public class SpawnMonstersPackEveryMins {
                 mob.setTarget(player);
             }
 
-            addRunAfter(entity::discard, MONSTER_DESPAWN_AFTER_TICK);
+            addRunAfter(() -> Utils.discardEntity(world, entity), MONSTER_DESPAWN_AFTER_TICK);
         }
     }
 
@@ -116,8 +123,7 @@ public class SpawnMonstersPackEveryMins {
 
             int offsetX = (int) (Math.cos(angle) * distance);
             int offsetZ = (int) (Math.sin(angle) * distance);
-
-            int baseY = playerPos.getY();
+            
             BlockPos candidatePos = playerPos.add(offsetX, 0, offsetZ);
 
             // Start vertical search

@@ -7,6 +7,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -33,21 +34,22 @@ public class BuffTalisman extends Item {
     private int checkInterval = 60;
     private int counter = 0;
 
-    public void onServerTick(ServerPlayerEntity player, Item compareItem) {
+    public void onServerTick(MinecraftServer server, Item compareItem) {
         counter++;
         if (counter < checkInterval) return;
         counter = 0;
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()){
+            if (p.getOffHandStack().getItem() == compareItem || p.getMainHandStack().getItem() == compareItem) {
 
-        if (player.getOffHandStack().getItem() == compareItem || player.getMainHandStack().getItem() == compareItem) {
+                StatusEffectInstance currentEffect = p.getStatusEffect(statusEffect);
 
-            StatusEffectInstance currentEffect = player.getStatusEffect(statusEffect);
-
-            if (currentEffect != null) {
-                int newAmplifier = Math.min(currentEffect.getAmplifier() + amplifier, 128);
-                player.addStatusEffect(new StatusEffectInstance(statusEffect, currentEffect.getDuration(), newAmplifier));
-            } else {
-                // Apply new effect
-                player.addStatusEffect(new StatusEffectInstance(statusEffect, effectDuration, amplifier)); // Duration: 600 ticks (30 seconds)
+                if (currentEffect != null) {
+                    int newAmplifier = Math.min(currentEffect.getAmplifier() + amplifier, 128);
+                    p.addStatusEffect(new StatusEffectInstance(statusEffect, currentEffect.getDuration(), newAmplifier));
+                } else {
+                    // Apply new effect
+                    p.addStatusEffect(new StatusEffectInstance(statusEffect, effectDuration, amplifier)); // Duration: 600 ticks (30 seconds)
+                }
             }
         }
     }
