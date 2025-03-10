@@ -39,12 +39,10 @@ public abstract class PhantomAIMixin extends Entity {
     @Unique
     private PlayerEntity currentLiftPlayer = null;
 
-    @Inject(method = "onSizeChanged", at = @At("HEAD"))
+    @Inject(method = "onSizeChanged", at = @At("HEAD"), cancellable = true)
     private void onSizeChanged(CallbackInfo ci) {
         this.calculateDimensions();
-
-        PhantomEntity phantom = (PhantomEntity) (Object) this;
-        phantom.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue((phantom.getPhantomSize() / 2));
+        ci.cancel();
     }
 
     @Inject(method = "tickMovement", at = @At("HEAD"))

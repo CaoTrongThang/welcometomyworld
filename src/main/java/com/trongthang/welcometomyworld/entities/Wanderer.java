@@ -3,7 +3,7 @@ package com.trongthang.welcometomyworld.entities;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
-import com.trongthang.welcometomyworld.classes.StartAnimation;
+import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.minecraft.block.BlockState;
@@ -12,9 +12,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.ai.NoPenaltyTargeting;
 import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
@@ -55,16 +53,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 //PORTALER: This mob is a portal that can move and can switch portal randomly, players can go to the portal to go to the end or the nether
-public class Wanderer extends TameableEntity implements StartAnimation {
+public class Wanderer extends StrongTameableEntityDefault {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
     private static final TrackedData<Boolean> IS_USING_SKILL = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> IS_RANDOM_FIRST_TIME = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> CAN_BE_TAMED_SET = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> CAN_BE_TAMED = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> IS_PATROLLING = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Float> ALL_SKILL_COOLDOWN = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.FLOAT);
 
     private static final int WALK_CYCLE_DURATION_MS = 2670;
     private static final int[] FOOTSTEP_TIMINGS_MS = {1250, 2250};
@@ -97,8 +93,6 @@ public class Wanderer extends TameableEntity implements StartAnimation {
 
     public final AnimationState healAnimationState = new AnimationState();
 
-    private double skillCooldownDecreasedBasedOnMobScale = 1;
-
     private int useSkillCooldownCounter = 0;
 
     private int maxScale = 8;
@@ -114,7 +108,6 @@ public class Wanderer extends TameableEntity implements StartAnimation {
     private double healthDecreaseWhenTameablePercent = 0.02f;
     private float healthIncreaseWhenTamed = 0.001f;
     private float percentHealthToBeTamed = 0.15f;
-    private int canBeTamedChance = 70;
 
     private int flipCooldown = 100;
     private int flipCooldownCounter = 0;
@@ -130,6 +123,8 @@ public class Wanderer extends TameableEntity implements StartAnimation {
     public Wanderer(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
 
+
+
         animationHashMap.put(AnimationName.IDLE, idleAnimationState);
         animationHashMap.put(AnimationName.WALK, walkAnimationState);
         animationHashMap.put(AnimationName.ATTACK, bowSkillAnimationState);
@@ -143,17 +138,17 @@ public class Wanderer extends TameableEntity implements StartAnimation {
         animationHashMap.put(AnimationName.MOVEMENT, backflipAnimationState);
         animationHashMap.put(AnimationName.BLOCK, blockAnimationState);
 
-        if (!this.getIsRandomFirstTime()) {
+
+        if (!this.getIsRandomFirstTime() && !this.getWorld().isClient) {
             double scale = WelcomeToMyWorld.random.nextDouble(1, maxScale);
-            skillCooldownDecreasedBasedOnMobScale = scale;
 
             this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
             this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 2));
             this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 2.5F));
             this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
 
-            if (skillCooldownDecreasedBasedOnMobScale / 3 > 1) {
-                this.setAllSkillCooldown((float) (this.getAllSkillCooldown() / (skillCooldownDecreasedBasedOnMobScale / 3)));
+            if (scale / 3 > 1) {
+                this.setAllSkillCooldown((float) (this.getAllSkillCooldown() / (scale / 3)));
             }
 
             if (this.getAllSkillCooldown() <= 30) {
@@ -186,11 +181,9 @@ public class Wanderer extends TameableEntity implements StartAnimation {
     protected void initDataTracker() {
         super.initDataTracker();
         this.dataTracker.startTracking(IS_USING_SKILL, false);
-        this.dataTracker.startTracking(IS_RANDOM_FIRST_TIME, false);
         this.dataTracker.startTracking(CAN_BE_TAMED, false);
         this.dataTracker.startTracking(CAN_BE_TAMED_SET, false);
         this.dataTracker.startTracking(IS_PATROLLING, false);
-        this.dataTracker.startTracking(ALL_SKILL_COOLDOWN, 50f);
     }
 
 
@@ -254,7 +247,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
             if (!this.getCanBeTamedSet()) {
                 if (this.getHealth() <= this.getMaxHealth() * percentHealthToBeTamed && (this.getOwner() == null || !this.isTamed())) {
                     if (!this.getCanBeTamed()) {
-                        if (WelcomeToMyWorld.random.nextInt(0, 100) < this.canBeTamedChance) {
+                        if (WelcomeToMyWorld.random.nextInt(0, 100) < this.getTameChance()) {
                             this.setCanBeTamed(true);
                         } else {
                             this.setCanBeTamed(false);
@@ -280,12 +273,9 @@ public class Wanderer extends TameableEntity implements StartAnimation {
     public void tick() {
         super.tick();
         setAnimationStates();
-
         usingSkillsHandler();
 
         if (!this.getWorld().isClient) {
-
-
             if (this.getTarget() != null) {
                 if(!this.getCanBeTamed()){
                     if(!this.shootingArrow){
@@ -297,7 +287,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
                     }
                 }
 
-                if (this.getTarget().isDead()) {
+                if (this.getTarget().isDead() || this.getTarget().getHealth() <= 0) {
                     this.setTarget(null);
                 }
             }
@@ -341,50 +331,51 @@ public class Wanderer extends TameableEntity implements StartAnimation {
                 return;
             }
 
+            if (this.getHealth() <= this.getMaxHealth() * 0.4f) {
+                int timeout = 0;
+                if (this.drinkHealthCounter >= this.drinkHealthCooldown) {
+                    if (!this.getCanBeTamed()) {
+
+                        this.useSkillCooldownCounter = 0;
+
+                        this.isDrinkingHeal = true;
+
+                        this.drinkHealthCounter = 0;
+                        timeout = 55;
+
+                        Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.HEAL, timeout);
+
+                        Utils.addRunAfter(() -> {
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
+                            this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
+                            this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
+                        }, 19);
+
+                        Utils.addRunAfter(() -> {
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
+                            this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
+                            this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
+                        }, 30);
+
+                        Utils.addRunAfter(() -> {
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
+                            this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
+                            this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
+                        }, 40);
+
+                        Utils.addRunAfter(() -> {
+                            this.isDrinkingHeal = false;
+                        }, timeout);
+
+                        resetSkill(timeout);
+                        return;
+                    }
+                }
+            }
+
             if (this.getTarget() != null) {
                 double distance = this.distanceTo(this.getTarget());
                 int timeout = 0;
-
-                if (this.getHealth() <= this.getMaxHealth() * 0.4f) {
-                    if (this.drinkHealthCounter >= this.drinkHealthCooldown) {
-                        if ((!this.getCanBeTamed() || this.isTamed() || this.getOwner() != null)) {
-
-                            this.useSkillCooldownCounter = 0;
-
-                            this.isDrinkingHeal = true;
-
-                            this.drinkHealthCounter = 0;
-                            timeout = 55;
-
-                            Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.HEAL, timeout);
-
-                            Utils.addRunAfter(() -> {
-                                Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
-                                this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
-                                this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
-                            }, 19);
-
-                            Utils.addRunAfter(() -> {
-                                Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
-                                this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
-                                this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
-                            }, 30);
-
-                            Utils.addRunAfter(() -> {
-                                Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
-                                this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
-                                this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
-                            }, 40);
-
-                            Utils.addRunAfter(() -> {
-                                this.isDrinkingHeal = false;
-                            }, timeout);
-
-                            resetSkill(timeout);
-                            return;
-                        }
-                    }
-                }
 
                 if (this.isDrinkingHeal) return;
 
@@ -421,7 +412,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
                     int rand = WelcomeToMyWorld.random.nextInt(0, 100);
                     timeout = 20;
 
-                    if(rand <= 10){
+                    if(rand <= 7){
                         this.useSkillCooldownCounter = 0;
                         {
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK4, timeout);
@@ -745,7 +736,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
             // Configure the arc:
             double arcAngle = Math.toRadians(90);  // 90° arc; adjust as needed.
             double halfArc = arcAngle / 2.0;
-            int slashLength = 40;                // Maximum distance of the slash.
+            int slashLength = 25;                // Maximum distance of the slash.
 
             // Set resolution: how finely we sample the arc.
             double radiusStep = 1.0;             // Start at 1 block out.
@@ -822,7 +813,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
                     } else {
                         target.addVelocity(pushBackDirection.x * 0.2f, 0.1f, pushBackDirection.z * 0.2f);
                     }
-
+                    target.disablesShield();
                     target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
                 }
             }
@@ -834,7 +825,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
         if (this.getTarget() == null) return;
         if (target.isBlocking() && target.getActiveItem().isDamageable()) {
 
-            float reducedDamage = damage * 2f;
+            float reducedDamage = damage;
 
             target.getActiveItem().damage((int) reducedDamage, target,
                     entity -> entity.sendToolBreakStatus(target.getActiveHand()));
@@ -904,7 +895,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
     }
 
     private Item getTameFood() {
-        return Items.SOUL_CAMPFIRE;
+        return Items.GOLDEN_APPLE;
     }
 
     @Override
@@ -950,12 +941,8 @@ public class Wanderer extends TameableEntity implements StartAnimation {
         }
     }
 
-    public void stopAllAnimation() {
-        AnimationName na = null;
-        for (AnimationName n : animationHashMap.keySet()) {
-            animationHashMap.get(n).stop();
-        }
-    }
+    // Store the goal instance
+    private ActiveTargetGoal<HostileEntity> hostileTargetGoal;
 
     @Override
     public boolean damage(DamageSource source, float amount) {
@@ -965,13 +952,21 @@ public class Wanderer extends TameableEntity implements StartAnimation {
                 this.setIsPatrolling(!this.getIsPatrolling());
 
                 if (this.getIsPatrolling()) {
-                    this.targetSelector.add(1, new ActiveTargetGoal<>(this, HostileEntity.class, true));
+                    // Create and add the goal if it doesn't exist
+                    if (this.hostileTargetGoal == null) {
+                        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
+                        this.targetSelector.add(1, this.hostileTargetGoal);
+                    }
                 } else {
+                    // Remove the goal if it exists
+                    if (this.hostileTargetGoal != null) {
+                        this.targetSelector.remove(this.hostileTargetGoal);
+                        this.hostileTargetGoal = null; // Clear the reference
+                    }
                     this.patrolCenterPos = null;
-                    this.targetSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, true));
                 }
 
-                return false;
+                return super.damage(source, 0);
             }
 
             if (!this.getCanBeTamed() && source.getAttacker() != this.getOwner()) {
@@ -983,7 +978,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
             int rand = WelcomeToMyWorld.random.nextInt(0, 100);
             if (rand <= 7 && (!this.getCanBeTamed() || this.isTamed() || this.getOwner() != null)) {
                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.BLOCK, 5);
-                return false;
+                return super.damage(source, 0);
             }
         }
 
@@ -1016,15 +1011,6 @@ public class Wanderer extends TameableEntity implements StartAnimation {
         this.dataTracker.set(IS_USING_SKILL, variant);
     }
 
-    public boolean getIsRandomFirstTime() {
-        return this.dataTracker.get(IS_RANDOM_FIRST_TIME);
-    }
-
-    public void setIsRandomFirstTime(boolean variant) {
-        this.dataTracker.set(IS_RANDOM_FIRST_TIME, variant);
-    }
-
-
     public boolean getCanBeTamed() {
         return this.dataTracker.get(CAN_BE_TAMED);
     }
@@ -1041,13 +1027,6 @@ public class Wanderer extends TameableEntity implements StartAnimation {
         this.dataTracker.set(IS_PATROLLING, variant);
     }
 
-    public float getAllSkillCooldown() {
-        return this.dataTracker.get(ALL_SKILL_COOLDOWN);
-    }
-
-    public void setAllSkillCooldown(float variant) {
-        this.dataTracker.set(ALL_SKILL_COOLDOWN, variant);
-    }
 
     public boolean getCanBeTamedSet() {
         return this.dataTracker.get(CAN_BE_TAMED_SET);
@@ -1064,6 +1043,7 @@ public class Wanderer extends TameableEntity implements StartAnimation {
         nbt.putBoolean("canBeTamedSet", this.getCanBeTamedSet());
         nbt.putFloat("allSkillCooldown", this.getAllSkillCooldown());
         nbt.putBoolean("isRandomFirstTime", this.getIsRandomFirstTime());
+        nbt.putInt("drinkHealthCounter", this.drinkHealthCounter);
 
         if (this.patrolCenterPos != null) {
             NbtList homePos = new NbtList();
@@ -1080,6 +1060,14 @@ public class Wanderer extends TameableEntity implements StartAnimation {
         this.setCanBeTamed(nbt.getBoolean("canBeTamed"));
         this.setCanBeTamedSet(nbt.getBoolean("canBeTamedSet"));
         this.setIsRandomFirstTime(nbt.getBoolean("isRandomFirstTime"));
+
+
+        int counter = nbt.getInt("drinkHealthCounter");
+
+        if(counter > 0){
+            this.drinkHealthCounter = nbt.getInt("drinkHealthCounter");
+        }
+
 
         if (nbt.getFloat("allSkillCooldown") > 0) {
             this.setAllSkillCooldown(nbt.getFloat("allSkillCooldown"));
@@ -1238,12 +1226,12 @@ public class Wanderer extends TameableEntity implements StartAnimation {
 
         @Override
         public boolean canStart() {
-            return mob.getIsPatrolling() && mob.patrolCenterPos != null && mob.getIsUsingSkill();
+            return mob.getIsPatrolling() && mob.patrolCenterPos != null;
         }
 
         @Override
         public boolean shouldContinue() {
-            return mob.getIsPatrolling() && mob.patrolCenterPos != null && mob.getIsUsingSkill();
+            return mob.getIsPatrolling() && mob.patrolCenterPos != null;
         }
 
         @Override

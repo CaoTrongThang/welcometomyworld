@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DDD",
+    "FEF",
+    "AAA"
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:diamond_block"
+    },
+    "F":
+    {
+      "item": "minecraft:emerald_block"
+    },
+    "A": {
+      "item": "minecraft:iron_block"
+    },
+    "D": {
+      "item": "minecraft:gold_block"
+    }
+  },
+  "result": {
+    "item": "minecraft:totem_of_undying",
+    "count": 1
+  }
+}

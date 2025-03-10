@@ -45,6 +45,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
     private double lastFallDistance = 0;
 
+    public static BlockPos skullRevivePosition = null;
+
     private int messageCounter = 0;
 //    List<String> removeMessages = List.of("Installed datapacks:",
 //            "You can return to this menu with /function nucleus:menu",
@@ -53,9 +55,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 //            "has made the advancement [Ice and Fire]",
 //            "Manic v1.1.0 (Commands | Wiki)");
 
-List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
-        "has made the advancement [Mobs of Mythology]");
-
+    List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
+            "has made the advancement [Mobs of Mythology]");
 
 
     @Override
@@ -114,14 +115,14 @@ List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
         });
 
         ClientReceiveMessageEvents.ALLOW_GAME.register((a, b) -> {
-            if(!removeMessagesFirstJoin) return true;
+            if (!removeMessagesFirstJoin) return true;
 
-            for(String m : removeMessages){
-                if(a.getString().toLowerCase().contains(m.toLowerCase())){
-                        messageCounter++;
-                        if(messageCounter >= removeMessages.size()){
-                            removeMessagesFirstJoin = false;
-                        }
+            for (String m : removeMessages) {
+                if (a.getString().toLowerCase().contains(m.toLowerCase())) {
+                    messageCounter++;
+                    if (messageCounter >= removeMessages.size()) {
+                        removeMessagesFirstJoin = false;
+                    }
                     return false;
                 }
             }
@@ -185,8 +186,7 @@ List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
     }
 
     private void waterFallDamage(MinecraftClient client) {
-        if(WATER_FALL_DAMAGE_COUNTER < WATER_FALL_DAMAGE_COOLDOWN)
-        {
+        if (WATER_FALL_DAMAGE_COUNTER < WATER_FALL_DAMAGE_COOLDOWN) {
             WATER_FALL_DAMAGE_COUNTER++;
             return;
         }
@@ -200,14 +200,14 @@ List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
         Vec3d veloc = player.getVelocity();
 
         if (veloc.getY() < -0.85) {
-            if(this.hasLandedWater(player)){
+            if (this.hasLandedWater(player)) {
                 float damageAmount = Utils.calculateDamageWithArmor(calculateFallDamage(lastFallDistance), player);
 
-                if(player.isSneaking()){
+                if (player.isSneaking()) {
                     damageAmount /= 2;
                 }
 
-                if(damageAmount > 6.5){
+                if (damageAmount > 6.5) {
                     PacketByteBuf buf = PacketByteBufs.create();
                     buf.writeFloat(damageAmount);
                     buf.writeUuid(player.getUuid());
@@ -228,7 +228,7 @@ List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
 
         // Check if the player is on the ground or touching a water block
         boolean land = blockState.isLiquid() && !player.getWorld().isAir(below);
-        if(land){
+        if (land) {
             lastFallDistance = player.fallDistance;
 
         }

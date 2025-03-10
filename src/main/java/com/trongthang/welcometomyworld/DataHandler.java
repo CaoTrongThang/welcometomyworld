@@ -34,10 +34,6 @@ public class DataHandler {
     public static final Type PLAYER_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerData>>() {}.getType();
     public ConcurrentHashMap<UUID, PlayerData> playerDataMap = new ConcurrentHashMap<>();
 
-    public Path playerStatsDataSavePath;
-    public static final Type PLAYER_STATS_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerStatsData>>() {}.getType();
-    public ConcurrentHashMap<UUID, PlayerStatsData> playerStatsData = new ConcurrentHashMap<>();
-
     public Path blocksPlacedByMobs;
     public static final Type BLOCKS_PLACED_BY_MOBS_DATA_TYPE = new TypeToken<ConcurrentHashMap<BlockPos, Integer>>() {}.getType();
     public ConcurrentHashMap<BlockPos, Integer> blocksPlacedByMobWillRemove = new ConcurrentHashMap<>();
@@ -51,15 +47,12 @@ public class DataHandler {
         playerDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerdata.json");
         blocksPlacedByMobs = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksPlacedByMobs.json");
 //        blocksBrokenByMobs = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksBrokenByMobs.json");
-        playerStatsDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerStatsData.json");
 
         playerDataMap.clear();
-        playerStatsData.clear();
         blocksPlacedByMobWillRemove.clear();
 //        blocksBrokenByMobWillRestore.clear();
 
         loadPlayerData();
-        loadPlayerStatsData();
         loadBlocksPlacedByMobsData();
 //        loadBlocksBrokenByMobsData();
 
@@ -72,12 +65,10 @@ public class DataHandler {
             playerDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerdata.json");
         }
         savePlayerData();
-        savePlayerStatsData();
         saveBlocksPlacedByMobsData();
 //        saveBlocksBrokenByMobsData();
 
         playerDataMap.clear();
-        playerStatsData.clear();
         blocksPlacedByMobWillRemove.clear();
         blocksBrokenByMobWillRestore.clear();
     }
@@ -136,35 +127,6 @@ public class DataHandler {
                 GSON.toJson(playerDataMap, PLAYER_DATA_TYPE, writer);
             }
             LOGGER.info("Saved {} player entries to data file.", playerDataMap.size());
-        } catch (IOException e) {
-            LOGGER.error("Failed to save player data", e);
-        }
-    }
-
-    public void loadPlayerStatsData() {
-        LOGGER.info("Loading player stats data from: {}", playerStatsDataSavePath);
-
-        if (Files.exists(playerStatsDataSavePath)) {
-            try (Reader reader = Files.newBufferedReader(playerStatsDataSavePath)) {
-                ConcurrentHashMap<UUID, PlayerStatsData> loadedData = GSON.fromJson(reader, PLAYER_STATS_DATA_TYPE);
-                if (loadedData != null) {
-                    playerStatsData.putAll(loadedData);
-                }
-            } catch (IOException e) {
-                LOGGER.error("Failed to load player stats data", e);
-            }
-        }
-    }
-
-    public void savePlayerStatsData() {
-        LOGGER.info("Saving player stats data to: {}", playerStatsDataSavePath);
-
-        try {
-            Files.createDirectories(playerStatsDataSavePath.getParent());
-            try (Writer writer = Files.newBufferedWriter(playerStatsDataSavePath)) {
-                GSON.toJson(playerStatsData, PLAYER_DATA_TYPE, writer);
-            }
-            LOGGER.info("Saved {} player stats entries to data file.", playerStatsData.size());
         } catch (IOException e) {
             LOGGER.error("Failed to save player data", e);
         }

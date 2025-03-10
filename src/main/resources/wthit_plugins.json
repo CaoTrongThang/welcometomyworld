@@ -1,0 +1,7 @@
+{
+  "welcometomyworld:plugin": {
+    "initializer": "com.trongthang.welcometomyworld.API.WthitPlugin",
+    "side": "client",
+    "required": ["wthit"]
+  }
+}

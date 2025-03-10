@@ -218,8 +218,8 @@ public class WandererModel<T extends Wanderer> extends SinglePartEntityModel<T> 
         ModelPartData left_leg_down = left_leg.addChild("left_leg_down", ModelPartBuilder.create().uv(60, 63).cuboid(-1.5F, 6.0F, -1.5F, 3.0F, 1.0F, 5.0F, new Dilation(0.0F))
                 .uv(116, 119).cuboid(-1.5F, 0.0F, -0.25F, 3.0F, 6.0F, 3.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 6.0F, 1.0F));
 
-        ModelPartData sword = hip_down.addChild("sword", ModelPartBuilder.create().uv(0, 0).cuboid(0.0F, -2.0F, 0.0F, 1.0F, 1.0F, 18.0F, new Dilation(0.0F))
-                .uv(16, 86).cuboid(0.0F, -1.0F, 0.0F, 1.0F, 1.0F, 19.0F, new Dilation(0.0F))
+        ModelPartData sword = hip_down.addChild("sword", ModelPartBuilder.create().uv(1, 0).cuboid(0.5F, -2.0F, 0.0F, 0.0F, 1.0F, 18.0F, new Dilation(0.0F))
+                .uv(17, 86).cuboid(0.5F, -1.0F, 0.0F, 0.0F, 1.0F, 19.0F, new Dilation(0.0F))
                 .uv(23, 58).cuboid(0.0F, -4.0F, -2.0F, 1.0F, 6.0F, 2.0F, new Dilation(0.0F))
                 .uv(70, 75).cuboid(0.0F, -2.0F, -6.0F, 1.0F, 2.0F, 4.0F, new Dilation(0.0F)), ModelTransform.of(6.0F, 0.0F, 0.0F, -0.3011F, -0.0522F, -0.1666F));
 

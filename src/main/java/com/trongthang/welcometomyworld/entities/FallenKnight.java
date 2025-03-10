@@ -3,7 +3,7 @@ package com.trongthang.welcometomyworld.entities;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
-import com.trongthang.welcometomyworld.classes.StartAnimation;
+import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -24,7 +24,6 @@ import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -60,12 +59,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
 //PORTALER: This mob is a portal that can move and can switch portal randomly, players can go to the portal to go to the end or the nether
-public class FallenKnight extends TameableEntity implements StartAnimation {
+public class FallenKnight extends StrongTameableEntityDefault {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
     private static final TrackedData<Boolean> IS_USING_SKILL = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> IS_RANDOM_FIRST_TIME = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> CAN_BE_TAMED_SET = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> CAN_BE_TAMED = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> IS_PATROLLING = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
@@ -83,7 +81,6 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
     private static final int ATTACK_3_DURATION_MS = 2500;
     private static final int[] ATTACK_3_SOUND_TIMINGS_MS = {400, 1220};
     private final Set<Integer> attack3PlayedFrames = new HashSet<>();
-
 
     private static final int TELEPORT_DURATION_MS = 8000;
     private static final int[] TELEPORT_SOUND_TIMINGS_MS = {0, 4300, 4900};
@@ -106,7 +103,7 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
 
     private int attack2Range = 8;
 
-    private int attack3Range = 20;
+    private int attack3Range = 17;
 
     private int maxScale = 8;
 
@@ -126,8 +123,6 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
     private int attack2DamageMultiply = 3;
     private int attack3DamageMultiply = 4;
 
-    private int maxNetherStarsAllow = 15;
-
     private int canChangeTargetCounter = 0;
     private int canChangeTargetCooldown = 80;
 
@@ -146,6 +141,7 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
         if (!this.getWorld().isClient && !this.getIsRandomFirstTime()) {
             double scale = WelcomeToMyWorld.random.nextDouble(1, maxScale);
             skillCooldownDecreasedBasedOnMobScale = scale;
+
 
             this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
             this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 2));
@@ -191,11 +187,11 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
     protected void initDataTracker() {
         super.initDataTracker();
         this.dataTracker.startTracking(IS_USING_SKILL, false);
-        this.dataTracker.startTracking(IS_RANDOM_FIRST_TIME, false);
         this.dataTracker.startTracking(CAN_BE_TAMED, false);
         this.dataTracker.startTracking(CAN_BE_TAMED_SET, false);
         this.dataTracker.startTracking(IS_PATROLLING, false);
         this.dataTracker.startTracking(ALL_SKILL_COOLDOWN, 200f);
+
     }
 
 
@@ -223,63 +219,6 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
         this.targetSelector.add(3, new CustomAttackWithOwnerGoal(this));
         this.targetSelector.add(4, new RevengeGoal(this).setGroupRevenge());
         this.targetSelector.add(5, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
-    }
-
-    public void setAnimationStates() {
-
-        if (this.getWorld().isClient) {
-            if (!this.getCanBeTamed()) {
-                if (this.isInSittingPose()) {
-                    if (!sitAnimationState.isRunning()) {
-                        startAnimation(AnimationName.SIT);
-                    }
-                    return;
-                }
-
-                Vec3d velocity = this.getVelocity();
-                boolean isMoving = velocity.x != 0 || velocity.z != 0;
-                if (animationTimeout <= 0 && !this.getIsUsingSkill()) {
-                    if (isMoving) {
-                        if (!walkAnimationState.isRunning()) {
-                            startAnimation(AnimationName.WALK);
-                        }
-                    } else {
-                        if (!idleAnimationState.isRunning()) {
-                            startAnimation(AnimationName.IDLE);
-                        }
-                    }
-                }
-            } else if (this.getCanBeTamed() && this.getOwner() == null) {
-                if (!this.tameableAnimationState.isRunning()) {
-                    this.startAnimation(AnimationName.TAMEABLE);
-                }
-            }
-
-
-        } else {
-            if (!this.getCanBeTamedSet()) {
-                if (this.getHealth() <= this.getMaxHealth() * percentHealthToBeTamed && (this.getOwner() == null || !this.isTamed())) {
-                    if (!this.getCanBeTamed()) {
-                        if (WelcomeToMyWorld.random.nextInt(0, 100) < this.canBeTamedChance) {
-                            this.setCanBeTamed(true);
-                        } else {
-                            this.setCanBeTamed(false);
-                        }
-
-                        this.setCanBeTamedSet(true);
-
-                        if (this.getCanBeTamed()) {
-                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_ARMOR_SHAKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
-                            Utils.addRunAfter(() -> Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_FALL, 0.5f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f)), 12);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (animationTimeout >= 0) {
-            animationTimeout--;
-        }
     }
 
     @Override
@@ -322,6 +261,58 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
         handleAnimationSoundsAndEffect();
     }
 
+
+    public void setAnimationStates() {
+        if (this.getWorld().isClient) {
+            if (!this.getCanBeTamed()) {
+                if (this.isInSittingPose()) {
+                    if (!sitAnimationState.isRunning()) {
+                        startAnimation(AnimationName.SIT);
+                    }
+                } else {
+                    Vec3d velocity = this.getVelocity();
+                    boolean isMoving = velocity.x != 0 || velocity.z != 0;
+                    if (animationTimeout <= 0 && !this.getIsUsingSkill()) {
+                        if (isMoving) {
+                            if (!walkAnimationState.isRunning()) {
+                                startAnimation(AnimationName.WALK);
+                            }
+                        } else {
+                            if (!idleAnimationState.isRunning()) {
+                                startAnimation(AnimationName.IDLE);
+                            }
+                        }
+                    }
+                }
+
+
+            } else if (this.getCanBeTamed() && this.getOwner() == null) {
+                if (!this.tameableAnimationState.isRunning()) {
+                    this.startAnimation(AnimationName.TAMEABLE);
+                }
+            }
+        } else {
+            if (!this.getCanBeTamedSet()) {
+                if (this.getHealth() <= this.getMaxHealth() * percentHealthToBeTamed && (this.getOwner() == null || !this.isTamed())) {
+                    if (!this.getCanBeTamed()) {
+                        this.setCanBeTamed(WelcomeToMyWorld.random.nextInt(0, 100) < this.canBeTamedChance);
+
+                        this.setCanBeTamedSet(true);
+
+                        if (this.getCanBeTamed()) {
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_ARMOR_SHAKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
+                            Utils.addRunAfter(() -> Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_FALL, 0.5f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f)), 12);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (animationTimeout >= 0) {
+            animationTimeout--;
+        }
+    }
+
     private void usingSkillsHandler() {
         if (!this.getWorld().isClient && !this.getCanBeTamed() && !this.isInSittingPose()) {
             if (this.getIsUsingSkill()) {
@@ -357,7 +348,7 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
                 if (distance <= attack2Range) {
                     int rand = WelcomeToMyWorld.random.nextInt(0, 100);
                     if (rand < 60) {
-                        timeout = 30;
+                        timeout = 29;
                         Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
                         Utils.addRunAfter(this::createDamageBox, 15);
                     } else {
@@ -687,9 +678,7 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
         if (this.getTarget() == null) return;
         if (target.isBlocking() && target.getActiveItem().isDamageable()) {
 
-            float reducedDamage = damage * 0.8f;
-
-            target.getActiveItem().damage((int) reducedDamage, target,
+            target.getActiveItem().damage((int) damage, target,
                     entity -> entity.sendToolBreakStatus(target.getActiveHand()));
 
         }
@@ -809,39 +798,42 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
 
     }
 
+    // Store the goal instance
+    private ActiveTargetGoal<HostileEntity> hostileTargetGoal;
+
     @Override
     public boolean damage(DamageSource source, float amount) {
         if (!this.getWorld().isClient) {
+            LOGGER.info("ATTACKER: " + source.getAttacker());
             if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner() && player.isSneaking()) {
                 this.patrolCenterPos = this.getBlockPos();
                 this.setIsPatrolling(!this.getIsPatrolling());
 
                 if (this.getIsPatrolling()) {
-                    this.targetSelector.add(1, new ActiveTargetGoal<>(this, HostileEntity.class, true));
+                    // Create and add the goal if it doesn't exist
+                    if (this.hostileTargetGoal == null) {
+                        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
+                        this.targetSelector.add(1, this.hostileTargetGoal);
+                    }
                 } else {
+                    // Remove the goal if it exists
+                    if (this.hostileTargetGoal != null) {
+                        this.targetSelector.remove(this.hostileTargetGoal);
+                        this.hostileTargetGoal = null; // Clear the reference
+                    }
                     this.patrolCenterPos = null;
-                    this.targetSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, true));
                 }
 
-                return false;
+                return super.damage(source, 0);
             }
 
             if (!this.getCanBeTamed() && source.getAttacker() != this.getOwner()) {
-
-                if (source.getSource() instanceof ArrowEntity) {
-                    return false;
-                }
-
                 if (source.getAttacker() instanceof PlayerEntity player) {
                     if (player.isCreative() || player.isSpectator()) return super.damage(source, amount);
                 }
-
-                if(this.canChangeTargetCounter >= this.canChangeTargetCooldown){
-                    this.setTarget(source.getAttacker() instanceof LivingEntity ? (LivingEntity) source.getAttacker() : null);
-                    this.canChangeTargetCounter = 0;
-                }
             }
         }
+
         return super.damage(source, amount);
     }
 
@@ -888,15 +880,6 @@ public class FallenKnight extends TameableEntity implements StartAnimation {
     public void setIsUsingSkill(boolean variant) {
         this.dataTracker.set(IS_USING_SKILL, variant);
     }
-
-    public boolean getIsRandomFirstTime() {
-        return this.dataTracker.get(IS_RANDOM_FIRST_TIME);
-    }
-
-    public void setIsRandomFirstTime(boolean variant) {
-        this.dataTracker.set(IS_RANDOM_FIRST_TIME, variant);
-    }
-
 
     public boolean getCanBeTamed() {
         return this.dataTracker.get(CAN_BE_TAMED);

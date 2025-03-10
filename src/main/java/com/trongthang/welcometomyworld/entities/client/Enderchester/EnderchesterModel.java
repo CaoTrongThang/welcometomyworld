@@ -14,6 +14,7 @@ public class EnderchesterModel<T extends Enderchester> extends SinglePartEntityM
 
     private final ModelPart a_living_chest;
     private final ModelPart all_body;
+    private final ModelPart all_body_eye;
     private final ModelPart body_fur;
     private final ModelPart back2;
     private final ModelPart front2;
@@ -38,6 +39,7 @@ public class EnderchesterModel<T extends Enderchester> extends SinglePartEntityM
     public EnderchesterModel(ModelPart root) {
         this.a_living_chest = root.getChild("a_living_chest");
         this.all_body = a_living_chest.getChild("all_body");
+        this.all_body_eye = all_body.getChild("all_body_eye");
         this.tongue = all_body.getChild("tongue");
         this.teeths = all_body.getChild("teeths");
         this.head = all_body.getChild("head");
@@ -64,9 +66,12 @@ public class EnderchesterModel<T extends Enderchester> extends SinglePartEntityM
     public static TexturedModelData getTexturedModelData() {
         ModelData modelData = new ModelData();
         ModelPartData modelPartData = modelData.getRoot();
-        ModelPartData a_living_chest = modelPartData.addChild("a_living_chest", ModelPartBuilder.create(), ModelTransform.of(0.0F, 22.75F, 0.0F, 0.0F, -3.098F, 0.0F));
+        ModelPartData a_living_chest = modelPartData.addChild("a_living_chest", ModelPartBuilder.create(), ModelTransform.of(0.0F, 24.0F, 0.0F, 0.0F, -3.098F, 0.0F));
 
-        ModelPartData all_body = a_living_chest.addChild("all_body", ModelPartBuilder.create().uv(0, 0).cuboid(-6.0F, -8.0F, -6.0F, 12.0F, 7.0F, 12.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
+        ModelPartData all_body = a_living_chest.addChild("all_body", ModelPartBuilder.create().uv(0, 0).cuboid(-6.0F, -8.0F, -6.0F, 12.0F, 7.0F, 12.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, -1.25F, 0.0F));
+
+        ModelPartData all_body_eye = all_body.addChild("all_body_eye", ModelPartBuilder.create().uv(0, 1).cuboid(-2.0F, -2.0F, -1.25F, 4.0F, 4.0F, 1.0F, new Dilation(0.0F))
+                .uv(2, 7).cuboid(-1.0F, -1.0F, -0.75F, 2.0F, 2.0F, 1.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, -4.0F, 7.0F));
 
         ModelPartData body_fur = all_body.addChild("body_fur", ModelPartBuilder.create(), ModelTransform.pivot(0.0F, -4.0F, -6.0F));
 
@@ -139,11 +144,11 @@ public class EnderchesterModel<T extends Enderchester> extends SinglePartEntityM
 
         ModelPartData head = all_body.addChild("head", ModelPartBuilder.create().uv(0, 19).cuboid(-6.0F, -4.0F, 0.0F, 12.0F, 4.0F, 12.0F, new Dilation(0.0F)), ModelTransform.of(0.0F, -8.0F, -6.0F, 0.5236F, 0.0F, 0.0F));
 
-        ModelPartData right_horn = head.addChild("right_horn", ModelPartBuilder.create().uv(12, 43).cuboid(-5.0F, -3.0F, 9.0F, 3.0F, 2.0F, 3.0F, new Dilation(0.0F)), ModelTransform.pivot(7.1434F, -2.865F, -3.5497F));
+        ModelPartData right_horn = head.addChild("right_horn", ModelPartBuilder.create().uv(12, 43).cuboid(2.1434F, -15.115F, 10.0F, 3.0F, 2.0F, 3.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 9.25F, -4.5497F));
 
-        ModelPartData cube_r5 = right_horn.addChild("cube_r5", ModelPartBuilder.create().uv(48, 14).cuboid(0.5F, -1.5F, -1.5F, 1.0F, 1.0F, 1.0F, new Dilation(0.0F)), ModelTransform.of(-5.0F, -3.75F, 11.5F, -0.0177F, -0.0192F, -0.2601F));
+        ModelPartData cube_r5 = right_horn.addChild("cube_r5", ModelPartBuilder.create().uv(48, 14).cuboid(0.5F, -1.5F, -1.5F, 1.0F, 1.0F, 1.0F, new Dilation(0.0F)), ModelTransform.of(2.1434F, -15.865F, 12.5F, -0.0177F, -0.0192F, -0.2601F));
 
-        ModelPartData cube_r6 = right_horn.addChild("cube_r6", ModelPartBuilder.create().uv(24, 47).cuboid(-0.5F, -2.5F, -1.5F, 2.0F, 2.0F, 2.0F, new Dilation(0.0F)), ModelTransform.of(-4.0F, -2.0F, 11.0F, -0.0185F, -0.0185F, -0.2164F));
+        ModelPartData cube_r6 = right_horn.addChild("cube_r6", ModelPartBuilder.create().uv(24, 47).cuboid(-0.5F, -2.5F, -1.5F, 2.0F, 2.0F, 2.0F, new Dilation(0.0F)), ModelTransform.of(3.1434F, -14.115F, 12.0F, -0.0185F, -0.0185F, -0.2164F));
 
         ModelPartData left_horn = head.addChild("left_horn", ModelPartBuilder.create().uv(0, 43).cuboid(-5.0F, -4.0F, 9.0F, 3.0F, 3.0F, 3.0F, new Dilation(0.0F)), ModelTransform.pivot(0.1434F, -2.865F, -3.5497F));
 
@@ -207,19 +212,19 @@ public class EnderchesterModel<T extends Enderchester> extends SinglePartEntityM
                 .uv(0, 59).cuboid(-10.0F, -2.0F, 0.0F, 2.0F, 3.0F, 0.0F, new Dilation(0.0F))
                 .uv(0, 62).cuboid(-12.0F, -2.0F, 0.0F, 2.0F, 2.0F, 0.0F, new Dilation(0.0F)), ModelTransform.of(0.0F, 0.0F, 0.0F, -0.3927F, 0.0F, 0.0F));
 
-        ModelPartData leg_front_right = a_living_chest.addChild("leg_front_right", ModelPartBuilder.create(), ModelTransform.pivot(6.0F, -2.0F, 4.0F));
+        ModelPartData leg_front_right = a_living_chest.addChild("leg_front_right", ModelPartBuilder.create(), ModelTransform.pivot(6.0F, -3.25F, 4.0F));
 
         ModelPartData cube_r13 = leg_front_right.addChild("cube_r13", ModelPartBuilder.create().uv(0, 35).cuboid(0.0F, -3.0F, -2.0F, 3.0F, 5.0F, 3.0F, new Dilation(0.0F)), ModelTransform.of(-0.75F, 1.5F, 0.0F, 0.0658F, -0.0218F, -0.0813F));
 
-        ModelPartData leg_front_left = a_living_chest.addChild("leg_front_left", ModelPartBuilder.create(), ModelTransform.pivot(-6.0F, -2.0F, 4.0F));
+        ModelPartData leg_front_left = a_living_chest.addChild("leg_front_left", ModelPartBuilder.create(), ModelTransform.pivot(-6.0F, -3.25F, 4.0F));
 
         ModelPartData cube_r14 = leg_front_left.addChild("cube_r14", ModelPartBuilder.create().uv(12, 35).cuboid(-2.0F, -2.0F, -1.0F, 3.0F, 5.0F, 3.0F, new Dilation(0.0F)), ModelTransform.of(-0.25F, 0.25F, 0.0F, 0.0344F, 0.0317F, 0.1205F));
 
-        ModelPartData leg_back_right = a_living_chest.addChild("leg_back_right", ModelPartBuilder.create(), ModelTransform.pivot(6.0F, -2.0F, -4.0F));
+        ModelPartData leg_back_right = a_living_chest.addChild("leg_back_right", ModelPartBuilder.create(), ModelTransform.pivot(6.0F, -3.25F, -4.0F));
 
         ModelPartData cube_r15 = leg_back_right.addChild("cube_r15", ModelPartBuilder.create().uv(24, 35).cuboid(-1.0F, -2.0F, -2.0F, 3.0F, 5.0F, 3.0F, new Dilation(0.0F)), ModelTransform.of(0.0F, 0.25F, 0.0F, -0.0855F, -0.0173F, -0.17F));
 
-        ModelPartData leg_back_left = a_living_chest.addChild("leg_back_left", ModelPartBuilder.create(), ModelTransform.pivot(-6.0F, -2.0F, -4.0F));
+        ModelPartData leg_back_left = a_living_chest.addChild("leg_back_left", ModelPartBuilder.create(), ModelTransform.pivot(-6.0F, -3.25F, -4.0F));
 
         ModelPartData cube_r16 = leg_back_left.addChild("cube_r16", ModelPartBuilder.create().uv(36, 35).cuboid(-3.0F, -2.0F, -1.0F, 3.0F, 5.0F, 3.0F, new Dilation(0.0F)), ModelTransform.of(0.5F, 0.25F, 0.0F, -0.0399F, 0.0089F, 0.146F));
         return TexturedModelData.of(modelData, 64, 64);

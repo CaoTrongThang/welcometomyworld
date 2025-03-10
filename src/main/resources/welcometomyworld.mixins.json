@@ -3,20 +3,22 @@
 	"package": "com.trongthang.welcometomyworld.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
+		"ServerPlayerEntityMixin",
 		"SunBurnImmuneMixin",
 		"PunchingBlockPentaltiesMixin",
-		"PhantomAIMixin",
-		"SpiderAIMixin",
-		"EndermanAIMixin",
 		"HostileEntityMixin",
 		"AbstractBlockMixinTick",
 		"SpeardableBlockMixin",
-		"NoDaySleepingMixin",
 		"OneShotErrorDebug",
 		"BooleanRuleMixin",
 		"TameableEntityMixin",
 		"TameableEntityKillMobMixin",
-		"MobEntityMixin"
+		"MobEntityMixin",
+		"PhantomAIMixin",
+		"HostileFollowPlayersMixin",
+		"EndermanAIMixin",
+		"SpeciesModDamageMixin",
+		"VehicleRemoveHostileMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

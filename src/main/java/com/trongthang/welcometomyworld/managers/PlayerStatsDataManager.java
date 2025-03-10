@@ -39,17 +39,6 @@ public class PlayerStatsDataManager {
     public static int COOLDOWN = 10;
     public static int COUNTER = 0;
 
-    public static void start() {
-        ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) ->
-        {
-            if (dataHandler.playerStatsData.get(serverPlayNetworkHandler.getPlayer().getUuid()) == null) {
-                dataHandler.playerStatsData.put(serverPlayNetworkHandler.getPlayer().getUuid(), new PlayerStatsData());
-            }
-        });
-
-        ServerTickEvents.END_SERVER_TICK.register(PlayerStatsDataManager::endServerTick);
-    }
-
     public static void endServerTick(MinecraftServer server) {
         if (SOUND_COOLDOWN_COUNTER < SOUND_COOLDOWN) {
             SOUND_COOLDOWN_COUNTER++;
@@ -58,11 +47,6 @@ public class PlayerStatsDataManager {
         COUNTER++;
         if (COUNTER < COOLDOWN) return;
         COUNTER = 0;
-
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-            PlayerStatsData pStats = dataHandler.playerStatsData.get(p.getUuid());
-            playerStaminaHandler(p, pStats);
-        }
     }
 
     public static void playerStaminaHandler(ServerPlayerEntity p, PlayerStatsData pStats) {

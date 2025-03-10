@@ -30,7 +30,9 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class IntroOfTheWorldHandler {
 
     Random rand = new Random();
-    double playersDeathChanceInTheIntro = 0.20;
+
+    public static double playersDeathChanceInTheIntro = 0.15;
+
     byte phantomSpawnAmount = 10;
     public boolean alreadySpawnedPhantom = false;
 
@@ -48,7 +50,7 @@ public class IntroOfTheWorldHandler {
     }
 
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
-        if(player.getWorld().isClient) return;
+        if (player.getWorld().isClient) return;
         PlayerData playerData = dataHandler.playerDataMap.get(player.getUuid());
         ServerWorld world = player.getServerWorld();
         boolean isAir = world.getBlockState(player.getBlockPos().down(25)).isAir();
@@ -144,9 +146,7 @@ public class IntroOfTheWorldHandler {
         }
 
         if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
-            if(!isAir){
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 300, 255));
-            }
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 400, 255));
 
             if (Utils.isPlayerStandingOnBlock(player)) {
                 // Create an explosion at the player's landing position

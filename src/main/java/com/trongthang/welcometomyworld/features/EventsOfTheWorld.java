@@ -15,19 +15,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.trongthang.welcometomyworld.Utilities.Utils.*;
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 
 public class EventsOfTheWorld {
 
-    public static final int EVENT_COOLDOWN_IN_TICKS = 24000;
-    public static final double HAPPEN_CHANCE = 0.4;
+    public static final int EVENT_COOLDOWN_IN_TICKS = 48000;
+    public static final double HAPPEN_CHANCE = 0.3;
 
     private static final Map<String, Consumer<ServerWorld>> EVENT_MAP = new HashMap<>();
     private static int ticksSinceLastEvent = 0;
@@ -36,12 +33,12 @@ public class EventsOfTheWorld {
 
     // Static block for default event registration
     static {
+        registerEvent("FIELD_OF_GOLDEN_MOTHS", EventsOfTheWorld::fieldOfGoldenMoths);
         registerEvent("CIRCLE_OF_DEATHS", EventsOfTheWorld::circleOfDeaths);
         registerEvent("CIRCLE_OF_PHANTOMS", EventsOfTheWorld::circleOfPhantom);
         registerEvent("RAIN_OF_FOOD", EventsOfTheWorld::rainOfFood);
         registerEvent("ANIMALS_RISING", EventsOfTheWorld::animalRaising);
-        registerEvent("ILLAGER_RAID", EventsOfTheWorld::illagerRaid);
-        registerEvent("FIELD_OF_GOLDEN_MOTHS", EventsOfTheWorld::fieldOfGoldenMoths); //aquamirae:golden_moth
+
     }
 
     // Method to register events dynamically
@@ -56,15 +53,15 @@ public class EventsOfTheWorld {
         if (ticksSinceLastEvent >= EVENT_COOLDOWN_IN_TICKS) {
             ticksSinceLastEvent = 0;
 
-            if(WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay >= stopEventsDay){
+            if (WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay >= stopEventsDay) {
                 return;
             }
 
-            server.getWorlds().forEach(world -> {
-                if (random.nextDouble() < HAPPEN_CHANCE) {
-                    triggerRandomEvent(world);
-                }
-            });
+
+            if (random.nextDouble() < HAPPEN_CHANCE) {
+                triggerRandomEvent(server.getOverworld());
+            }
+
         }
     }
 
@@ -91,13 +88,14 @@ public class EventsOfTheWorld {
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
 
+        if (targetPlayer.isCreative() || targetPlayer.isSpectator()) return;
 
         targetPlayer.sendMessage(
                 Text.literal("They're around you...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
         );
 
         World w = targetPlayer.getWorld();
-        if(!(w.getRegistryKey() == World.OVERWORLD)) return;
+        if (!(w.getRegistryKey() == World.OVERWORLD)) return;
 
         int numberOfMobs = 20; // Number of zombies in the circle
         double radius = 36.0;    // Radius of the circle
@@ -107,12 +105,11 @@ public class EventsOfTheWorld {
             double x = targetPlayer.getX() + radius * Math.cos(angle);
             double z = targetPlayer.getZ() + radius * Math.sin(angle);
 
-            BlockPos spawnPos = Utils.findSafeSpawnPositionAroundTheCenterPos(world, new Vec3d(x, targetPlayer.getY(), z), 5) ;
+            BlockPos spawnPos = Utils.findSafeSpawnHostileMobPositionAroundTheCenterPos(world, new Vec3d(x, targetPlayer.getY(), z), 5);
             Entity zombie = spawnMob(world, spawnPos, "minecraft:zombie"); // Custom spawnMob utility
 
             if (zombie != null && zombie instanceof MobEntity mob) {
-                mob.setTarget(targetPlayer); // Make the zombie target the player
-
+                mob.getNavigation().startMovingTo(targetPlayer.getX(), targetPlayer.getY(), targetPlayer.getZ(), 1f);
                 addRunAfter(() -> Utils.discardEntity(world, mob), 3000);
             }
         }
@@ -128,12 +125,14 @@ public class EventsOfTheWorld {
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
 
-        int numberOfPhantoms = 6; // Number of phantoms in the circle
+        if (targetPlayer.isCreative() || targetPlayer.isSpectator()) return;
+
+        int numberOfPhantoms = 3; // Number of phantoms in the circle
         double radius = 48.0;     // Radius of the circle
         double heightOffset = 0; // Height above the player
 
         targetPlayer.sendMessage(
-                Text.literal("Something is coming from the sky...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
+                Text.literal("Something is on the sky...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
         );
 
         for (int i = 0; i < numberOfPhantoms; i++) {
@@ -142,14 +141,12 @@ public class EventsOfTheWorld {
             double z = targetPlayer.getZ() + radius * Math.sin(angle);
             double y = targetPlayer.getY() + heightOffset; // Spawn above the player
 
-            BlockPos spawnPos =  new BlockPos((int) x, (int) y, (int) z) ;
-            if(!Utils.isSafeSpawn(world, spawnPos)) continue;
+            BlockPos spawnPos = new BlockPos((int) x, (int) y, (int) z);
+            if (!Utils.isSafeSpawn(world, spawnPos)) continue;
 
             Entity phantom = spawnMob(world, spawnPos, "minecraft:phantom"); // Custom spawnMob utility
 
             if (phantom != null && phantom instanceof MobEntity mob) {
-                mob.setTarget(targetPlayer); // Make the phantom target the player
-
                 addRunAfter(() -> Utils.discardEntity(world, mob), 4000);
             }
         }
@@ -164,6 +161,8 @@ public class EventsOfTheWorld {
 
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
+
+        if (targetPlayer.isCreative() || targetPlayer.isSpectator()) return;
 
         int numberOfItems = 30; // Total number of food items
         double spawnRadius = 48.0; // Radius within which food will "rain"
@@ -181,22 +180,23 @@ public class EventsOfTheWorld {
 
         for (int i = 0; i < numberOfItems; i++) {
             // Random position within the radius
-            double angle = 2 * Math.PI * random.nextDouble();
-            double distance = spawnRadius * random.nextDouble();
-            double x = targetPlayer.getX() + distance * Math.cos(angle);
-            double z = targetPlayer.getZ() + distance * Math.sin(angle);
-            double y = targetPlayer.getY() + heightOffset;
+            Utils.addRunAfter(() -> {
+                        double angle = 2 * Math.PI * random.nextDouble();
+                        double distance = spawnRadius * random.nextDouble();
+                        double x = targetPlayer.getX() + distance * Math.cos(angle);
+                        double z = targetPlayer.getZ() + distance * Math.sin(angle);
+                        double y = targetPlayer.getY() + heightOffset;
 
-            Vec3d spawnPos = new Vec3d(x, y, z);
+                        Vec3d spawnPos = new Vec3d(x, y, z);
 
-            // Random food item
-            ItemStack chosenFood = foodItems[random.nextInt(foodItems.length)];
+                        // Random food item
+                        ItemStack chosenFood = foodItems[random.nextInt(foodItems.length)];
 
-            // Use SpawnItem to spawn the food
-            SpawnItem(world, spawnPos, chosenFood);
+                        // Use SpawnItem to spawn the food
+                        SpawnItem(world, spawnPos, chosenFood);
+                    }
+                    , i * 10);
         }
-
-        System.out.println("Rain of Food event triggered for player: " + targetPlayer.getName().getString());
     }
 
     public static void animalRaising(ServerWorld world) {
@@ -208,10 +208,12 @@ public class EventsOfTheWorld {
 
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
+        if (targetPlayer.isCreative() || targetPlayer.isSpectator()) return;
 
-        int numberOfAnimals = 12; // Total number of animals to spawn
-        int spawnRadius = 64;    // Spawn radius around the player
-        int packs = 3;           // Number of packs
+        int numberOfAnimals = 12;
+        int packs = 3;
+        double minRadius = 50.0;  // Minimum distance from player
+        double maxRadius = 70.0;  // Maximum distance from player
         String[] animalTypes = {
                 "minecraft:cow",
                 "minecraft:sheep",
@@ -224,75 +226,36 @@ public class EventsOfTheWorld {
         );
 
         for (int i = 0; i < packs; i++) {
+            // Calculate pack center position
+            double angle = 2 * Math.PI * random.nextDouble();
+            double distance = minRadius + (maxRadius - minRadius) * random.nextDouble();
+            double centerX = targetPlayer.getX() + distance * Math.cos(angle);
+            double centerZ = targetPlayer.getZ() + distance * Math.sin(angle);
+
             for (int j = 0; j < numberOfAnimals / packs; j++) {
-                double angle = 2 * Math.PI * random.nextDouble(); // Random angle for distribution
-                double distance = random.nextDouble() * spawnRadius; // Random distance within radius
+                // Generate position within pack cluster
+                double packSpread = 8.0;  // Max spread from pack center
+                double x = centerX + (random.nextDouble() - 0.5) * packSpread * 2;
+                double z = centerZ + (random.nextDouble() - 0.5) * packSpread * 2;
 
-                double x = targetPlayer.getX() + distance * Math.cos(angle);
-                double z = targetPlayer.getZ() + distance * Math.sin(angle);
-                double y = world.getTopY() + 1; // Spawn just above the ground
+                // Find safe spawn position with proper Y coordinate
+                BlockPos spawnPos = findSafeSpawnHostileMobPositionAroundTheCenterPos(
+                        world,
+                        new Vec3d(x, targetPlayer.getY(), z),
+                        10  // Increased search radius for safe spot
+                );
 
-                BlockPos spawnPos = findSafeSpawnPositionAroundTheCenterPos(world, new Vec3d((int) x, (int) targetPlayer.getY(), (int) z), 4) ;
+                if (spawnPos == null) continue;
 
-                if(spawnPos == null) continue;
+                String chosenAnimal = animalTypes[random.nextInt(animalTypes.length)];
+                Entity animal = spawnMob(world, spawnPos, chosenAnimal);
 
-                String chosenAnimal = animalTypes[random.nextInt(animalTypes.length)]; // Random animal type
-
-                Entity animal = spawnMob(world, spawnPos, chosenAnimal); // Custom spawnMob utility
-                if (animal != null && animal instanceof MobEntity mob) {
-                    mob.setTarget(targetPlayer); // Optional: Animals target the player
-
-                    //Mob will despawn after 2000 ticks
+                if (animal instanceof MobEntity mob) {
+                    mob.setTarget(targetPlayer);
                     addRunAfter(() -> Utils.discardEntity(world, mob), 2000);
                 }
             }
         }
-
-        System.out.println("Animal Raising event triggered for player: " + targetPlayer.getName().getString());
-    }
-
-    public static void illagerRaid(ServerWorld world) {
-        List<ServerPlayerEntity> players = world.getPlayers();
-        if (players.isEmpty()) {
-            System.out.println("No players available for Illager Raid event.");
-            return;
-        }
-
-        // Pick a random player
-        ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
-
-        int numberOfIllagers = 10; // Total number of illagers
-        int spawnRadius = 20;     // Spawn radius around the player
-        String[] illagerTypes = {
-                "minecraft:evoker",
-                "minecraft:vindicator",
-                "minecraft:pillager",
-                "minecraft:illusioner" // For fun, even if not vanilla accessible
-        };
-
-        for (int i = 0; i < numberOfIllagers; i++) {
-            double angle = 2 * Math.PI * random.nextDouble(); // Random angle for distribution
-            double distance = random.nextDouble() * spawnRadius; // Random distance within radius
-
-            double x = targetPlayer.getX() + distance * Math.cos(angle);
-            double z = targetPlayer.getZ() + distance * Math.sin(angle);
-            double y = world.getTopY() + 1; // Spawn just above the ground
-
-            BlockPos spawnPos = findSafeSpawnPositionAroundTheCenterPos(world, new Vec3d((int) x, (int) targetPlayer.getY(), (int) z), 4) ;
-
-            if(spawnPos == null) continue;
-
-            String chosenIllager = illagerTypes[random.nextInt(illagerTypes.length)]; // Random illager type
-
-            Entity illager = spawnMob(world, spawnPos, chosenIllager); // Custom spawnMob utility
-            if (illager != null && illager instanceof MobEntity mob) {
-                mob.setTarget(targetPlayer); // Make illagers target the player
-
-                addRunAfter(() -> Utils.discardEntity(world, mob), 2000);
-            }
-        }
-
-        LOGGER.info("Illager Raid event triggered for player: " + targetPlayer.getName().getString());
     }
 
     public static void fieldOfGoldenMoths(ServerWorld world) {
@@ -303,6 +266,7 @@ public class EventsOfTheWorld {
 
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
+        if (targetPlayer.isCreative() || targetPlayer.isSpectator()) return;
 
         UTILS.sendTextAfter(targetPlayer, "It seems like the golden butterflies are welcome you.", 120);
 
@@ -318,9 +282,9 @@ public class EventsOfTheWorld {
             double x = targetPlayer.getX() + radius * Math.cos(angle);
             double z = targetPlayer.getZ() + radius * Math.sin(angle);
 
-            BlockPos spawnPos = findSafeSpawnPositionAroundTheCenterPos(world, new Vec3d((int) x, (int) targetPlayer.getY(), (int) z), 4) ;
+            BlockPos spawnPos = findSafeSpawnHostileMobPositionAroundTheCenterPos(world, new Vec3d((int) x, (int) targetPlayer.getY(), (int) z), 4);
 
-            if(spawnPos == null) continue;
+            if (spawnPos == null) continue;
 
             addRunAfter(() -> {
                 Entity goldenMoth = spawnMob(world, spawnPos, "aquamirae:golden_moth"); // Custom spawnMob utility
@@ -331,7 +295,5 @@ public class EventsOfTheWorld {
                 }
             }, counter);
         }
-
-        LOGGER.info("Field Of Golden Moths triggered for player: " + targetPlayer.getName().getString());
     }
 }

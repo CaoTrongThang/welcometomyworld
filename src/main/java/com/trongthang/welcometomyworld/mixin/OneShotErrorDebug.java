@@ -18,10 +18,9 @@ public class OneShotErrorDebug {
     @Inject(method = "onDeath", at = @At("HEAD"), cancellable = true)
     public void onDeath(DamageSource damageSource, CallbackInfo ci) {
         if(!ConfigLoader.getInstance().oneShotDebugLog) return;
+
         LivingEntity livingEntity = (LivingEntity) (Object) this;
         Entity attacker = damageSource.getAttacker();
-
-        if(livingEntity.getWorld().isClient) return;
 
         LOGGER.info("==== DEATH DEBUG INFO ====");
         LOGGER.info("Entity Type: " + livingEntity.getName().getString());

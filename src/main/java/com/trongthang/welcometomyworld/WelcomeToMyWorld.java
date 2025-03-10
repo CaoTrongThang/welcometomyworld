@@ -2,32 +2,23 @@ package com.trongthang.welcometomyworld;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.ModTagsManager;
-import com.trongthang.welcometomyworld.classes.RequestMobStatsPacket;
 import com.trongthang.welcometomyworld.events.SpawnEvents;
-import com.trongthang.welcometomyworld.screen.MobUpgradeScreen;
 import com.trongthang.welcometomyworld.managers.*;
 import com.trongthang.welcometomyworld.features.*;
 import com.trongthang.welcometomyworld.items.RepairTalisman;
 import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.classes.PlayerData;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
@@ -116,10 +107,22 @@ public class WelcomeToMyWorld implements ModInitializer {
         });
 
         ServerLifecycleEvents.SERVER_STARTED.register((t) -> {
+
             ServerWorld world = t.getOverworld();
+            IntroOfTheWorldHandler.playersDeathChanceInTheIntro = t.isHardcore() ? 0.05 : 0.15;
 
             if (world != null) {
                 world.getGameRules().get(GameRules.PLAYERS_SLEEPING_PERCENTAGE).set(100, t);
+            }
+
+            if (ConfigLoader.getInstance().noMoreF3B) {
+                if (world != null) {
+                    world.getGameRules().get(GameRules.REDUCED_DEBUG_INFO).set(true, t);
+                }
+            }
+
+            if (world != null) {
+                world.getGameRules().get(GameRules.KEEP_INVENTORY).set(false, t);
             }
 
             server = t;
@@ -134,6 +137,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         {
             performAllActionsFirstJoin(serverPlayNetworkHandler.getPlayer());
         });
+
 
         PlayerBlockBreakEvents.AFTER.register((world, playerEntity, blockPos, blockState, blockEntity) -> {
             if (!canBreakBlockSpawnMobs) return;
@@ -151,6 +155,7 @@ public class WelcomeToMyWorld implements ModInitializer {
             fallingToWaterDamage.handleFallingToWaterDamage();
         }
 
+
         ItemsManager.initialize();
         EntitiesManager.register();
         BlocksEntitiesManager.initialize();
@@ -159,6 +164,9 @@ public class WelcomeToMyWorld implements ModInitializer {
         SoundsManager.registerSounds();
         ServerNetworking.register();
         SpawnEvents.register();
+        AwakeHandler.register();
+        HostileMobsAwareness.registerEvents();
+        MinecellsDimensionSarcastic.registerEvents();
     }
 
 
@@ -193,6 +201,8 @@ public class WelcomeToMyWorld implements ModInitializer {
         if (canBedsExplode) {
             awakeHandler.checkAndExplodeIfSleeping(server);
         }
+
+        HostileMobsAwareness.onServerTick(server);
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 

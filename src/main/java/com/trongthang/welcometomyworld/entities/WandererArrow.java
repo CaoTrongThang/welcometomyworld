@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -29,8 +30,8 @@ import static com.trongthang.welcometomyworld.entities.FallenKnight.spawnParticl
 public class WandererArrow extends PersistentProjectileEntity {
 
     public int explosionRange = 8;
-
     public boolean canExplode = true;
+    private int lifeTime = 0;
 
     public WandererArrow(EntityType<? extends PersistentProjectileEntity> entityType, World world) {
         super(entityType, world);
@@ -38,17 +39,20 @@ public class WandererArrow extends PersistentProjectileEntity {
 
     public WandererArrow(World world, LivingEntity owner) {
         super(EntitiesManager.WANDERER_ARROW, owner, world);
+        this.age();
+    }
 
-        if (owner != null) {
-            // Set the arrow's base damage to the owner's attack damage
-            this.setDamage(owner.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
+    @Override
+    protected void age() {
+        ++this.lifeTime;
+        if (this.lifeTime >= 200) {
+            this.discard();
         }
     }
 
     @Override
     public void tick() {
         super.tick();
-
         if (!this.getWorld().isClient) return; // Only spawn particles on the client side
 
         // Get the arrow's current position
@@ -83,7 +87,14 @@ public class WandererArrow extends PersistentProjectileEntity {
     protected void onEntityHit(EntityHitResult entityHitResult) {
         super.onEntityHit(entityHitResult);
 
-        Entity entity = entityHitResult.getEntity(); // The entity that was hit
+        Entity entity = entityHitResult.getEntity();
+
+        LivingEntity owner = (LivingEntity) this.getOwner();
+
+        if(owner != null){
+            entity.damage(this.getWorld().getDamageSources().mobAttack((LivingEntity) this.getOwner()), (float)(owner.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)));
+        }
+
         if (entity instanceof LivingEntity livingEntity) {
             // Check if the entity is blocking with a shield
             if (livingEntity.isBlocking() && livingEntity.getActiveItem().isOf(Items.SHIELD)) {
@@ -95,7 +106,38 @@ public class WandererArrow extends PersistentProjectileEntity {
     @Override
     public boolean canHit(Entity target) {
         // Check if the target is the owner of the arrow
-        return !(target instanceof LivingEntity && target == this.getOwner()) && super.canHit(target);
+        if (target == this.getOwner()) return false;
+
+        if (target instanceof WandererArrow) {
+            return false;
+        }
+
+        if (target instanceof ArrowEntity) {
+            return false;
+        }
+
+        if (this.getOwner() != null) {
+            if (target == this.getOwner()) return false;
+        }
+        if (target instanceof TameableEntity tameable) {
+            if (tameable.isTamed() && tameable.getOwner() != null) {
+                if (tameable.getOwner() == this.getOwner()) return false;
+            }
+        }
+
+        if (target instanceof Wanderer wanderer) {
+            // Skip untamed vs. untamed damage
+            if (!wanderer.isTamed()) {
+                return true;
+            }
+
+            if (wanderer.isTamed() && this.getOwner() != null && wanderer.isTamed() && wanderer.getOwner() != null) {
+                if (this.getOwner().equals(wanderer.getOwner())) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void createShockwave() {
@@ -145,12 +187,12 @@ public class WandererArrow extends PersistentProjectileEntity {
                 // Handle FallenKnight-specific logic
                 if (target instanceof Wanderer wanderer) {
                     // Skip untamed vs. untamed damage
-                    if (!wanderer.isTamed() && !wanderer.isTamed()) {
+                    if (!wanderer.isTamed()) {
                         continue;
                     }
 
                     // Skip tamed vs. tamed damage if they have the same owner
-                    if (wanderer.isTamed() && this.getOwner() != null && wanderer.isTamed() && wanderer.getOwner() != null) {
+                    if (wanderer.isTamed() && this.getOwner() != null && wanderer.getOwner() != null) {
                         if (this.getOwner().equals(wanderer.getOwner())) {
                             continue;
                         }

@@ -2,6 +2,7 @@ package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.managers.ItemsManager;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.screen.MobUpgradeScreen;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
@@ -26,7 +27,7 @@ public class BossesSpawningHandler {
     public int checkInterval = 5000;
     public int counter = 0;
 
-    public double bossSpawnChance = 0.5;
+    public double bossSpawnChance = 0.2;
 
     final int SPAWN_MIN_DISTANCE = 32; // Minimum distance from player
     final int SPAWN_MAX_DISTANCE = 64; // Maximum distance from player
@@ -163,7 +164,7 @@ public class BossesSpawningHandler {
                     spawnParticlesUpToTheSky(world, mob);
 
                     Utils.addRunAfter(() -> {
-                        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 200);
+                        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 100);
                         mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 10);
                         mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 10);
 

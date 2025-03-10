@@ -2,10 +2,7 @@ package com.trongthang.welcometomyworld.mixin;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.*;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.BlockTags;
@@ -33,7 +30,6 @@ public class AbstractBlockMixinTick {
     private static final int SCHEDULE_DELAY_TIME = 20;
 
 
-    private static final int RUSTY_IRON_BLOCK_TIME = 240;
     private static final int PLANKS_LOGS_TURN_TO_BURNING_BLOCK_TIME = 80;
 
     private static final ConcurrentHashMap<BlockPos, Integer> blockTurnIntoCounter = new ConcurrentHashMap<>();

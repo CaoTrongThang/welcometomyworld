@@ -1,12 +1,11 @@
 package com.trongthang.welcometomyworld;
 
 import com.trongthang.welcometomyworld.classes.RequestMobStatsPacket;
-import com.trongthang.welcometomyworld.classes.SyncMobStatsPacket;
-import com.trongthang.welcometomyworld.classes.TameableEntityInterface;
-import com.trongthang.welcometomyworld.classes.UpdateMobStatPacket;
+import com.trongthang.welcometomyworld.classes.tameablePacket.SyncMobStatsPacket;
+import com.trongthang.welcometomyworld.classes.tameablePacket.TameableEntityInterface;
+import com.trongthang.welcometomyworld.classes.tameablePacket.UpdateMobStatPacket;
 import com.trongthang.welcometomyworld.entities.Enderchester;
 import com.trongthang.welcometomyworld.entities.Portaler;
-import com.trongthang.welcometomyworld.entities.client.Portaler.PortalerRenderer;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
@@ -17,7 +16,6 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import static com.trongthang.welcometomyworld.GlobalVariables.*;
@@ -88,31 +86,38 @@ public class ServerNetworking {
                 if (entity instanceof TameableEntity tameableEntity) {
                     TameableEntityInterface entityInterface = (TameableEntityInterface) tameableEntity;
 
-                    if(entityInterface.getPointAvailalble() <= 0) return;
+                    if (entityInterface.getPointAvailalble() <= 0) return;
 
                     switch (packet.statName) {
                         case "damage" -> {
                             int newDamageLevel = entityInterface.getDamageLevel() + packet.amount;
                             entityInterface.setDamageLevel(newDamageLevel);
 
-                            // Update the attack damage attribute
+                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                            double newStat = oldStat + Math.min(MAX_DAMAGE_MOB, oldStat * DAMAGE_ADD_PER_LEVEL_MOB_PERCENT / 100);
+
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)
-                                    .setBaseValue(tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) + DAMAGE_ADD_PER_LEVEL_MOB);
+                                    .setBaseValue(newStat);
                         }
                         case "health" -> {
                             int newHealthLevel = entityInterface.getHealthLevel() + packet.amount;
                             entityInterface.setHealthLevel(newHealthLevel);
 
+                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).getBaseValue();
+                            double newStat = oldStat + Math.min(MAX_HEALTH_MOB, (oldStat * HEALTH_ADD_PER_LEVEL_PERCENT / 100));
+
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
-                                    .setBaseValue(tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) + HEALTH_ADD_PER_LEVEL);
+                                    .setBaseValue(newStat);
                         }
                         case "defense" -> {
                             int newDefenseLevel = entityInterface.getDefenseLevel() + packet.amount;
                             entityInterface.setDefenseLevel(newDefenseLevel);
 
-                            // Update the armor attribute
+                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue();
+                            double newStat = oldStat + Math.min(MAX_ARMOR_MOB, oldStat * ARMOR_ADD_PER_LEVEL_MOB_PERCENT / 100);
+
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR)
-                                    .setBaseValue(tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) + ARMOR_ADD_PER_LEVEL_MOB);
+                                    .setBaseValue(newStat);
                         }
                         case "speed" -> {
                             int newSpeedLevel = entityInterface.getSpeedLevel() + packet.amount;
@@ -127,7 +132,7 @@ public class ServerNetworking {
                     entityInterface.setPointAvailalble(entityInterface.getPointAvailalble() - 1);
 
                     // Send the updated stats to all nearby players
-                    SyncMobStatsPacket syncPacket = new SyncMobStatsPacket(tameableEntity.getId(), entityInterface);
+                    SyncMobStatsPacket syncPacket = new SyncMobStatsPacket(tameableEntity.getId(), tameableEntity);
                     player.getWorld().getPlayers().forEach(p -> {
                         ServerPlayNetworking.send((ServerPlayerEntity) p, SYNC_MOB_STATS_CLIENT, syncPacket.encode(new PacketByteBuf(Unpooled.buffer())));
                     });
@@ -141,10 +146,8 @@ public class ServerNetworking {
             server.execute(() -> {
                 var entity = player.getWorld().getEntityById(packet.entityId);
                 if (entity instanceof TameableEntity tameableEntity) {
-                    TameableEntityInterface entityInterface = (TameableEntityInterface) tameableEntity;
-
                     // Send the mob's stats to the client
-                    SyncMobStatsPacket syncPacket = new SyncMobStatsPacket(tameableEntity.getId(), entityInterface);
+                    SyncMobStatsPacket syncPacket = new SyncMobStatsPacket(tameableEntity.getId(), tameableEntity);
                     ServerPlayNetworking.send(player, SYNC_MOB_STATS_CLIENT, syncPacket.encode(new PacketByteBuf(Unpooled.buffer())));
                 }
             });

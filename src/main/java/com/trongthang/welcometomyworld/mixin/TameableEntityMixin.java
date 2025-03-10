@@ -1,7 +1,6 @@
 package com.trongthang.welcometomyworld.mixin;
 
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.classes.TameableEntityInterface;
+import com.trongthang.welcometomyworld.classes.tameablePacket.TameableEntityInterface;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.nbt.NbtCompound;
 import org.spongepowered.asm.mixin.Mixin;

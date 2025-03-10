@@ -1,9 +1,8 @@
 package com.trongthang.welcometomyworld.screen;
 
-import com.trongthang.welcometomyworld.GlobalVariables;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.classes.TameableEntityInterface;
-import com.trongthang.welcometomyworld.classes.UpdateMobStatPacket;
+import com.trongthang.welcometomyworld.classes.tameablePacket.TameableEntityInterface;
+import com.trongthang.welcometomyworld.classes.tameablePacket.UpdateMobStatPacket;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawContext;
@@ -18,10 +17,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 
-import static com.trongthang.welcometomyworld.GlobalVariables.*;
-
 public class MobUpgradeScreen extends Screen {
-    private final TameableEntity tameableEntity;
+    public final TameableEntity tameableEntity;
     private final TameableEntityInterface entityInterface;
     private float rotationAngle = 0; // Current rotation angle of the mob
 
@@ -51,6 +48,8 @@ public class MobUpgradeScreen extends Screen {
         addButton("+", "health", 1, boxX + buttonsOffset, boxY + 20 + buttonSpacing);
         addButton("+", "defense", 1, boxX + buttonsOffset, boxY + 20 + 2 * buttonSpacing);
         addButton("+", "speed", 1, boxX + buttonsOffset, boxY + 20 + 3 * buttonSpacing);
+
+
     }
 
     private void addButton(String symbol, String statName, int amount, int x, int y) {
@@ -189,10 +188,12 @@ public class MobUpgradeScreen extends Screen {
         context.drawBorder(boxX, boxY, statsBoxWidth, statsBoxHeight, 0xFFFFFFFF); // White border
 
         // Format the attribute values to one decimal place
+
+
         String damageValue = String.format("%.1f", tameableEntity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
-        String healthValue = String.format("%.1f", tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).getValue());
-        String defenseValue = String.format("%.1f", tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getValue());
-        String speedValue = String.format("%.1f", tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).getValue());
+        String healthValue = String.format("%.1f", tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH));
+        String defenseValue = String.format("%.1f", tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR));
+        String speedValue = String.format("%.2f", tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
 
         // Draw stats inside the box
         drawStatInBox(context, "Damage Level [" + damageValue + "]: ", entityInterface.getDamageLevel(), boxX + 40, boxY + 25);

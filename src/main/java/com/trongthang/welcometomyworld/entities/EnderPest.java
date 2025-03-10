@@ -88,6 +88,9 @@ public class EnderPest extends MobEntity implements StartAnimation {
     private int eyeOfEnderNeeded = 3;
     private boolean isScammingDisappear = false;
 
+    private int minItem = 5;
+    private int maxItem = 10;
+
     public EnderPest(EntityType<? extends MobEntity> entityType, World world) {
         super(entityType, world);
 
@@ -186,7 +189,7 @@ public class EnderPest extends MobEntity implements StartAnimation {
                     this.setIsScam(true);
                 } else {
                     if (!this.getCanDisappear() && !this.getIsScam()) {
-
+                        openEnderPest();
                     }
                 }
             }
@@ -220,7 +223,7 @@ public class EnderPest extends MobEntity implements StartAnimation {
 
     public void openEnderPest(){
         this.setCanDisappear(true);
-        List<Item> items = getRandomItem(WelcomeToMyWorld.random.nextInt(5, 25));
+        List<Item> items = getRandomItem(WelcomeToMyWorld.random.nextInt(minItem, maxItem));
         int startingTime = 51;
         if (!items.isEmpty()) {
             for (Item item : items) {
@@ -258,31 +261,6 @@ public class EnderPest extends MobEntity implements StartAnimation {
         if (mouthOpenAnimationState.isRunning() && !completeOpenMouthSound) {
             handleSwitchSounds();
         }
-    }
-
-    private void handleWalkSounds() {
-        if (!this.getWorld().isClient()) return;
-        if (!mouthOpenAnimationState.isRunning()) return;
-
-        long animTime = mouthOpenAnimationState.getTimeRunning();
-        int currentPos = (int) (animTime % MOUNTH_OPEN_DURATION_MS);
-
-        for (int timing : FOOTSTEP_TIMINGS_MS) {
-            int timingInCycle = timing % MOUNTH_OPEN_DURATION_MS;
-
-            if (previousWalkPosition != -1) {
-                boolean normalCross = previousWalkPosition < timingInCycle && currentPos >= timingInCycle;
-                boolean wrapAround = timingInCycle == 0 && previousWalkPosition > currentPos;
-
-                if (normalCross || wrapAround) {
-                    Utils.sendSoundPacketFromClient(SoundsManager.PORTALER_STEP, this.getBlockPos());
-                }
-
-
-            }
-        }
-
-        previousWalkPosition = currentPos;
     }
 
     private void handleSwitchSounds() {

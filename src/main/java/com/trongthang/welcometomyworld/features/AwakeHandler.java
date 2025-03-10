@@ -2,23 +2,30 @@ package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
@@ -49,6 +56,22 @@ public class AwakeHandler {
             "I’m not slowing down anytime soon!"
     );
 
+    public static final List<String> luckEffectMessages = List.of(
+            "Here you go",
+            "Good luck!",
+            "Better take a snap",
+            "Fortune favors you!",
+            "Lady Luck smiles upon you!",
+            "Destiny takes a nap too!",
+            "Lucky stars aligned!",
+            "Charm of Morpheus activated!",
+            "Fate needs some rest too!"
+    );
+
+    private static final ConcurrentHashMap<UUID, Boolean> playerBuffTracker = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, Integer> playerBedInteractCooldownTracker = new ConcurrentHashMap<>();
+
+    private static final int defaultBedCooldown = 200;
 
     private static final double WAKE_UP_CHANCE = 1.0; // Base chance of explosion
 
@@ -58,60 +81,99 @@ public class AwakeHandler {
 
     private double nearASleepingFriendChanceDecrease = 0.3;
     private double nearACampfireChanceDecrease = 0.2;
-    private double holdingFlowerChanceDecrease = 0.3;
+    private double holdingFlowerChanceDecrease = 0.4;
+
+    private static final double GIVE_LUCK_EFFECT_CHANCE = 0.5f;
+    private static final int LUCK_EFFECT_DURATION = 600;
 
     // Interval to check if player is sleeping (in ticks)
     public int checkInterval = 40;
     private int counter = 0;
 
+    public static int lastLuckBuffDay = 0;
+
     public AwakeHandler() {
     }
 
-    private static final double GIVE_LUCK_EFFECT_CHANCE = 0.5;
-    private static final int LUCK_EFFECT_DURATION = 600;
-    private static final Set<ServerWorld> appliedWorlds = new HashSet<>();
+    public static void register(){
+        UseBlockCallback.EVENT.register((a,world,c,d) -> {
+            BlockState state = world.getBlockState(d.getBlockPos());
+
+            if(state.isIn(BlockTags.BEDS)){
+                if(playerBedInteractCooldownTracker.containsKey(a.getUuid())){
+                    if(playerBedInteractCooldownTracker.get(a.getUuid()) > 0 ){
+                        return ActionResult.FAIL;
+                    }
+                }
+            }
+
+            return ActionResult.PASS;
+        });
+    }
+
 
     public static void checkAndApplyLuckEffect(ServerWorld world) {
         long timeOfDay = world.getTimeOfDay() % 24000; // Get current in-game time (0-23999)
+        int currentDay = DayAndNightCounterAnimationHandler.getCurrentDay(world);
 
-        // Check if it's 8 PM (18,000 ticks) and the effect hasn't been applied yet
-        if (timeOfDay == 18000 && !appliedWorlds.contains(world)) {
-            applyLuckEffectToAllPlayers(world);
-            appliedWorlds.add(world); // Mark this world as having applied the effect
+        // Reset buff tracker at the start of a new day
+        if (currentDay!= lastLuckBuffDay && !playerBuffTracker.isEmpty()) {
+            playerBuffTracker.clear();
+            return;
         }
 
-        // Reset the flag after 8 PM has passed
-        if (timeOfDay > 18000 && timeOfDay < 19000) {
-            appliedWorlds.remove(world); // Ready for the next day's check
+        if (timeOfDay >= 21000 && timeOfDay < 21130) {
+            lastLuckBuffDay = currentDay;
+            for (ServerPlayerEntity player : world.getPlayers()) {
+                UUID playerId = player.getUuid();
+
+                // Check if the player has already received the buff for this night
+                if (!playerBuffTracker.getOrDefault(playerId, false)) {
+                    applyLuckEffectToPlayer(player);
+                    playerBuffTracker.put(playerId, true); // Mark the player as buffed
+                    Utils.UTILS.sendTextAfter(player, luckEffectMessages.get(random.nextInt(luckEffectMessages.size())));
+
+                    Utils.spawnParticles(world, player.getBlockPos(), ParticleTypes.HAPPY_VILLAGER);
+                }
+            }
         }
     }
 
-    private static void applyLuckEffectToAllPlayers(ServerWorld world) {
-        for (ServerPlayerEntity player : world.getPlayers()) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, LUCK_EFFECT_DURATION, 0));
-            ServerPlayNetworking.send(player, PLAY_EXPERIENCE_ORB_PICK_UP, PacketByteBufs.empty());
-        }
+    private static void applyLuckEffectToPlayer(ServerPlayerEntity player) {
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, LUCK_EFFECT_DURATION, 0));
+        ServerPlayNetworking.send(player, PLAY_EXPERIENCE_ORB_PICK_UP, PacketByteBufs.empty());
     }
 
     public void checkAndExplodeIfSleeping(MinecraftServer server) {
-
-
-        if (random.nextDouble() < GIVE_LUCK_EFFECT_CHANCE) {
-            checkAndApplyLuckEffect(server.getOverworld());
-        };
 
         counter++;
         if (counter < checkInterval) return;
         counter = 0;
 
-        for(ServerPlayerEntity player : server.getPlayerManager().getPlayerList()){
-            if (player.isSleeping()) {
-                // Calculate the effective explosion chance
-                double awakeChance = calculateWakeUpChance(player);
+        for(UUID x : playerBedInteractCooldownTracker.keySet()){
+            int c = playerBedInteractCooldownTracker.get(x) - checkInterval;
+            if(c <= 0){
+                playerBedInteractCooldownTracker.remove(x);
+            } else {
+                playerBedInteractCooldownTracker.put(x, c);
+            }
+        }
 
-                // Check if explosion happens based on the effective chance
+        if (random.nextDouble() < GIVE_LUCK_EFFECT_CHANCE) {
+            checkAndApplyLuckEffect(server.getOverworld());
+        };
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (player.isSleeping()) {
+                double awakeChance = Math.max(calculateWakeUpChance(player), 0);
+
+                Text grayMessage = Text.literal("Awake chance: " + (awakeChance * 100) + "%");
+                player.sendMessage(grayMessage, false);
+
                 if (random.nextDouble() < awakeChance) {
                     ServerWorld world = player.getServerWorld();
+
+                    playerBedInteractCooldownTracker.put(player.getUuid(), defaultBedCooldown);
 
                     BlockPos pos = player.getSleepingPosition().orElse(null);
                     Utils.spawnParticles(world, pos, ParticleTypes.SMOKE);
@@ -137,7 +199,7 @@ public class AwakeHandler {
             return Math.max(0, effectiveChance);
         }
 
-        if(isTheWorldRaining(player)){
+        if (player.getWorld().isRaining()) {
             effectiveChance -= rainDescreaseChance;
             return Math.max(0, effectiveChance);
         }
@@ -147,14 +209,10 @@ public class AwakeHandler {
             effectiveChance -= nearASleepingFriendChanceDecrease;
         }
 
+        ItemStack mainHandStack = player.getMainHandStack();
+
         // Apply the holding flower effect
-        if (player.getMainHandStack().getItem() == Items.POPPY
-                || player.getMainHandStack().getItem() == Items.DANDELION
-                || player.getMainHandStack().getItem() == Items.OXEYE_DAISY
-                || player.getMainHandStack().getItem() == Items.CORNFLOWER
-                || player.getMainHandStack().getItem() == Items.CHORUS_FLOWER
-                || player.getMainHandStack().getItem() == Items.SUNFLOWER
-                || player.getMainHandStack().getItem() == Items.TORCHFLOWER) {
+        if (mainHandStack.isIn(ItemTags.FLOWERS)) {
             effectiveChance -= holdingFlowerChanceDecrease;
         }
 
@@ -201,10 +259,6 @@ public class AwakeHandler {
         return false;
     }
 
-    private boolean isTheWorldRaining(ServerPlayerEntity player) {
-        return player.getWorld().isRaining();
-    }
-
     // Trigger the explosion if the conditions are met
     private void triggerWakeUp(ServerPlayerEntity player) {
         // Get the player's bed position
@@ -219,7 +273,7 @@ public class AwakeHandler {
                 Utils.UTILS.sendTextAfter(player, "Seems like you're not tired enough.");
             }, 60);
         } else {
-            player.sendMessage(Text.literal(notSleepyMessages.get(random.nextInt(0, notSleepyMessages.size() - 1))));
+            player.sendMessage(Text.literal(notSleepyMessages.get(random.nextInt(0, notSleepyMessages.size() - 1))).formatted(Formatting.WHITE));
         }
     }
 }

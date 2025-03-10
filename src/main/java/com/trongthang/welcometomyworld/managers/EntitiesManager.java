@@ -25,13 +25,6 @@ import net.minecraft.world.dimension.DimensionType;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class EntitiesManager {
-//    public static final EntityType<ALivingLog> A_LIVING_LOG = Registry.register(
-//            Registries.ENTITY_TYPE,
-//            new Identifier(WelcomeToMyWorld.MOD_ID, "a_living_log"),
-//            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, ALivingLog::new)
-//                    .dimensions(EntityDimensions.fixed(0.6f, 0.6f)) // Adjust width and height
-//                    .build()
-//    );
 
     public static final EntityType<ALivingFlower> A_LIVING_FLOWER = Registry.register(
             Registries.ENTITY_TYPE,
@@ -95,7 +88,7 @@ public class EntitiesManager {
             new Identifier(WelcomeToMyWorld.MOD_ID, "wanderer"),
             FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, Wanderer::new)
                     .fireImmune()
-                    .dimensions(EntityDimensions.changing(1.5f, 5f))
+                    .dimensions(EntityDimensions.changing(1.5f, 4f))
                     .build()
     );
 
@@ -165,7 +158,7 @@ public class EntitiesManager {
                 },
                 SpawnGroup.CREATURE,
                 EntitiesManager.CHESTER,
-                2,
+                4,
                 1,
                 1
         );
@@ -175,7 +168,7 @@ public class EntitiesManager {
                     return context.getBiomeKey().getValue().equals(new Identifier("betterend", "shadow_forest"));
                 },
                 SpawnGroup.CREATURE,
-                EntitiesManager.ENDERCHESTER, 5,
+                EntitiesManager.ENDERCHESTER, 6,
                 1,
                 1
         );
@@ -221,11 +214,11 @@ public class EntitiesManager {
                     Identifier biomeId = context.getBiomeKey().getValue();
                     // Only allow spawns in biomes from the "twilightforest" namespace
                     // and exclude the "stream" biome.
-                    return biomeId.getNamespace().equals("twilightforest") && !biomeId.getPath().equals("stream");
+                    return biomeId.getNamespace().equals("twilightforest") && !biomeId.getPath().equals("stream") && !biomeId.getPath().equals("swamp");
                 },
                 SpawnGroup.CREATURE,
                 WANDERER,
-                100,
+                1,
                 1,
                 1
         );
@@ -270,7 +263,8 @@ public class EntitiesManager {
                 || context.getBiomeKey().equals(BiomeKeys.RIVER)
                 || context.getBiomeKey().equals(BiomeKeys.FROZEN_RIVER)
                 || context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "muddy_river"))
-                || context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "frozen_tundra"))) {
+                || context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "frozen_tundra"))
+                || context.getBiomeKey().getValue().equals(new Identifier("terralith", "haze_mountain"))) {
             return false;
         }
 

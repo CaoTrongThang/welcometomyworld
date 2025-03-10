@@ -18,9 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
-// ! TODO: ftbquests:book
-// ! TODO: save items into a list if players inventory is full
-
 public class GiveStartingItemsHandler {
 
     public static ConcurrentHashMap<ServerPlayerEntity, List<ItemStack>> pendingItems = new ConcurrentHashMap<>();

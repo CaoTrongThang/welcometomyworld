@@ -9,6 +9,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.World;
 
 import java.util.Random;
 
@@ -33,8 +34,8 @@ public class DayAndNightCounterAnimationHandler {
     private boolean dayAnimationComplete = false;
     private boolean nightAnimationComplete = false;
 
-    private int tickRandomBound = 27;
-    private int tickRandomMin = 12;
+    private int tickRandomBound = 25;
+    private int tickRandomMin = 10;
     private int delayTick = 0;
     private int currentTick = 0;
 
@@ -46,6 +47,9 @@ public class DayAndNightCounterAnimationHandler {
         counter = 0;
         currentDay = 0;
         currentCharIndex = 0;
+        dayAnimationComplete = false;
+        nightAnimationComplete = false;
+
     }
 
     // Main method that checks for day changes every tick
@@ -117,15 +121,23 @@ public class DayAndNightCounterAnimationHandler {
             currentDay = (int) (currentTime / TICKS_IN_DAY);
             dayAnimationComplete = false;
             nightAnimationComplete = true;
+
+            MinecellsDimensionSarcastic.kickIfPlayerInMinecell(player.getServer());
         }
     }
 
-    private void startDayAnimation(ServerWorld world, int day) {
-        animationText = "DAY " + day;  // Prepare the text to be animated for day
-        currentCharIndex = 0;  // Reset the index
-        delayTick = 0;
-        isAnimatingDay = true;  // Start the animation
+    public static int getCurrentDay(World world) {
+        long currentTime = world.getTimeOfDay();  // Get the current time in the world (in ticks)
+        return  (int) (currentTime / TICKS_IN_DAY);
     }
+
+    private void startDayAnimation(ServerWorld world, int day) {
+        animationText = "- DAY " + day + " -";  // Hyphens included here
+        currentCharIndex = 0;
+        delayTick = 0;
+        isAnimatingDay = true;
+    }
+
 
     private void startNightAnimation(ServerWorld world) {
         // Prepare the "Nighttime is coming..." message split into words.
@@ -136,22 +148,20 @@ public class DayAndNightCounterAnimationHandler {
     }
 
     private void sendAnimationUpdate(ServerWorld world, String textToSend, boolean nighttime) {
-        // Send the current part of the text to all players
         for (ServerPlayerEntity player : world.getPlayers()) {
             if (nighttime) {
                 player.sendMessage(Text.literal(textToSend).formatted(Formatting.DARK_RED), true);
             } else {
-                textToSend = "- " + textToSend + " -";
+                // Remove hyphen addition here
                 player.sendMessage(Text.literal(textToSend).formatted(Formatting.WHITE), true);
             }
             ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
-
         }
 
         if (nighttime) {
-            delayTick = rand.nextInt(tickRandomMin * 2, tickRandomBound * 2); // Random delay for animation
+            delayTick = rand.nextInt(tickRandomMin * 2, tickRandomBound * 2);
         } else {
-            delayTick = rand.nextInt(tickRandomMin, tickRandomBound); // Random delay for animation
+            delayTick = rand.nextInt(tickRandomMin, tickRandomBound);
         }
     }
 }

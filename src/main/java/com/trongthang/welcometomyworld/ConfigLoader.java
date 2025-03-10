@@ -35,12 +35,22 @@ public class ConfigLoader {
     @Expose
     @SerializedName("giveStartingItems")
     public boolean giveStartingItems = true;
+
+    @Expose
+    @SerializedName("noMoreF3B")
+    public boolean noMoreF3B = true;
+
     @Expose
     @SerializedName("oneShotDebugLog")
     public boolean oneShotDebugLog = false;
+
     @Expose
     @SerializedName("keepInventoryDebugLog")
     public boolean keepInventoryDebugLog = false;
+
+    @Expose
+    @SerializedName("mobTargetErrorDebug")
+    public boolean mobTargetErrorDebug = false;
 
     public static void loadConfig() {
         File configFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), CONFIG_FILE_NAME);

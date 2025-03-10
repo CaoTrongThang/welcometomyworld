@@ -71,6 +71,11 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
     }
 
     @Override
+    public Text getDisplayName() {
+        return Text.translatable("entity.welcometomyworld.chesterstomach");
+    }
+
+    @Override
     public void openMobChest(PlayerEntity player) {
         player.openHandledScreen(this);
     }
@@ -207,4 +212,6 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInv, PlayerEntity player) {
         return GenericContainerScreenHandler.createGeneric9x6(syncId, playerInv, inventory);
     }
+
+
 }

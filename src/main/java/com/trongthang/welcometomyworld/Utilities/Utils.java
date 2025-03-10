@@ -21,7 +21,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.DefaultParticleType;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
@@ -266,23 +265,35 @@ public class Utils {
         return entity;
     }
 
-    public static BlockPos findSafeSpawnPositionAroundTheCenterPos(ServerWorld world, Vec3d centerPos, int spawnDistance) {
-        int maxTries = 15;
+    public static BlockPos findSafeSpawnHostileMobPositionAroundTheCenterPos(ServerWorld world, Vec3d centerPos, int searchRadius) {
+        final int maxTries = 20;
+        final int verticalSearchRange = 4;
 
         for (int i = 0; i < maxTries; i++) {
+            // Generate position in circular pattern around center
             double angle = random.nextDouble() * 2 * Math.PI;
-            double distance = spawnDistance + random.nextDouble() * 10; // Random offset beyond minimum distance
-            int x = (int) (centerPos.x + Math.cos(angle) * distance);
-            int z = (int) (centerPos.z + Math.sin(angle) * distance);
-            int y = world.getTopY(Heightmap.Type.WORLD_SURFACE, x, z); // Get the topmost block
+            double distance = random.nextDouble() * searchRadius;
+            double x = centerPos.x + Math.cos(angle) * distance;
+            double z = centerPos.z + Math.sin(angle) * distance;
 
-            BlockPos potentialPos = new BlockPos(x, y, z);
+            // Find proper Y coordinate
+            int y = world.getTopY(Heightmap.Type.WORLD_SURFACE, (int) x, (int) z);
+            BlockPos.Mutable testPos = new BlockPos.Mutable(x, y, z);
 
-            if (isSafeSpawn(world, potentialPos)) {
-                return potentialPos;
+            // Vertical search for valid position
+            for (int dy = 0; dy < verticalSearchRange; dy++) {
+                testPos.setY(y + dy);
+                if (isSafeSpawn(world, testPos)) {
+                    return testPos.toImmutable();
+                }
+
+                testPos.setY(y - dy);
+                if (isSafeSpawn(world, testPos)) {
+                    return testPos.toImmutable();
+                }
             }
         }
-        return null; // No safe position found
+        return null;
     }
 
     public static boolean isSafeSpawn(ServerWorld world, BlockPos pos) {
@@ -445,6 +456,19 @@ public class Utils {
         );
     }
 
+    public static void sendSoundPacketToClient(SoundEvent sound, BlockPos pos){
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeDouble(pos.getX())
+                .writeDouble(pos.getY())
+                .writeDouble(pos.getZ());
+        buf.writeIdentifier(sound.getId());
+
+        ClientPlayNetworking.send(
+                SOUND_PACKET_ID,
+                buf
+        );
+    }
+
     public static void playClientSound(BlockPos pos, SoundEvent sound, int maxDistance) {
         // Get the client instance
         MinecraftClient client = MinecraftClient.getInstance();
@@ -498,28 +522,5 @@ public class Utils {
         }
     }
 
-    public static void spawnParticleCircle(ServerWorld world, Vec3d center, double radius, int density, ParticleEffect particleType) {
-        // Calculate the angle increment based on the density
-        double angleIncrement = (2 * Math.PI) / density;
 
-        for (int i = 0; i < density; i++) {
-            // Calculate the angle for this particle
-            double angle = i * angleIncrement;
-
-            // Calculate the x and z offsets using trigonometry
-            double xOffset = radius * Math.cos(angle);
-            double zOffset = radius * Math.sin(angle);
-
-            // Spawn the particle at the calculated position
-            world.spawnParticles(
-                    particleType,
-                    center.x + xOffset,
-                    center.y,
-                    center.z + zOffset,
-                    1, // Number of particles to spawn at this position
-                    0, 0, 0, // No random offset
-                    0 // No speed
-            );
-        }
-    }
 }

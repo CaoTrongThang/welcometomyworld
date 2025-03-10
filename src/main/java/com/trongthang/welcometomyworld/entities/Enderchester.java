@@ -112,6 +112,9 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     private int checkMusicCounter = 0;
     private int checkMusicCooldown = 25;
 
+    private int checkOwnerOfflineCounter = 40;
+    private int checkOwnerOfflineCooldown = 0;
+
     public Enderchester(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
 
@@ -169,7 +172,7 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
     @Override
     protected void initGoals() {
-        this.goalSelector.add(1, new SitGoal(this));
+        this.goalSelector.add(1, new CustomSitGoal(this));
         this.goalSelector.add(3, new SwimGoal(this));
         this.goalSelector.add(5, new SleepingNoMove(this));
         this.goalSelector.add(6, new StopMovementGoalWhenOpeningChest(this));
@@ -308,6 +311,24 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
         if (!this.getWorld().isClient()) {
             if (this.getCanSleepData()) {
+
+                if(this.getOwner() != null){
+                    if(checkOwnerOfflineCounter < checkOwnerOfflineCooldown){
+                        checkOwnerOfflineCounter++;
+                    }
+
+                    if(checkOwnerOfflineCounter >= checkOwnerOfflineCooldown){
+                        checkOwnerOfflineCounter = 0;
+                        if(this.getIsOpeningChestData()){
+                            ServerPlayerEntity owner = ((ServerWorld) this.getWorld()).getServer()
+                                    .getPlayerManager().getPlayer(this.getOwnerUuid());
+                            if(owner == null){
+                                this.setIsOpeningChestData(false);
+                            }
+                        }
+                    }
+                }
+
 
                 if (!this.getIsSleepingData() && this.getOwner() == null) {
                     if (this.checkMusicCounter < checkMusicCooldown) {
@@ -866,6 +887,36 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         public void stop() {
             threateningEntity = null;
             mob.getNavigation().stop();
+        }
+    }
+
+    class CustomSitGoal extends Goal {
+        private final Enderchester mob;
+
+        public CustomSitGoal(Enderchester mob) {
+            this.mob = mob;
+            this.setControls(EnumSet.of(Control.JUMP, Control.MOVE));
+        }
+
+        @Override
+        public boolean canStart() {
+            return mob.isSitting();
+        }
+
+        @Override
+        public void start() {
+            mob.getNavigation().stop();
+            mob.setInSittingPose(true);
+        }
+
+        @Override
+        public void stop() {
+            mob.setInSittingPose(false);
+        }
+
+        @Override
+        public boolean shouldContinue() {
+            return mob.isSitting();
         }
     }
 }

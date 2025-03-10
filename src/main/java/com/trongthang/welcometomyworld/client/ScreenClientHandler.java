@@ -14,7 +14,6 @@ import static com.trongthang.welcometomyworld.client.ClientData.LAST_INTERACTED_
 public class ScreenClientHandler {
     public static void register() {
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-
             if ((screen.getTitle().equals(Text.translatable("container.enderchest")) || screen.getTitle().equals(Text.translatable("entity.welcometomyworld.chesterstomach"))) && LAST_INTERACTED_MOB_ID != -1) {
                 ScreenEvents.remove(screen).register(removedScreen -> {
 

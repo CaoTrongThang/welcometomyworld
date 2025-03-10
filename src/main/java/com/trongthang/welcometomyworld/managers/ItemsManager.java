@@ -50,7 +50,7 @@ public class ItemsManager {
             .displayName(Text.translatable("itemGroup.welcometomyworld.general"))
             .icon(() -> new ItemStack(POWER_TALISMAN))  // Set the icon of the item group
             .build();
-    
+
     public static Item registerSpawnEgg(EntityType entityType, String id){
         Item item = new SpawnEggItem(entityType, 0xFFFFFF, 0xFFFFFF, new Item.Settings());
         Item registeredItem = Registry.register(Registries.ITEM, new Identifier(WelcomeToMyWorld.MOD_ID, id), item);
@@ -59,14 +59,9 @@ public class ItemsManager {
     }
 
     public static Item registerItem(Item item, String id) {
-        LOGGER.info("Registered: " + id);
-        // Create the identifier for the item.
         Identifier itemID = new Identifier(WelcomeToMyWorld.MOD_ID, id);
-
-        // Register the item
         Item registeredItem = Registry.register(Registries.ITEM, itemID, item);
 
-        // Return the registered item!
         return registeredItem;
     }
 

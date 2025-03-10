@@ -32,12 +32,12 @@ import java.util.Random;
 @Mixin(EndermanEntity.class)
 public abstract class EndermanAIMixin extends Entity {
 
-    private final int COOLDOWN_TIME = 900;
+    private final int COOLDOWN_TIME = 1400;
     private int counter = COOLDOWN_TIME;
     private boolean canUseTeleportSkill = true;
     private static boolean endermanCanPickBlocks = true;
 
-    private final double chanceToUseSkill = 0.8;
+    private final double chanceToUseSkill = 0.4;
     private final double chanceToSwitchBetweenTwoWayOfPickingPlayers = 0.5;
 
     private BlockPos lastPos;

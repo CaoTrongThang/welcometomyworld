@@ -23,8 +23,8 @@ public class BooleanRuleMixin {
         // Compare the rule's key to GameRules.KEEP_INVENTORY
         if (rule.equals(GameRules.KEEP_INVENTORY)) {
 
-            if(ConfigLoader.getInstance().keepInventoryDebugLog) {
-                LOGGER.info("keepInventory was set to: " + value + " This is a debug log of WelcomeToMyWorld mod, it's used to debug what mod sometimes set the KeepInventory to true, please send me the log if you see this message") ;
+            if (ConfigLoader.getInstance().keepInventoryDebugLog) {
+                LOGGER.info("keepInventory was set to: " + value + " This is a debug log of WelcomeToMyWorld mod, it's used to debug what mod sometimes set the KeepInventory to true, please send me the log if you see this message");
                 LOGGER.info("Blocked attempt to set keepInventory to true");
             }
 
@@ -33,9 +33,18 @@ public class BooleanRuleMixin {
 
             // Optionally cancel the modification
             if (value) {
-
                 ci.cancel(); // Prevents the rule from being set to true
             }
         }
+
+        if (rule.equals(GameRules.REDUCED_DEBUG_INFO)) {
+            if (ConfigLoader.getInstance().noMoreF3B) {
+                if (value) {
+                    LOGGER.info("You can't use F3 + B, can turn on in welcometomyworldconfig");
+                    ci.cancel();
+                }
+            }
+        }
+
     }
 }

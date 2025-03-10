@@ -39,7 +39,7 @@ public class WandererArrowModel extends EntityModel<WandererArrow> {
 
         ModelPartData cube_r4 = wanderer_arrow.addChild("cube_r4", ModelPartBuilder.create().uv(1, 1).cuboid(-4.6517F, -1.0F, -5.2301F, 2.0F, 1.0F, 1.0F, new Dilation(0.0F)), ModelTransform.of(0.0F, 0.0F, 0.0F, 0.0F, -0.7854F, 0.0F));
 
-        ModelPartData cube_r5 = wanderer_arrow.addChild("cube_r5", ModelPartBuilder.create().uv(1, 1).cuboid(-0.5F, -4.6088F, -4.1694F, 1.0F, 2.0F, 1.0F, new Dilation(0.0F)), ModelTransform.of(0.0F, 0.0F, 0.0F, 0.7854F, 0.0F, 0.0F));
+        ModelPartData cube_r5 = wanderer_arrow.addChild("cube_r5", ModelPartBuilder.create().uv(1, 1).cuboid(-0.5F, -4.6088F, -4.1694F, 1.0F, 2.0F, 1.0F, new Dilation(0.0F)), ModelTransform.of(0.0F, 0.0F, -1.25F, 0.7854F, 0.0F, 0.0F));
 
         ModelPartData cube_r6 = wanderer_arrow.addChild("cube_r6", ModelPartBuilder.create().uv(1, 1).cuboid(-0.5F, 2.4623F, -5.9372F, 1.0F, 2.0F, 1.0F, new Dilation(0.0F)), ModelTransform.of(0.0F, 0.0F, 0.0F, -0.7854F, 0.0F, 0.0F));
         return TexturedModelData.of(modelData, 32, 32);

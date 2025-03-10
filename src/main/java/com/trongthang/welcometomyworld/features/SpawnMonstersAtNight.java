@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld.features;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.MonsterSpawn;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -16,20 +17,19 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 
 public class SpawnMonstersAtNight {
 
-    private static final int SPAWN_DISTANCE = 64;
-
     private static int MAX_MONSTERS_FOR_EACH_PLAYER = 15;
 
-    private static double chanceToHappen = 70;
+    private static double chanceToHappen = 50;
 
     private static int monsterWillIncreasePerDay = 10;
+
     private static int increaseMonsterByDay = 1;
 
     private static int eachPlayerIncreaseMonster = 10;
 
-    private static int monsterDespawnAfterTick = 3000;
+    private static int monsterDespawnAfterTick = 2000;
 
-    public static final int stopSpawningDay = 269;
+    public static final int stopSpawningDay = 1000;
 
     private static List<MonsterSpawn> monsters = List.of(
             new MonsterSpawn("minecraft:zombie", 0),
@@ -38,9 +38,9 @@ public class SpawnMonstersAtNight {
     );
 
     public static void spawnMonsters(ServerWorld world, int currentDay) {
-        if(currentDay <= 0 || currentDay >= stopSpawningDay) return;
+        if (currentDay <= 0 || currentDay >= stopSpawningDay) return;
 
-        if(random.nextInt(0, 100) > chanceToHappen) return;
+        if (random.nextInt(0, 100) > chanceToHappen) return;
 
         List<ServerPlayerEntity> players = world.getPlayers();
 
@@ -52,25 +52,33 @@ public class SpawnMonstersAtNight {
 
         for (ServerPlayerEntity player : players) {
             World w = player.getWorld();
-            if(!(w.getRegistryKey() == World.OVERWORLD)) continue;
+            if (!(w.getRegistryKey() == World.OVERWORLD)) continue;
             for (int y = 0; y <= monsterWillSpawnForEachPlayer; y++) {
 
-                while (true){
+                while (true) {
                     MonsterSpawn mon = monsters.get(random.nextInt(0, monsters.size()));
-                    if(mon.data <= currentDay){
-                        BlockPos safePos = findSafeSpawnPositionAroundTheCenterPos(world, player.getPos(), SPAWN_DISTANCE);
+                    if (mon.data <= currentDay) {
+                        BlockPos safePos = SpawnMonstersPackEveryMins.findSafeSpawnPosition(world, player.getBlockPos());
 
                         Entity entity;
 
-                        if(safePos != null){
+                        if (safePos != null) {
                             entity = spawnMob(world, safePos, mon.id);
                         } else {
                             entity = null;
                         }
 
-                        if(entity == null) return;
+                        if (entity == null) return;
+                        if (entity instanceof MobEntity mobEntity) {
 
-                        ((MobEntity) entity).setTarget(player);
+                            mobEntity.initialize(world, world.getLocalDifficulty(safePos), SpawnReason.NATURAL, null, null);
+
+                            if (mobEntity.canSee(player)) {
+                                mobEntity.setTarget(player);
+                            }
+                            ;
+                        }
+
 
                         addRunAfter(() -> Utils.discardEntity(world, entity), monsterDespawnAfterTick);
 
