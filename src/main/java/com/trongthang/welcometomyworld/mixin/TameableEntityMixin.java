@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.trongthang.welcometomyworld.GlobalVariables.DEFAULT_XP_TAMEABLE_MOB;
+
 @Mixin(TameableEntity.class)
 public class TameableEntityMixin implements TameableEntityInterface {
     @Unique
@@ -22,7 +24,7 @@ public class TameableEntityMixin implements TameableEntityInterface {
     @Unique
     private float currentLevel = 0;
     @Unique
-    private float nextLevelRequireExp = 20; // Default value
+    private float nextLevelRequireExp = DEFAULT_XP_TAMEABLE_MOB; // Default value
     @Unique
     private float currentLevelExp = 0;
     @Unique
@@ -31,7 +33,7 @@ public class TameableEntityMixin implements TameableEntityInterface {
     // Inject into the constructor to initialize default values
     @Inject(method = "<init>", at = @At("RETURN"))
     private void init(CallbackInfo ci) {
-        this.nextLevelRequireExp = 20; // Ensure default value is set
+        this.nextLevelRequireExp = DEFAULT_XP_TAMEABLE_MOB;
     }
 
     // Save custom data to NBT
@@ -55,7 +57,7 @@ public class TameableEntityMixin implements TameableEntityInterface {
         this.defenseLevel = nbt.contains("DefenseLevel") ? nbt.getInt("DefenseLevel") : 0;
         this.speedLevel = nbt.contains("SpeedLevel") ? nbt.getInt("SpeedLevel") : 0;
         this.currentLevel = nbt.contains("CurrentLevel") ? nbt.getFloat("CurrentLevel") : 0;
-        this.nextLevelRequireExp = nbt.contains("NextLevelRequireExp") ? nbt.getFloat("NextLevelRequireExp") : 20; // Default value
+        this.nextLevelRequireExp = nbt.contains("NextLevelRequireExp") ? nbt.getFloat("NextLevelRequireExp") : DEFAULT_XP_TAMEABLE_MOB; // Default value
         this.currentLevelExp = nbt.contains("CurrentLevelExp") ? nbt.getFloat("CurrentLevelExp") : 0;
         this.pointAvailable = nbt.contains("PointAvailable") ? nbt.getInt("PointAvailable") : 0;
     }

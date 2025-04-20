@@ -4,9 +4,11 @@ import com.trongthang.welcometomyworld.entities.EnderPest;
 import com.trongthang.welcometomyworld.entities.FallenKnight;
 import com.trongthang.welcometomyworld.entities.Wanderer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.PhantomEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 
@@ -27,7 +29,10 @@ public class SpawnEvents {
 
             if (entity instanceof PhantomEntity phantom) {
                 if(entity.getCustomName() == null){
-                    entity.teleport((int) entity.getX(), (int) entity.getY() + 30, (int) entity.getZ());
+                    if(world.getBlockState(new BlockPos((int) entity.getX(), (int) entity.getY() + 30, (int) entity.getZ())).isAir()){
+                        entity.teleport((int) entity.getX(), (int) entity.getY() + 30, (int) entity.getZ());
+                    }
+
                     phantom.setPhantomSize(random.nextInt(2, 50));
                     phantom.getNavigation().stop();
                 }

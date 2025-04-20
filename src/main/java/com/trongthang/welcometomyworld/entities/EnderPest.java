@@ -55,11 +55,6 @@ public class EnderPest extends MobEntity implements StartAnimation {
     private static final TrackedData<Boolean> IS_SCAM = DataTracker.registerData(EnderPest.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Integer> ATE_ENDER_EYES = DataTracker.registerData(EnderPest.class, TrackedDataHandlerRegistry.INTEGER);
 
-    private static final int WALK_CYCLE_DURATION_MS = 5380;
-    private static final int[] FOOTSTEP_TIMINGS_MS = {1280, 4000};
-
-    private int previousWalkPosition = -1;
-
     private static final int MOUNTH_OPEN_DURATION_MS = 8000;
     private static final int[] MOUTH_OPEN_TIMINGS_MS = {0, 330, 790, 1170, 1500, 1790, 2040, 2250, 2420, 2500, 2558};
     private final Set<Integer> portalPlayedFrames = new HashSet<>();

@@ -3,12 +3,15 @@ package com.trongthang.welcometomyworld.entities.client.FallenKnight;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.FallenKnight;
 import com.trongthang.welcometomyworld.entities.client.Portaler.PortalerModel;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
+@Environment(EnvType.CLIENT)
 public class FallenKnightRenderer extends MobEntityRenderer<FallenKnight, FallenKnightModel<FallenKnight>> {
 
     public FallenKnightRenderer(EntityRendererFactory.Context context) {

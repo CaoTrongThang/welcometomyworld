@@ -52,7 +52,6 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.A_LIVING_CHEST_EA
 public class Chester extends Enderchester implements InventoryOwner, NamedScreenHandlerFactory {
 
     private final SimpleInventory inventory = new SimpleInventory(54);
-    public ParticleEffect particleEffect = ParticleTypes.END_ROD;
     private Item tameFood = Items.BONE;
 
     public Chester(EntityType<? extends TameableEntity> entityType, World world) {
@@ -62,12 +61,7 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
 
     @Override
     public ParticleEffect getParticleEffect() {
-        return particleEffect;
-    }
-
-    @Override
-    public void spawnParticlesAround() {
-
+        return null;
     }
 
     @Override

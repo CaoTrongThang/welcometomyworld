@@ -94,7 +94,8 @@ public class ServerNetworking {
                             entityInterface.setDamageLevel(newDamageLevel);
 
                             double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue();
-                            double newStat = oldStat + Math.min(MAX_DAMAGE_MOB, oldStat * DAMAGE_ADD_PER_LEVEL_MOB_PERCENT / 100);
+                            double addStat = Math.max(MIN_DAMAGE_MOB, Math.min(MAX_DAMAGE_MOB, oldStat * DAMAGE_ADD_PER_LEVEL_MOB_PERCENT / 100));
+                            double newStat = oldStat + random.nextDouble(addStat * 0.8f, addStat);
 
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)
                                     .setBaseValue(newStat);
@@ -104,7 +105,10 @@ public class ServerNetworking {
                             entityInterface.setHealthLevel(newHealthLevel);
 
                             double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).getBaseValue();
-                            double newStat = oldStat + Math.min(MAX_HEALTH_MOB, (oldStat * HEALTH_ADD_PER_LEVEL_PERCENT / 100));
+
+                            double addStat = Math.max(MIN_HEALTH_MOB, Math.min(MAX_HEALTH_MOB, oldStat * HEALTH_ADD_PER_LEVEL_PERCENT / 100));
+
+                            double newStat = oldStat + random.nextDouble(addStat * 0.8f, addStat);
 
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
                                     .setBaseValue(newStat);
@@ -114,7 +118,10 @@ public class ServerNetworking {
                             entityInterface.setDefenseLevel(newDefenseLevel);
 
                             double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue();
-                            double newStat = oldStat + Math.min(MAX_ARMOR_MOB, oldStat * ARMOR_ADD_PER_LEVEL_MOB_PERCENT / 100);
+
+                            double addStat = Math.max(MIN_ARMOR_MOB, Math.min(MAX_ARMOR_MOB, oldStat * ARMOR_ADD_PER_LEVEL_MOB_PERCENT / 100));
+
+                            double newStat = oldStat + random.nextDouble(addStat * 0.8f, addStat);
 
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR)
                                     .setBaseValue(newStat);

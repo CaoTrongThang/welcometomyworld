@@ -15,8 +15,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.trongthang.welcometomyworld.GlobalVariables.DEFAULT_XP_TAMEABLE_MOB;
 import static com.trongthang.welcometomyworld.GlobalVariables.EXP_MULTIPLIER_EACH_LEVEL_MOB;
 
+// every tameable mob has a leveling system
+// This class use to scaled the xp the tameable mob get when kill hostile mobs
 @Mixin(LivingEntity.class)
 public class TameableEntityKillMobMixin {
     @Inject(method = "onDeath", at = @At("HEAD"), cancellable = true)
@@ -42,7 +45,11 @@ public class TameableEntityKillMobMixin {
             float expGained = Math.max(1, (targetHealth) / WelcomeToMyWorld.random.nextFloat(5f, scaleFactor));
             expGained += (float) (livingEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR));
 
-            float newExp = entityInterface.getCurrentLevelExp() + expGained;
+            double stateRate = tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) + tameableEntity.getMaxHealth();
+            double scaleXpByStateRate = 1000 / (stateRate + 1);
+
+            float newExp = (float) (entityInterface.getCurrentLevelExp() + (expGained + (expGained * scaleXpByStateRate)));
+
             entityInterface.setCurrentLevelExp(newExp);
 
             float currentExp = entityInterface.getCurrentLevelExp();
@@ -55,7 +62,7 @@ public class TameableEntityKillMobMixin {
                 levelsGained++;
 
                 // Update required EXP for next level
-                requiredExp *= EXP_MULTIPLIER_EACH_LEVEL_MOB;
+                requiredExp = (float) (DEFAULT_XP_TAMEABLE_MOB * (Math.pow(EXP_MULTIPLIER_EACH_LEVEL_MOB, entityInterface.getCurrentLevel())));
                 counter++;
             }
 
@@ -80,25 +87,6 @@ public class TameableEntityKillMobMixin {
                     player.sendMessage(message, false);
                 }
             }
-
-//            if (levelsGained > 0) {
-//                LivingEntity owner = tameableEntity.getOwner();
-//                if (owner instanceof PlayerEntity player) {
-//                    String mobName = tameableEntity.getName().getString();
-//                    int newLevel = (int) entityInterface.getCurrentLevel();
-//
-//                    Text message = Text.literal("")
-//                            .formatted(Formatting.GRAY)
-//                            .formatted(Formatting.ITALIC)
-//                            .append(Text.literal("Your " + mobName + " leveled up to "))
-//                            .append(Text.literal(String.valueOf(newLevel))
-//                                    .formatted(Formatting.WHITE)
-//                                    .formatted(Formatting.ITALIC))
-//                            .append(Text.literal("!"));
-//
-//                    player.sendMessage(message, false);
-//                }
-//            }
         }
     }
 }

@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Is That A Dog?"
+    },
+    "description": {
+      "text": "No it's a chester!"
+    },
+    "icon": {
+      "item": "welcometomyworld:chester"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "welcome": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

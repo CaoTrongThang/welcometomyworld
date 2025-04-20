@@ -6,11 +6,14 @@ import com.trongthang.welcometomyworld.items.ModToolMaterial;
 import com.trongthang.welcometomyworld.items.RepairKnowledge;
 import com.trongthang.welcometomyworld.items.RepairTalisman;
 import com.trongthang.welcometomyworld.items.Weapons.Hammer;
+import com.trongthang.welcometomyworld.items.enchantments.SilenceEnchantment;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -41,10 +44,14 @@ public class ItemsManager {
     public static final Item ANCIENT_WHALE_SPAWN_EGG = registerSpawnEgg(EntitiesManager.ANCIENT_WHALE, "ancient_whale");
     public static final Item ENDERCHESTER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.ENDERCHESTER, "enderchester");
     public static final Item CHESTER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.CHESTER, "chester");
-    public static final Item PORTALER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.PORTALER, "portaler");
     public static final Item THE_ENDER_CHEST_SPAWN_EGG = registerSpawnEgg(EntitiesManager.ENDER_PEST, "ender_pest");
-    public static final Item THE_FALLEN_KNIGHT_SPAWN_EGG = registerSpawnEgg(EntitiesManager.FALLEN_KNIGHT, "fallen_knight");
-    public static final Item WANDERER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.WANDERER, "wanderer");
+
+    public static final Item PORTALER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.PORTALER, "portaler", 0x7b7b7b, 0xb500d1);
+    public static final Item THE_FALLEN_KNIGHT_SPAWN_EGG  = registerSpawnEgg(EntitiesManager.FALLEN_KNIGHT, "fallen_knight", 0x525252, 0x727272);
+    public static final Item WANDERER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.WANDERER, "wanderer", 0x000000, 0xFFFFFF);
+    public static final Item BLOSSOM_SPAWN_EGG = registerSpawnEgg(EntitiesManager.BLOSSOM, "blossom", 0x00b00b, 0x00d120);
+
+    public static Enchantment silenceEnchantment = new SilenceEnchantment();
 
     public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
             .displayName(Text.translatable("itemGroup.welcometomyworld.general"))
@@ -58,6 +65,21 @@ public class ItemsManager {
         return registeredItem;
     }
 
+    public static <T extends MobEntity> Item registerSpawnEgg(EntityType<T> entityType, String id, int primaryColor, int secondaryColor) {
+        SpawnEggItem item = new SpawnEggItem(
+                entityType,
+                primaryColor,
+                secondaryColor,
+                new FabricItemSettings()
+        );
+
+        return Registry.register(
+                Registries.ITEM,
+                new Identifier(WelcomeToMyWorld.MOD_ID, id + "_spawn_egg"),
+                item
+        );
+    }
+
     public static Item registerItem(Item item, String id) {
         Identifier itemID = new Identifier(WelcomeToMyWorld.MOD_ID, id);
         Item registeredItem = Registry.register(Registries.ITEM, itemID, item);
@@ -68,11 +90,13 @@ public class ItemsManager {
     public static void initialize() {
         // Register the custom item group with the registry
         Identifier itemGroupId = new Identifier(WelcomeToMyWorld.MOD_ID, "general");
+
         Registry.register(Registries.ITEM_GROUP, itemGroupId, WELCOME_TO_MY_WORLD_GROUP);
 
         // Create a RegistryKey for the custom item group
         RegistryKey<ItemGroup> groupKey = RegistryKey.of(Registries.ITEM_GROUP.getKey(), itemGroupId);
 
+        Registry.register(Registries.ENCHANTMENT, new Identifier(WelcomeToMyWorld.MOD_ID, "silence"), silenceEnchantment);
 
         // Modify entries for your custom item group using the RegistryKey
         ItemGroupEvents.modifyEntriesEvent(groupKey)
@@ -99,6 +123,7 @@ public class ItemsManager {
                     itemGroup.add(ItemsManager.THE_ENDER_CHEST_SPAWN_EGG);
                     itemGroup.add(ItemsManager.THE_FALLEN_KNIGHT_SPAWN_EGG);
                     itemGroup.add(ItemsManager.WANDERER_SPAWN_EGG);
+                    itemGroup.add(ItemsManager.BLOSSOM_SPAWN_EGG);
 
                     itemGroup.add(BlocksManager.TOUGHER_IRON_BLOCK);
                     itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK);
@@ -111,6 +136,9 @@ public class ItemsManager {
                     itemGroup.add(BlocksManager.BURNING_PLANK);
                     itemGroup.add(BlocksManager.BURNED_PLANK);
                     itemGroup.add(BlocksManager.CUSTOM_VINE);
+
+                    itemGroup.add(BlocksManager.EASYCRAFT_TROPHY);
+                    itemGroup.add(BlocksManager.GAMING_DISC_TROPHY);
                 });
     }
 }

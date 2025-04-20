@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Blooming"
+    },
+    "description": {
+      "text": "You proved that you can actually fight for something"
+    },
+    "icon": {
+      "item": "minecraft:poppy"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "welcome": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

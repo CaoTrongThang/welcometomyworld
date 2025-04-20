@@ -2,32 +2,39 @@ package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.managers.ItemsManager;
 import com.trongthang.welcometomyworld.Utilities.Utils;
-import com.trongthang.welcometomyworld.screen.MobUpgradeScreen;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
 
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.*;
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class BossesSpawningHandler {
     public int checkInterval = 5000;
     public int counter = 0;
 
     public double bossSpawnChance = 0.2;
+
+    public int glowEffectDuration = 400;
 
     final int SPAWN_MIN_DISTANCE = 32; // Minimum distance from player
     final int SPAWN_MAX_DISTANCE = 64; // Maximum distance from player
@@ -116,7 +123,7 @@ public class BossesSpawningHandler {
     }
 
     // Run in ticks
-    public void spawnZombieNearPlayers(ServerWorld world) {
+    public void spawnBossNearPlayers(ServerWorld world) {
         counter++;
         if (counter < checkInterval) return;
         counter = 0;
@@ -125,54 +132,62 @@ public class BossesSpawningHandler {
 
         if (r > bossSpawnChance) return;
 
-        world.getPlayers().forEach(player -> {
-            BlockPos playerPos = player.getBlockPos();
+        if (world.getPlayers().isEmpty()) return;
 
-            // Try to find a valid spawn position
-            BlockPos spawnPos = findValidSpawnPosition(world, playerPos);
+        int randIndex = random.nextInt(world.getPlayers().size());
 
-            if (spawnPos != null) {
-                // Randomly select a mob name and associated EntityType
-                List<String> mobNames = new ArrayList<>(ancientMobs.keySet());
-                String randomMobName = mobNames.get(random.nextInt(mobNames.size()));
-                EntityType<? extends MobEntity> mobEntityType = ancientMobs.get(randomMobName);
+        ServerPlayerEntity player = world.getPlayers().get(randIndex);
 
-                // Create the mob entity based on the random type
-                MobEntity mob = mobEntityType.create(world);
-                if (mob != null) {
-                    mob.refreshPositionAndAngles(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), 0, 0);
-                    mob.setCustomName(Text.literal(randomMobName).styled(style -> style.withColor(Formatting.DARK_PURPLE)));  // Set custom name to the randomly selected name
+        if (player == null) return;
+
+        BlockPos playerPos = player.getBlockPos();
+
+        // Try to find a valid spawn position
+        BlockPos spawnPos = findValidSpawnPosition(world, playerPos);
+
+        if (spawnPos != null) {
+            // Randomly select a mob name and associated EntityType
+            List<String> mobNames = new ArrayList<>(ancientMobs.keySet());
+            String randomMobName = mobNames.get(random.nextInt(mobNames.size()));
+            EntityType<? extends MobEntity> mobEntityType = ancientMobs.get(randomMobName);
+
+            // Create the mob entity based on the random type
+            MobEntity mob = mobEntityType.create(world);
+            if (mob != null) {
+                mob.refreshPositionAndAngles(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), 0, 0);
+                mob.setCustomName(Text.literal(randomMobName).styled(style -> style.withColor(Formatting.DARK_PURPLE)));  // Set custom name to the randomly selected name
 
 
-                    Utils.applyEffectForMobs(mob, 3, 200);
+                Utils.applyEffectForMobs(mob, 3, 200);
 
-                    Text message = Text.literal("☠").styled(style -> style.withColor(Formatting.DARK_PURPLE))
-                            .append(Text.literal(" An ").styled(style -> style.withColor(Formatting.WHITE))
-                                    .append(Text.literal(randomMobName)
-                                            .styled(style -> style.withColor(Formatting.DARK_PURPLE)))
-                                    .append(Text.literal(" just spawned nearby, be careful...")
-                                            .styled(style -> style.withColor(Formatting.WHITE))));
+                Text message = Text.literal("☠").styled(style -> style.withColor(Formatting.DARK_PURPLE))
+                        .append(Text.literal(" An ").styled(style -> style.withColor(Formatting.WHITE))
+                                .append(Text.literal(randomMobName)
+                                        .styled(style -> style.withColor(Formatting.DARK_PURPLE)))
+                                .append(Text.literal(" just spawned nearby, be careful...")
+                                        .styled(style -> style.withColor(Formatting.WHITE))));
 
-                    player.sendMessage(message);
+                player.sendMessage(message);
 
-                    // Spawn the beacon beam effect
-                    spawnLightningForNoticePlayers(world, mob);
+                // Spawn the beacon beam effect
+                spawnLightningForNoticePlayers(world, mob);
 
-                    // Spawn the mob in the world
-                    world.spawnEntity(mob);
+                // Spawn the mob in the world
+                world.spawnEntity(mob);
 
-                    spawnParticlesUpToTheSky(world, mob);
+                spawnParticlesUpToTheSky(world, mob);
 
-                    Utils.addRunAfter(() -> {
-                        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 100);
-                        mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 10);
-                        mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 10);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, glowEffectDuration, 0));
 
-                        mob.setHealth(mob.getMaxHealth());
-                    }, 30);
-                }
+                Utils.addRunAfter(() -> {
+                    mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 100);
+                    mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 10);
+                    mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 10);
+
+                    mob.setHealth(mob.getMaxHealth());
+                }, 30);
             }
-        });
+        }
     }
 
 
@@ -180,7 +195,7 @@ public class BossesSpawningHandler {
         // No spawning at day
         if (world.isDay()) return null;
 
-        for (int i = 0; i < 10; i++) { // Try 10 random positions
+        for (int i = 0; i < 10; i++) {
             double angle = world.random.nextDouble() * 2 * Math.PI; // Random angle
             int distance = SPAWN_MIN_DISTANCE + world.random.nextInt(SPAWN_MAX_DISTANCE - SPAWN_MIN_DISTANCE + 1); // Random distance within range
             int offsetX = (int) (Math.cos(angle) * distance);

@@ -8,6 +8,7 @@ import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.NoPenaltyTargeting;
 import net.minecraft.entity.ai.TargetPredicate;
@@ -15,6 +16,7 @@ import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -24,6 +26,7 @@ import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -47,6 +50,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.EntityView;
+import net.minecraft.world.MobSpawnerLogic;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -117,6 +121,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
     private int getHealthUpdateCounter = 0;
     private double healthDecreaseWhenTameablePercent = 0.01f;
     private float healthIncreaseWhenTamed = 0.005f;
+
     private float percentHealthToBeTamed = 0.15f;
     private int canBeTamedChance = 70;
 
@@ -144,8 +149,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
 
             this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
-            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 2));
-            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 2.5F));
+            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 3));
+            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 5F));
             this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
 
             if (skillCooldownDecreasedBasedOnMobScale / 3 > 1) {
@@ -210,14 +215,14 @@ public class FallenKnight extends StrongTameableEntityDefault {
         this.goalSelector.add(4, new PatrollingGoal(this));
         this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 15, 25, false));
         this.goalSelector.add(6, new StopWhenUsingSkill(this));
-        this.goalSelector.add(7, new CustomMeleeAttackGoal(this, 20, 1.5f));
+        this.goalSelector.add(7, new CustomMeleeAttackGoal(this, 27, 1.5f));
         this.goalSelector.add(8, new LargeEntityWanderGoal(this, 1.0, 1));
         this.goalSelector.add(9, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
         this.goalSelector.add(11, new LookAroundGoal(this));
 
         this.targetSelector.add(2, new CustomTrackOwnerAttackGoal(this));
         this.targetSelector.add(3, new CustomAttackWithOwnerGoal(this));
-        this.targetSelector.add(4, new RevengeGoal(this).setGroupRevenge());
+        this.targetSelector.add(4, new CustomRevengeGoal(this).setGroupRevenge());
         this.targetSelector.add(5, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
     }
 
@@ -248,7 +253,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 if (this.getCanBeTamed()) {
                     this.damage(this.getWorld().getDamageSources().generic(), (float) (this.getMaxHealth() * healthDecreaseWhenTameablePercent));
                 } else {
-                    this.setHealth(this.getHealth() + (this.getMaxHealth() * this.healthIncreaseWhenTamed));
+                    this.setHealth(this.getHealth() + Math.min(this.getMaxHealth() * this.healthIncreaseWhenTamed, this.maxRegenHealthPerUpdate));
                 }
             }
         }
@@ -605,6 +610,13 @@ public class FallenKnight extends StrongTameableEntityDefault {
                         if (tameable.getOwner() == this.getOwner()) continue;
                     }
                 }
+
+                if(target instanceof PlayerEntity){
+                    if(this.isTamed() || this.getOwner() != null){
+                        continue;
+                    }
+                }
+
                 // Handle FallenKnight-specific logic
                 if (target instanceof FallenKnight knight) {
                     // Skip untamed vs. untamed damage
@@ -619,6 +631,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
                         }
                     }
                 }
+
                 float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * this.attack3DamageMultiply;
                 damageBlockingShield(target, damage);
                 if(target instanceof PlayerEntity){
@@ -677,10 +690,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         if (this.getTarget() == null) return;
         if (target.isBlocking() && target.getActiveItem().isDamageable()) {
-
             target.getActiveItem().damage((int) damage, target,
                     entity -> entity.sendToolBreakStatus(target.getActiveHand()));
-
         }
     }
 
@@ -731,6 +742,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 this.animationTimeout = 1;
                 this.setTarget(null);
                 this.setCanBeTamed(false);
+
+                Utils.grantAdvancement((ServerPlayerEntity) player, "tameable/you_are_worthy");
 
                 this.setHealth(this.getMaxHealth() / 2);
 
@@ -803,8 +816,13 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
+        if (this.isDead()) return false;
+
         if (!this.getWorld().isClient) {
-            LOGGER.info("ATTACKER: " + source.getAttacker());
+            if(source.getSource() instanceof ArrowEntity){
+                amount /= 2;
+            }
+
             if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner() && player.isSneaking()) {
                 this.patrolCenterPos = this.getBlockPos();
                 this.setIsPatrolling(!this.getIsPatrolling());
@@ -849,7 +867,12 @@ public class FallenKnight extends StrongTameableEntityDefault {
         if (!this.getWorld().isClient) {
             Vec3d knockbackDirection = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(), target.getZ() - this.getZ()).normalize();
 
-            target.addVelocity(knockbackDirection.multiply(2, 0, 2));
+            if(target instanceof PlayerEntity){
+                target.addVelocity(knockbackDirection.multiply(2, 0, 2));
+            } else {
+                target.addVelocity(knockbackDirection);
+            }
+
             // Send animation packet to all nearby players
             for (ServerPlayerEntity player : ((ServerWorld) this.getWorld()).getPlayers()) {
                 if (player.canSee(this)) {

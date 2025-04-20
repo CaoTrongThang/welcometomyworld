@@ -3,12 +3,15 @@ package com.trongthang.welcometomyworld.entities.client.PortalerTheEnd;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.Portaler;
 import com.trongthang.welcometomyworld.entities.client.Portaler.PortalerRenderer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
+@Environment(EnvType.CLIENT)
 public class PortalerTheEndRenderer extends PortalerRenderer {
 
     public static final Identifier[] TEXTURES = {

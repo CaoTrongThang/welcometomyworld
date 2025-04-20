@@ -10,15 +10,23 @@
 		"AbstractBlockMixinTick",
 		"SpeardableBlockMixin",
 		"OneShotErrorDebug",
-		"BooleanRuleMixin",
 		"TameableEntityMixin",
 		"TameableEntityKillMobMixin",
-		"MobEntityMixin",
+		"HostileEntityStatsBuffAndAttackTameableCreatures",
 		"PhantomAIMixin",
 		"HostileFollowPlayersMixin",
 		"EndermanAIMixin",
-		"SpeciesModDamageMixin",
-		"VehicleRemoveHostileMixin"
+		"BuffOrNerfDamageForBossesOrMobsFromOtherMods",
+		"VehicleRemoveHostileMixin",
+		"SleepManagerChange",
+		"IncreaseXpDroppedFromMobsMixin",
+		"BoatEntityNullFix",
+		"ReduceDamageIndicatorParticles",
+		"PointedDripstoneMixin",
+		"IncreaseHealthRegenOfHostileMobs",
+		"OwnerCantDamageTamedMobsWhenItsInCombat",
+		"AIShouldSleep",
+		"FasterSpawner"
 	],
 	"injectors": {
 		"defaultRequire": 1

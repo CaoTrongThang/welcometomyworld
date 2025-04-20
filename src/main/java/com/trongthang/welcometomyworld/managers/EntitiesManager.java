@@ -13,14 +13,11 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.dimension.DimensionType;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
@@ -101,6 +98,16 @@ public class EntitiesManager {
                     .build()
     );
 
+
+    public static final EntityType<Blossom> BLOSSOM = Registry.register(
+            Registries.ENTITY_TYPE,
+            new Identifier(WelcomeToMyWorld.MOD_ID, "blossom"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, Blossom::new)
+                    .fireImmune()
+                    .dimensions(EntityDimensions.changing(1, 1f))
+                    .build()
+    );
+
     public static void register() {
 //        FabricDefaultAttributeRegistry.register(A_LIVING_LOG, setAttributes(8, 0.1));
 
@@ -119,6 +126,8 @@ public class EntitiesManager {
         FabricDefaultAttributeRegistry.register(FALLEN_KNIGHT, FallenKnight.setAttributes());
 
         FabricDefaultAttributeRegistry.register(WANDERER, Wanderer.setAttributes());
+
+        FabricDefaultAttributeRegistry.register(BLOSSOM, Blossom.setAttributes());
 
         addSpawn();
 
@@ -141,7 +150,7 @@ public class EntitiesManager {
                 ),
                 SpawnGroup.MONSTER,
                 EntityType.PHANTOM,
-                3, 1, 3
+                1, 1, 3
         );
 
 
@@ -158,7 +167,7 @@ public class EntitiesManager {
                 },
                 SpawnGroup.CREATURE,
                 EntitiesManager.CHESTER,
-                4,
+                10,
                 1,
                 1
         );
@@ -168,7 +177,7 @@ public class EntitiesManager {
                     return context.getBiomeKey().getValue().equals(new Identifier("betterend", "shadow_forest"));
                 },
                 SpawnGroup.CREATURE,
-                EntitiesManager.ENDERCHESTER, 6,
+                EntitiesManager.ENDERCHESTER, 9,
                 1,
                 1
         );
@@ -204,7 +213,7 @@ public class EntitiesManager {
                 },
                 SpawnGroup.CREATURE,
                 EntitiesManager.FALLEN_KNIGHT,
-                50,
+                55,
                 1,
                 1
         );
@@ -218,7 +227,17 @@ public class EntitiesManager {
                 },
                 SpawnGroup.CREATURE,
                 WANDERER,
+                3,
                 1,
+                1
+        );
+
+        BiomeModifications.addSpawn(
+                context -> context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "magnolia_woodland"))
+                        || context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "rocky_meadow")),
+                SpawnGroup.CREATURE,
+                EntitiesManager.BLOSSOM,
+                11,
                 1,
                 1
         );
@@ -264,6 +283,7 @@ public class EntitiesManager {
                 || context.getBiomeKey().equals(BiomeKeys.FROZEN_RIVER)
                 || context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "muddy_river"))
                 || context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "frozen_tundra"))
+                || context.getBiomeKey().getValue().equals(new Identifier("regions_unexplored", "cold_river"))
                 || context.getBiomeKey().getValue().equals(new Identifier("terralith", "haze_mountain"))) {
             return false;
         }

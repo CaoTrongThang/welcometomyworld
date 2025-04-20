@@ -45,12 +45,8 @@ public class ConfigLoader {
     public boolean oneShotDebugLog = false;
 
     @Expose
-    @SerializedName("keepInventoryDebugLog")
-    public boolean keepInventoryDebugLog = false;
-
-    @Expose
-    @SerializedName("mobTargetErrorDebug")
-    public boolean mobTargetErrorDebug = false;
+    @SerializedName("hostileMobsEventsStopSpawningDay")
+    public int hostileMobsEventsStopSpawningDay = 500;
 
     public static void loadConfig() {
         File configFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), CONFIG_FILE_NAME);

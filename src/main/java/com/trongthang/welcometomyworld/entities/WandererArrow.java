@@ -1,6 +1,5 @@
 package com.trongthang.welcometomyworld.entities;
 
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -108,11 +107,7 @@ public class WandererArrow extends PersistentProjectileEntity {
         // Check if the target is the owner of the arrow
         if (target == this.getOwner()) return false;
 
-        if (target instanceof WandererArrow) {
-            return false;
-        }
-
-        if (target instanceof ArrowEntity) {
+        if (target instanceof PersistentProjectileEntity) {
             return false;
         }
 

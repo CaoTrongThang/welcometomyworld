@@ -2,6 +2,7 @@ package com.trongthang.welcometomyworld.client;
 
 import com.trongthang.welcometomyworld.ModKeybindings;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.RequestMobStatsPacket;
 import com.trongthang.welcometomyworld.screen.MobUpgradeScreen;
 import io.netty.buffer.Unpooled;
@@ -14,6 +15,8 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -36,7 +39,9 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class WelcomeToMyWorldClient implements ClientModInitializer {
     private Perspective previousPerspective = Perspective.FIRST_PERSON;
     private boolean wasPlayerDead = false;
+
     private boolean stopSendingOriginsScreen = false;
+    private boolean stopSendingLoadingTerrainScreen = false;
 
     private boolean removeMessagesFirstJoin = true;
 
@@ -69,11 +74,13 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register((handler, client, c) -> {
             preRenderChunks(c);
             removeMessagesFirstJoin = true;
+            stopSendingLoadingTerrainScreen = false;
             messageCounter = 0;
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             stopSendingOriginsScreen = false;
+            stopSendingLoadingTerrainScreen = false;
         });
 
         if (compatityChecker.OriginCheck()) {
@@ -84,11 +91,23 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
                     // Check for the Origins screen
                     if (screenTitle.equals("origins.screen.choose_origin")) {
                         if (client.player != null) {
-                            sendPacketToServer(1);
+                            PacketByteBuf buf = PacketByteBufs.create();
+                            buf.writeInt(1);
+
+                            if (client.player != null) {
+                                buf.writeUuid(client.player.getUuid());
+                                ClientPlayNetworking.send(FIRST_ORIGIN_CHOOSING_SCREEN, buf);
+                            }
                         }
                     } else {
                         if (client.player != null) {
-                            sendPacketToServer(0);
+                            PacketByteBuf buf = PacketByteBufs.create();
+                            buf.writeInt(0);
+
+                            if (client.player != null) {
+                                buf.writeUuid(client.player.getUuid());
+                                ClientPlayNetworking.send(FIRST_ORIGIN_CHOOSING_SCREEN, buf);
+                            }
                         }
                     }
                 }
@@ -96,12 +115,19 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         } else {
             stopSendingOriginsScreen = true;
         }
-
+        
         ClientTickEvents.END_CLIENT_TICK.register(this::onTicks);
+
+        ClientPlayNetworking.registerGlobalReceiver(CLIENT_HAS_DATA, (client, handler, buf, responseSender) -> {
+            client.execute(() -> {
+                stopSendingOriginsScreen = true;
+                stopSendingLoadingTerrainScreen = true;
+            });
+        });
 
         ClientPlayNetworking.registerGlobalReceiver(STOP_SENDING_ORIGINS_SCREEN, (client, handler, buf, responseSender) -> {
             client.execute(() -> {
-                stopSendingOriginsScreen = true;
+                stopSendingLoadingTerrainScreen = true;
             });
         });
 
@@ -135,10 +161,35 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         if (client.player != null) {
             this.waterFallDamage(client);
             this.switchPerspectiveOnDeath(client);
+            handleTerrainScreen(client);
         }
 
         if (ModKeybindings.openMobStats.wasPressed()) {
             handleOpenMobStats(client);
+        }
+    }
+
+    private boolean lastScreenTerain = false;
+
+    private void handleTerrainScreen(MinecraftClient client){
+        if(stopSendingLoadingTerrainScreen) return;
+
+        if(lastScreenTerain){
+            if(!(client.currentScreen instanceof DownloadingTerrainScreen)){
+                stopSendingLoadingTerrainScreen = true;
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeInt(1);
+
+                if (client.player != null) {
+                    buf.writeUuid(client.player.getUuid());
+                    ClientPlayNetworking.send(FIRST_LOADING_TERRAIN_SCREEN, buf);
+                }
+            }
+        }
+
+        if(client.currentScreen instanceof DownloadingTerrainScreen)
+        {
+            lastScreenTerain = true;
         }
     }
 
@@ -245,20 +296,6 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
     private float calculateFallDamage(double fallDistance) {
         return (float) (((Math.abs(fallDistance - 5))));
-    }
-
-    private void sendPacketToServer(int state) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(state);
-
-        // Safely get the player's UUID
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null) {
-            buf.writeUuid(client.player.getUuid());
-            ClientPlayNetworking.send(FIRST_ORIGIN_CHOOSING_SCREEN, buf);
-        } else {
-            System.err.println("Player object is null, unable to send packet!");
-        }
     }
 
     private void preRenderChunks(MinecraftClient client) {

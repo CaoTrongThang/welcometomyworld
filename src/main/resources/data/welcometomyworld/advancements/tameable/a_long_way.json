@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "A Long Way"
+    },
+    "description": {
+      "text": "How long have you been out there?"
+    },
+    "icon": {
+      "item": "welcometomyworld:wanderer_spawn_egg"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "welcome": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

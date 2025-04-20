@@ -1,13 +1,15 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.ConfigLoader;
-import com.trongthang.welcometomyworld.GlobalConfig;
 import com.trongthang.welcometomyworld.Utilities.SpawnParticiles;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.entities.Blossom;
+import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -21,8 +23,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.ChunkStatus;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Random;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
@@ -33,7 +37,7 @@ public class IntroOfTheWorldHandler {
 
     public static double playersDeathChanceInTheIntro = 0.15;
 
-    byte phantomSpawnAmount = 10;
+    byte phantomSpawnAmount = 8;
     public boolean alreadySpawnedPhantom = false;
 
     private int slownessTimeInTickAfterLand = 280;
@@ -44,22 +48,22 @@ public class IntroOfTheWorldHandler {
         //teleport player to the sky
         Vec3d skyPosition = new Vec3d(player.getX(), 400, player.getZ());
         player.teleport(skyPosition.x, skyPosition.y, skyPosition.z);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 100, 128));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 60, 0));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 100, 4));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 160, 128));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 80, 0));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 160, 4));
     }
 
+    //THIS IS A FUCKING MESS, DON'T READ
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
         if (player.getWorld().isClient) return;
         PlayerData playerData = dataHandler.playerDataMap.get(player.getUuid());
         ServerWorld world = player.getServerWorld();
-        boolean isAir = world.getBlockState(player.getBlockPos().down(25)).isAir();
 
         if (!firstTimeLoadChunkIntro) {
             firstTimeLoadChunkIntro = true;
         }
 
-        if (!playerData.firstTouchGround || !playerData.firstTeleportedToSky || !playerData.completeOriginSelectingScreen) {
+        if (!playerData.firstTouchGround || !playerData.firstTeleportedToSky || !playerData.completeOriginSelectingScreen || !playerData.completeLoadingTerrainScreen ) {
             if (player.isCreative()) {
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 return;
@@ -87,17 +91,28 @@ public class IntroOfTheWorldHandler {
                 return;
             }
         }
+        if (!playerData.completeLoadingTerrainScreen) {
+            teleportPlayersToSkyFirstJoin(player);
 
-        if (!playerData.firstTeleportedToSky && (player.isOnGround() || player.isTouchingWater())) {
+            if (playerData.firstTouchGround) {
+                playerData.completeLoadingTerrainScreen = true;
+            }
+
+            return;
+        }
+
+        if (!playerData.firstTeleportedToSky) {
             if (player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
                 teleportPlayersToSkyFirstJoin(player);
 
-                for (int x = 1; x < 40; x++) {
-                    Utils.addRunAfter(() -> {
-                        Utils.spawnCircleParticles(player);
-                    }, x);
+                if(!playerData.completeSpawningParticles){
+                    for (int x = 1; x < 40; x++) {
+                        Utils.addRunAfter(() -> {
+                            Utils.spawnCircleParticles(player);
+                        }, x);
+                    }
+                    playerData.completeSpawningParticles = true;
                 }
-                playerData.completeSpawningParticles = true;
 
                 Utils.UTILS.sendTextAfter(player, "Finally!", 20);
 
@@ -111,19 +126,12 @@ public class IntroOfTheWorldHandler {
                     spawnPhantom(player.getServerWorld(), player);
                     alreadySpawnedPhantom = true;
                 }
-
-//                //Ensure player must in the air at first join to keep doing the intro
-//                if (player.getWorld().getBlockState(player.getBlockPos().down()).isAir()) {
-//                    dataHandler.playerDataMap.get(player.getUuid()).firstTeleportedToSky = true;
-//
-//                }
             } else {
                 playerData.firstTouchGround = true;
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
             }
-        }
-        ;
+        };
 
         if (!playerData.firstTeleportedToSky && player.getY() >= 350) {
             playerData.firstTeleportedToSky = true;
@@ -145,10 +153,29 @@ public class IntroOfTheWorldHandler {
             Utils.UTILS.sendTextAfter(player, "Finally!");
         }
 
-        if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 400, 255));
+        if ((player.getHealth() <= 0 || player.isDead()) && !playerData.introDeathByGod) {
+            Utils.UTILS.sendTextAfter(player, "That was... bad.", 20);
+            playerData.firstTouchGround = true;
+            playerData.firstTeleportedToSky = true;
+            Utils.grantAdvancement(player, "a_rough_start");
+            playerData.completeLoadingTerrainScreen = true;
+            return;
+        }
 
+        if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
+            if (!world.getBlockState(player.getBlockPos().down(40)).isAir()) {
+                player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 200, 255));
+            }
             if (Utils.isPlayerStandingOnBlock(player)) {
+                if ((player.getHealth() <= 0 || player.isDead()) && !playerData.introDeathByGod) {
+                    Utils.UTILS.sendTextAfter(player, "That was... bad.", 20);
+                    playerData.firstTouchGround = true;
+                    playerData.firstTeleportedToSky = true;
+                    Utils.grantAdvancement(player, "a_rough_start");
+                    playerData.completeLoadingTerrainScreen = true;
+                    return;
+                }
+
                 // Create an explosion at the player's landing position
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
                 world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F, World.ExplosionSourceType.TNT);
@@ -169,15 +196,29 @@ public class IntroOfTheWorldHandler {
 
                 Utils.grantAdvancement(player, "successfully_landed");
                 introMessages(player, false);
+                playerData.completeLoadingTerrainScreen = true;
             }
         } else {
-            if (player.isOnGround() || player.isTouchingWater()) {
-                if (player.getHealth() <= 0 && !playerData.introDeathByGod) {
-                    Utils.UTILS.sendTextAfter(player, "That was... bad.", 20);
-                    playerData.firstTouchGround = true;
-                    playerData.firstTeleportedToSky = true;
-                    Utils.grantAdvancement(player, "a_rough_start");
-                }
+            if (Utils.isPlayerStandingOnBlock(player) && player.getHealth() > 0) {
+                BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
+                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F, World.ExplosionSourceType.TNT);
+                playerData.completeLoadingTerrainScreen = true;
+                player.setVelocity(player.getVelocity().x, 1.2, player.getVelocity().z); // Small upward bounce
+                player.velocityModified = true; // Ensure the velocity is synced to the client
+                Utils.addRunAfter(() -> {
+                    player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4));
+                }, 20);
+                player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
+
+                spawnLandEffect(player);
+                SpawnParticiles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
+                // Set the player’s "firstLandFromSky" to true
+                playerData.firstTouchGround = true;
+                playerData.firstTeleportedToSky = true;
+                playerData.introMessageAfterDeath = true;
+
+                Utils.grantAdvancement(player, "successfully_landed");
+                introMessages(player, false);
             }
         }
     }
@@ -215,7 +256,6 @@ public class IntroOfTheWorldHandler {
                 server.execute(() -> {
                     // Validate that the player exists
                     if (p == null) {
-                        System.err.println("Received packet for unknown player");
                         return;
                     }
 
@@ -223,13 +263,11 @@ public class IntroOfTheWorldHandler {
                     PlayerData playerData = dataHandler.playerDataMap.get(p.getUuid());
 
                     if (playerData == null) {
-                        System.err.println("No data found for player UUID: " + p.getUuid());
                         return;
                     }
 
                     if (playerData.completeOriginSelectingScreen) return;
 
-                    // Update player state based on packet data
                     if (state == 1) {
                         playerData.firstOriginSelectingScreen = true;
                     }
@@ -238,6 +276,29 @@ public class IntroOfTheWorldHandler {
                         playerData.completeOriginSelectingScreen = true;
                         ServerPlayNetworking.send(p, STOP_SENDING_ORIGINS_SCREEN, PacketByteBufs.empty());
                     }
+                });
+            });
+
+            ServerPlayNetworking.registerGlobalReceiver(FIRST_LOADING_TERRAIN_SCREEN, (server, p, handler, buf, responseSender) -> {
+                // Read all data from the buffer immediately
+                int state = buf.readInt();
+
+                server.execute(() -> {
+                    // Validate that the player exists
+                    if (p == null) {
+                        return;
+                    }
+
+                    // Access player data
+                    PlayerData playerData = dataHandler.playerDataMap.get(p.getUuid());
+
+                    if (playerData == null) {
+                        return;
+                    }
+
+                    if (playerData.completeLoadingTerrainScreen) return;
+
+                    playerData.completeLoadingTerrainScreen = true;
                 });
             });
         }
@@ -274,6 +335,10 @@ public class IntroOfTheWorldHandler {
             Utils.addRunAfter(() -> {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
             }, 40 * 20);
+
+            Utils.addRunAfter(() -> {
+                spawnBlossom((ServerWorld) player.getWorld(), player);
+            }, 46 * 20);
 
         } else {
             if (player.getWorld().getLevelProperties().isHardcore()) {
@@ -341,10 +406,154 @@ public class IntroOfTheWorldHandler {
         }
     }
 
+    public void spawnBlossom(ServerWorld world, PlayerEntity player) {
+        if (world.isClient) return;
+
+        if (player == null) return;
+
+        Blossom blossom = EntitiesManager.BLOSSOM.create(world.toServerWorld());
+
+        if (blossom != null) {
+            BlockPos safePos = findSpawnPosition((ServerPlayerEntity) player, 3);
+            ;
+
+            if (safePos == null) {
+                LOGGER.info("No safe pos to spawn Blossom");
+                return;
+            }
+
+            blossom.setPosition(safePos.getX(), safePos.getY(), safePos.getZ());
+
+            Utils.addRunAfter(() -> {
+                blossom.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, player.getPos());
+            }, 5);
+
+
+            blossom.setIsGreeting(true);
+            blossom.greetingTarget = player;
+
+            world.spawnEntity(blossom);
+        }
+    }
+
+    public static BlockPos findSpawnPosition(ServerPlayerEntity player, int scanRadius) {
+        ServerWorld world = (ServerWorld) player.getWorld();
+
+        // Get chunk coordinates once
+        ChunkPos playerChunkPos = new ChunkPos(player.getBlockPos());
+
+        // 1. Highest priority - 2 blocks in front at head height
+        BlockPos frontPos = calculateFrontPosition(player);
+        if (isPositionSafe(world, frontPos, playerChunkPos)) {
+            return frontPos;
+        }
+
+        // 2. Check below front position (with chunk check)
+        BlockPos belowPos = findSafeBelow(world, frontPos, playerChunkPos);
+        if (belowPos != null) {
+            return belowPos;
+        }
+
+        // 3. Scan around player with chunk awareness
+        BlockPos aroundPos = scanAroundPosition(world, frontPos, scanRadius, playerChunkPos);
+        return aroundPos;
+    }
+
+    private static boolean isPositionSafe(ServerWorld world, BlockPos pos, ChunkPos centerChunk) {
+        // Check chunk loading first
+        if (!world.isChunkLoaded(pos.getX() >> 4, pos.getZ() >> 4)) {
+            return false;
+        }
+
+        // Check if position is within world bounds
+        if (!world.isInBuildLimit(pos)) return false;
+
+        // Check block states only if chunk is loaded
+        return world.getBlockState(pos).isAir() &&
+                world.getBlockState(pos.up()).isAir();
+    }
+
+    private static BlockPos findSafeBelow(ServerWorld world, BlockPos startPos, ChunkPos centerChunk) {
+        // Limit search to original chunk
+        if (!isSameChunk(startPos, centerChunk)) return null;
+
+        for (int i = 0; i < 5; i++) {
+            BlockPos checkPos = startPos.down(i);
+            if (isPositionSafe(world, checkPos, centerChunk)) {
+                return checkPos;
+            }
+        }
+        return null;
+    }
+
+    private static BlockPos scanAroundPosition(ServerWorld world, BlockPos center, int radius, ChunkPos centerChunk) {
+        // Search only in initially loaded chunks around player
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                // Only check chunks that were loaded when we started
+                if (!world.getChunkManager().isChunkLoaded(centerChunk.x + dx, centerChunk.z + dz)) {
+                    continue;
+                }
+
+                // Check vertical column in loaded chunk
+                for (int dy = -radius; dy <= radius; dy++) {
+                    BlockPos pos = center.add(dx, dy, dz);
+                    if (isPositionSafe(world, pos, centerChunk)) {
+                        return pos;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean isSameChunk(BlockPos pos, ChunkPos chunk) {
+        return pos.getX() >> 4 == chunk.x && pos.getZ() >> 4 == chunk.z;
+    }
+
+    private static BlockPos calculateFrontPosition(ServerPlayerEntity player) {
+        // Convert yaw to direction vector
+        float yaw = player.getHeadYaw();
+        double radianYaw = Math.toRadians(yaw);
+
+        double xOffset = -Math.sin(radianYaw) * 2;
+        double zOffset = Math.cos(radianYaw) * 2;
+
+        // Calculate position 2 blocks in front at head height
+        return new BlockPos(
+                (int) Math.floor(player.getX() + xOffset),
+                (int) Math.floor(player.getY() + 1.5), // Head height
+                (int) Math.floor(player.getZ() + zOffset)
+        );
+    }
+
+    private static boolean isPositionSafe(World world, BlockPos pos) {
+        // Check if position is within world bounds
+        if (!world.isInBuildLimit(pos)) return false;
+
+        // Check if block is passable and has space
+        return world.getBlockState(pos).isAir() &&
+                world.getBlockState(pos.up()).isAir();
+    }
+
+    private static BlockPos findSafeBelow(World world, BlockPos startPos) {
+        // Check up to 5 blocks below
+        for (int i = 0; i < 5; i++) {
+            BlockPos checkPos = startPos.down(i);
+            if (isPositionSafe(world, checkPos)) {
+                return checkPos;
+            }
+        }
+
+
+        return null;
+    }
+
     public void spawnPhantom(ServerWorld world, PlayerEntity player) {
         // Get player's current position
 
         if (player == null) return;
+
         int addDistance = 20;
         int distance = 80;
 
@@ -357,7 +566,6 @@ public class IntroOfTheWorldHandler {
 
             // Calculate the spawn position
             BlockPos spawnPos = new BlockPos((int) (playerPos.x + offsetX), (int) (playerPos.y + offsetY), (int) (playerPos.z + offsetZ));
-
             // Create and spawn the Phantom entity
             PhantomEntity phantom = EntityType.PHANTOM.create(world.toServerWorld());
 

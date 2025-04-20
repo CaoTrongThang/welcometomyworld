@@ -1,17 +1,19 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.JukeboxBlock;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.JukeboxBlockEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
@@ -22,6 +24,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 import java.util.*;
@@ -62,10 +66,8 @@ public class AwakeHandler {
             "Better take a snap",
             "Fortune favors you!",
             "Lady Luck smiles upon you!",
-            "Destiny takes a nap too!",
             "Lucky stars aligned!",
-            "Charm of Morpheus activated!",
-            "Fate needs some rest too!"
+            "Charm of Morpheus activated!"
     );
 
     private static final ConcurrentHashMap<UUID, Boolean> playerBuffTracker = new ConcurrentHashMap<>();
@@ -77,13 +79,14 @@ public class AwakeHandler {
 
     // Variables to modify the explosion chance
     private double havingLuckEffectChanceDecrease = 1.0;
+    private double hearingMusicDecreaseChance = 1.0;
     private double rainDescreaseChance = 1.0;
 
     private double nearASleepingFriendChanceDecrease = 0.3;
     private double nearACampfireChanceDecrease = 0.2;
     private double holdingFlowerChanceDecrease = 0.4;
 
-    private static final double GIVE_LUCK_EFFECT_CHANCE = 0.5f;
+    private static final double GIVE_LUCK_EFFECT_CHANCE = 0.1f;
     private static final int LUCK_EFFECT_DURATION = 600;
 
     // Interval to check if player is sleeping (in ticks)
@@ -96,25 +99,25 @@ public class AwakeHandler {
     }
 
     public static void register(){
-        UseBlockCallback.EVENT.register((a,world,c,d) -> {
-            BlockState state = world.getBlockState(d.getBlockPos());
-
-            if(state.isIn(BlockTags.BEDS)){
-                if(playerBedInteractCooldownTracker.containsKey(a.getUuid())){
-                    if(playerBedInteractCooldownTracker.get(a.getUuid()) > 0 ){
-                        return ActionResult.FAIL;
-                    }
-                }
-            }
-
-            return ActionResult.PASS;
-        });
+//        UseBlockCallback.EVENT.register((a,world,c,d) -> {
+//            BlockState state = world.getBlockState(d.getBlockPos());
+//
+//            if(state.isIn(BlockTags.BEDS)){
+//                if(playerBedInteractCooldownTracker.containsKey(a.getUuid())){
+//                    if(playerBedInteractCooldownTracker.get(a.getUuid()) > 0 ){
+//                        return ActionResult.FAIL;
+//                    }
+//                }
+//            }
+//
+//            return ActionResult.PASS;
+//        });
     }
 
 
     public static void checkAndApplyLuckEffect(ServerWorld world) {
         long timeOfDay = world.getTimeOfDay() % 24000; // Get current in-game time (0-23999)
-        int currentDay = DayAndNightCounterAnimationHandler.getCurrentDay(world);
+        int currentDay = dayAndNightCounterAnimationHandler.currentDay;
 
         // Reset buff tracker at the start of a new day
         if (currentDay!= lastLuckBuffDay && !playerBuffTracker.isEmpty()) {
@@ -144,48 +147,47 @@ public class AwakeHandler {
         ServerPlayNetworking.send(player, PLAY_EXPERIENCE_ORB_PICK_UP, PacketByteBufs.empty());
     }
 
-    public void checkAndExplodeIfSleeping(MinecraftServer server) {
+    public void awakeCheck(MinecraftServer server) {
 
         counter++;
         if (counter < checkInterval) return;
         counter = 0;
 
-        for(UUID x : playerBedInteractCooldownTracker.keySet()){
-            int c = playerBedInteractCooldownTracker.get(x) - checkInterval;
-            if(c <= 0){
-                playerBedInteractCooldownTracker.remove(x);
-            } else {
-                playerBedInteractCooldownTracker.put(x, c);
-            }
-        }
-
+//        for(UUID x : playerBedInteractCooldownTracker.keySet()){
+//            int c = playerBedInteractCooldownTracker.get(x) - checkInterval;
+//            if(c <= 0){
+//                playerBedInteractCooldownTracker.remove(x);
+//            } else {
+//                playerBedInteractCooldownTracker.put(x, c);
+//            }
+//        }
         if (random.nextDouble() < GIVE_LUCK_EFFECT_CHANCE) {
             checkAndApplyLuckEffect(server.getOverworld());
         };
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            if (player.isSleeping()) {
-                double awakeChance = Math.max(calculateWakeUpChance(player), 0);
-
-                Text grayMessage = Text.literal("Awake chance: " + (awakeChance * 100) + "%");
-                player.sendMessage(grayMessage, false);
-
-                if (random.nextDouble() < awakeChance) {
-                    ServerWorld world = player.getServerWorld();
-
-                    playerBedInteractCooldownTracker.put(player.getUuid(), defaultBedCooldown);
-
-                    BlockPos pos = player.getSleepingPosition().orElse(null);
-                    Utils.spawnParticles(world, pos, ParticleTypes.SMOKE);
-
-                    Utils.addRunAfter(() -> {
-                                triggerWakeUp(player);
-                            }
-                            , 20);
-
-                }
-            }
-        }
+//        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+//            if (player.isSleeping()) {
+//                double awakeChance = Math.max(calculateWakeUpChance(player), 0);
+//
+//                Text grayMessage = Text.literal("Awake chance: " + (awakeChance * 100) + "%");
+//                player.sendMessage(grayMessage, false);
+//
+//                if (random.nextDouble() < awakeChance) {
+//                    ServerWorld world = player.getServerWorld();
+//
+//                    playerBedInteractCooldownTracker.put(player.getUuid(), defaultBedCooldown);
+//
+//                    BlockPos pos = player.getSleepingPosition().orElse(null);
+//                    Utils.spawnParticles(world, pos, ParticleTypes.SMOKE);
+//
+//                    Utils.addRunAfter(() -> {
+//                                triggerWakeUp(player);
+//                            }
+//                            , 20);
+//
+//                }
+//            }
+//        }
         // Ensure the player is still in a sleeping state
     }
 
@@ -201,6 +203,11 @@ public class AwakeHandler {
 
         if (player.getWorld().isRaining()) {
             effectiveChance -= rainDescreaseChance;
+            return Math.max(0, effectiveChance);
+        }
+
+        if(isHearingMusic(player.getWorld(), player.getBlockPos())){
+            effectiveChance -= hearingMusicDecreaseChance;
             return Math.max(0, effectiveChance);
         }
 
@@ -231,7 +238,7 @@ public class AwakeHandler {
         for (ServerPlayerEntity otherPlayer : world.getServer().getPlayerManager().getPlayerList()) {
             if (!otherPlayer.equals(player)) {
                 // Check if the player is within a 5-block radius of another player
-                if (player.squaredDistanceTo(otherPlayer) < 100 && player.isSleeping()) {
+                if (player.squaredDistanceTo(otherPlayer) < 30 && player.isSleeping()) {
                     return true;
                 }
             }
@@ -275,5 +282,34 @@ public class AwakeHandler {
         } else {
             player.sendMessage(Text.literal(notSleepyMessages.get(random.nextInt(0, notSleepyMessages.size() - 1))).formatted(Formatting.WHITE));
         }
+    }
+
+    private boolean isHearingMusic(World world, BlockPos pos) {
+        boolean hasMusic = false;
+
+        Box box = new Box(pos).expand(10);
+
+        for (BlockPos p : BlockPos.iterate(
+                MathHelper.floor(box.minX),
+                MathHelper.floor(box.minY),
+                MathHelper.floor(box.minZ),
+                MathHelper.floor(box.maxX),
+                MathHelper.floor(box.maxY),
+                MathHelper.floor(box.maxZ))) {
+
+            BlockState state = world.getBlockState(p);
+            if (state.getBlock() instanceof JukeboxBlock) {
+                BlockEntity blockEntity = world.getBlockEntity(p);
+                if (blockEntity instanceof JukeboxBlockEntity) {
+                    hasMusic = ((JukeboxBlockEntity) blockEntity).isPlayingRecord();
+                    if (hasMusic) {
+                        return true;
+                    }
+                    ;
+                }
+            }
+        }
+
+        return hasMusic;
     }
 }

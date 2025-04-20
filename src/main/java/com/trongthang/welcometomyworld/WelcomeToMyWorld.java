@@ -15,6 +15,8 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.render.entity.feature.EndermanEyesFeatureRenderer;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -22,6 +24,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.WorldProperties;
+import net.minecraft.world.explosion.Explosion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +51,10 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     public static final Identifier FIRST_ORIGIN_CHOOSING_SCREEN = new Identifier(MOD_ID, "first_origin_choosing_screen");
     public static final Identifier STOP_SENDING_ORIGINS_SCREEN = new Identifier(MOD_ID, "stop_sending_origins_screen");
+
+    public static final Identifier FIRST_LOADING_TERRAIN_SCREEN = new Identifier(MOD_ID, "first_loading_terrian_screen");
+
+    public static final Identifier CLIENT_HAS_DATA = new Identifier(MOD_ID, "client_has_data");
 
     public static final Identifier PLAY_BLOCK_PORTAL_TRAVEL = new Identifier(MOD_ID, "play_block_portal_travel");
     public static final Identifier PLAY_BLOCK_LEVER_CLICK = new Identifier(MOD_ID, "play_block_lever_click");
@@ -89,7 +97,6 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static BossesSpawningHandler bossesSpawningHandler = new BossesSpawningHandler();
     public static LightningsStrikePlayersInRain lightningsStrikePlayersInRain = new LightningsStrikePlayersInRain();
 
-
     MinecraftServer server;
 
     @Override
@@ -122,7 +129,7 @@ public class WelcomeToMyWorld implements ModInitializer {
             }
 
             if (world != null) {
-                world.getGameRules().get(GameRules.KEEP_INVENTORY).set(false, t);
+                world.getGameRules().get(GameRules.DISABLE_ELYTRA_MOVEMENT_CHECK).set(true, t);
             }
 
             server = t;
@@ -133,9 +140,20 @@ public class WelcomeToMyWorld implements ModInitializer {
             server = null;
         });
 
+        MusicPlayer.initialize();
+
         ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) ->
         {
             performAllActionsFirstJoin(serverPlayNetworkHandler.getPlayer());
+
+            UUID playerUUID = serverPlayNetworkHandler.getPlayer().getUuid();
+
+            if (!dataHandler.playerDataMap.containsKey(playerUUID)) {
+                PlayerData pl = dataHandler.playerDataMap.get(playerUUID);
+                if(pl.firstTouchGround){
+                    ServerPlayNetworking.send(serverPlayNetworkHandler.getPlayer(), CLIENT_HAS_DATA, PacketByteBufs.empty());
+                }
+            }
         });
 
 
@@ -155,7 +173,6 @@ public class WelcomeToMyWorld implements ModInitializer {
             fallingToWaterDamage.handleFallingToWaterDamage();
         }
 
-
         ItemsManager.initialize();
         EntitiesManager.register();
         BlocksEntitiesManager.initialize();
@@ -167,7 +184,9 @@ public class WelcomeToMyWorld implements ModInitializer {
         AwakeHandler.register();
         HostileMobsAwareness.registerEvents();
         MinecellsDimensionSarcastic.registerEvents();
+        AllowSleepAllTime.registerEvents();
     }
+
 
 
     private void performAllActionsFirstJoin(ServerPlayerEntity player) {
@@ -194,37 +213,40 @@ public class WelcomeToMyWorld implements ModInitializer {
     }
 
     private void onStartServerTick(MinecraftServer server) {
+
     }
 
     private void onEndServerTick(MinecraftServer server) {
 
         if (canBedsExplode) {
-            awakeHandler.checkAndExplodeIfSleeping(server);
+            awakeHandler.awakeCheck(server);
         }
+
+        SpawnSingleMonsterEverySeconds.spawnMonsters(server.getOverworld(), dayAndNightCounterAnimationHandler.currentDay);
 
         HostileMobsAwareness.onServerTick(server);
 
+
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (ConfigLoader.getInstance().introOfTheWorld) {
+                introOfTheWorldHandler.handlePlayerFirstJoin(player);
+            }
 
             if (canDayAndNightCounterAnimation) {
                 dayAndNightCounterAnimationHandler.onServerTick(player);
             }
 
-            if (ConfigLoader.getInstance().introOfTheWorld) {
-                introOfTheWorldHandler.handlePlayerFirstJoin(player);
-            }
-
-            if (canNauseaInWater) {
-                nauseaInWaterHandler.onServerTick(server);
-            }
-
-            if (canBossesSpawningHanlder) {
-                bossesSpawningHandler.spawnZombieNearPlayers(server.getOverworld());
-            }
+//           if (canNauseaInWater) {
+//               nauseaInWaterHandler.onServerTick(server);
+//           }
 
             if (ConfigLoader.getInstance().giveStartingItems) {
                 GiveStartingItemsHandler.giveItemHandler(player, ConfigLoader.getInstance().clearItemsBeforeGivingStartingItems);
             }
+        }
+
+        if (canBossesSpawningHanlder) {
+            bossesSpawningHandler.spawnBossNearPlayers(server.getOverworld());
         }
 
         ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_IRON).onServerTick(server, ItemsManager.REPAIR_TALISMAN_IRON);

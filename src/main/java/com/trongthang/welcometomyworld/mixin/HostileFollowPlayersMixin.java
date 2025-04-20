@@ -33,7 +33,7 @@ public class HostileFollowPlayersMixin {
     private static final int maxGoToCooldown = 300;
     private int goToCounter = 0;
 
-    private static final double MAX_DISTANCE_SQ = 100.0 * 100.0;
+    private static final double MAX_DISTANCE_SQ = 120.0 * 120.0;
 
     private Vec3d targetPos = null;
     private UUID targetPlayer = null;

@@ -34,6 +34,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -123,8 +124,6 @@ public class Wanderer extends StrongTameableEntityDefault {
     public Wanderer(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
 
-
-
         animationHashMap.put(AnimationName.IDLE, idleAnimationState);
         animationHashMap.put(AnimationName.WALK, walkAnimationState);
         animationHashMap.put(AnimationName.ATTACK, bowSkillAnimationState);
@@ -144,7 +143,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
             this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
             this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 2));
-            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 2.5F));
+            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 3F));
             this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
 
             if (scale / 3 > 1) {
@@ -167,7 +166,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.14f)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 25f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 40f)
-                .add(EntityAttributes.GENERIC_ARMOR, 10)
+                .add(EntityAttributes.GENERIC_ARMOR, 5)
                 .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10f)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f);
     }
@@ -206,10 +205,10 @@ public class Wanderer extends StrongTameableEntityDefault {
         this.goalSelector.add(9, new LookAtEntityGoal(this, LivingEntity.class, 15.0F)); // Increased range to 40
         this.goalSelector.add(11, new LookAroundGoal(this));
 
-        this.targetSelector.add(2, new CustomTrackOwnerAttackGoal(this));
-        this.targetSelector.add(3, new CustomAttackWithOwnerGoal(this));
-        this.targetSelector.add(4, new RevengeGoal(this).setGroupRevenge());
-        this.targetSelector.add(5, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+        this.targetSelector.add(1, new CustomTrackOwnerAttackGoal(this));
+        this.targetSelector.add(2, new CustomAttackWithOwnerGoal(this));
+        this.targetSelector.add(3, new CustomRevengeGoal(this).setGroupRevenge());
+        this.targetSelector.add(4, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
     }
 
     public void setAnimationStates() {
@@ -217,6 +216,7 @@ public class Wanderer extends StrongTameableEntityDefault {
         if (this.getWorld().isClient) {
             if (!this.getCanBeTamed()) {
                 if (this.isInSittingPose()) {
+
                     if (!sitAnimationState.isRunning()) {
                         startAnimation(AnimationName.SIT);
                     }
@@ -306,7 +306,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                 if (this.getCanBeTamed()) {
                     this.damage(this.getWorld().getDamageSources().generic(), (float) (this.getMaxHealth() * healthDecreaseWhenTameablePercent));
                 } else {
-                    this.setHealth(this.getHealth() + (this.getMaxHealth() * this.healthIncreaseWhenTamed));
+                    this.setHealth(this.getHealth() + Math.min(this.getMaxHealth() * this.healthIncreaseWhenTamed, this.maxRegenHealthPerUpdate));
                 }
             }
         }
@@ -316,7 +316,6 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     private void usingSkillsHandler() {
         if (!this.getWorld().isClient && !this.getCanBeTamed() && !this.isInSittingPose()) {
-
             if (this.flipCooldownCounter < this.flipCooldown) {
                 this.flipCooldownCounter++;
             }
@@ -335,12 +334,10 @@ public class Wanderer extends StrongTameableEntityDefault {
                 int timeout = 0;
                 if (this.drinkHealthCounter >= this.drinkHealthCooldown) {
                     if (!this.getCanBeTamed()) {
-
                         this.useSkillCooldownCounter = 0;
-
                         this.isDrinkingHeal = true;
-
                         this.drinkHealthCounter = 0;
+
                         timeout = 55;
 
                         Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.HEAL, timeout);
@@ -404,7 +401,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                         Utils.playSound(this.getWorld(), this.getTarget().getBlockPos(), SoundEvents.ENTITY_ENDERMAN_TELEPORT);
 
-                    }, 7);
+                    }, 6);
                     Utils.addRunAfter(this::createSwordSlashShockwavePolar, 17);
                 }
                 if (distance > 12 && distance <= 35) {
@@ -419,7 +416,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                             rainOfArrowsSkill(this.getTarget().getPos());
                         }
                     } else {
-                        this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 20f);
+                        this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 40f);
                         Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_BOW_ATTACK, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                         this.shootingArrow = true;
                         this.lookAtPos = this.getTarget().getPos();
@@ -494,7 +491,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
                             Utils.addRunAfter(this::createSwordSlashShockwavePolar, 17);
                         } else if(rand1 > 50 && rand1 < 90){
-                            this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 20f);
+                            this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 40f);
+
                             timeout = 20;
                             Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_BOW_ATTACK, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                             this.shootingArrow = true;
@@ -790,6 +788,13 @@ public class Wanderer extends StrongTameableEntityDefault {
                     if (tameable.isTamed() && tameable.getOwner() != null &&
                             tameable.getOwner() == this.getOwner()) continue;
                 }
+
+                if(target instanceof PlayerEntity){
+                    if(this.isTamed() || this.getOwner() != null){
+                        continue;
+                    }
+                }
+
                 if (target instanceof Wanderer knight) {
                     if (!this.isTamed() && !knight.isTamed()) continue;
                     if (this.isTamed() && this.getOwner() != null &&
@@ -856,8 +861,6 @@ public class Wanderer extends StrongTameableEntityDefault {
             return ActionResult.PASS;
         }
 
-
-        // Handle sitting/unsitting when tamed and interacted by the owner
         if (this.isTamed() && this.getOwner() == player) {
             this.setSitting(!this.isSitting());
             this.setIsPatrolling(false);
@@ -882,6 +885,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                 this.setCanBeTamed(false);
 
                 this.setHealth(this.getMaxHealth() / 2);
+
+                Utils.grantAdvancement((ServerPlayerEntity) player, "tameable/a_long_way");
 
                 this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
             } else {
@@ -946,6 +951,8 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
+        if (this.isDead()) return false;
+
         if (!this.getWorld().isClient) {
             if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner() && player.isSneaking()) {
                 this.patrolCenterPos = this.getBlockPos();
@@ -978,12 +985,14 @@ public class Wanderer extends StrongTameableEntityDefault {
             int rand = WelcomeToMyWorld.random.nextInt(0, 100);
             if (rand <= 7 && (!this.getCanBeTamed() || this.isTamed() || this.getOwner() != null)) {
                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.BLOCK, 5);
+                this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(), SoundsManager.WANDERER_BLOCK, this.getSoundCategory(), 0.8F, 1.0F);
                 return super.damage(source, 0);
             }
         }
 
         return super.damage(source, amount);
     }
+
 
     @Override
     public void onDeath(DamageSource source) {

@@ -85,7 +85,7 @@ public class DeathCounter {
         } else if(biome.contains("ocean")) {
             Utils.UTILS.sendTextAfter(player, "1000 deaths at sea... Is it the endless blue that’s drawing you in, or just your *drowning* instincts?");
         } else {
-            Utils.UTILS.sendTextAfter(player, "I’ve got to hand it to you, surviving this long in a [biome] is almost an art form. Keep it up!");
+            Utils.UTILS.sendTextAfter(player, "I’ve got to hand it to you, surviving this long in a " + biome + " is almost an art form. Keep it up!");
         }
     }
 }

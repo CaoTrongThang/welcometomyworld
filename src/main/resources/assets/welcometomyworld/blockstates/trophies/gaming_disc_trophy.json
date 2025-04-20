@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "facing=north": { "model": "welcometomyworld:block/trophies/gaming_disc_trophy" },
+    "facing=east":  { "model": "welcometomyworld:block/trophies/gaming_disc_trophy", "y": 90 },
+    "facing=south": { "model": "welcometomyworld:block/trophies/gaming_disc_trophy", "y": 180 },
+    "facing=west":  { "model": "welcometomyworld:block/trophies/gaming_disc_trophy", "y": 270 }
+  }
+}
+

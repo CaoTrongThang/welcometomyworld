@@ -11,6 +11,8 @@ import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 
 public class BlocksManager {
 
@@ -57,6 +59,16 @@ public class BlocksManager {
             new Block(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
                     .strength(3.0f, 6.0f)
                     .requiresTool()));
+
+    public static final Block GAMING_DISC_TROPHY = registerBlock("trophies/gaming_disc_trophy",
+            new TrophyBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
+                    .strength(3.0f, 6.0f)
+                    .requiresTool().nonOpaque(), VoxelShapes.cuboid(0.25, 0, 0.25, 0.75, 1.0, 0.75)));
+
+    public static final Block EASYCRAFT_TROPHY = registerBlock("trophies/easycraft_trophy",
+            new TrophyBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
+                    .strength(3.0f, 6.0f)
+                    .requiresTool().nonOpaque()));
 
     public static final Block CUSTOM_VINE = registerBlock("custom_vine",
             new CustomVine(FabricBlockSettings.copyOf(Blocks.VINE)));

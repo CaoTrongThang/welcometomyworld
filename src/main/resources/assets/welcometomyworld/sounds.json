@@ -174,10 +174,74 @@
       }
     ]
   },
+  "wanderer_block": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:wanderer/wanderer_block",
+        "attenuation_distance": 64
+      }
+    ]
+  },
   "hostile_mob_buff": {
     "sounds": [
       {
         "name": "welcometomyworld:hostile_mob_buff",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "blossom_buff": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:blossom/blossom_buff",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "blossom_laugh": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:blossom/blossom_laugh",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "blossom_walk": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:blossom/blossom_walk",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "blossom_ultimate": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:blossom/blossom_ultimate",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "blossom_hurt": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:blossom/blossom_hurt",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "blossom_rise": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:blossom/blossom_rise",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "blossom_ambient": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:blossom/blossom_ambient",
         "attenuation_distance": 64
       }
     ]

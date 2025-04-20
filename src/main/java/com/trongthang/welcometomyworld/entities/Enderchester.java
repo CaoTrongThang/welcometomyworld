@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.entities;
 
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.StartAnimation;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
@@ -39,6 +40,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
@@ -51,6 +53,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.trongthang.welcometomyworld.Utilities.SpawnParticiles.spawnParticlesAroundEntity;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 import static com.trongthang.welcometomyworld.client.ClientData.LAST_INTERACTED_MOB_ID;
 
@@ -417,7 +420,8 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         // Every 20 ticks, spawn particles around the mob
         if (particleSpawnCounter >= DEFAULT_PARTICLE_SPAWN_COOLDOWN) {
 
-            spawnParticlesAround();
+            spawnParticlesAroundEntity(this, this.getParticleEffect(), 0.5, 3);
+
             particleSpawnCounter = 0;
         }
     }
@@ -516,6 +520,12 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                     }
                 }
 
+                if(this instanceof Chester){
+                    Utils.grantAdvancement((ServerPlayerEntity) player, "tameable/is_that_a_dog");
+                } else {
+                    Utils.grantAdvancement((ServerPlayerEntity) player, "tameable/ender_puppu");
+                }
+
             } else {
                 // Negative reaction if tame attempt fails
                 this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_NEGATIVE_PLAYER_REACTION_PARTICLES);
@@ -577,27 +587,6 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     @Override
     protected float getSoundVolume() {
         return 0.4F;
-    }
-
-    public void spawnParticlesAround() {
-        World world = this.getWorld();
-        if (world.isClient) {
-            double x = this.getX();
-            double y = this.getY() + this.getHeight() / 3;
-            double z = this.getZ();
-
-            // Spawn particles in a circle around the mob
-            for (int i = 0; i < 5; i++) {  // Adjust number of particles as needed
-                double angle = Math.random() * 2 * Math.PI;  // Random angle in radians
-                double radius = 0.5;  // Radius of the particle circle
-
-                double offsetX = radius * Math.cos(angle);
-                double offsetZ = radius * Math.sin(angle);
-
-                // Add particle at random angle and radius around the mob's position
-                world.addParticle(this.getParticleEffect(), x + offsetX, y, z + offsetZ, 0, 0, 0);
-            }
-        }
     }
 
     public ParticleEffect getParticleEffect() {

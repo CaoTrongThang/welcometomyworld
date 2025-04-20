@@ -5,6 +5,7 @@ import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.StartAnimation;
 import com.trongthang.welcometomyworld.client.ClientScheduler;
+import com.trongthang.welcometomyworld.entities.client.Portaler.PortalerRenderer;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.NoPenaltyTargeting;
@@ -38,6 +39,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.trongthang.welcometomyworld.Utilities.SpawnParticiles.spawnParticlesAroundEntity;
+
 //PORTALER: This mob is a portal that can move and can switch portal randomly, players can go to the portal to go to the end or the nether
 public class Portaler extends PathAwareEntity implements StartAnimation {
 
@@ -58,7 +61,6 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     private static final int[] PORTAL_SOUND_TIMINGS_MS = {50, 1500};
     private final Set<Integer> portalPlayedFrames = new HashSet<>();
 
-
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState walkAnimationState = new AnimationState();
     public final AnimationState switchingPortalAnimationState = new AnimationState();
@@ -74,6 +76,12 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     private int switchingTimer = 36;
     private int switchingTimerCounter = 0;
     public boolean completeSwitich = false;
+
+    private int animationCounter = 0;
+    private int currentFrame = 0;
+
+    private int particleCounter = 0;
+    private int particleCooldown = 10;
 
     public Portaler(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
@@ -179,6 +187,7 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     public void tick() {
         super.tick();
         setAnimationStates();
+        updateAnimationFrame();
 
         if (!this.getWorld().isClient) {
             switchingPortalCounter++;
@@ -192,6 +201,16 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
                 } else {
                     this.setIsSwitchingPortal(true);
                     switchingTimerCounter = switchingTimer;
+                }
+            }
+        } else {
+            particleCounter++;
+            if(particleCounter > particleCooldown){
+                particleCounter = 0;
+                if(this.getTextureVariant() == 0){
+                    spawnParticlesAroundEntity(this, ParticleTypes.PORTAL, 2, 0);
+                } else {
+                    spawnParticlesAroundEntity(this, ParticleTypes.END_ROD, 2, 0);
                 }
             }
         }
@@ -271,6 +290,11 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
         if (currentPos > PORTAL_ANIM_DURATION_MS - 200) {
             portalPlayedFrames.clear();
         }
+    }
+
+    @Override
+    public boolean canBreatheInWater() {
+        return true;
     }
 
     private void triggerPortalSound(int timing) {
@@ -376,6 +400,23 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
         super.onDeath(source);
         if (!this.getWorld().isClient) {
             Utils.playSound(this.getWorld(), this.getBlockPos(), SoundsManager.PORTALER_DEATH);
+        }
+    }
+
+    public int getCurrentFrame() {
+        return currentFrame;
+    }
+
+    public void updateAnimationFrame() {
+        animationCounter++;
+        if (animationCounter >= 2) {
+            animationCounter = 0;
+            if(this.getTextureVariant() == 0){
+                currentFrame = (currentFrame + 1) % PortalerRenderer.NETHER_PORTAL_PNGS.length;
+            } else {
+                currentFrame = (currentFrame + 1) % PortalerRenderer.END_PORTAL_PNG.length;
+            }
+
         }
     }
 
@@ -489,6 +530,7 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
             }
             return target;
         }
+
 
         @Override
         public boolean shouldContinue() {

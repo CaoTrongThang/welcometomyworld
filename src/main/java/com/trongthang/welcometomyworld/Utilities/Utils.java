@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.Utilities;
 
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.CustomPositionedSound;
 import com.trongthang.welcometomyworld.classes.RunAfter;
@@ -37,6 +38,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.SpawnHelper;
 import net.minecraft.world.World;
 
 import java.util.HashSet;
@@ -52,21 +54,29 @@ public class Utils {
     public static final Utils UTILS = new Utils();
 
     public static void grantAdvancement(ServerPlayerEntity player, String achievement) {
-        String advancementId = "welcometomyworld:" + achievement;
-        Advancement advancement = player.getServer().getAdvancementLoader().get(new Identifier(advancementId));
-        if (advancement != null) {
+        if (player == null) return; // Prevent NPE
+        if(player.getServer() == null) return;
+        player.getServer().execute(() -> {
+            Identifier advancementId = new Identifier("welcometomyworld", achievement);
+            Advancement advancement = player.server.getAdvancementLoader().get(advancementId);
+
+            if (advancement == null) {
+                WelcomeToMyWorld.LOGGER.error("Advancement {} not found!", advancementId);
+                return;
+            }
+
             AdvancementProgress progress = player.getAdvancementTracker().getProgress(advancement);
             if (!progress.isDone()) {
                 for (String criterion : progress.getUnobtainedCriteria()) {
                     player.getAdvancementTracker().grantCriterion(advancement, criterion);
                 }
             }
-        }
+        });
     }
 
     public void sendTextAfter(ServerPlayerEntity player, String text) {
         Text message = Text.literal("").styled(style -> style.withColor(Formatting.WHITE))
-                .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)).styled(style -> style.withBold(true)))
+                .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)))
                 .append(Text.literal(" " + text).styled(style -> style.withColor(Formatting.WHITE)));
 
         player.sendMessage(message);
@@ -81,7 +91,7 @@ public class Utils {
             if (currentPlayer == null) return;
 
             Text message = Text.literal("").styled(style -> style.withColor(Formatting.WHITE))
-                    .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)).styled(style -> style.withBold(true)))
+                    .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)))
                     .append(Text.literal(" " + text).styled(style -> style.withColor(Formatting.WHITE)));
 
             currentPlayer.sendMessage(message);
@@ -112,6 +122,7 @@ public class Utils {
                 double z = centerZ + radius * Math.sin(angle);
 
                 // Spawn the particle (using purple portal particles)
+
                 world.spawnParticles(
                         ParticleTypes.PORTAL, // Purple portal particles
                         x, centerY, z,        // Position of the particle
@@ -248,9 +259,9 @@ public class Utils {
             if (entity instanceof MobEntity mobEntity) {
                 // Set the mob's position
                 mobEntity.refreshPositionAndAngles(
-                        blockPos.getX() + 0.5,
+                        blockPos.getX(),
                         blockPos.getY(),
-                        blockPos.getZ() + 0.5,
+                        blockPos.getZ(),
                         world.random.nextFloat() * 360F, 0
                 );
 
@@ -522,5 +533,33 @@ public class Utils {
         }
     }
 
+    public static BlockPos findSafeSpawnPositionByPack(ServerWorld world, BlockPos center,
+                                                       EntityType<?> entityType, int minRadius, int maxRadius) {
+        final int MAX_ATTEMPTS = 70;
+        final int HORIZONTAL_RANGE = maxRadius - minRadius;
+
+        for (int i = 0; i < MAX_ATTEMPTS; i++) {
+            // Generate position in square instead of circle for better coverage
+            int x = center.getX() + (minRadius + random.nextInt(HORIZONTAL_RANGE)) * (random.nextBoolean() ? 1 : -1);
+            int z = center.getZ() + (minRadius + random.nextInt(HORIZONTAL_RANGE)) * (random.nextBoolean() ? 1 : -1);
+
+            // Improved vertical search
+            Heightmap.Type heightmapType = SpawnRestriction.getHeightmapType(entityType);
+            int topY = world.getTopY(heightmapType, x, z);
+
+            // Check 3 blocks below and above the surface
+            for (int yOffset = -3; yOffset <= 3; yOffset++) {
+                BlockPos.Mutable mutablePos = new BlockPos.Mutable(x, topY + yOffset, z);
+
+                // Validate spawn rules first before solid block check
+
+                if (SpawnHelper.canSpawn(SpawnRestriction.getLocation(entityType), world, mutablePos, entityType)) {
+                    return mutablePos.toImmutable();
+                }
+            }
+        }
+
+        return null;
+    }
 
 }

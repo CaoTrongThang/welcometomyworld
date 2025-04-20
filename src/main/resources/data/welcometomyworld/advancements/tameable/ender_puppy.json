@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Ender Puppy"
+    },
+    "description": {
+      "text": "I think I love them"
+    },
+    "icon": {
+      "item": "welcometomyworld:enderchester"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "welcome": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

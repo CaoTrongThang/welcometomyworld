@@ -2,12 +2,15 @@ package com.trongthang.welcometomyworld.entities.client.AncientWhale;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.AncientWhale;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
+@Environment(EnvType.CLIENT)
 public class AncientWhaleRenderer extends MobEntityRenderer<AncientWhale, AncientWhaleModel<AncientWhale>> {
 
     public AncientWhaleRenderer(EntityRendererFactory.Context context) {

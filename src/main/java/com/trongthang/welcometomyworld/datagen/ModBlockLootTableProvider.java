@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.datagen;
 
+import com.trongthang.welcometomyworld.managers.BlocksManager;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider;
 import net.minecraft.loot.LootTable;

@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "You're Worthy"
+    },
+    "description": {
+      "text": "The Fallen Knight accepted you"
+    },
+    "icon": {
+      "item": "welcometomyworld:fallen_hammer"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "welcome": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

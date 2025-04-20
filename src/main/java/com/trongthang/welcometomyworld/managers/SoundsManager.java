@@ -44,8 +44,17 @@ public class SoundsManager {
     public static final SoundEvent WANDERER_SWORD_SLASH = registerSoundEvent("wanderer_sword_slash");
     public static final SoundEvent WANDERER_SWORD_CHARGE = registerSoundEvent("wanderer_sword_charge");
     public static final SoundEvent WANDERER_WALK = registerSoundEvent("wanderer_walk");
+    public static final SoundEvent WANDERER_BLOCK = registerSoundEvent("wanderer_block");
 
     public static final SoundEvent HOSTILE_MOB_BUFF = registerSoundEvent("hostile_mob_buff");
+
+    public static final SoundEvent BLOSSOM_BUFF = registerSoundEvent("blossom_buff");
+    public static final SoundEvent BLOSSOM_LAUGH= registerSoundEvent("blossom_laugh");
+    public static final SoundEvent BLOSSOM_ULTIMATE = registerSoundEvent("blossom_ultimate");
+    public static final SoundEvent BLOSSOM_WALK = registerSoundEvent("blossom_walk");
+    public static final SoundEvent BLOSSOM_RISE= registerSoundEvent("blossom_rise");
+    public static final SoundEvent BLOSSOM_AMBIENT = registerSoundEvent("blossom_ambient");
+    public static final SoundEvent BLOSSOM_HURT = registerSoundEvent("blossom_hurt");
 
     private static SoundEvent registerSoundEvent(String name){
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);

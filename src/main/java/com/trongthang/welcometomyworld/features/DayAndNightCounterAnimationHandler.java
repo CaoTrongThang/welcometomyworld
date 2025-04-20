@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.features;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
 import com.trongthang.welcometomyworld.GlobalConfig;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
@@ -15,6 +16,7 @@ import java.util.Random;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
+// DON'T READ THIS CODE, I DON'T KNOW WHAT I'M DOING, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA, but it works lol
 public class DayAndNightCounterAnimationHandler {
 
     private static final String NIGHT_PREFIX = "Nighttime is coming... ";
@@ -35,7 +37,7 @@ public class DayAndNightCounterAnimationHandler {
     private boolean nightAnimationComplete = false;
 
     private int tickRandomBound = 25;
-    private int tickRandomMin = 10;
+    private int tickRandomMin = 15;
     private int delayTick = 0;
     private int currentTick = 0;
 
@@ -66,7 +68,6 @@ public class DayAndNightCounterAnimationHandler {
                         currentCharIndex++;
                     } else {
                         isAnimatingDay = false; // Stop once the animation finishes
-
                         ServerPlayNetworking.send(player, PLAY_BELL, PacketByteBufs.empty());
                     }
                 }
@@ -91,7 +92,6 @@ public class DayAndNightCounterAnimationHandler {
         counter = 0;
 
         long currentTime = world.getTimeOfDay();  // Get the current time in the world (in ticks)
-
         long currentTimeInDay = currentTime % 24000;
 
         // Check if it's the start of a new day
@@ -100,9 +100,9 @@ public class DayAndNightCounterAnimationHandler {
             dayAnimationComplete = true;
             nightAnimationComplete = false;
 
-            if (currentDay == SpawnMonstersAtNight.stopSpawningDay) {
+            if (currentDay == ConfigLoader.getInstance().hostileMobsEventsStopSpawningDay) {
                 for (ServerPlayerEntity p : world.getPlayers()) {
-                    Utils.UTILS.sendTextAfter(p, "You did a great job, The dark will be a little bit easier for you.", 20);
+                    Utils.UTILS.sendTextAfter(p, "You did a great job, The nighttime will be easier for you.", 20);
                 }
             }
 

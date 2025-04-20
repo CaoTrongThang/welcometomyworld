@@ -1,7 +1,9 @@
 package com.trongthang.welcometomyworld.Utilities;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.particle.DefaultParticleType;
+import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -26,6 +28,35 @@ public class SpawnParticiles {
                 // Spawn particles along the edges of the square
                 spawnSquareParticles(world, initialPos, currentSize, particle);
             }, currentTick);
+        }
+    }
+
+    public static void spawnParticlesAroundEntity(LivingEntity livingEntity, ParticleEffect particle, double radius, float eyeHeightDivide) {
+        if(particle == null) return;
+
+        if (livingEntity.getWorld().isClient) {
+
+            double x = livingEntity.getX();
+            double y = 0;
+
+            if(eyeHeightDivide > 0){
+                y = livingEntity.getY() + livingEntity.getHeight() / eyeHeightDivide;
+            } else {
+                y = livingEntity.getY() + livingEntity.getHeight();
+            }
+
+            double z = livingEntity.getZ();
+
+            // Spawn particles in a circle around the mob
+            for (int i = 0; i < 5; i++) {  // Adjust number of particles as needed
+                double angle = Math.random() * 2 * Math.PI;  // Random angle in radians
+
+                double offsetX = radius * Math.cos(angle);
+                double offsetZ = radius * Math.sin(angle);
+
+                // Add particle at random angle and radius around the mob's position
+                livingEntity.getWorld().addParticle(particle, x + offsetX, y, z + offsetZ, 0, 0, 0);
+            }
         }
     }
 

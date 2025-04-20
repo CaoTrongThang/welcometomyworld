@@ -1,9 +1,11 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -23,7 +25,7 @@ public class FallingToWaterDamage {
             server.execute(() -> {
                 ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerUuid);
                 if (player != null) {
-                    if (isUmbrella(player)) {
+                    if (isHoldingUmbrella(player)) {
                         return;
                     }
 
@@ -38,10 +40,12 @@ public class FallingToWaterDamage {
         });
     }
 
-    public static boolean isUmbrella(ServerPlayerEntity player) {
+    public static boolean isHoldingUmbrella(ServerPlayerEntity player) {
         // Get the "artifacts:umbrella" item
         Item umbrellaItem = Registries.ITEM.get(new Identifier("artifacts", "umbrella"));
-        if (umbrellaItem == null) {
+
+        LOGGER.info("ITEM: " + umbrellaItem);
+        if (umbrellaItem == null || umbrellaItem == Items.AIR) {
             LOGGER.info("Umbrella item not found in registry!");
             return false;
         }
@@ -58,6 +62,6 @@ public class FallingToWaterDamage {
             return true;
         }
 
-        return false; // Not holding in either hand
+        return false;
     }
 }

@@ -24,7 +24,7 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 public class EventsOfTheWorld {
 
     public static final int EVENT_COOLDOWN_IN_TICKS = 48000;
-    public static final double HAPPEN_CHANCE = 0.3;
+    public static final double HAPPEN_CHANCE = 0.2;
 
     private static final Map<String, Consumer<ServerWorld>> EVENT_MAP = new HashMap<>();
     private static int ticksSinceLastEvent = 0;
@@ -35,7 +35,6 @@ public class EventsOfTheWorld {
     static {
         registerEvent("FIELD_OF_GOLDEN_MOTHS", EventsOfTheWorld::fieldOfGoldenMoths);
         registerEvent("CIRCLE_OF_DEATHS", EventsOfTheWorld::circleOfDeaths);
-        registerEvent("CIRCLE_OF_PHANTOMS", EventsOfTheWorld::circleOfPhantom);
         registerEvent("RAIN_OF_FOOD", EventsOfTheWorld::rainOfFood);
         registerEvent("ANIMALS_RISING", EventsOfTheWorld::animalRaising);
 
@@ -85,14 +84,12 @@ public class EventsOfTheWorld {
             return;
         }
 
+        boolean mobSpawned = false;
+
         // Pick a random player
         ServerPlayerEntity targetPlayer = players.get(random.nextInt(players.size()));
 
         if (targetPlayer.isCreative() || targetPlayer.isSpectator()) return;
-
-        targetPlayer.sendMessage(
-                Text.literal("They're around you...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
-        );
 
         World w = targetPlayer.getWorld();
         if (!(w.getRegistryKey() == World.OVERWORLD)) return;
@@ -111,7 +108,14 @@ public class EventsOfTheWorld {
             if (zombie != null && zombie instanceof MobEntity mob) {
                 mob.getNavigation().startMovingTo(targetPlayer.getX(), targetPlayer.getY(), targetPlayer.getZ(), 1f);
                 addRunAfter(() -> Utils.discardEntity(world, mob), 3000);
+                mobSpawned = true;
             }
+        }
+
+        if(mobSpawned){
+            targetPlayer.sendMessage(
+                    Text.literal("They're around you...").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
+            );
         }
     }
 

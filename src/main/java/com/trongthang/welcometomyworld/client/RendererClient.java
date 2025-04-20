@@ -1,6 +1,8 @@
 package com.trongthang.welcometomyworld.client;
 
 import com.trongthang.welcometomyworld.entities.ALivingFlowerRenderer;
+import com.trongthang.welcometomyworld.entities.client.Blossom.BlossomModel;
+import com.trongthang.welcometomyworld.entities.client.Blossom.BlossomRenderer;
 import com.trongthang.welcometomyworld.entities.client.Enderchester.EnderchesterModel;
 import com.trongthang.welcometomyworld.entities.client.Enderchester.EnderchesterRenderer;
 import com.trongthang.welcometomyworld.entities.client.AncientWhale.AncientWhaleModel;
@@ -34,6 +36,11 @@ public class RendererClient implements ClientModInitializer {
         BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.RUSTED_IRON_BARS, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.TOUGHER_IRON_BARS, RenderLayer.getCutout());
 
+        BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAMING_DISC_TROPHY, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.EASYCRAFT_TROPHY, RenderLayer.getCutout());
+
+//        BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAME_DISC_TROPHY, RenderLayer.getCutout());
+
         EntityModelLayerRegistry.registerModelLayer(AncientWhaleModel.ANCIENT_WHALE, AncientWhaleModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.ANCIENT_WHALE, AncientWhaleRenderer::new);
 
@@ -58,5 +65,8 @@ public class RendererClient implements ClientModInitializer {
 
         EntityModelLayerRegistry.registerModelLayer(WandererArrowModel.WANDERER_ARROW, WandererArrowModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.WANDERER_ARROW, WandererArrowRenderer::new);
+
+        EntityModelLayerRegistry.registerModelLayer(BlossomModel.BLOSSOM, BlossomModel::getTexturedModelData);
+        EntityRendererRegistry.register(EntitiesManager.BLOSSOM, BlossomRenderer::new);
     }
 }
