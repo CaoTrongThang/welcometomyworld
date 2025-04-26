@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "welcometomyworld:tougher_iron_block",
+    "welcometomyworld:rusted_iron_block",
+    "welcometomyworld:rusted_iron_block_stage2",
+    "welcometomyworld:rusted_iron_block_stage3",
+    "welcometomyworld:rusted_iron_bars",
+    "welcometomyworld:tougher_iron_bars",
+    "welcometomyworld:burned_plank",
+    "welcometomyworld:trophies/challenger_trophy",
+    "welcometomyworld:trophies/gaming_disc_trophy",
+    "welcometomyworld:trophies/music_trophy",
+    "welcometomyworld:trophies/easycraft_trophy",
+    "welcometomyworld:burning_plank"
+  ]
+}

@@ -4,6 +4,8 @@ import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.CustomPositionedSound;
 import com.trongthang.welcometomyworld.classes.RunAfter;
+import com.trongthang.welcometomyworld.entities.BlockSlamGroundEntity;
+import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -560,6 +562,21 @@ public class Utils {
         }
 
         return null;
+    }
+
+    public static void CreateBlockSlamGround(ServerWorld world, BlockState state, BlockPos pos){
+        BlockSlamGroundEntity effectEntity = EntitiesManager.BLOCK_SLAM_GROUND.create(world);
+        if (effectEntity != null) {
+            effectEntity.setBlockState(state);
+            effectEntity.setPosition(
+                    pos.getX() + 0.5,  // Center in block
+                    pos.getY() + 0.1, // Slightly above ground
+                    pos.getZ() + 0.5   // Center in block
+            );
+
+
+            world.spawnEntity(effectEntity);
+        }
     }
 
 }

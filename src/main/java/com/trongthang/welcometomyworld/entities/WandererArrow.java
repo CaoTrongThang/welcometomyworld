@@ -114,24 +114,28 @@ public class WandererArrow extends PersistentProjectileEntity {
         if (this.getOwner() != null) {
             if (target == this.getOwner()) return false;
         }
+
         if (target instanceof TameableEntity tameable) {
-            if (tameable.isTamed() && tameable.getOwner() != null) {
-                if (tameable.getOwner() == this.getOwner()) return false;
-            }
-        }
-
-        if (target instanceof Wanderer wanderer) {
-            // Skip untamed vs. untamed damage
-            if (!wanderer.isTamed()) {
-                return true;
-            }
-
-            if (wanderer.isTamed() && this.getOwner() != null && wanderer.isTamed() && wanderer.getOwner() != null) {
-                if (this.getOwner().equals(wanderer.getOwner())) {
-                    return false;
+            if(this.getOwner() instanceof TameableEntity tameable1){
+                if (tameable.isTamed() && tameable.getOwner() != null) {
+                    if (tameable.getOwner() == tameable1.getOwner()) return false;
                 }
             }
         }
+
+        if (target instanceof Wanderer targetWanderer) {{
+                if(this.getOwner() instanceof TameableEntity tameable){
+                    if (!targetWanderer.isTamed() && !tameable.isTamed()) {
+                        return false;
+                    }
+
+                    if (tameable.getOwner() == targetWanderer.getOwner()) {
+                        return false;
+                    }
+                }
+            }
+        }
+
         return true;
     }
 

@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.mixin;
 
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;

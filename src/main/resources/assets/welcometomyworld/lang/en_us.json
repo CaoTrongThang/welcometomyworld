@@ -12,6 +12,7 @@
   "item.welcometomyworld.speed_talisman": "Speed Talisman",
   "item.welcometomyworld.life_talisman": "Life Talisman",
   "item.welcometomyworld.resistance_talisman": "Resistance Talisman",
+  "item.welcometomyworld.creeper_talisman": "Creeper's Talisman",
 
   "item.welcometomyworld.a_living_log": "A Living Log Spawn Egg",
   "item.welcometomyworld.a_living_flower": "A Living Flower Spawn Egg",
@@ -48,6 +49,8 @@
   "block.welcometomyworld.rusted_iron_block_stage3": "Corroded Iron Block",
   "block.welcometomyworld.trophies.gaming_disc_trophy": "Gaming Disc Trophy",
   "block.welcometomyworld.trophies.easycraft_trophy": "Easycraft Trophy",
+  "block.welcometomyworld.trophies.music_trophy": "Music Trophy",
+  "block.welcometomyworld.trophies.challenger_trophy": "Challenger Trophy",
 
   "block.welcometomyworld.burning_plank": "Burning Plank",
   "block.welcometomyworld.burned_plank": "Burned Plank",

@@ -33,6 +33,15 @@ repositories {
         maven { url "https://maven.shedaniel.me/" }
         maven { url "https://maven.terraformersmc.com/releases/" }
 
+
+        maven {
+            name = "TerraformersMC"
+            url = "https://maven.terraformersmc.com/"
+        }
+        maven {
+            name = "Ladysnake Libs"
+            url = 'https://maven.ladysnake.org/releases'
+        }
     }
 
 }
@@ -61,6 +70,8 @@ dependencies {
 
     modRuntimeOnly "mcp.mobius.waila:wthit:fabric-8.16.1"
     modRuntimeOnly "lol.bai:badpackets:fabric-0.4.3"
+
+    modImplementation "dev.emi:trinkets:3.7.2"
 }
 
 processResources {

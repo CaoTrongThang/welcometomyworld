@@ -61,6 +61,7 @@ public class SpawnSingleMonsterEverySeconds {
 
         mobEntity.initialize(world, world.getLocalDifficulty(spawnPos), SpawnReason.NATURAL, null, null);
 
+        mobEntity.setHealth(mobEntity.getMaxHealth());
         if (mobEntity.canSee(player)) {
             mobEntity.setTarget(player);
         }

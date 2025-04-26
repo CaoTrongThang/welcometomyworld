@@ -107,7 +107,6 @@ public abstract class PhantomAIMixin extends Entity {
             }
 
             currentLiftPlayer.teleport(phantomPos.getX(), phantomPos.getY() - 1.2, phantomPos.getZ());
-            currentLiftPlayer.setVelocity(0,0,0);
 
         } else {
             currentLiftPlayer = null;

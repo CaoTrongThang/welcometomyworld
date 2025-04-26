@@ -1,10 +1,7 @@
 package com.trongthang.welcometomyworld.managers;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.items.BuffTalisman;
-import com.trongthang.welcometomyworld.items.ModToolMaterial;
-import com.trongthang.welcometomyworld.items.RepairKnowledge;
-import com.trongthang.welcometomyworld.items.RepairTalisman;
+import com.trongthang.welcometomyworld.items.*;
 import com.trongthang.welcometomyworld.items.Weapons.Hammer;
 import com.trongthang.welcometomyworld.items.enchantments.SilenceEnchantment;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -38,6 +35,7 @@ public class ItemsManager {
     public static final Item SPEED_TALISMAN = registerItem(new BuffTalisman(new FabricItemSettings(), StatusEffects.SPEED, 1), "speed_talisman");
     public static final Item LIFE_TALISMAN = registerItem(new BuffTalisman(new FabricItemSettings(), StatusEffects.REGENERATION, 1), "life_talisman");
     public static final Item RESISTANCE_TALISMAN = registerItem(new BuffTalisman(new FabricItemSettings(), StatusEffects.RESISTANCE, 2), "resistance_talisman");
+    public static final Item CREEPER_TALISMAN = registerItem(new CreeperTalisman(new FabricItemSettings()), "creeper_talisman");
 
 //    public static final Item A_LIVING_LOG_SPAWN_EGG = registerSpawnEgg(EntitiesManager.A_LIVING_LOG, "a_living_log");
     public static final Item A_LIVING_FLOWER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.A_LIVING_FLOWER, "a_living_flower");
@@ -115,6 +113,8 @@ public class ItemsManager {
                     itemGroup.add(ItemsManager.REPAIR_TALISMAN_GOLD);
                     itemGroup.add(ItemsManager.REPAIR_TALISMAN_EMERALD);
 
+                    itemGroup.add(ItemsManager.CREEPER_TALISMAN);
+
 //                    itemGroup.add(ItemsManager.A_LIVING_LOG_SPAWN_EGG);
                     itemGroup.add(ItemsManager.A_LIVING_FLOWER_SPAWN_EGG);
                     itemGroup.add(ItemsManager.ENDERCHESTER_SPAWN_EGG);
@@ -139,6 +139,8 @@ public class ItemsManager {
 
                     itemGroup.add(BlocksManager.EASYCRAFT_TROPHY);
                     itemGroup.add(BlocksManager.GAMING_DISC_TROPHY);
+                    itemGroup.add(BlocksManager.CHALLENGER_TROPHY);
+                    itemGroup.add(BlocksManager.MUSIC_TROPHY);
                 });
     }
 }

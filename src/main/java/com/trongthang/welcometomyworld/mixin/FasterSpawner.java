@@ -10,28 +10,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
+
 @Mixin({MobSpawnerLogic.class})
 public class FasterSpawner {
-
-//    @Shadow
-//    private int maxNearbyEntities;
-//    @Shadow
-//    private int minSpawnDelay;
-//    @Shadow
-//    private int maxSpawnDelay;
-//    @Shadow
-//    private int requiredPlayerRange;
-//
-//    @Inject(
-//            method = {"<init>"},
-//            at = {@At("RETURN")}
-//    )
-//    private void onInit(CallbackInfo info) {
-//        this.maxNearbyEntities = 18;
-//        this.minSpawnDelay = 0;
-//        this.maxSpawnDelay = 200;
-//        this.requiredPlayerRange = 24;
-//    }
 
     @Shadow
     private int spawnDelay;
@@ -40,7 +22,7 @@ public class FasterSpawner {
     @Inject(method = "updateSpawns", at = @At("HEAD"), cancellable = true)
     private void onUpdateSpawns(World world, BlockPos pos, CallbackInfo ci) {
         // Directly set spawnDelay to 1 tick (or 0 if you truly want instant)
-        this.spawnDelay = 40;
+        this.spawnDelay = random.nextInt(150, 450);
         ci.cancel(); // Skip all vanilla delay-setting logic
     }
 }

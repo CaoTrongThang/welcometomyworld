@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.client;
 
 import com.trongthang.welcometomyworld.entities.ALivingFlowerRenderer;
+import com.trongthang.welcometomyworld.entities.client.BlockSlamGroudEntity.BlockSlamGroundRenderer;
 import com.trongthang.welcometomyworld.entities.client.Blossom.BlossomModel;
 import com.trongthang.welcometomyworld.entities.client.Blossom.BlossomRenderer;
 import com.trongthang.welcometomyworld.entities.client.Enderchester.EnderchesterModel;
@@ -30,6 +31,9 @@ import net.minecraft.client.render.RenderLayer;
 public class RendererClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+
+        EntityRendererRegistry.register(EntitiesManager.BLOCK_SLAM_GROUND, BlockSlamGroundRenderer::new);
+
         EntityRendererRegistry.register(EntitiesManager.A_LIVING_FLOWER, ALivingFlowerRenderer::new);
 
         BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.CUSTOM_VINE, RenderLayer.getCutout());
@@ -38,6 +42,10 @@ public class RendererClient implements ClientModInitializer {
 
         BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAMING_DISC_TROPHY, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.EASYCRAFT_TROPHY, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.CHALLENGER_TROPHY, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.MUSIC_TROPHY, RenderLayer.getCutout());
+
+
 
 //        BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAME_DISC_TROPHY, RenderLayer.getCutout());
 

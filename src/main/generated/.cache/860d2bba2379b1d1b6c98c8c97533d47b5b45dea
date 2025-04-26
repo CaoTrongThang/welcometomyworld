@@ -1,0 +1,5 @@
+// 1.20.1	2025-04-25T22:37:31.8581282	Welcome To My World/Tags for minecraft:block
+a564781bb1a3ffd60848cc5a477f5c67a5c2dd64 data\minecraft\tags\blocks\mineable\pickaxe.json
+a564781bb1a3ffd60848cc5a477f5c67a5c2dd64 data\minecraft\tags\blocks\needs_stone_tool.json
+12c27ff1383352c0f223ae65fdf6320548135662 data\minecraft\tags\blocks\climbable.json
+8a23702b05296c8af5014d6aa6e9265ded85c7d9 data\fabric\tags\blocks\needs_tool_level_4.json

@@ -68,10 +68,9 @@ public class SpawnMonstersPackEveryMins {
     );
 
     public static List<Pair<String, Integer>> mutantMonsterPackComposition = List.of(
-            Pair.of("mutantmonsters:mutant_zombie", 2),
-            Pair.of("mutantmonsters:mutant_skeleton", 2),
-            Pair.of("mutantmonsters:mutant_endermanl", 1),
-            Pair.of("mutantmonsters:mutant_creeper", 4)
+            Pair.of("mutantmonsters:mutant_zombie", 4),
+            Pair.of("mutantmonsters:mutant_skeleton", 3),
+            Pair.of("mutantmonsters:mutant_enderman", 1)
     );
 
     public static List<Pair<String, Integer>> pillagerPackComposition = List.of(
@@ -218,6 +217,7 @@ public class SpawnMonstersPackEveryMins {
                     if (mob.canSee(player)) mob.setTarget(player);
 
                     tryDiscardSpawnedMobAfterTime(world, (MobEntity) entity, COOLDOWN);
+                    mob.setHealth(mob.getMaxHealth());
                 }
             }
         }
@@ -288,6 +288,7 @@ public class SpawnMonstersPackEveryMins {
                     mob.setTarget(player);
                 }
 
+                mob.setHealth(mob.getMaxHealth());
                 tryDiscardSpawnedMobAfterTime(world, mob, 2500);
             }
         }

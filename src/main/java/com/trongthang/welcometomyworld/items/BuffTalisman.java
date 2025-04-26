@@ -17,7 +17,7 @@ import net.minecraft.world.World;
 import java.util.Collection;
 import java.util.List;
 
-public class BuffTalisman extends Item {
+public class BuffTalisman  extends Item {
 
     public StatusEffect statusEffect;
     public int amplifier;

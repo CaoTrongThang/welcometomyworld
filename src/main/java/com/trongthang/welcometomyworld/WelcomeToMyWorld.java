@@ -5,7 +5,6 @@ import com.trongthang.welcometomyworld.classes.ModTagsManager;
 import com.trongthang.welcometomyworld.events.SpawnEvents;
 import com.trongthang.welcometomyworld.managers.*;
 import com.trongthang.welcometomyworld.features.*;
-import com.trongthang.welcometomyworld.items.RepairTalisman;
 import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import net.fabricmc.api.ModInitializer;
@@ -15,8 +14,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.client.render.entity.feature.EndermanEyesFeatureRenderer;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -24,8 +22,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
-import net.minecraft.world.WorldProperties;
-import net.minecraft.world.explosion.Explosion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +146,7 @@ public class WelcomeToMyWorld implements ModInitializer {
 
             if (!dataHandler.playerDataMap.containsKey(playerUUID)) {
                 PlayerData pl = dataHandler.playerDataMap.get(playerUUID);
-                if(pl.firstTouchGround){
+                if (pl.firstTouchGround) {
                     ServerPlayNetworking.send(serverPlayNetworkHandler.getPlayer(), CLIENT_HAS_DATA, PacketByteBufs.empty());
                 }
             }
@@ -185,8 +181,21 @@ public class WelcomeToMyWorld implements ModInitializer {
         HostileMobsAwareness.registerEvents();
         MinecellsDimensionSarcastic.registerEvents();
         AllowSleepAllTime.registerEvents();
-    }
+        ChangeCreeperSpawnWeight.register();
 
+
+//        // Register a listener for when the server has started
+//        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+//            // Iterate through all registered enchantments
+//            Registries.ENCHANTMENT.forEach(enchantment -> {
+//                // Get the enchantment's registry ID (includes namespace from the mod adding it)
+//                Identifier id = Registries.ENCHANTMENT.getId(enchantment);
+//
+//                // Log details about the enchantment
+//                LOGGER.info("\"" + id + "\"");
+//            });
+//        });
+    }
 
 
     private void performAllActionsFirstJoin(ServerPlayerEntity player) {
@@ -248,10 +257,6 @@ public class WelcomeToMyWorld implements ModInitializer {
         if (canBossesSpawningHanlder) {
             bossesSpawningHandler.spawnBossNearPlayers(server.getOverworld());
         }
-
-        ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_IRON).onServerTick(server, ItemsManager.REPAIR_TALISMAN_IRON);
-        ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_GOLD).onServerTick(server, ItemsManager.REPAIR_TALISMAN_GOLD);
-        ((RepairTalisman) ItemsManager.REPAIR_TALISMAN_EMERALD).onServerTick(server, ItemsManager.REPAIR_TALISMAN_EMERALD);
 
         ((BuffTalisman) ItemsManager.POWER_TALISMAN).onServerTick(server, ItemsManager.POWER_TALISMAN);
         ((BuffTalisman) ItemsManager.SPEED_TALISMAN).onServerTick(server, ItemsManager.SPEED_TALISMAN);

@@ -15,9 +15,6 @@ import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
@@ -57,11 +54,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Wanderer extends StrongTameableEntityDefault {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
-
-    private static final TrackedData<Boolean> IS_USING_SKILL = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> CAN_BE_TAMED_SET = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> CAN_BE_TAMED = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> IS_PATROLLING = DataTracker.registerData(Wanderer.class, TrackedDataHandlerRegistry.BOOLEAN);
 
     private static final int WALK_CYCLE_DURATION_MS = 2670;
     private static final int[] FOOTSTEP_TIMINGS_MS = {1250, 2250};
@@ -104,10 +96,7 @@ public class Wanderer extends StrongTameableEntityDefault {
     public int animationTimeout = 0;
     public static final int DEFAULT_ANIMATION_TIMEOUT = 15;
 
-    private int healthUpdateCooldown = 100;
-    private int getHealthUpdateCounter = 0;
     private double healthDecreaseWhenTameablePercent = 0.02f;
-    private float healthIncreaseWhenTamed = 0.001f;
     private float percentHealthToBeTamed = 0.15f;
 
     private int flipCooldown = 100;
@@ -174,15 +163,6 @@ public class Wanderer extends StrongTameableEntityDefault {
     @Override
     public @Nullable PassiveEntity createChild(ServerWorld world, PassiveEntity entity) {
         return null;
-    }
-
-    @Override
-    protected void initDataTracker() {
-        super.initDataTracker();
-        this.dataTracker.startTracking(IS_USING_SKILL, false);
-        this.dataTracker.startTracking(CAN_BE_TAMED, false);
-        this.dataTracker.startTracking(CAN_BE_TAMED_SET, false);
-        this.dataTracker.startTracking(IS_PATROLLING, false);
     }
 
 
@@ -294,20 +274,6 @@ public class Wanderer extends StrongTameableEntityDefault {
 
             if(this.getTarget() == null && this.getIsUsingSkill()){
                 this.setIsUsingSkill(false);
-            }
-
-
-            if (this.getHealthUpdateCounter <= this.healthUpdateCooldown) {
-                this.getHealthUpdateCounter++;
-            }
-
-            if (this.getHealthUpdateCounter > this.healthUpdateCooldown) {
-                this.getHealthUpdateCounter = 0;
-                if (this.getCanBeTamed()) {
-                    this.damage(this.getWorld().getDamageSources().generic(), (float) (this.getMaxHealth() * healthDecreaseWhenTameablePercent));
-                } else {
-                    this.setHealth(this.getHealth() + Math.min(this.getMaxHealth() * this.healthIncreaseWhenTamed, this.maxRegenHealthPerUpdate));
-                }
             }
         }
 
@@ -1012,39 +978,6 @@ public class Wanderer extends StrongTameableEntityDefault {
         return this.getWorld();
     }
 
-    public boolean getIsUsingSkill() {
-        return this.dataTracker.get(IS_USING_SKILL);
-    }
-
-    public void setIsUsingSkill(boolean variant) {
-        this.dataTracker.set(IS_USING_SKILL, variant);
-    }
-
-    public boolean getCanBeTamed() {
-        return this.dataTracker.get(CAN_BE_TAMED);
-    }
-
-    public void setCanBeTamed(boolean variant) {
-        this.dataTracker.set(CAN_BE_TAMED, variant);
-    }
-
-    public boolean getIsPatrolling() {
-        return this.dataTracker.get(IS_PATROLLING);
-    }
-
-    public void setIsPatrolling(boolean variant) {
-        this.dataTracker.set(IS_PATROLLING, variant);
-    }
-
-
-    public boolean getCanBeTamedSet() {
-        return this.dataTracker.get(CAN_BE_TAMED_SET);
-    }
-
-    public void setCanBeTamedSet(boolean variant) {
-        this.dataTracker.set(CAN_BE_TAMED_SET, variant);
-    }
-
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
@@ -1303,117 +1236,6 @@ public class Wanderer extends StrongTameableEntityDefault {
         public void stop() {
             mob.getNavigation().stop();
             cooldown = 0;
-        }
-    }
-
-    public class CustomFollowOwnerGoal extends Goal {
-        private final Wanderer mob;
-        private LivingEntity owner;
-        private final World world;
-        private final double speed;
-        private final float minFollowDistance;
-        private final float maxFollowDistance;
-        private final boolean leavesAllowed;
-        private int teleportCooldown;
-        private int pathUpdateCooldown;
-
-        public CustomFollowOwnerGoal(Wanderer mob, double speed,
-                                     float minDistance, float maxDistance,
-                                     boolean leavesAllowed) {
-            this.mob = mob;
-            this.world = mob.getWorld();
-            this.speed = speed;
-            this.minFollowDistance = minDistance;
-            this.maxFollowDistance = maxDistance;
-            this.leavesAllowed = leavesAllowed;
-            this.setControls(EnumSet.of(Control.MOVE, Control.LOOK));
-        }
-
-        @Override
-        public boolean canStart() {
-            if (mob.getIsPatrolling() || mob.getTarget() != null) return false;
-
-            LivingEntity owner = mob.getOwner();
-            if (owner == null) return false;
-
-            double distanceSq = mob.squaredDistanceTo(owner);
-            return distanceSq > (maxFollowDistance * maxFollowDistance);
-        }
-
-        @Override
-        public boolean shouldContinue() {
-            if (mob.getIsPatrolling() || mob.getTarget() != null) return false;
-
-            LivingEntity owner = mob.getOwner();
-            if (owner == null) return false;
-
-            double distanceSq = mob.squaredDistanceTo(owner);
-            return distanceSq > (minFollowDistance * minFollowDistance);
-        }
-
-        @Override
-        public void start() {
-            this.teleportCooldown = 0;
-            this.pathUpdateCooldown = 0;
-            this.owner = mob.getOwner();
-        }
-
-        @Override
-        public void tick() {
-            mob.getLookControl().lookAt(owner, 10.0F, mob.getMaxLookPitchChange());
-            double distance = mob.distanceTo(owner);
-
-            handleTeleportation(distance);
-            handlePathfinding(distance);
-        }
-
-        private void handleTeleportation(double distance) {
-            if (teleportCooldown > 0) teleportCooldown--;
-
-            if (distance > maxFollowDistance && teleportCooldown <= 0) {
-                if (tryTeleportToOwner()) {
-                    teleportCooldown = 40; // 2 second cooldown
-                    pathUpdateCooldown = 0;
-                }
-            }
-        }
-
-        private void handlePathfinding(double distance) {
-            if (pathUpdateCooldown > 0) {
-                pathUpdateCooldown--;
-                return;
-            }
-
-            if (distance > minFollowDistance) {
-                pathUpdateCooldown = 10; // Update path every 0.5 seconds
-                mob.getNavigation().startMovingTo(owner, speed);
-            } else {
-                mob.getNavigation().stop();
-            }
-        }
-
-        private boolean tryTeleportToOwner() {
-            if (!leavesAllowed && !world.getBlockState(owner.getBlockPos()).isAir()) return false;
-
-            return mob.teleport(
-                    owner.getX(),
-                    owner.getY(),
-                    owner.getZ(),
-                    true
-            );
-        }
-
-        @Override
-        public void stop() {
-            mob.getNavigation().stop();
-            this.owner = null;
-            this.teleportCooldown = 0;
-            this.pathUpdateCooldown = 0;
-        }
-
-        @Override
-        public boolean shouldRunEveryTick() {
-            return true; // Important for smooth updates
         }
     }
 

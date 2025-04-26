@@ -2,13 +2,10 @@ package com.trongthang.welcometomyworld.mixin;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.DamageCalculator;
-import net.minecraft.block.PointedDripstoneBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Mixin(LivingEntity.class)
-public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
+public class BalanceDamageForBossesOrMobsFromOtherMods {
     private static final Map<Identifier, DamageCalculator> DAMAGE_MODIFIERS = new HashMap<>();
 
     static {
@@ -32,7 +29,7 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "alpha_yeti"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 10) {
+                    if (original <= 15) {
                         if (damageSource.getType().msgId().equals("twilightforest.yeeted")) {
                             return original;
                         }
@@ -54,7 +51,7 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "carminite_ghastguard"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 10) {
+                    if (original <= 15) {
                         return original + (float) Math.min(100, attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.015f);
                     }
                     return 0;
@@ -62,7 +59,7 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "carminite_ghastling"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 10) {
+                    if (original <= 15) {
                         return original + (float) Math.min(100, attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.02f);
                     }
                     return 0;
@@ -100,7 +97,7 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "knight_phantom"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 40) {
+                    if (original <= 50) {
                         return original + (float) Math.min(100, attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 3f);
                     }
                     return 0;
@@ -124,7 +121,7 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("minecraft", "ghast"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 10) {
+                    if (original <= 40) {
                         return original + (float) Math.min(100, attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.008f);
                     }
                     return 0;
@@ -132,10 +129,10 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "captain_cornelia"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 20) {
+                    if (original <= 100) {
                         return original + (float) Math.min(100, attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0075f);
                     }
-                    return 0;
+                    return original;
                 });
 
         DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "maw"),
@@ -145,7 +142,7 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "anglerfish"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 50) {
+                    if (original <= 100) {
                         return original + (float) Math.min(100, attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0065f);
                     }
                     return 0;
@@ -244,15 +241,39 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
         DAMAGE_MODIFIERS.put(new Identifier("graveyard", "lich"),
                 (original, attacker, damageSource) -> {
-                    if (original <= 20) {
+                    if (original <= 25) {
                         if (damageSource.getType().msgId().equals("explosion.player")) {
-                            return Math.min(original * 2, 40);
-                        } else if(damageSource.getType().msgId().equals("indirectMagic")) {
-                            return Math.min(original * 2, 40);
+                            return Math.min(original * 1.8f, 40);
+                        } else if (damageSource.getType().msgId().equals("indirectMagic")) {
+                            return Math.min(original * 1.8f, 40);
                         }
                     }
 
                     return original;
+                });
+
+        DAMAGE_MODIFIERS.put(new Identifier("minecells", "concierge"),
+                (original, attacker, damageSource) -> {
+
+                    if (damageSource.getType().msgId().equals("minecells.aura")) {
+                        return original * 0.45f;
+                    }
+
+                    return original;
+                });
+
+        DAMAGE_MODIFIERS.put(new Identifier("minecells", "conjunctivius"),
+                (original, attacker, damageSource) -> {
+
+                    if(original > 250){
+                        original = 115;
+                    } else if(original > 150){
+                        original = 85;
+                    } else if (original < 50){
+                        original = 50;
+                    }
+
+                    return Math.min(120, original);
                 });
     }
 
@@ -266,10 +287,11 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
         Entity attacker = source.getAttacker();
         if (attacker != null) {
 
-            WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
-            WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
-            WelcomeToMyWorld.LOGGER.info("ID ATTACKER: " + Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
-            WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
+//            WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
+//            WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
+//            WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
+//            WelcomeToMyWorld.LOGGER.info("ID ATTACKER: " + Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
+//            WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
 
             if (attacker != null) {
                 if (source.getType().msgId().equals("thorns")) {
@@ -280,7 +302,7 @@ public class BuffOrNerfDamageForBossesOrMobsFromOtherMods {
 
                 if (calculator != null) {
                     float scaledDamage = calculator.calculate(originalDamage, (LivingEntity) attacker, source);
-                    WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
+//                    WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
                     return scaledDamage;
                 }
             }

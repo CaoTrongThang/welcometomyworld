@@ -10,6 +10,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.ServerWorldAccess;
@@ -83,13 +84,16 @@ public class HostileEntityStatsBuffAndAttackTameableCreatures {
 
         buff();
 
+
+
         Utils.addRunAfter(() -> {
             if (mobEntity instanceof HostileEntity entity)
             {
                 if (!(entity instanceof EndermanEntity)) {
-                    this.targetSelector.add(15, new ActiveTargetGoal<>(entity, TameableEntity.class, true));
+                    this.targetSelector.add(15, new ActiveTargetGoal<>(entity, TameableEntity.class, true,
+                            target -> !Registries.ENTITY_TYPE.getId(target.getType()).getNamespace().contains("iceandfire")));
                 }
             }
-        }, 10);
+        }, 20);
     }
 }

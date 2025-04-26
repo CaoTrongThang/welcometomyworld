@@ -26,6 +26,10 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(BlocksManager.RUSTED_IRON_BARS)
                 .add(BlocksManager.TOUGHER_IRON_BARS)
                 .add(BlocksManager.BURNED_PLANK)
+                .add(BlocksManager.CHALLENGER_TROPHY)
+                .add(BlocksManager.GAMING_DISC_TROPHY)
+                .add(BlocksManager.MUSIC_TROPHY)
+                .add(BlocksManager.EASYCRAFT_TROPHY)
                 .add(BlocksManager.BURNING_PLANK);
 
         getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL)
@@ -36,6 +40,10 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(BlocksManager.RUSTED_IRON_BARS)
                 .add(BlocksManager.TOUGHER_IRON_BARS)
                 .add(BlocksManager.BURNED_PLANK)
+                .add(BlocksManager.CHALLENGER_TROPHY)
+                .add(BlocksManager.GAMING_DISC_TROPHY)
+                .add(BlocksManager.MUSIC_TROPHY)
+                .add(BlocksManager.EASYCRAFT_TROPHY)
                 .add(BlocksManager.BURNING_PLANK);
 
         getOrCreateTagBuilder(BlockTags.CLIMBABLE)

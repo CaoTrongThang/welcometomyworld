@@ -4,6 +4,7 @@ import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
+import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -54,10 +55,7 @@ import net.minecraft.world.MobSpawnerLogic;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
@@ -66,12 +64,6 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class FallenKnight extends StrongTameableEntityDefault {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
-
-    private static final TrackedData<Boolean> IS_USING_SKILL = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> CAN_BE_TAMED_SET = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> CAN_BE_TAMED = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> IS_PATROLLING = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Float> ALL_SKILL_COOLDOWN = DataTracker.registerData(FallenKnight.class, TrackedDataHandlerRegistry.FLOAT);
 
     private static final int WALK_CYCLE_DURATION_MS = 4000;
     private static final int[] FOOTSTEP_TIMINGS_MS = {1080, 3210};
@@ -116,11 +108,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     public int animationTimeout = 0;
     public static final int DEFAULT_ANIMATION_TIMEOUT = 15;
-
-    private int healthUpdateCooldown = 100;
-    private int getHealthUpdateCounter = 0;
-    private double healthDecreaseWhenTameablePercent = 0.01f;
-    private float healthIncreaseWhenTamed = 0.005f;
 
     private float percentHealthToBeTamed = 0.15f;
     private int canBeTamedChance = 70;
@@ -188,17 +175,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
         return new Identifier("welcometomyworld", "entities/fallen_knight");
     }
 
-    @Override
-    protected void initDataTracker() {
-        super.initDataTracker();
-        this.dataTracker.startTracking(IS_USING_SKILL, false);
-        this.dataTracker.startTracking(CAN_BE_TAMED, false);
-        this.dataTracker.startTracking(CAN_BE_TAMED_SET, false);
-        this.dataTracker.startTracking(IS_PATROLLING, false);
-        this.dataTracker.startTracking(ALL_SKILL_COOLDOWN, 200f);
-
-    }
-
 
     @Override
     public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
@@ -243,22 +219,9 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     this.setTarget(null);
                 }
             }
-
-            if (this.getHealthUpdateCounter <= this.healthUpdateCooldown) {
-                this.getHealthUpdateCounter++;
-            }
-
-            if (this.getHealthUpdateCounter > this.healthUpdateCooldown) {
-                this.getHealthUpdateCounter = 0;
-                if (this.getCanBeTamed()) {
-                    this.damage(this.getWorld().getDamageSources().generic(), (float) (this.getMaxHealth() * healthDecreaseWhenTameablePercent));
-                } else {
-                    this.setHealth(this.getHealth() + Math.min(this.getMaxHealth() * this.healthIncreaseWhenTamed, this.maxRegenHealthPerUpdate));
-                }
-            }
         }
 
-        if(this.canChangeTargetCounter < this.canChangeTargetCooldown){
+        if (this.canChangeTargetCounter < this.canChangeTargetCooldown) {
             this.canChangeTargetCounter++;
         }
 
@@ -567,37 +530,38 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     }
 
+
     private void createShockwave() {
         if (!this.getWorld().isClient) {
             ServerWorld serverWorld = (ServerWorld) this.getWorld();
             BlockPos center = this.getBlockPos();
 
-            Box checkArea = new Box(this.getBlockPos()).expand(attack3Range);
+            Box checkArea = new Box(center).expand(attack3Range);
             List<LivingEntity> damageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea, entity -> true);
 
-            // Set to track blocks where particles have been spawned
-            Set<BlockPos> particleSpawnedBlocks = new HashSet<>();
 
             for (int x = -attack3Range; x <= attack3Range; x++) {
                 for (int z = -attack3Range; z <= attack3Range; z++) {
-                    if (x * x + z * z <= attack3Range * attack3Range) {
-                        for (int yOffset = 0; yOffset >= -1; yOffset--) {
-                            BlockPos targetPos = center.add(x, yOffset, z);
-                            BlockState state = serverWorld.getBlockState(targetPos);
+                    for (int y = this.getBlockY() - 1; y >= this.getBlockY() - 4; y--) {
 
-                            BlockPos blockAbove = targetPos.up();
-                            if (yOffset < 0 && particleSpawnedBlocks.contains(blockAbove)) {
-                                continue;
+                        BlockPos pos = new BlockPos(this.getBlockX() + x, y, this.getBlockZ() + z);
+                        BlockState state = serverWorld.getBlockState(pos);
+                        if (!state.isAir()) {
+                            float ra = random.nextFloat();
+                            if(ra < 0.2f){
+                                spawnParticles(serverWorld, pos, state);
                             }
 
-                            if (!state.isAir()) {
-                                spawnParticles(serverWorld, targetPos, state);
-                                particleSpawnedBlocks.add(targetPos); // Mark this block as having particles spawned
+                            if(ra < 0.05f){
+                                Utils.CreateBlockSlamGround(serverWorld, state, pos);
                             }
+
+                            break;
                         }
                     }
                 }
             }
+
 
 
             for (LivingEntity target : damageTarget) {
@@ -611,8 +575,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     }
                 }
 
-                if(target instanceof PlayerEntity){
-                    if(this.isTamed() || this.getOwner() != null){
+                if (target instanceof PlayerEntity) {
+                    if (this.isTamed() || this.getOwner() != null) {
                         continue;
                     }
                 }
@@ -634,7 +598,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
                 float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * this.attack3DamageMultiply;
                 damageBlockingShield(target, damage);
-                if(target instanceof PlayerEntity){
+                if (target instanceof PlayerEntity) {
                     target.addVelocity(0, 1.4f, 0);
                 } else {
                     target.addVelocity(0, 0.8f, 0);
@@ -819,7 +783,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
         if (this.isDead()) return false;
 
         if (!this.getWorld().isClient) {
-            if(source.getSource() instanceof ArrowEntity){
+            if (source.getSource() instanceof ArrowEntity) {
                 amount /= 2;
             }
 
@@ -867,7 +831,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
         if (!this.getWorld().isClient) {
             Vec3d knockbackDirection = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(), target.getZ() - this.getZ()).normalize();
 
-            if(target instanceof PlayerEntity){
+            if (target instanceof PlayerEntity) {
                 target.addVelocity(knockbackDirection.multiply(2, 0, 2));
             } else {
                 target.addVelocity(knockbackDirection);
@@ -887,37 +851,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
     }
 
     @Override
-    public void onDeath(DamageSource source) {
-        super.onDeath(source);
-    }
-
-    @Override
     public EntityView method_48926() {
         return this.getWorld();
-    }
-
-    public boolean getIsUsingSkill() {
-        return this.dataTracker.get(IS_USING_SKILL);
-    }
-
-    public void setIsUsingSkill(boolean variant) {
-        this.dataTracker.set(IS_USING_SKILL, variant);
-    }
-
-    public boolean getCanBeTamed() {
-        return this.dataTracker.get(CAN_BE_TAMED);
-    }
-
-    public void setCanBeTamed(boolean variant) {
-        this.dataTracker.set(CAN_BE_TAMED, variant);
-    }
-
-    public boolean getIsPatrolling() {
-        return this.dataTracker.get(IS_PATROLLING);
-    }
-
-    public void setIsPatrolling(boolean variant) {
-        this.dataTracker.set(IS_PATROLLING, variant);
     }
 
     public float getAllSkillCooldown() {
@@ -926,14 +861,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     public void setAllSkillCooldown(float variant) {
         this.dataTracker.set(ALL_SKILL_COOLDOWN, variant);
-    }
-
-    public boolean getCanBeTamedSet() {
-        return this.dataTracker.get(CAN_BE_TAMED_SET);
-    }
-
-    public void setCanBeTamedSet(boolean variant) {
-        this.dataTracker.set(CAN_BE_TAMED_SET, variant);
     }
 
     @Override
@@ -1245,117 +1172,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
         }
     }
 
-    public class CustomFollowOwnerGoal extends Goal {
-        private final FallenKnight mob;
-        private LivingEntity owner;
-        private final World world;
-        private final double speed;
-        private final float minFollowDistance;
-        private final float maxFollowDistance;
-        private final boolean leavesAllowed;
-        private int teleportCooldown;
-        private int pathUpdateCooldown;
-
-        public CustomFollowOwnerGoal(FallenKnight mob, double speed,
-                                     float minDistance, float maxDistance,
-                                     boolean leavesAllowed) {
-            this.mob = mob;
-            this.world = mob.getWorld();
-            this.speed = speed;
-            this.minFollowDistance = minDistance;
-            this.maxFollowDistance = maxDistance;
-            this.leavesAllowed = leavesAllowed;
-            this.setControls(EnumSet.of(Goal.Control.MOVE, Goal.Control.LOOK));
-        }
-
-        @Override
-        public boolean canStart() {
-            if (mob.getIsPatrolling() || mob.getTarget() != null) return false;
-
-            LivingEntity owner = mob.getOwner();
-            if (owner == null) return false;
-
-            double distanceSq = mob.squaredDistanceTo(owner);
-            return distanceSq > (maxFollowDistance * maxFollowDistance);
-        }
-
-        @Override
-        public boolean shouldContinue() {
-            if (mob.getIsPatrolling() || mob.getTarget() != null) return false;
-
-            LivingEntity owner = mob.getOwner();
-            if (owner == null) return false;
-
-            double distanceSq = mob.squaredDistanceTo(owner);
-            return distanceSq > (minFollowDistance * minFollowDistance);
-        }
-
-        @Override
-        public void start() {
-            this.teleportCooldown = 0;
-            this.pathUpdateCooldown = 0;
-            this.owner = mob.getOwner();
-        }
-
-        @Override
-        public void tick() {
-            mob.getLookControl().lookAt(owner, 10.0F, mob.getMaxLookPitchChange());
-            double distance = mob.distanceTo(owner);
-
-            handleTeleportation(distance);
-            handlePathfinding(distance);
-        }
-
-        private void handleTeleportation(double distance) {
-            if (teleportCooldown > 0) teleportCooldown--;
-
-            if (distance > maxFollowDistance && teleportCooldown <= 0) {
-                if (tryTeleportToOwner()) {
-                    teleportCooldown = 40; // 2 second cooldown
-                    pathUpdateCooldown = 0;
-                }
-            }
-        }
-
-        private void handlePathfinding(double distance) {
-            if (pathUpdateCooldown > 0) {
-                pathUpdateCooldown--;
-                return;
-            }
-
-            if (distance > minFollowDistance) {
-                pathUpdateCooldown = 10; // Update path every 0.5 seconds
-                mob.getNavigation().startMovingTo(owner, speed);
-            } else {
-                mob.getNavigation().stop();
-            }
-        }
-
-        private boolean tryTeleportToOwner() {
-            if (!leavesAllowed && !world.getBlockState(owner.getBlockPos()).isAir()) return false;
-
-            return mob.teleport(
-                    owner.getX(),
-                    owner.getY(),
-                    owner.getZ(),
-                    true
-            );
-        }
-
-        @Override
-        public void stop() {
-            mob.getNavigation().stop();
-            this.owner = null;
-            this.teleportCooldown = 0;
-            this.pathUpdateCooldown = 0;
-        }
-
-        @Override
-        public boolean shouldRunEveryTick() {
-            return true; // Important for smooth updates
-        }
-    }
-
     class CustomTrackOwnerAttackGoal extends TrackTargetGoal {
         private final FallenKnight mob;
         private LivingEntity attacker;
@@ -1415,11 +1231,11 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 } else {
                     this.attacking = livingEntity.getAttacking();
                     int i = livingEntity.getLastAttackTime();
-                    if(this.attacking instanceof TameableEntity target){
-                        if(target.getOwner() != null){
-                           if(target.getOwner() == this.tameable.getOwner()){
-                               return false;
-                           }
+                    if (this.attacking instanceof TameableEntity target) {
+                        if (target.getOwner() != null) {
+                            if (target.getOwner() == this.tameable.getOwner()) {
+                                return false;
+                            }
                         }
                     }
                     return i != this.lastAttackTime && this.canTrack(this.attacking, TargetPredicate.DEFAULT) && this.tameable.canAttackWithOwner(this.attacking, livingEntity);

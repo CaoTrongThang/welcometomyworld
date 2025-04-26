@@ -108,6 +108,14 @@ public class EntitiesManager {
                     .build()
     );
 
+    public static final EntityType<BlockSlamGroundEntity> BLOCK_SLAM_GROUND = Registry.register(
+            Registries.ENTITY_TYPE,
+            new Identifier(WelcomeToMyWorld.MOD_ID, "block_slam_ground"),
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, BlockSlamGroundEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.5f, 0.5f)) // Adjust width and height
+                    .build()
+    );
+
     public static void register() {
 //        FabricDefaultAttributeRegistry.register(A_LIVING_LOG, setAttributes(8, 0.1));
 
@@ -167,7 +175,7 @@ public class EntitiesManager {
                 },
                 SpawnGroup.CREATURE,
                 EntitiesManager.CHESTER,
-                10,
+                12,
                 1,
                 1
         );

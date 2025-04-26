@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "IRI",
+    "AAA"
+
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:gunpowder"
+    },"I": {
+      "item": "welcometomyworld:ancient_fragment"
+    },"R": {
+      "item": "welcometomyworld:repair_knowledge"
+    }
+  },
+  "result": {
+    "item": "welcometomyworld:creeper_talisman",
+    "count": 1
+  }
+}

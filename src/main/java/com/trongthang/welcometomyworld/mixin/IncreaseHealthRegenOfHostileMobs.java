@@ -31,7 +31,10 @@ public class IncreaseHealthRegenOfHostileMobs {
         LivingEntity entity = (LivingEntity) (Object) this;
         if(entity.getWorld().isClient) return;
 
-        this.outCombatCounter--;
+        if(this.outCombatTime > 0){
+            this.outCombatCounter--;
+        }
+
 
         if(enemies.isEmpty()) return;
         if(enemies.size() <= 3) return;

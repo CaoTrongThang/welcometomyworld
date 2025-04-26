@@ -16,13 +16,8 @@ import java.util.Map;
 
 public class AllowSleepAllTime {
     public static final int nightTime = 13000;
-    public static final int dawnTime = 24000;
-    private static final Logger LOGGER = LogManager.getLogger("AllowSleepAllTime");
-
-    private static int totalSleepPlayers = 0;
     private static boolean canCheck = false;
 
-    // Track sleep state PER DIMENSION
     private static final Map<Identifier, Boolean> dimensionSleepChecks = new HashMap<>();
 
     public static void registerEvents() {
@@ -60,16 +55,12 @@ public class AllowSleepAllTime {
             }
 
             // Check players IN THIS DIMENSION
-            boolean allPlayersSleeping = false;
+            boolean allPlayersSleeping = true;
 
-            for(ServerPlayerEntity p : world.getPlayers()){
-                boolean isSleeping = p.isSleeping();
-                boolean canResetTime = p.canResetTimeBySleeping();
-
-                if(isSleeping && canResetTime){
-                    allPlayersSleeping = true;
-                } else {
+            for (ServerPlayerEntity p : world.getPlayers()) {
+                if (!p.isSleeping() || !p.canResetTimeBySleeping()) {
                     allPlayersSleeping = false;
+                    break;
                 }
             }
 

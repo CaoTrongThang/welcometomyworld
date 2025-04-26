@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
+
+//Reduce the total DAMAGE_INDICATOR particles to reduce lags
 @Mixin(PlayerEntity.class)
 public abstract class ReduceDamageIndicatorParticles {
     @Redirect(
@@ -23,7 +25,7 @@ public abstract class ReduceDamageIndicatorParticles {
     private int reduceParticleCount(ServerWorld world, ParticleEffect particle, double x, double y, double z, int count,
                                     double deltaX, double deltaY, double deltaZ, double speed) {
 
-        int newCount = Math.min(count, 20);
+        int newCount = Math.min(count, 10);
         return world.spawnParticles(particle, x, y, z, newCount, deltaX, deltaY, deltaZ, speed);
     }
 }

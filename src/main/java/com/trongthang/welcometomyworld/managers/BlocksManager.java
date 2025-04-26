@@ -60,19 +60,28 @@ public class BlocksManager {
                     .strength(3.0f, 6.0f)
                     .requiresTool()));
 
+    public static final Block CUSTOM_VINE = registerBlock("custom_vine",
+            new CustomVine(FabricBlockSettings.copyOf(Blocks.VINE)));
+
     public static final Block GAMING_DISC_TROPHY = registerBlock("trophies/gaming_disc_trophy",
             new TrophyBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
                     .strength(3.0f, 6.0f)
-                    .requiresTool().nonOpaque(), VoxelShapes.cuboid(0.25, 0, 0.25, 0.75, 1.0, 0.75)));
+                    .requiresTool().nonOpaque(), VoxelShapes.cuboid(0.15, 0, 0.15, 0.85, 1.0, 0.85)));
 
     public static final Block EASYCRAFT_TROPHY = registerBlock("trophies/easycraft_trophy",
             new TrophyBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
                     .strength(3.0f, 6.0f)
                     .requiresTool().nonOpaque()));
 
-    public static final Block CUSTOM_VINE = registerBlock("custom_vine",
-            new CustomVine(FabricBlockSettings.copyOf(Blocks.VINE)));
+    public static final Block CHALLENGER_TROPHY = registerBlock("trophies/challenger_trophy",
+            new TrophyBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
+                    .strength(3.0f, 6.0f)
+                    .requiresTool().nonOpaque(), VoxelShapes.cuboid(0.10, 0, 0.10, 0.90, 1.0, 0.90)));
 
+    public static final Block MUSIC_TROPHY = registerBlock("trophies/music_trophy",
+            new TrophyBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
+                    .strength(3.0f, 6.0f)
+                    .requiresTool().nonOpaque(), VoxelShapes.cuboid(0.10, 0, 0.10, 0.90, 1.0, 0.90)));
 
     private static Block registerBlock(String name, Block block) {
         registerBlockItem(name, block);

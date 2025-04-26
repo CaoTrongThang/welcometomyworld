@@ -1,9 +1,12 @@
 package com.trongthang.welcometomyworld.items;
 
+import com.trongthang.welcometomyworld.managers.ItemsManager;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
@@ -28,31 +31,34 @@ public class RepairTalisman extends Item {
         this.REPAIR_AMOUNT = repairAmount;
     }
 
-    private int checkInterval = 60;
-    private int counter = 0;
 
-    public void onServerTick(MinecraftServer server, Item compareItem){
-        counter++;
-        if(counter < checkInterval) return;
-        counter = 0;
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+        if(world.isClient) return;
 
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()){
+        if(entity instanceof PlayerEntity p){
 
-            if(p.getOffHandStack().getItem() == compareItem || p.getMainHandStack().getItem() == compareItem){
+            if(world.getTickOrder() % 100 != 0) return;
+
+            Item offhand = p.getOffHandStack().getItem();
+            Item mainHand = p.getMainHandStack().getItem();
+
+            if(mainHand == this || offhand == this){
                 for (int i = 0; i < p.getInventory().size(); i++) {
                     ItemStack itemStack = p.getInventory().getStack(i);
 
-                    // Check if the item is damageable and has damage
                     if (!itemStack.isEmpty() && itemStack.isDamageable() && itemStack.getDamage() > 0) {
-                        // Repair by subtracting damage
+
                         int currentDamage = itemStack.getDamage();
-                        int newDamage = Math.max(0, currentDamage - (int) REPAIR_AMOUNT); // Ensure damage doesn't go below 0
+                        int newDamage = Math.max(0, currentDamage - (int) REPAIR_AMOUNT);
                         itemStack.setDamage(newDamage);
                     }
                 }
             }
         }
+
     }
+
 
     @Override
     public void appendTooltip(ItemStack itemStack, World world, List<Text> tooltip, TooltipContext tooltipContext) {
@@ -76,7 +82,7 @@ public class RepairTalisman extends Item {
         Text line2Part1 = Text.literal("Cooldown: ")
                 .setStyle(Style.EMPTY.withColor(Formatting.GRAY)); // Gray part
 
-        Text cooldown = Text.literal(String.valueOf(checkInterval / 20) + "s")
+        Text cooldown = Text.literal(String.valueOf("5") + "s")
                 .setStyle(Style.EMPTY.withColor(Formatting.RED)); // Red for the number
 
 

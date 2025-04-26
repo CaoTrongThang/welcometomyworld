@@ -24,7 +24,7 @@ public class SpawnMonstersAtNight {
     private static int MAX_MONSTERS_FOR_EACH_PLAYER = 15;
     private static int MAX_MONSTERS = 40;
 
-    private static double chanceToHappen = 50;
+    private static double chanceToHappen = 30;
     private static int monsterWillIncreasePerDay = 10;
     private static int increaseMonsterByDay = 1;
     private static int eachPlayerIncreaseMonster = 10;
@@ -70,17 +70,18 @@ public class SpawnMonstersAtNight {
                     continue;
                 }
 
-                Entity entity;
+                Entity entity = null;
+                MobEntity mobEntity = null;
 
                 if (spawnPos != null) {
                     entity = spawnMob(world, spawnPos, mon.id);
+                    mobEntity = (MobEntity) entity;
                 } else {
                     continue;
                 }
-
-                MobEntity mobEntity = (MobEntity) entity;
-
                 mobEntity.initialize(world, world.getLocalDifficulty(spawnPos), SpawnReason.NATURAL, null, null);
+
+                mobEntity.setHealth(mobEntity.getMaxHealth());
 
                     if (mobEntity.canSee(player)) {
                         mobEntity.setTarget(player);

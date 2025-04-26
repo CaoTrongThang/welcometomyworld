@@ -29,6 +29,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.passive.FishEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
@@ -49,6 +50,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.stat.Stats;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
@@ -87,10 +89,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
-    private static final TrackedData<Boolean> IS_USING_SKILL = DataTracker.registerData(Blossom.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> IS_PATROLLING = DataTracker.registerData(Blossom.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> IS_GREETING = DataTracker.registerData(Blossom.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Float> ALL_SKILL_COOLDOWN = DataTracker.registerData(Blossom.class, TrackedDataHandlerRegistry.FLOAT);
 
     private static final int ATTACK_2_DURATION_MS = 10000;
     private static final int[] ATTACK_2_SOUND_TIMINGS_MS = {100};
@@ -127,10 +126,6 @@ public class Blossom extends StrongTameableEntityDefault {
     private int ultimateCooldown = 400;
     private int defaultUltimateCooldown = 4800;
 
-    private int healthUpdateCooldown = 100;
-    private int getHealthUpdateCounter = 0;
-    private float healthIncreaseWhenTamed = 0.005f;
-
     private int healCooldownCounter = 200;
     private float selfHealPercent = 0.03f;
     private float groupHealPercent = 0.03f;
@@ -143,7 +138,6 @@ public class Blossom extends StrongTameableEntityDefault {
 
     public Blossom(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
-
         this.moveControl = new FlightMoveControl(this, 20, true);
         this.navigation = new BlossomNavigation(this, world);
 
@@ -207,19 +201,16 @@ public class Blossom extends StrongTameableEntityDefault {
         return null;
     }
 
-    @Override
-    protected void initDataTracker() {
-        super.initDataTracker();
-        this.dataTracker.startTracking(IS_USING_SKILL, false);
-        this.dataTracker.startTracking(IS_PATROLLING, false);
-        this.dataTracker.startTracking(IS_GREETING, false);
-        this.dataTracker.startTracking(ALL_SKILL_COOLDOWN, 200f);
-    }
-
 
     @Override
     public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
         return false;
+    }
+
+    @Override
+    protected void initDataTracker() {
+        super.initDataTracker();
+        this.dataTracker.startTracking(IS_GREETING, false);
     }
 
     @Override
@@ -240,14 +231,7 @@ public class Blossom extends StrongTameableEntityDefault {
         this.targetSelector.add(2, new CustomAttackWithOwnerGoal(this));
         this.targetSelector.add(3, new CustomRevengeGoal(this).setGroupRevenge());
 
-        this.targetSelector.add(4, new ActiveTargetGoal<>(this, HostileEntity.class, 10, false, false, (hostile) -> {
-            LivingEntity owner = this.getOwner();
-            if (owner == null) {
-                return true;
-            }
-
-            return (owner.getAttacker() == null && owner.getAttacking() == null);
-        }));
+        this.targetSelector.add(4, new ActiveTargetGoal<>(this, HostileEntity.class, true));
     }
 
     @Override
@@ -256,9 +240,11 @@ public class Blossom extends StrongTameableEntityDefault {
         setAnimationStates();
 
 //        if (this.getWorld().isClient) {
-//            WelcomeToMyWorld.LOGGER.info("[CLIENT] SITTING: " + this.isInSittingPose());
+//            WelcomeToMyWorld.LOGGER.info("[CLIENT] DEATH: " + this.isDead());
+////            WelcomeToMyWorld.LOGGER.info("[CLIENT] SITTING: " + this.isInSittingPose());
 //        } else {
-//            WelcomeToMyWorld.LOGGER.info("[SERVER] SITTING: " + this.isInSittingPose());
+//            WelcomeToMyWorld.LOGGER.info("[SERVER] DEATH: " + this.isDead());
+////            WelcomeToMyWorld.LOGGER.info("[SERVER] SITTING: " + this.isInSittingPose());
 //        }
 
         if (!this.getWorld().isClient) {
@@ -282,15 +268,6 @@ public class Blossom extends StrongTameableEntityDefault {
                 if (this.getTarget().isDead()) {
                     this.setTarget(null);
                 }
-            }
-
-            if (this.getHealthUpdateCounter <= this.healthUpdateCooldown) {
-                this.getHealthUpdateCounter++;
-            }
-
-            if (this.getHealthUpdateCounter > this.healthUpdateCooldown) {
-                this.getHealthUpdateCounter = 0;
-                this.setHealth(this.getHealth() + Math.min(this.getMaxHealth() * this.healthIncreaseWhenTamed, this.maxRegenHealthPerUpdate));
             }
         } else {
             particleCounter++;
@@ -431,7 +408,7 @@ public class Blossom extends StrongTameableEntityDefault {
                                     Utils.sendSoundPacketToClient(SoundsManager.BLOSSOM_BUFF, ally.getBlockPos());
                                 }
 
-                                this.healCooldownCounter = Math.min(totalBuff * 200, this.healthUpdateCooldown);
+                                this.healCooldownCounter = Math.min(totalBuff * 200, this.defaultHealCooldown);
 
                                 ally.setHealth(ally.getHealth() + (ally.getMaxHealth() * this.groupHealPercent));
                             }
@@ -661,25 +638,23 @@ public class Blossom extends StrongTameableEntityDefault {
             List<LivingEntity> damageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea, entity -> true);
 
             // Set to track blocks where particles have been spawned
-            Set<BlockPos> particleSpawnedBlocks = new HashSet<>();
-
-
             for (int x = -attackSkillRange; x <= attackSkillRange; x++) {
                 for (int z = -attackSkillRange; z <= attackSkillRange; z++) {
-                    if (x * x + z * z <= attackSkillRange * attackSkillRange) {
-                        for (int yOffset = 0; yOffset >= -1; yOffset--) {
-                            BlockPos targetPos = center.add(x, yOffset, z);
-                            BlockState state = serverWorld.getBlockState(targetPos);
+                    for (int y = center.getY() - 1; y >= center.getY() - 3; y--) {
 
-                            BlockPos blockAbove = targetPos.up();
-                            if (yOffset < 0 && particleSpawnedBlocks.contains(blockAbove)) {
-                                continue;
+                        BlockPos pos = new BlockPos(center.getX() + x, y, center.getZ() + z);
+                        BlockState state = serverWorld.getBlockState(pos);
+                        if (!state.isAir()) {
+                            float ra = random.nextFloat();
+                            if (ra < 0.4f) {
+                                spawnBlockParticles(serverWorld, pos, state);
                             }
 
-                            if (!state.isAir()) {
-                                spawnBlockParticles(serverWorld, targetPos, state);
-                                particleSpawnedBlocks.add(targetPos); // Mark this block as having particles spawned
+                            if (ra < 0.04f) {
+                                Utils.CreateBlockSlamGround(serverWorld, state, pos);
                             }
+
+                            break;
                         }
                     }
                 }
@@ -717,10 +692,26 @@ public class Blossom extends StrongTameableEntityDefault {
                         }
                     }
                 }
+                BlockPos targetBlockPos = target.getBlockPos().add(0, 2, 0);
 
-                float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
-                damageBlockingShield(target, damage);
-                target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
+                boolean invisToSky = true;
+                for(int y = 0; y < 8; y++){
+                    BlockPos currentPos = targetBlockPos.add(0, y, 0);
+                    BlockState state = serverWorld.getBlockState(currentPos);
+
+                    if (!state.getCollisionShape(serverWorld, currentPos).isEmpty()) {
+                        invisToSky = false;
+                        break;
+                    }
+                }
+
+                if(invisToSky){
+                    float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
+
+                    if(!damageBlockingShield(target, damage)){
+                        target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
+                    };
+                }
             }
         }
     }
@@ -757,13 +748,16 @@ public class Blossom extends StrongTameableEntityDefault {
     }
 
 
-    private void damageBlockingShield(LivingEntity target, float damage) {
-
-        if (this.getTarget() == null) return;
+    private boolean damageBlockingShield(LivingEntity target, float damage) {
+        if (this.getTarget() == null) return false;
         if (target.isBlocking() && target.getActiveItem().isDamageable()) {
             target.getActiveItem().damage((int) damage, target,
                     entity -> entity.sendToolBreakStatus(target.getActiveHand()));
+
+            return true;
         }
+
+        return false;
     }
 
     public static void spawnBlockParticles(ServerWorld world, BlockPos pos, BlockState state) {
@@ -773,7 +767,6 @@ public class Blossom extends StrongTameableEntityDefault {
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        ItemStack itemStack = player.getStackInHand(hand);
         World world = this.getWorld();
 
         if (world.isClient) {
@@ -798,10 +791,8 @@ public class Blossom extends StrongTameableEntityDefault {
             }));
 
             if (this.isSitting()) {
-                this.moveControl = new MoveControl(this);
                 this.setNoGravity(false);
             } else {
-                this.moveControl = new FlightMoveControl(this, 20, true);
                 this.setNoGravity(true);
             }
 
@@ -810,33 +801,7 @@ public class Blossom extends StrongTameableEntityDefault {
             return ActionResult.SUCCESS;
         }
 
-//        if (itemStack.isOf(this.getTameFood())) {
-//            if (!player.getAbilities().creativeMode) {
-//                itemStack.decrement(1);
-//            }
-//
-//            if (this.random.nextInt(2) == 0) {
-//                this.setOwner(player);
-//                this.setTamed(true);
-//                this.setSitting(false);
-//                this.animationTimeout = 1;
-//                this.setTarget(null);
-//
-//                this.setHealth(this.getMaxHealth() / 2);
-//
-//                this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
-//            } else {
-//                this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_NEGATIVE_PLAYER_REACTION_PARTICLES);
-//            }
-//
-//            return ActionResult.SUCCESS;
-//        }
-
         return ActionResult.PASS;
-    }
-
-    private Item getTameFood() {
-        return Items.SOUL_CAMPFIRE;
     }
 
     @Override
@@ -881,11 +846,11 @@ public class Blossom extends StrongTameableEntityDefault {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
+        if (this.getIsGreeting()) {
+            return super.damage(source, 0);
+        }
 
-        if (this.isDead()) return false;
         if (!this.getWorld().isClient) {
-            if (this.getIsGreeting()) return super.damage(source, 0);
-
             if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner() && player.isSneaking()) {
                 this.patrolCenterPos = this.getBlockPos();
                 this.setIsPatrolling(!this.getIsPatrolling());
@@ -893,31 +858,13 @@ public class Blossom extends StrongTameableEntityDefault {
                 if (this.getIsPatrolling()) {
                     // Create and add the goal if it doesn't exist
                     if (this.hostileTargetGoal == null) {
-                        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, 10, false, false, (hostile) -> {
-                            LivingEntity owner = this.getOwner();
-                            if (owner == null) {
-                                return true;
-                            }
-
-                            return (owner.getAttacker() == null && owner.getAttacking() == null);
-                        });
-
+                        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
                         this.targetSelector.add(1, this.hostileTargetGoal);
-                    } else {
-                        this.targetSelector.add(1, new ActiveTargetGoal<>(this, HostileEntity.class, true));
                     }
                 } else {
                     // Remove the goal if it exists
                     if (this.hostileTargetGoal != null) {
                         this.targetSelector.remove(this.hostileTargetGoal);
-                        this.targetSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, 10, false, false, (hostile) -> {
-                            LivingEntity owner = this.getOwner();
-                            if (owner == null) {
-                                return true;
-                            }
-
-                            return (owner.getAttacker() == null && owner.getAttacking() == null);
-                        }));
                         this.hostileTargetGoal = null; // Clear the reference
                     }
                     this.patrolCenterPos = null;
@@ -926,7 +873,7 @@ public class Blossom extends StrongTameableEntityDefault {
                 return super.damage(source, 0);
             }
 
-            if (source.getAttacker() instanceof LivingEntity && WelcomeToMyWorld.random.nextInt(0, 100) <= 40) {
+            if (source.getAttacker() instanceof LivingEntity && WelcomeToMyWorld.random.nextInt(0, 100) <= 40 && !this.isInSittingPose()) {
                 if (this.teleportRandomly()) {
                     return super.damage(source, 0);
                 } else {
@@ -946,8 +893,8 @@ public class Blossom extends StrongTameableEntityDefault {
 
     @Override
     public void onDeath(DamageSource source) {
-        super.onDeath(source);
 
+        super.onDeath(source);
         if (this.isTamed() || this.getOwner() != null) return;
 
         if (WelcomeToMyWorld.random.nextInt(0, 100) > this.getTameChance()) return;
@@ -1077,36 +1024,12 @@ public class Blossom extends StrongTameableEntityDefault {
         return this.getWorld();
     }
 
-    public boolean getIsUsingSkill() {
-        return this.dataTracker.get(IS_USING_SKILL);
-    }
-
-    public void setIsUsingSkill(boolean variant) {
-        this.dataTracker.set(IS_USING_SKILL, variant);
-    }
-
-    public boolean getIsPatrolling() {
-        return this.dataTracker.get(IS_PATROLLING);
-    }
-
-    public void setIsPatrolling(boolean variant) {
-        this.dataTracker.set(IS_PATROLLING, variant);
-    }
-
     public boolean getIsGreeting() {
         return this.dataTracker.get(IS_GREETING);
     }
 
     public void setIsGreeting(boolean variant) {
         this.dataTracker.set(IS_GREETING, variant);
-    }
-
-    public float getAllSkillCooldown() {
-        return this.dataTracker.get(ALL_SKILL_COOLDOWN);
-    }
-
-    public void setAllSkillCooldown(float variant) {
-        this.dataTracker.set(ALL_SKILL_COOLDOWN, variant);
     }
 
     @Override
@@ -1152,6 +1075,11 @@ public class Blossom extends StrongTameableEntityDefault {
         private static final int HORIZONTAL_RANGE = 24;
         private static final int VERTICAL_RANGE = 12;
         private static final float SPEED_MODIFIER = 2f;
+
+        private static final int GROUND_SEARCH_DEPTH = 10;
+        private static final int MIN_GROUND_DISTANCE = 2;
+        private static final int MAX_GROUND_DISTANCE = 8;
+
         private final Blossom blossom;
         private int failedAttempts;
 
@@ -1175,20 +1103,42 @@ public class Blossom extends StrongTameableEntityDefault {
         }
 
         public boolean shouldContinue() {
-            return blossom.navigation.isFollowingPath() && failedAttempts < 3 && !blossom.isInSittingPose() && !blossom.getIsPatrolling();
+            return blossom.navigation.isFollowingPath() && failedAttempts < 3 && !blossom.isInSittingPose() && !blossom.getIsPatrolling() && !blossom.isDead();
         }
 
         private Vec3d findValidAirPosition() {
             Random random = blossom.getRandom();
             Vec3d currentPos = blossom.getPos();
 
-            // Generate positions in a spherical pattern
-            for (int i = 0; i < 15; i++) {
+            for (int i = 0; i < 30; i++) {
                 Vec3d candidate = currentPos.add(
                         random.nextGaussian() * HORIZONTAL_RANGE,
                         (random.nextFloat() - 0.5f) * VERTICAL_RANGE,
                         random.nextGaussian() * HORIZONTAL_RANGE
                 );
+
+                BlockPos candidatePos = BlockPos.ofFloored(candidate);
+                World world = blossom.getWorld();
+
+                if (!world.isChunkLoaded(candidatePos)) continue;
+
+                // Find nearest solid block below candidate
+                int groundY = findGroundY(world, candidatePos);
+                if (groundY != -1) {
+                    // Adjust to fly 5-10 blocks above ground
+                    candidate = new Vec3d(
+                            candidate.x,
+                            groundY + MIN_GROUND_DISTANCE + random.nextInt(MAX_GROUND_DISTANCE - MIN_GROUND_DISTANCE + 1),
+                            candidate.z
+                    );
+                } else {
+                    // No ground found, lower flight altitude
+                    candidate = new Vec3d(
+                            candidate.x,
+                            Math.max(candidate.y - (MIN_GROUND_DISTANCE + random.nextInt(6)), world.getBottomY()),
+                            candidate.z
+                    );
+                }
 
                 if (isValidFlightPosition(BlockPos.ofFloored(candidate))) {
                     return candidate;
@@ -1197,16 +1147,23 @@ public class Blossom extends StrongTameableEntityDefault {
             return null;
         }
 
+        private int findGroundY(World world, BlockPos pos) {
+            // Search downward for solid blocks within GROUND_SEARCH_DEPTH
+            int startY = pos.getY();
+            int minY = Math.max(startY - GROUND_SEARCH_DEPTH, world.getBottomY());
+
+            for (int y = startY; y >= minY; y--) {
+                BlockPos currentPos = new BlockPos(pos.getX(), y, pos.getZ());
+                if (world.getBlockState(currentPos).isSolid()) {
+                    return y;
+                }
+            }
+            return -1; // No ground found
+        }
+
         private boolean isValidFlightPosition(BlockPos pos) {
             World world = blossom.getWorld();
-
-            if (!world.isChunkLoaded(pos.down())) {
-                return false;
-            }
-
-            return world.isAir(pos) &&
-                    world.isAir(pos.up()) &&
-                    world.getBlockState(pos.down()).isSolid();
+            return world.isAir(pos) && world.isAir(pos.up());
         }
     }
 
@@ -1255,6 +1212,8 @@ public class Blossom extends StrongTameableEntityDefault {
                 cooldown--;
                 return;
             }
+
+            if(mob.patrolCenterPos == null) return;
 
             Vec3d center = mob.patrolCenterPos.toCenterPos();
             double distanceFromCenter = getDistanceFromCenter();
@@ -1308,7 +1267,6 @@ public class Blossom extends StrongTameableEntityDefault {
 
         private void attemptTeleport(Vec3d target) {
             if (mob.teleportTo(target.x, target.y, target.z)) {
-                WelcomeToMyWorld.LOGGER.info("teleported");
 
                 cooldown = 100;
                 mob.setTarget(null);
@@ -1337,120 +1295,6 @@ public class Blossom extends StrongTameableEntityDefault {
             failedNavigationAttempts = 0;
             waypointCooldown = 0;
             currentWaypoint = null;
-        }
-
-        @Override
-        public boolean shouldRunEveryTick() {
-            return true;
-        }
-    }
-
-    public class CustomFollowOwnerGoal extends Goal {
-        private final Blossom mob;
-        private final World world;
-        private final double speed;
-        private final float minFollowDistance; // Start following if owner is farther than this
-        private final float maxFollowDistance; // If owner is farther than this, attempt teleporting
-        private final boolean leavesAllowed;
-        private int teleportCooldown;
-
-        public CustomFollowOwnerGoal(Blossom mob, double speed, float minDistance, float maxDistance, boolean leavesAllowed) {
-            this.mob = mob;
-            this.world = mob.getWorld();
-            this.speed = speed;
-            this.minFollowDistance = minDistance;
-            this.maxFollowDistance = maxDistance;
-            this.leavesAllowed = leavesAllowed;
-            this.setControls(EnumSet.of(Control.MOVE, Control.LOOK));
-        }
-
-        // Start following if the owner is farther than the minimum distance.
-        @Override
-        public boolean canStart() {
-            if (mob.getIsPatrolling() || mob.getTarget() != null) {
-                return false;
-            }
-            LivingEntity owner = mob.getOwner();
-            if (owner == null) {
-                return false;
-            }
-            double distanceSq = mob.squaredDistanceTo(owner);
-            return distanceSq > (minFollowDistance * minFollowDistance);
-        }
-
-        // Continue following until we get close enough
-        @Override
-        public boolean shouldContinue() {
-            if (mob.getIsPatrolling() || mob.getTarget() != null) {
-                return false;
-            }
-            LivingEntity owner = mob.getOwner();
-            if (owner == null) {
-                return false;
-            }
-
-            double distanceSq = mob.squaredDistanceTo(owner);
-            return distanceSq > (minFollowDistance * minFollowDistance);
-        }
-
-        @Override
-        public void start() {
-            this.teleportCooldown = 0;
-        }
-
-        @Override
-        public void tick() {
-            // Always refresh the owner reference so it stays up-to-date.
-            LivingEntity owner = mob.getOwner();
-            if (owner == null) {
-                return;
-            }
-
-            // Make the mob look at the owner
-            mob.getLookControl().lookAt(owner, 10.0F, mob.getMaxLookPitchChange());
-
-            double distance = mob.distanceTo(owner);
-
-            handleTeleportation(distance, owner);
-            handlePathfinding(distance, owner);
-        }
-
-        private void handleTeleportation(double distance, LivingEntity owner) {
-            if (teleportCooldown > 0) {
-                teleportCooldown--;
-            }
-
-            // If the owner is much too far away, attempt to teleport
-            if (distance > maxFollowDistance && teleportCooldown <= 0) {
-                if (tryTeleportToOwner(owner)) {
-                    teleportCooldown = 40;
-                }
-            }
-        }
-
-        private void handlePathfinding(double distance, LivingEntity owner) {
-            // Use pathfinding only if the mob is beyond the minimum follow distance
-            if (distance > minFollowDistance) {
-                mob.getNavigation().startMovingTo(owner, speed);
-            } else {
-                mob.getNavigation().stop();
-            }
-        }
-
-        private boolean tryTeleportToOwner(LivingEntity owner) {
-            // Optionally restrict teleportation if, for example, the owner is not in an open area.
-            // You might need to adjust this if your design should allow teleporting into non-air blocks.
-            if (!leavesAllowed && !world.getBlockState(owner.getBlockPos()).isAir()) {
-                return false;
-            }
-            // Attempt to teleport to the owner's current position.
-            return mob.teleport(owner.getX(), owner.getY(), owner.getZ(), true);
-        }
-
-        @Override
-        public void stop() {
-            mob.getNavigation().stop();
-            teleportCooldown = 0;
         }
 
         @Override
