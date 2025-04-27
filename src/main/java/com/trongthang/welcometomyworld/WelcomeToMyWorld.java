@@ -14,7 +14,6 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -181,7 +180,8 @@ public class WelcomeToMyWorld implements ModInitializer {
         HostileMobsAwareness.registerEvents();
         MinecellsDimensionSarcastic.registerEvents();
         AllowSleepAllTime.registerEvents();
-        ChangeCreeperSpawnWeight.register();
+        BalanceSpawnWeight.register();
+        MobsGearsUp.register();
 
 
 //        // Register a listener for when the server has started

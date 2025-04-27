@@ -31,7 +31,8 @@
 		"CreeperDropAllBlocksAndCheckItems",
 		"FixSupporoformTinkerArmorBar",
 		"BalanceEnchantments",
-		"BabyZombieReduce"
+		"BabyZombieReduce",
+		"MobEntityGearsUp"
 	],
 	"injectors": {
 		"defaultRequire": 1

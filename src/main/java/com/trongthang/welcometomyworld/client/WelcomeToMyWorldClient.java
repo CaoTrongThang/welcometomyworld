@@ -115,7 +115,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         } else {
             stopSendingOriginsScreen = true;
         }
-        
+
         ClientTickEvents.END_CLIENT_TICK.register(this::onTicks);
 
         ClientPlayNetworking.registerGlobalReceiver(CLIENT_HAS_DATA, (client, handler, buf, responseSender) -> {
@@ -141,6 +141,12 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         });
 
         ClientReceiveMessageEvents.ALLOW_GAME.register((a, b) -> {
+
+            if (a.getString().toLowerCase().contains("detected: ")) {
+                return false;
+            }
+
+
             if (!removeMessagesFirstJoin) return true;
 
             for (String m : removeMessages) {
@@ -171,11 +177,11 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
     private boolean lastScreenTerain = false;
 
-    private void handleTerrainScreen(MinecraftClient client){
-        if(stopSendingLoadingTerrainScreen) return;
+    private void handleTerrainScreen(MinecraftClient client) {
+        if (stopSendingLoadingTerrainScreen) return;
 
-        if(lastScreenTerain){
-            if(!(client.currentScreen instanceof DownloadingTerrainScreen)){
+        if (lastScreenTerain) {
+            if (!(client.currentScreen instanceof DownloadingTerrainScreen)) {
                 stopSendingLoadingTerrainScreen = true;
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeInt(1);
@@ -187,8 +193,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             }
         }
 
-        if(client.currentScreen instanceof DownloadingTerrainScreen)
-        {
+        if (client.currentScreen instanceof DownloadingTerrainScreen) {
             lastScreenTerain = true;
         }
     }

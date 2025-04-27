@@ -25,7 +25,7 @@ public class BalanceEnchantments {
                 damage = level * (level + 1) / 2.0f;
             } else {
                 // Accelerated scaling for levels 6+
-                damage = 15 + 5 * (level - 5) * (level - 4);
+                damage = 5 * (level - 5) * (level - 4);
             }
 
             cir.setReturnValue(damage);
@@ -33,7 +33,7 @@ public class BalanceEnchantments {
         }
 
         if (instance == Enchantments.SMITE) {
-            float damage = 15 * (level);
+            float damage = 12 * (level);
 
             cir.setReturnValue(damage);
             cir.cancel();

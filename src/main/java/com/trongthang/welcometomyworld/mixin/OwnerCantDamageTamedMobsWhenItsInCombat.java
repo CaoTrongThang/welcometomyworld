@@ -17,21 +17,21 @@ public class OwnerCantDamageTamedMobsWhenItsInCombat {
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     private void preventOwnerDamageDuringCombat(DamageSource source, float amount, CallbackInfoReturnable<Boolean> ci) {
-        Entity attacker = source.getAttacker();
-
-        if (!(attacker instanceof PlayerEntity player)) return;
 
         LivingEntity targetEntity = (LivingEntity) (Object) this;
 
         if (targetEntity.getWorld().isClient()) return;
 
+        Entity attacker = source.getAttacker();
+
+        if (!(attacker instanceof PlayerEntity player)) return;
+
+
         if (targetEntity instanceof TameableEntity tameable && tameable.isTamed()) {
             LivingEntity owner = tameable.getOwner();
 
             if (owner != null && owner == attacker) {
-                LivingEntity combatTarget = tameable.getTarget();
-
-                if (combatTarget != null
+                if (tameable.getTarget() != null
                         && !player.getAbilities().creativeMode) {
                     ci.setReturnValue(false);
                     ci.cancel();

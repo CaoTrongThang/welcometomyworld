@@ -382,7 +382,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                             rainOfArrowsSkill(this.getTarget().getPos());
                         }
                     } else {
-                        this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 40f);
+                        this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 30f);
                         Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_BOW_ATTACK, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                         this.shootingArrow = true;
                         this.lookAtPos = this.getTarget().getPos();
@@ -457,7 +457,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
                             Utils.addRunAfter(this::createSwordSlashShockwavePolar, 17);
                         } else if(rand1 > 50 && rand1 < 90){
-                            this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 40f);
+                            this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 30f);
 
                             timeout = 20;
                             Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_BOW_ATTACK, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));

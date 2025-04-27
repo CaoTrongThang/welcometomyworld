@@ -105,7 +105,9 @@ public class WandererArrow extends PersistentProjectileEntity {
     @Override
     public boolean canHit(Entity target) {
         // Check if the target is the owner of the arrow
-        if (target == this.getOwner()) return false;
+        if(this.getOwner() instanceof TameableEntity tameable){
+            if(tameable.getOwner() == target) return false;
+        }
 
         if (target instanceof PersistentProjectileEntity) {
             return false;
@@ -173,15 +175,17 @@ public class WandererArrow extends PersistentProjectileEntity {
 
 
             for (LivingEntity target : damageTarget) {
-                if (target == this.getOwner()) continue;
-                if (this.getOwner() != null) {
-                    if (target == this.getOwner()) continue;
-                }
-                if (target instanceof TameableEntity tameable) {
-                    if (tameable.isTamed() && tameable.getOwner() != null) {
-                        if (tameable.getOwner() == this.getOwner()) continue;
+                if(this.getOwner() instanceof TameableEntity tameable){
+                    if(tameable.getOwner() == target) continue;
+
+                    if (target instanceof TameableEntity targetTameable) {
+                        if (targetTameable.isTamed() && targetTameable.getOwner() != null) {
+                            if (targetTameable.getOwner() == tameable.getOwner()) continue;
+                        }
                     }
                 }
+
+
 
                 // Handle FallenKnight-specific logic
                 if (target instanceof Wanderer wanderer) {
