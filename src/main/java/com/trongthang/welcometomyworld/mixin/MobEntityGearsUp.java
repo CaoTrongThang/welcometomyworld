@@ -131,6 +131,8 @@ public abstract class MobEntityGearsUp {
 
         int counter = 0;
         while(moreEnchantmentsChance(mob) && counter <= 5){
+            if(applicable.isEmpty()) break;
+
             int rand = random.nextInt(applicable.size());
             Enchantment chosen = applicable.get(rand);
             applicable.remove(rand);
@@ -140,8 +142,6 @@ public abstract class MobEntityGearsUp {
 
             counter++;
         }
-
-
     }
 
     private MobsGearsUp.EnchantmentCategory getItemCategory(Item item) {
@@ -168,7 +168,7 @@ public abstract class MobEntityGearsUp {
         long currentTime = mob.getWorld().getTimeOfDay();
         int currentDay = (int) (currentTime / 24000);
 
-        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 50), 0.9f);
+        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 50), 0.95f);
         if(random.nextFloat() > newChance) return false;
 
         return true;
@@ -179,7 +179,7 @@ public abstract class MobEntityGearsUp {
         long currentTime = mob.getWorld().getTimeOfDay();
         int currentDay = (int) (currentTime / 24000);
 
-        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 50), 0.4f);
+        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 50), 0.45f);
         if(random.nextFloat() > newChance) return false;
 
         return true;

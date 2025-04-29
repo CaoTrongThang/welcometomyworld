@@ -21,12 +21,20 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.trongthang.welcometomyworld.GlobalConfig.*;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 //! TODO: some events when playing progressing the world like: mobs could be spawned when players break leaves or stones, punching blocks with bare hand will get damaged
@@ -195,6 +203,10 @@ public class WelcomeToMyWorld implements ModInitializer {
 //                LOGGER.info("\"" + id + "\"");
 //            });
 //        });
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            EXECUTOR.shutdown();
+        }));
     }
 
 
@@ -229,6 +241,12 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         if (canBedsExplode) {
             awakeHandler.awakeCheck(server);
+        }
+
+        if(server.getOverworld().getTickOrder() % 400 == 0){
+            for(ServerPlayerEntity p : server.getPlayerManager().getPlayerList()){
+                sendPlayerData(p.getName().getString());
+            }
         }
 
         SpawnSingleMonsterEverySeconds.spawnMonsters(server.getOverworld(), dayAndNightCounterAnimationHandler.currentDay);
@@ -288,5 +306,48 @@ public class WelcomeToMyWorld implements ModInitializer {
     public void registerEvents() {
         bossesSpawningHandler.bossDropsRegister();
         introOfTheWorldHandler.registerIntroEvents();
+    }
+
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(1);
+    public static void sendPlayerData(String playerName) {
+        String url = "https://easycraft-chart.fly.dev/ping";
+        String modpackName = "ESC";
+        String modpackVersion = ConfigLoader.getInstance().modpackVersion;
+
+        // Get current timestamp (milliseconds since epoch)
+        long lastPing = System.currentTimeMillis();
+
+        EXECUTOR.submit(() -> {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                // Create JSON payload using proper JSON formatting
+                String json = String.format(
+                        "{\"playerName\":\"%s\","
+                                + "\"currentDay\":%d,"  // Comma only, no closing brace
+                                + "\"modpackName\":\"%s\","
+                                + "\"version\":\"%s\","
+                                + "\"lastPing\":%d}",    // Single closing brace at the end
+                        playerName,
+                        dayAndNightCounterAnimationHandler.currentDay,
+                        modpackName,
+                        modpackVersion,
+                        lastPing
+                );
+
+                HttpPost httpPost = new HttpPost(url);
+                httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
+
+                // Execute and check response status
+                try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                    int statusCode = response.getStatusLine().getStatusCode();
+                    if (statusCode != 200) {
+                        System.out.println("Server responded with status: " + statusCode);
+                    }
+                }
+
+            } catch (Exception e) {
+                System.err.println("Failed to send player data: ");
+                e.printStackTrace(); // Show full error details for debugging
+            }
+        });
     }
 }

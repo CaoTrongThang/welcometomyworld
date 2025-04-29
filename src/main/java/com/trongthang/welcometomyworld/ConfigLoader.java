@@ -27,6 +27,10 @@ public class ConfigLoader {
     private static ConfigLoader INSTANCE;
 
     @Expose
+    @SerializedName("modpackVersion")
+    public String modpackVersion = "1.5.3";
+
+    @Expose
     @SerializedName("introOfTheWorld")
     public boolean introOfTheWorld = true;
     @Expose

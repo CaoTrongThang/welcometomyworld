@@ -96,10 +96,10 @@ public class MobsGearsUp {
         validMobs.put(new Identifier("minecraft:zombie_villager"), new MobSettings());
         validMobs.put(new Identifier("minecraft:vindicator"), new MobSettings());
         validMobs.put(new Identifier("minecraft:giant"), new MobSettings());
+        validMobs.put(new Identifier("palegardenabackport:creaking"), new MobSettings());
         validMobs.put(new Identifier("minecraft:enderman"), new MobSettings().setOffhand(false));
         validMobs.put(new Identifier("minecraft:spider"), new MobSettings().setOffhand(false));
         validMobs.put(new Identifier("minecraft:skeleton"), new MobSettings().setRange(true).setMelee(false));
-
 
         validEnchantments.add(new Identifier("minecraft:protection"));
         validEnchantments.add(new Identifier("minecraft:fire_protection"));
