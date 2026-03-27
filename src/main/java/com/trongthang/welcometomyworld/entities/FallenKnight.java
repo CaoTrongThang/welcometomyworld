@@ -548,11 +548,11 @@ public class FallenKnight extends StrongTameableEntityDefault {
                         BlockState state = serverWorld.getBlockState(pos);
                         if (!state.isAir()) {
                             float ra = random.nextFloat();
-                            if(ra < 0.2f){
+                            if (ra < 0.2f) {
                                 spawnParticles(serverWorld, pos, state);
                             }
 
-                            if(ra < 0.05f){
+                            if (ra < 0.05f) {
                                 Utils.CreateBlockSlamGround(serverWorld, state, pos);
                             }
 
@@ -561,7 +561,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     }
                 }
             }
-
 
 
             for (LivingEntity target : damageTarget) {
@@ -687,7 +686,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
         if (this.isTamed() && this.getOwner() == player) {
             this.setSitting(!this.isSitting());
             this.setIsPatrolling(false);
-            this.targetSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, true));
+            this.targetSelector.remove(hostileTargetGoal);
             this.setTarget(null);
 
             return ActionResult.SUCCESS;
@@ -775,9 +774,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     }
 
-    // Store the goal instance
-    private ActiveTargetGoal<HostileEntity> hostileTargetGoal;
-
     @Override
     public boolean damage(DamageSource source, float amount) {
         if (this.isDead()) return false;
@@ -792,17 +788,9 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 this.setIsPatrolling(!this.getIsPatrolling());
 
                 if (this.getIsPatrolling()) {
-                    // Create and add the goal if it doesn't exist
-                    if (this.hostileTargetGoal == null) {
-                        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
-                        this.targetSelector.add(1, this.hostileTargetGoal);
-                    }
+                    this.targetSelector.add(1, this.hostileTargetGoal);
                 } else {
-                    // Remove the goal if it exists
-                    if (this.hostileTargetGoal != null) {
-                        this.targetSelector.remove(this.hostileTargetGoal);
-                        this.hostileTargetGoal = null; // Clear the reference
-                    }
+                    this.targetSelector.remove(this.hostileTargetGoal);
                     this.patrolCenterPos = null;
                 }
 

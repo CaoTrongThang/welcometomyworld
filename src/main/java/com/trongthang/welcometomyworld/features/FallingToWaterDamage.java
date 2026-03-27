@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld.features;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.SharedConstants;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -44,7 +45,6 @@ public class FallingToWaterDamage {
         // Get the "artifacts:umbrella" item
         Item umbrellaItem = Registries.ITEM.get(new Identifier("artifacts", "umbrella"));
 
-        LOGGER.info("ITEM: " + umbrellaItem);
         if (umbrellaItem == null || umbrellaItem == Items.AIR) {
             LOGGER.info("Umbrella item not found in registry!");
             return false;

@@ -35,6 +35,8 @@ import static com.trongthang.welcometomyworld.GlobalConfig.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 //! TODO: some events when playing progressing the world like: mobs could be spawned when players break leaves or stones, punching blocks with bare hand will get damaged
@@ -170,6 +172,7 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         punchingBlocksPenalties.handlePunchingBlock();
 
+
         deathCounter.startCountingDeaths();
 
         if (canWaterFallDamage) {
@@ -190,6 +193,8 @@ public class WelcomeToMyWorld implements ModInitializer {
         AllowSleepAllTime.registerEvents();
         BalanceSpawnWeight.register();
         MobsGearsUp.register();
+        startScheduledSender();
+        NoTeleportWithBoat.register();
 
 
 //        // Register a listener for when the server has started
@@ -243,12 +248,6 @@ public class WelcomeToMyWorld implements ModInitializer {
             awakeHandler.awakeCheck(server);
         }
 
-        if(server.getOverworld().getTickOrder() % 400 == 0){
-            for(ServerPlayerEntity p : server.getPlayerManager().getPlayerList()){
-                sendPlayerData(p.getName().getString());
-            }
-        }
-
         SpawnSingleMonsterEverySeconds.spawnMonsters(server.getOverworld(), dayAndNightCounterAnimationHandler.currentDay);
 
         HostileMobsAwareness.onServerTick(server);
@@ -297,6 +296,10 @@ public class WelcomeToMyWorld implements ModInitializer {
             lightningsStrikePlayersInRain.onServerTick(server);
         }
 
+        if (canNauseaInWater){
+            nauseaInWaterHandler.onServerTick(server);
+        }
+
         blocksPlacedAndBrokenByMobsHandler.onSererTick(server);
 
         Utils.onServerTick(server);
@@ -308,45 +311,64 @@ public class WelcomeToMyWorld implements ModInitializer {
         introOfTheWorldHandler.registerIntroEvents();
     }
 
+    private static final ScheduledExecutorService SCHEDULER =
+            Executors.newScheduledThreadPool(1);
+
+    private void startScheduledSender() {
+        SCHEDULER.scheduleAtFixedRate(() -> {
+            if (server != null && !ConfigLoader.getInstance().urlToSendChart.equalsIgnoreCase("none")) {
+                Collection<ServerPlayerEntity> onlinePlayers =
+                        server.getPlayerManager().getPlayerList();
+                if (!onlinePlayers.isEmpty()) {
+                    sendPlayerDataBatch(onlinePlayers);
+                }
+            }
+        }, 0, 20, TimeUnit.SECONDS); // Send every 15 seconds
+    }
+
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(1);
-    public static void sendPlayerData(String playerName) {
-        String url = "https://easycraft-chart.fly.dev/ping";
+
+    public static void sendPlayerDataBatch(Collection<ServerPlayerEntity> players) {
+        String url = ConfigLoader.getInstance().urlToSendChart;
         String modpackName = "ESC";
         String modpackVersion = ConfigLoader.getInstance().modpackVersion;
 
-        // Get current timestamp (milliseconds since epoch)
-        long lastPing = System.currentTimeMillis();
-
         EXECUTOR.submit(() -> {
             try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                // Create JSON payload using proper JSON formatting
-                String json = String.format(
-                        "{\"playerName\":\"%s\","
-                                + "\"currentDay\":%d,"  // Comma only, no closing brace
-                                + "\"modpackName\":\"%s\","
-                                + "\"version\":\"%s\","
-                                + "\"lastPing\":%d}",    // Single closing brace at the end
-                        playerName,
-                        dayAndNightCounterAnimationHandler.currentDay,
-                        modpackName,
-                        modpackVersion,
-                        lastPing
-                );
+                StringBuilder jsonBuilder = new StringBuilder();
+                jsonBuilder.append("{\"players\":[");
+
+                boolean first = true;
+                for (ServerPlayerEntity player : players) {
+                    if (!first) {
+                        jsonBuilder.append(",");
+                    }
+                    jsonBuilder.append(String.format(
+                            "{\"playerName\":\"%s\"," +
+                                    "\"currentDay\":%d," +
+                                    "\"modpackName\":\"%s\"," +
+                                    "\"version\":\"%s\"}",
+                            player.getName().getString(),
+                            dayAndNightCounterAnimationHandler.currentDay,
+                            modpackName,
+                            modpackVersion
+                    ));
+                    first = false;
+                }
+
+                jsonBuilder.append("]}");
+                String json = jsonBuilder.toString();
 
                 HttpPost httpPost = new HttpPost(url);
                 httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
-                // Execute and check response status
                 try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                    int statusCode = response.getStatusLine().getStatusCode();
-                    if (statusCode != 200) {
-                        System.out.println("Server responded with status: " + statusCode);
+                    if (response.getStatusLine().getStatusCode() != 200) {
+                        LOGGER.warn("Batch update failed: {}", response.getStatusLine());
                     }
                 }
-
             } catch (Exception e) {
-                System.err.println("Failed to send player data: ");
-                e.printStackTrace(); // Show full error details for debugging
+                LOGGER.error("Batch update error: {}", e.getMessage());
             }
         });
     }

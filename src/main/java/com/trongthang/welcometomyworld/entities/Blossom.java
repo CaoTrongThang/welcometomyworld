@@ -128,13 +128,15 @@ public class Blossom extends StrongTameableEntityDefault {
     private int defaultUltimateCooldown = 4800;
 
     private int healCooldownCounter = 200;
-    private float selfHealPercent = 0.03f;
+    private float selfHealPercent = 0.1f;
     private float groupHealPercent = 0.03f;
 
     private int defaultHealCooldown = 1200;
 
     private int particleCounter = 0;
     private int particleCooldown = 10;
+
+    public ActiveTargetGoal<HostileEntity> hostileTargetGoal;
 
 
     public Blossom(EntityType<? extends TameableEntity> entityType, World world) {
@@ -221,7 +223,7 @@ public class Blossom extends StrongTameableEntityDefault {
         this.goalSelector.add(1, new SwimGoal(this));
         this.goalSelector.add(2, new CustomSitGoal(this));
         this.goalSelector.add(3, new PatrollingGoal(this));
-        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 20, 25, false));
+        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 15, 25, false));
         this.goalSelector.add(6, new FollowTargetGoal(this, 8.0D, 20.0F, 48.0F));
         this.goalSelector.add(7, new StopWhenUsingSkill(this));
         this.goalSelector.add(8, new CustomFlyingWanderingAroundGoal(this));
@@ -232,7 +234,10 @@ public class Blossom extends StrongTameableEntityDefault {
         this.targetSelector.add(2, new CustomAttackWithOwnerGoal(this));
         this.targetSelector.add(3, new CustomRevengeGoal(this).setGroupRevenge());
 
-        this.targetSelector.add(4, new ActiveTargetGoal<>(this, HostileEntity.class, true));
+        if (!this.isTamed() && this.getOwner() == null) {
+            this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
+            this.targetSelector.add(4, this.hostileTargetGoal);
+        }
     }
 
     @Override
@@ -253,7 +258,7 @@ public class Blossom extends StrongTameableEntityDefault {
                 if (this.greetingTarget != null) {
                     ServerPlayerEntity player = this.getWorld().getServer().getPlayerManager().getPlayer(this.greetingTarget.getUuid());
                     if (player != null) {
-                        this.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, player.getPos());
+                        this.getLookControl().lookAt(player, 30.0F, 30.0F);
                     }
                 }
 
@@ -376,8 +381,8 @@ public class Blossom extends StrongTameableEntityDefault {
 
                         Utils.addRunAfter(() -> {
                             // Calculate buff parameters based on stats
-                            int regenAmplifier = Math.min((int) (this.getMaxHealth() / 200), 10);
-                            int resistanceAmplifier = Math.min((int) (this.getArmor() / 2.5f), 10);
+                            int regenAmplifier = Math.min((int) (this.getMaxHealth() / 250), 10);
+                            int resistanceAmplifier = Math.min((int) (this.getArmor() / 3f), 10);
 
                             // Randomly choose between Regeneration or Resistance
                             boolean useRegen = this.random.nextFloat() < 0.5f;
@@ -427,7 +432,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
                 if (this.getTarget() != null) {
                     if (this.healCooldownCounter <= 0) {
-                        if (this.getHealth() < this.getMaxHealth() * 0.8f) {
+                        if (this.getHealth() < this.getMaxHealth() * 0.9f) {
                             this.useSkillCooldownCounter = 0;
                             this.healCooldownCounter = this.defaultHealCooldown;
 
@@ -630,7 +635,7 @@ public class Blossom extends StrongTameableEntityDefault {
             BlockPos targetBlockPos = this.getTarget().getBlockPos().add(0, 1, 0);
             BlockPos center = this.getTarget().getBlockPos();
 
-            for(int y = 0; y < 8; y++){
+            for (int y = 0; y < 8; y++) {
                 BlockPos currentPos = targetBlockPos.add(0, y, 0);
                 BlockState state = serverWorld.getBlockState(currentPos);
 
@@ -674,18 +679,16 @@ public class Blossom extends StrongTameableEntityDefault {
 
             for (LivingEntity target : damageTarget) {
                 if (target == this) continue;
-                if (this.getOwner() != null) {
-                    if (target == this.getOwner()) continue;
-                }
+                if (this.isOwner(target)) continue;
 
                 if (target instanceof TameableEntity tameable) {
-                    if (tameable.isTamed() && tameable.getOwner() != null) {
-                        if (tameable.getOwner() == this.getOwner()) continue;
+                    if (tameable.isTamed() && tameable.getOwnerUuid() != null) {
+                        if (tameable.getOwnerUuid().equals(this.getOwnerUuid())) continue;
                     }
                 }
 
                 if (target instanceof PlayerEntity) {
-                    if (this.isTamed() || this.getOwner() != null) {
+                    if (this.isTamed() || this.getOwnerUuid() != null) {
                         continue;
                     }
                 }
@@ -697,17 +700,18 @@ public class Blossom extends StrongTameableEntityDefault {
                     }
 
                     // Skip tamed vs. tamed damage if they have the same owner
-                    if (this.isTamed() && this.getOwner() != null && mob.isTamed() && mob.getOwner() != null) {
-                        if (this.getOwner().equals(mob.getOwner())) {
+                    if (this.isTamed() && this.getOwnerUuid() != null && mob.isTamed() && mob.getOwnerUuid() != null) {
+                        if (this.getOwnerUuid().equals(mob.getOwnerUuid())) {
                             continue;
                         }
                     }
                 }
 
                 boolean invisToSky = true;
+                BlockPos targetHeadPos = target.getBlockPos().add(0, 1, 0);
 
-                for(int y = 0; y < 8; y++){
-                    BlockPos currentPos = targetBlockPos.add(0, y, 0);
+                for (int ty = 0; ty < 8; ty++) {
+                    BlockPos currentPos = targetHeadPos.add(0, ty, 0);
                     BlockState state = serverWorld.getBlockState(currentPos);
 
                     if (!state.getCollisionShape(serverWorld, currentPos).isEmpty()) {
@@ -716,12 +720,12 @@ public class Blossom extends StrongTameableEntityDefault {
                     }
                 }
 
-                if(invisToSky){
-                    float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
+                if (invisToSky) {
+                    float damage = (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
 
-                    if(!damageBlockingShield(target, damage)){
+                    if (!damageBlockingShield(target, damage)) {
                         target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
-                    };
+                    }
                 }
             }
         }
@@ -792,13 +796,7 @@ public class Blossom extends StrongTameableEntityDefault {
             this.setInSittingPose(this.isSitting());
             this.navigation.stop();
             this.setIsPatrolling(false);
-            this.targetSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, 10, false, false, (hostile) -> {
-                LivingEntity owner = this.getOwner();
-                if (owner == null) {
-                    return true;
-                }
-                return (owner.getAttacker() == null && owner.getAttacking() == null);
-            }));
+            this.targetSelector.remove(this.hostileTargetGoal);
 
             if (this.isSitting()) {
                 this.setNoGravity(false);
@@ -851,8 +849,6 @@ public class Blossom extends StrongTameableEntityDefault {
         }
     }
 
-    // Store the goal instance
-    private ActiveTargetGoal<HostileEntity> hostileTargetGoal;
 
     @Override
     public boolean damage(DamageSource source, float amount) {
@@ -866,17 +862,9 @@ public class Blossom extends StrongTameableEntityDefault {
                 this.setIsPatrolling(!this.getIsPatrolling());
 
                 if (this.getIsPatrolling()) {
-                    // Create and add the goal if it doesn't exist
-                    if (this.hostileTargetGoal == null) {
-                        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
-                        this.targetSelector.add(1, this.hostileTargetGoal);
-                    }
+                    this.targetSelector.add(1, this.hostileTargetGoal);
                 } else {
-                    // Remove the goal if it exists
-                    if (this.hostileTargetGoal != null) {
-                        this.targetSelector.remove(this.hostileTargetGoal);
-                        this.hostileTargetGoal = null; // Clear the reference
-                    }
+                    this.targetSelector.remove(this.hostileTargetGoal);
                     this.patrolCenterPos = null;
                 }
 
@@ -912,19 +900,19 @@ public class Blossom extends StrongTameableEntityDefault {
 
         Entity attacker = source.getAttacker();
 
-        if(attacker == null) return;
+        if (attacker == null) return;
 
-        if(attacker.getWorld().isClient()) return;
+        if (attacker.getWorld().isClient()) return;
 
         ServerPlayerEntity player = null;
-        if(attacker instanceof TameableEntity tameable){
-            if(tameable.isTamed() && tameable.getOwner() != null){
-                if(tameable.getOwner() instanceof ServerPlayerEntity playerEntity){
+        if (attacker instanceof TameableEntity tameable) {
+            if (tameable.isTamed() && tameable.getOwner() != null) {
+                if (tameable.getOwner() instanceof ServerPlayerEntity playerEntity) {
                     player = playerEntity;
                 }
             }
         }
-        if(player != null){
+        if (player != null) {
             summonNewBlossom(player);
             return;
         }
@@ -934,7 +922,7 @@ public class Blossom extends StrongTameableEntityDefault {
         }
     }
 
-    private void summonNewBlossom(ServerPlayerEntity p){
+    private void summonNewBlossom(ServerPlayerEntity p) {
         ServerWorld world = (ServerWorld) this.getWorld();
         BlockPos deathPos = this.getBlockPos();
 
@@ -992,9 +980,6 @@ public class Blossom extends StrongTameableEntityDefault {
 
             blossom.setAllSkillCooldown(this.getAllSkillCooldown());
 
-            blossom.goalSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, true));
-            blossom.targetSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, true));
-
             if (blossom != null) {
                 // Teleportation effect
                 world.spawnParticles(ParticleTypes.CHERRY_LEAVES,
@@ -1003,17 +988,19 @@ public class Blossom extends StrongTameableEntityDefault {
                 );
 
                 blossom.refreshPositionAndAngles(deathPos, 0, 0);
-                world.spawnEntity(blossom);
 
-                // Set owner and properties
+                // Set owner and properties before spawning to avoid race conditions
                 blossom.setOwner(p);
                 blossom.setTamed(true);
                 blossom.setHealth(blossom.getMaxHealth() * 0.5f);
+
+                world.spawnEntity(blossom);
 
                 // Healing effect
                 world.playSound(null, deathPos, SoundEvents.ENTITY_ILLUSIONER_CAST_SPELL,
                         SoundCategory.NEUTRAL, 1.0f, 0.8f + world.random.nextFloat() * 0.4f);
 
+                blossom.targetSelector.remove(blossom.hostileTargetGoal);
                 // Sustained particles
                 for (int i = 0; i < 6; i++) {
                     world.getServer().execute(() -> {
@@ -1246,7 +1233,7 @@ public class Blossom extends StrongTameableEntityDefault {
                 return;
             }
 
-            if(mob.patrolCenterPos == null) return;
+            if (mob.patrolCenterPos == null) return;
 
             Vec3d center = mob.patrolCenterPos.toCenterPos();
             double distanceFromCenter = getDistanceFromCenter();

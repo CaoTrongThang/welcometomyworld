@@ -27,8 +27,12 @@ public class ConfigLoader {
     private static ConfigLoader INSTANCE;
 
     @Expose
+    @SerializedName("urlToSendChart")
+    public String urlToSendChart = "none";
+
+    @Expose
     @SerializedName("modpackVersion")
-    public String modpackVersion = "1.5.3";
+    public String modpackVersion = "0.0.0";
 
     @Expose
     @SerializedName("introOfTheWorld")

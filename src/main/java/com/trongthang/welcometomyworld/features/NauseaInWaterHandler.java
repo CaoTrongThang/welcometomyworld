@@ -11,7 +11,7 @@ import java.util.Random;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class NauseaInWaterHandler {
-    public int checkInverval = 60;
+    public int checkInverval = 120;
     public int counter = 0;
 
     public int effectDuration = 120;

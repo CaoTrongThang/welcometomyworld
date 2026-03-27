@@ -265,15 +265,106 @@ public class BalanceDamageForBossesOrMobsFromOtherMods {
         DAMAGE_MODIFIERS.put(new Identifier("minecells", "conjunctivius"),
                 (original, attacker, damageSource) -> {
 
-                    if(original > 250){
+                    if (original > 250) {
                         original = 115;
-                    } else if(original > 150){
+                    } else if (original > 150) {
                         original = 85;
-                    } else if (original < 50){
+                    } else if (original < 50) {
                         original = 50;
                     }
 
                     return Math.min(120, original);
+                });
+
+        DAMAGE_MODIFIERS.put(new Identifier("palegardenbackport", "creaking"),
+                (original, attacker, damageSource) -> {
+                    return 100;
+                });
+
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "end_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(100, original * 0.8f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "badlands_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "crimson_forest_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "dark_oak_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "end_islands_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 1.4f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "coral_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 1.9f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "soulsand_valley_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 1.5f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "snowy_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 1.5f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "warped_forest_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 2f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "windswept_hills_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 1.8f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "scarab"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 3f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "ice_spikes_enderman"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 0.7f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "spirit"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(90, original * 1.5f);
+                });
+
+        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "female_orc_elite"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(150, original * 0.8f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "spriggan"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(50, original * 3);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "orc_champion"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(120, original * 0.9f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "orc_champion"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(120, original * 0.9f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "ogre"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(115, original * 0.9f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "crawler"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(95, original * 1.1f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "orc_chief"),
+                (original, attacker, damageSource) -> {
+                    if (original > 150) {
+                        original = 150;
+                    }
+
+                    return Math.min(150, original);
                 });
     }
 

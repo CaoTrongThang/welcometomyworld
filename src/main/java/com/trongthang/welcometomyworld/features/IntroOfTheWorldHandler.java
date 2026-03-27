@@ -48,9 +48,9 @@ public class IntroOfTheWorldHandler {
         //teleport player to the sky
         Vec3d skyPosition = new Vec3d(player.getX(), 400, player.getZ());
         player.teleport(skyPosition.x, skyPosition.y, skyPosition.z);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 160, 128));
+//        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 160, 128));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 80, 0));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 160, 4));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 150, 4));
     }
 
     //THIS IS A FUCKING MESS, DON'T READ

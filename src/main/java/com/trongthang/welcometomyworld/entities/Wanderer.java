@@ -257,8 +257,8 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         if (!this.getWorld().isClient) {
             if (this.getTarget() != null) {
-                if(!this.getCanBeTamed()){
-                    if(!this.shootingArrow){
+                if (!this.getCanBeTamed()) {
+                    if (!this.shootingArrow) {
                         this.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, this.getTarget().getPos());
                     }
 
@@ -272,7 +272,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                 }
             }
 
-            if(this.getTarget() == null && this.getIsUsingSkill()){
+            if (this.getTarget() == null && this.getIsUsingSkill()) {
                 this.setIsUsingSkill(false);
             }
         }
@@ -342,12 +342,12 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                 if (this.isDrinkingHeal) return;
 
-                if(distance > 35){
+                if (distance > 35) {
                     this.useSkillCooldownCounter = 0;
                     timeout = 40;
                     Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
                     Utils.addRunAfter(() -> {
-                        if(this.getTarget() == null) return;
+                        if (this.getTarget() == null) return;
 
                         // Calculate the direction vector from the mob to the target
                         Vec3d mobToTargetDirection = new Vec3d(
@@ -375,7 +375,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                     int rand = WelcomeToMyWorld.random.nextInt(0, 100);
                     timeout = 20;
 
-                    if(rand <= 7){
+                    if (rand <= 7) {
                         this.useSkillCooldownCounter = 0;
                         {
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK4, timeout);
@@ -456,7 +456,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                             timeout = 40;
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
                             Utils.addRunAfter(this::createSwordSlashShockwavePolar, 17);
-                        } else if(rand1 > 50 && rand1 < 90){
+                        } else if (rand1 > 50 && rand1 < 90) {
                             this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 30f);
 
                             timeout = 20;
@@ -472,8 +472,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                             Utils.addRunAfter(() -> {
                                 shootArrow();
                             }, 18);
-                        }
-                        else if(rand1 >= 90) {
+                        } else if (rand1 >= 90) {
                             timeout = 20;
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK4, timeout);
                             rainOfArrowsSkill(this.getTarget().getPos());
@@ -755,8 +754,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                             tameable.getOwner() == this.getOwner()) continue;
                 }
 
-                if(target instanceof PlayerEntity){
-                    if(this.isTamed() || this.getOwner() != null){
+                if (target instanceof PlayerEntity) {
+                    if (this.isTamed() || this.getOwner() != null) {
                         continue;
                     }
                 }
@@ -779,7 +778,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                             this.getTarget().getZ() - this.getZ()
                     );
 
-                    if(target instanceof PlayerEntity){
+                    if (target instanceof PlayerEntity) {
                         target.addVelocity(pushBackDirection.x * 1.5f, 0.1f, pushBackDirection.z * 1.5f);
                     } else {
                         target.addVelocity(pushBackDirection.x * 0.2f, 0.1f, pushBackDirection.z * 0.2f);
@@ -830,7 +829,7 @@ public class Wanderer extends StrongTameableEntityDefault {
         if (this.isTamed() && this.getOwner() == player) {
             this.setSitting(!this.isSitting());
             this.setIsPatrolling(false);
-            this.targetSelector.remove(new ActiveTargetGoal<>(this, HostileEntity.class, true));
+            this.targetSelector.remove(this.hostileTargetGoal);
             this.setTarget(null);
 
             return ActionResult.SUCCESS;
@@ -912,9 +911,6 @@ public class Wanderer extends StrongTameableEntityDefault {
         }
     }
 
-    // Store the goal instance
-    private ActiveTargetGoal<HostileEntity> hostileTargetGoal;
-
     @Override
     public boolean damage(DamageSource source, float amount) {
         if (this.isDead()) return false;
@@ -926,16 +922,9 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                 if (this.getIsPatrolling()) {
                     // Create and add the goal if it doesn't exist
-                    if (this.hostileTargetGoal == null) {
-                        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
-                        this.targetSelector.add(1, this.hostileTargetGoal);
-                    }
+                    this.targetSelector.add(1, this.hostileTargetGoal);
                 } else {
-                    // Remove the goal if it exists
-                    if (this.hostileTargetGoal != null) {
-                        this.targetSelector.remove(this.hostileTargetGoal);
-                        this.hostileTargetGoal = null; // Clear the reference
-                    }
+                    this.targetSelector.remove(this.hostileTargetGoal);
                     this.patrolCenterPos = null;
                 }
 
@@ -963,8 +952,8 @@ public class Wanderer extends StrongTameableEntityDefault {
     @Override
     public void onDeath(DamageSource source) {
         super.onDeath(source);
-        if(!this.getWorld().isClient){
-            if(!this.isTamed() || this.getOwner() == null){
+        if (!this.getWorld().isClient) {
+            if (!this.isTamed() || this.getOwner() == null) {
                 EnderPest enderPest = new EnderPest(EntitiesManager.ENDER_PEST, this.getWorld());
                 enderPest.setPos(this.getX(), this.getY() + 1, this.getZ());
                 this.getWorld().spawnEntity(enderPest);
@@ -1006,7 +995,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         int counter = nbt.getInt("drinkHealthCounter");
 
-        if(counter > 0){
+        if (counter > 0) {
             this.drinkHealthCounter = nbt.getInt("drinkHealthCounter");
         }
 
