@@ -28,8 +28,23 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH;
 
 public class SpawnEvents {
+
+    public static final java.util.List<String> DISABLED_MOBS = java.util.Arrays.asList(
+            "mobs_of_mythology:kobold",
+            "iceandfire:hippocampus"
+    );
+
     public static void register(){
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            // Chặn những con đã lỡ save vào chunk từ trước, hoặc lách qua được Mixin của WorldGen
+            if (entity instanceof net.minecraft.entity.LivingEntity) {
+                String entityId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(entity.getType()).toString();
+                if (DISABLED_MOBS.contains(entityId)) {
+                    entity.discard();
+                    return;
+                }
+            }
+
             if (entity instanceof EnderPest) {
                 synchronized (EnderPest.class) {
                     EnderPest.totalEnderPests = Math.min(EnderPest.totalEnderPests + 1, EnderPest.MAX_ENDER_PESTS);

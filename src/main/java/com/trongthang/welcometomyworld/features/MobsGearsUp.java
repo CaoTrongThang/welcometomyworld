@@ -101,6 +101,16 @@ public class MobsGearsUp {
         validMobs.put(new Identifier("minecraft:skeleton"), new MobSettings().setRange(true).setMelee(false));
         validMobs.put(new Identifier("minecraft:ravager"), new MobSettings().setOffhand(false));
 
+
+
+        validMobs.put(new Identifier("myths_of_the_sea:leviathan"), new MobSettings().setOffhand(false).setMelee(false));
+
+        validMobs.put(new Identifier("saintsdragons:nulljaw"), new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
+        validMobs.put(new Identifier("saintsdragons:ignivorus"), new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
+        validMobs.put(new Identifier("saintsdragons:raevyx"), new MobSettings().setOffhand(false).setMelee(false));
+        validMobs.put(new Identifier("saintsdragons:cindervane"), new MobSettings().setOffhand(false).setMelee(false));
+        validMobs.put(new Identifier("saintsdragons:stegonaut"), new MobSettings().setOffhand(false).setMelee(false));
+
         validMobs.put(new Identifier("takesapillage:legioner"), new MobSettings());
         validMobs.put(new Identifier("takesapillage:skirmisher"), new MobSettings());
         validMobs.put(new Identifier("takesapillage:archer"), new MobSettings().setRange(false).setMelee(true));
@@ -166,11 +176,11 @@ public class MobsGearsUp {
                     case FEET -> BOOTS.add(item);
                 }
             } else if (item instanceof SwordItem swordItem) {
-                if (swordItem.getAttackDamage() <= 12.0F) {
+                if (swordItem.getAttackDamage() <= 10.0F) {
                     MELEE_WEAPONS.add(item);
                 }
             } else if (item instanceof AxeItem axeItem) {
-                if (axeItem.getAttackDamage() <= 12.0F) {
+                if (axeItem.getAttackDamage() <= 10.0F) {
                     MELEE_WEAPONS.add(item);
                 }
             } else if (item instanceof BowItem || item instanceof CrossbowItem) {

@@ -32,7 +32,8 @@
 		"FixSupporoformTinkerArmorBar",
 		"BalanceEnchantments",
 		"BabyZombieReduce",
-		"MobEntityGearsUp"
+		"MobEntityGearsUp",
+		"StopSpecificMobsToSpawn"
 	],
 	"injectors": {
 		"defaultRequire": 1

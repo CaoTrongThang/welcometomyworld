@@ -366,7 +366,29 @@ public class BalanceDamageForBossesOrMobsFromOtherMods {
 
                     return Math.min(150, original);
                 });
+
+        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "leviathan"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(110, original * 0.55f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "bunyip"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(80, original * 0.55f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "bake_kujira"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(80, original * 0.6f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "kraken"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(95, original * 0.85f);
+                });
+        DAMAGE_MODIFIERS.put(new Identifier("saintsdragons", "nulljaw"),
+                (original, attacker, damageSource) -> {
+                    return Math.min(95, original);
+                });
     }
+
 
     @ModifyVariable(
             method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z", // Explicit method descriptor
@@ -378,22 +400,22 @@ public class BalanceDamageForBossesOrMobsFromOtherMods {
         Entity attacker = source.getAttacker();
         if (attacker != null) {
 
-//            WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
-//            WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
-//            WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
-//            WelcomeToMyWorld.LOGGER.info("ID ATTACKER: " + Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
-//            WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
-
             if (attacker != null) {
                 if (source.getType().msgId().equals("thorns")) {
                     return originalDamage;
                 }
 
+                // WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
+                // WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
+                // WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
+                // WelcomeToMyWorld.LOGGER.info("ID ATTACKER: " + Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
+                // WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
+
                 DamageCalculator calculator = DAMAGE_MODIFIERS.get(Registries.ENTITY_TYPE.getId(attacker.getType()));
 
                 if (calculator != null) {
                     float scaledDamage = calculator.calculate(originalDamage, (LivingEntity) attacker, source);
-//                    WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
+                    // WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
                     return scaledDamage;
                 }
             }

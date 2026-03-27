@@ -13,13 +13,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ZombieEntity.class)
+@Mixin(value = ZombieEntity.class, priority = 10000)
 public class BabyZombieReduce {
 
     @Inject(method = "setBaby", at = @At("HEAD"), cancellable = true)
     private void setBaby(boolean baby, CallbackInfo ci) {
-
-        if(WelcomeToMyWorld.random.nextFloat() < 0.001){
+        if (baby && WelcomeToMyWorld.random.nextFloat() > 0.001) {
             ci.cancel();
         }
     }
