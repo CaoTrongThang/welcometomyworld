@@ -96,14 +96,14 @@ public class MobsGearsUp {
         validMobs.put(new Identifier("minecraft:zombie_villager"), new MobSettings());
         validMobs.put(new Identifier("minecraft:vindicator"), new MobSettings());
         validMobs.put(new Identifier("minecraft:giant"), new MobSettings());
-        validMobs.put(new Identifier("minecraft:enderman"), new MobSettings().setOffhand(false));
+        validMobs.put(new Identifier("minecraft:enderman"), new MobSettings().setOffhand(false).setRange(false));
         validMobs.put(new Identifier("minecraft:spider"), new MobSettings().setOffhand(false));
         validMobs.put(new Identifier("minecraft:skeleton"), new MobSettings().setRange(true).setMelee(false));
         validMobs.put(new Identifier("minecraft:ravager"), new MobSettings().setOffhand(false));
 
+        validMobs.put(new Identifier("myths_of_the_sea:leviathan"), new MobSettings().setOffhand(false).setMelee(false).setRange(false));
 
-
-        validMobs.put(new Identifier("myths_of_the_sea:leviathan"), new MobSettings().setOffhand(false).setMelee(false));
+        validMobs.put(new Identifier("companions:sacred_pontiff"), new MobSettings().setOffhand(false).setMelee(false).setRange(false));
 
         validMobs.put(new Identifier("saintsdragons:nulljaw"), new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
         validMobs.put(new Identifier("saintsdragons:ignivorus"), new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));

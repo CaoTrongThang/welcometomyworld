@@ -223,7 +223,7 @@ public class Blossom extends StrongTameableEntityDefault {
         this.goalSelector.add(1, new SwimGoal(this));
         this.goalSelector.add(2, new CustomSitGoal(this));
         this.goalSelector.add(3, new PatrollingGoal(this));
-        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 15, 25, false));
+        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 20, 30, false));
         this.goalSelector.add(6, new FollowTargetGoal(this, 8.0D, 20.0F, 48.0F));
         this.goalSelector.add(7, new StopWhenUsingSkill(this));
         this.goalSelector.add(8, new CustomFlyingWanderingAroundGoal(this));

@@ -56,7 +56,6 @@ public class WthitPlugin implements IWailaPlugin {
         @Override
         public void appendHead(ITooltip tooltip, IEntityAccessor accessor, IPluginConfig config) {
             if (accessor.getEntity() instanceof StrongTameableEntityDefault entity) {
-                // Your existing logic here
                 MutableText name = Text.literal(entity.getType().getName().getString());
                 if (!entity.isTamed() || entity.getOwner() == null) {
                     name.append(String.format(" (Tame Chance: %d%%)", (int) entity.getTameChance()));

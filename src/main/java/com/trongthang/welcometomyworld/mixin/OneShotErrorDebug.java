@@ -22,7 +22,7 @@ public class OneShotErrorDebug {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
         Entity attacker = damageSource.getAttacker();
 
-        LOGGER.info("==== DEATH DEBUG INFO ====");
+        LOGGER.info("WelcomeToMyWorld ==== DEATH DEBUG INFO ====");
         LOGGER.info("Entity Type: " + livingEntity.getName().getString());
         LOGGER.info("Final Damage Source: " + damageSource.getName());
 
