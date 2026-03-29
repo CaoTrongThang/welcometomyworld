@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-
 //! TODO: some events when playing progressing the world like: mobs could be spawned when players break leaves or stones, punching blocks with bare hand will get damaged
 
 public class WelcomeToMyWorld implements ModInitializer {
@@ -54,10 +53,12 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static final Identifier UPDATE_MOB_STAT = new Identifier(MOD_ID, "update_mob_stat");
     public static final Identifier SYNC_MOB_STATS_CLIENT = new Identifier(MOD_ID, "sync_mob_stats");
 
-    public static final Identifier FIRST_ORIGIN_CHOOSING_SCREEN = new Identifier(MOD_ID, "first_origin_choosing_screen");
+    public static final Identifier FIRST_ORIGIN_CHOOSING_SCREEN = new Identifier(MOD_ID,
+            "first_origin_choosing_screen");
     public static final Identifier STOP_SENDING_ORIGINS_SCREEN = new Identifier(MOD_ID, "stop_sending_origins_screen");
 
-    public static final Identifier FIRST_LOADING_TERRAIN_SCREEN = new Identifier(MOD_ID, "first_loading_terrian_screen");
+    public static final Identifier FIRST_LOADING_TERRAIN_SCREEN = new Identifier(MOD_ID,
+            "first_loading_terrian_screen");
 
     public static final Identifier CLIENT_HAS_DATA = new Identifier(MOD_ID, "client_has_data");
 
@@ -76,7 +77,8 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static final Identifier A_LIVING_CHEST_EAT_ANIMATION = new Identifier(MOD_ID, "eat_animation");
     public static final Identifier A_LIVING_CHEST_ATTACK = new Identifier(MOD_ID, "a_living_chest_attack");
 
-    public static final Identifier PORTALER_COMPLETE_PORTAL_CHANGING = new Identifier(MOD_ID, "portaler_complete_portal_changing");
+    public static final Identifier PORTALER_COMPLETE_PORTAL_CHANGING = new Identifier(MOD_ID,
+            "portaler_complete_portal_changing");
     public static final Identifier PLAY_BELL = new Identifier(MOD_ID, "play_bell");
 
     public static final Identifier SOUND_PACKET_ID = new Identifier(MOD_ID, "sound_packet");
@@ -147,8 +149,7 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         MusicPlayer.initialize();
 
-        ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) ->
-        {
+        ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> {
             performAllActionsFirstJoin(serverPlayNetworkHandler.getPlayer());
 
             UUID playerUUID = serverPlayNetworkHandler.getPlayer().getUuid();
@@ -156,22 +157,23 @@ public class WelcomeToMyWorld implements ModInitializer {
             if (!dataHandler.playerDataMap.containsKey(playerUUID)) {
                 PlayerData pl = dataHandler.playerDataMap.get(playerUUID);
                 if (pl.firstTouchGround) {
-                    ServerPlayNetworking.send(serverPlayNetworkHandler.getPlayer(), CLIENT_HAS_DATA, PacketByteBufs.empty());
+                    ServerPlayNetworking.send(serverPlayNetworkHandler.getPlayer(), CLIENT_HAS_DATA,
+                            PacketByteBufs.empty());
                 }
             }
         });
 
-
         PlayerBlockBreakEvents.AFTER.register((world, playerEntity, blockPos, blockState, blockEntity) -> {
-            if (!canBreakBlockSpawnMobs) return;
-            breakingBlocksSpawnMobsHandler.handleBlockBreakMobSpawn(world, playerEntity, blockPos, blockState, blockEntity);
+            if (!canBreakBlockSpawnMobs)
+                return;
+            breakingBlocksSpawnMobsHandler.handleBlockBreakMobSpawn(world, playerEntity, blockPos, blockState,
+                    blockEntity);
         });
 
         ServerTickEvents.START_SERVER_TICK.register(this::onStartServerTick);
         ServerTickEvents.END_SERVER_TICK.register(this::onEndServerTick);
 
         punchingBlocksPenalties.handlePunchingBlock();
-
 
         deathCounter.startCountingDeaths();
 
@@ -196,24 +198,23 @@ public class WelcomeToMyWorld implements ModInitializer {
         startScheduledSender();
         NoTeleportWithBoat.register();
 
-
-//        // Register a listener for when the server has started
-//        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-//            // Iterate through all registered enchantments
-//            Registries.ENCHANTMENT.forEach(enchantment -> {
-//                // Get the enchantment's registry ID (includes namespace from the mod adding it)
-//                Identifier id = Registries.ENCHANTMENT.getId(enchantment);
-//
-//                // Log details about the enchantment
-//                LOGGER.info("\"" + id + "\"");
-//            });
-//        });
+        // // Register a listener for when the server has started
+        // ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+        // // Iterate through all registered enchantments
+        // Registries.ENCHANTMENT.forEach(enchantment -> {
+        // // Get the enchantment's registry ID (includes namespace from the mod adding
+        // it)
+        // Identifier id = Registries.ENCHANTMENT.getId(enchantment);
+        //
+        // // Log details about the enchantment
+        // LOGGER.info("\"" + id + "\"");
+        // });
+        // });
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             EXECUTOR.shutdown();
         }));
     }
-
 
     private void performAllActionsFirstJoin(ServerPlayerEntity player) {
         UUID playerUUID = player.getUuid();
@@ -221,19 +222,22 @@ public class WelcomeToMyWorld implements ModInitializer {
         LOGGER.info("Checking if player {} is a first-time joiner in this world...", player.getName().getString());
 
         if (!dataHandler.playerDataMap.containsKey(playerUUID)) {
-            LOGGER.info("Player {} is joining for the first time in this world. Adding to firstTimePlayers set and teleporting.", player.getName().getString());
+            LOGGER.info(
+                    "Player {} is joining for the first time in this world. Adding to firstTimePlayers set and teleporting.",
+                    player.getName().getString());
             dataHandler.playerDataMap.put(playerUUID, new PlayerData(true));
             ServerPlayNetworking.send(player, CHANGE_PERSPECTIVE, PacketByteBufs.empty());
         } else {
-            LOGGER.info("Player {} has already joined before in this world. Skipping teleport.", player.getName().getString());
+            LOGGER.info("Player {} has already joined before in this world. Skipping teleport.",
+                    player.getName().getString());
             return;
         }
 
         if (player.isAlive()) {
             if (canSwitchPerspective) {
                 player.sendMessage(
-                        Text.literal("Easycraft - Creator: TrongThang").styled(style -> style.withItalic(true).withColor(Formatting.GRAY))
-                );
+                        Text.literal("Easycraft - Creator: TrongThang")
+                                .styled(style -> style.withItalic(true).withColor(Formatting.GRAY)));
             }
         }
     }
@@ -248,10 +252,10 @@ public class WelcomeToMyWorld implements ModInitializer {
             awakeHandler.awakeCheck(server);
         }
 
-        SpawnSingleMonsterEverySeconds.spawnMonsters(server.getOverworld(), dayAndNightCounterAnimationHandler.currentDay);
+        SpawnSingleMonsterEverySeconds.spawnMonsters(server.getOverworld(),
+                dayAndNightCounterAnimationHandler.currentDay);
 
         HostileMobsAwareness.onServerTick(server);
-
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (ConfigLoader.getInstance().introOfTheWorld) {
@@ -262,12 +266,13 @@ public class WelcomeToMyWorld implements ModInitializer {
                 dayAndNightCounterAnimationHandler.onServerTick(player);
             }
 
-//           if (canNauseaInWater) {
-//               nauseaInWaterHandler.onServerTick(server);
-//           }
+            // if (canNauseaInWater) {
+            // nauseaInWaterHandler.onServerTick(server);
+            // }
 
             if (ConfigLoader.getInstance().giveStartingItems) {
-                GiveStartingItemsHandler.giveItemHandler(player, ConfigLoader.getInstance().clearItemsBeforeGivingStartingItems);
+                GiveStartingItemsHandler.giveItemHandler(player,
+                        ConfigLoader.getInstance().clearItemsBeforeGivingStartingItems);
             }
         }
 
@@ -296,7 +301,7 @@ public class WelcomeToMyWorld implements ModInitializer {
             lightningsStrikePlayersInRain.onServerTick(server);
         }
 
-        if (canNauseaInWater){
+        if (canNauseaInWater) {
             nauseaInWaterHandler.onServerTick(server);
         }
 
@@ -311,14 +316,12 @@ public class WelcomeToMyWorld implements ModInitializer {
         introOfTheWorldHandler.registerIntroEvents();
     }
 
-    private static final ScheduledExecutorService SCHEDULER =
-            Executors.newScheduledThreadPool(1);
+    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
 
     private void startScheduledSender() {
         SCHEDULER.scheduleAtFixedRate(() -> {
             if (server != null && !ConfigLoader.getInstance().urlToSendChart.equalsIgnoreCase("none")) {
-                Collection<ServerPlayerEntity> onlinePlayers =
-                        server.getPlayerManager().getPlayerList();
+                Collection<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
                 if (!onlinePlayers.isEmpty()) {
                     sendPlayerDataBatch(onlinePlayers);
                 }
@@ -351,8 +354,7 @@ public class WelcomeToMyWorld implements ModInitializer {
                             player.getName().getString(),
                             dayAndNightCounterAnimationHandler.currentDay,
                             modpackName,
-                            modpackVersion
-                    ));
+                            modpackVersion));
                     first = false;
                 }
 

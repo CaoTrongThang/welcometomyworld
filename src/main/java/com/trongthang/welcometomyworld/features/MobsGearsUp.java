@@ -117,6 +117,8 @@ public class MobsGearsUp {
 
         validMobs.put(new Identifier("palegardenbackport:creaking"), new MobSettings());
 
+        validMobs.put(new Identifier("eldritch_end:eye"), new MobSettings().setOffhand(false).setMelee(false));
+
         validEnchantments.add(new Identifier("minecraft:protection"));
         validEnchantments.add(new Identifier("minecraft:fire_protection"));
         validEnchantments.add(new Identifier("minecraft:feather_falling"));

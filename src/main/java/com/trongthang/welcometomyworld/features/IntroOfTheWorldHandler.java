@@ -24,9 +24,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Random;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
@@ -45,17 +42,19 @@ public class IntroOfTheWorldHandler {
     public static boolean firstTimeLoadChunkIntro = false;
 
     public void teleportPlayersToSkyFirstJoin(ServerPlayerEntity player) {
-        //teleport player to the sky
+        // teleport player to the sky
         Vec3d skyPosition = new Vec3d(player.getX(), 400, player.getZ());
         player.teleport(skyPosition.x, skyPosition.y, skyPosition.z);
-//        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 160, 128));
+        // player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE,
+        // 160, 128));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 80, 0));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 150, 4));
     }
 
-    //THIS IS A FUCKING MESS, DON'T READ
+    // THIS IS A FUCKING MESS, DON'T READ
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
-        if (player.getWorld().isClient) return;
+        if (player.getWorld().isClient)
+            return;
         PlayerData playerData = dataHandler.playerDataMap.get(player.getUuid());
         ServerWorld world = player.getServerWorld();
 
@@ -63,7 +62,8 @@ public class IntroOfTheWorldHandler {
             firstTimeLoadChunkIntro = true;
         }
 
-        if (!playerData.firstTouchGround || !playerData.firstTeleportedToSky || !playerData.completeOriginSelectingScreen || !playerData.completeLoadingTerrainScreen ) {
+        if (!playerData.firstTouchGround || !playerData.firstTeleportedToSky
+                || !playerData.completeOriginSelectingScreen || !playerData.completeLoadingTerrainScreen) {
             if (player.isCreative()) {
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 return;
@@ -105,7 +105,7 @@ public class IntroOfTheWorldHandler {
             if (player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
                 teleportPlayersToSkyFirstJoin(player);
 
-                if(!playerData.completeSpawningParticles){
+                if (!playerData.completeSpawningParticles) {
                     for (int x = 1; x < 40; x++) {
                         Utils.addRunAfter(() -> {
                             Utils.spawnCircleParticles(player);
@@ -131,14 +131,16 @@ public class IntroOfTheWorldHandler {
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
             }
-        };
+        }
+        ;
 
         if (!playerData.firstTeleportedToSky && player.getY() >= 350) {
             playerData.firstTeleportedToSky = true;
             ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
         }
 
-        if (playerData.firstTouchGround || !playerData.firstTeleportedToSky) return;
+        if (playerData.firstTouchGround || !playerData.firstTeleportedToSky)
+            return;
 
         if (playerData.completeOriginSelectingScreen && !playerData.completeSpawningParticles) {
             Utils.spawnCircleParticles(player);
@@ -178,14 +180,16 @@ public class IntroOfTheWorldHandler {
 
                 // Create an explosion at the player's landing position
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
-                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F, World.ExplosionSourceType.TNT);
+                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F,
+                        World.ExplosionSourceType.TNT);
 
                 player.setVelocity(player.getVelocity().x, 1.2, player.getVelocity().z); // Small upward bounce
                 player.velocityModified = true; // Ensure the velocity is synced to the client
                 Utils.addRunAfter(() -> {
                     player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4));
                 }, 20);
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
+                player.addStatusEffect(
+                        new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
 
                 spawnLandEffect(player);
                 SpawnParticiles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
@@ -201,14 +205,16 @@ public class IntroOfTheWorldHandler {
         } else {
             if (Utils.isPlayerStandingOnBlock(player) && player.getHealth() > 0) {
                 BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
-                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F, World.ExplosionSourceType.TNT);
+                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F,
+                        World.ExplosionSourceType.TNT);
                 playerData.completeLoadingTerrainScreen = true;
                 player.setVelocity(player.getVelocity().x, 1.2, player.getVelocity().z); // Small upward bounce
                 player.velocityModified = true; // Ensure the velocity is synced to the client
                 Utils.addRunAfter(() -> {
                     player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4));
                 }, 20);
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
+                player.addStatusEffect(
+                        new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
 
                 spawnLandEffect(player);
                 SpawnParticiles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
@@ -232,8 +238,7 @@ public class IntroOfTheWorldHandler {
                     player.getX() + (world.random.nextDouble() - 0.5) * 0.5,
                     player.getY() + world.random.nextDouble() * 1.0,
                     player.getZ() + (world.random.nextDouble() - 0.5) * 0.5,
-                    0, 0, 0, 0, 0.05
-            );
+                    0, 0, 0, 0, 0.05);
         }
     }
 
@@ -241,7 +246,8 @@ public class IntroOfTheWorldHandler {
         if (ConfigLoader.getInstance().introOfTheWorld) {
             ServerPlayerEvents.AFTER_RESPAWN.register((serverPlayerEntity1, serverPlayerEntity, c) -> {
                 PlayerData playerData = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
-                if (playerData == null) return;
+                if (playerData == null)
+                    return;
 
                 if (!playerData.introMessageAfterDeath) {
                     playerData.introMessageAfterDeath = true;
@@ -249,82 +255,93 @@ public class IntroOfTheWorldHandler {
                 }
             });
 
-            ServerPlayNetworking.registerGlobalReceiver(FIRST_ORIGIN_CHOOSING_SCREEN, (server, p, handler, buf, responseSender) -> {
-                // Read all data from the buffer immediately
-                int state = buf.readInt();
+            ServerPlayNetworking.registerGlobalReceiver(FIRST_ORIGIN_CHOOSING_SCREEN,
+                    (server, p, handler, buf, responseSender) -> {
+                        // Read all data from the buffer immediately
+                        int state = buf.readInt();
 
-                server.execute(() -> {
-                    // Validate that the player exists
-                    if (p == null) {
-                        return;
-                    }
+                        server.execute(() -> {
+                            // Validate that the player exists
+                            if (p == null) {
+                                return;
+                            }
 
-                    // Access player data
-                    PlayerData playerData = dataHandler.playerDataMap.get(p.getUuid());
+                            // Access player data
+                            PlayerData playerData = dataHandler.playerDataMap.get(p.getUuid());
 
-                    if (playerData == null) {
-                        return;
-                    }
+                            if (playerData == null) {
+                                return;
+                            }
 
-                    if (playerData.completeOriginSelectingScreen) return;
+                            if (playerData.completeOriginSelectingScreen)
+                                return;
 
-                    if (state == 1) {
-                        playerData.firstOriginSelectingScreen = true;
-                    }
+                            if (state == 1) {
+                                playerData.firstOriginSelectingScreen = true;
+                            }
 
-                    if (state == 0 && playerData.firstOriginSelectingScreen) {
-                        playerData.completeOriginSelectingScreen = true;
-                        ServerPlayNetworking.send(p, STOP_SENDING_ORIGINS_SCREEN, PacketByteBufs.empty());
-                    }
-                });
-            });
+                            if (state == 0 && playerData.firstOriginSelectingScreen) {
+                                playerData.completeOriginSelectingScreen = true;
+                                ServerPlayNetworking.send(p, STOP_SENDING_ORIGINS_SCREEN, PacketByteBufs.empty());
+                            }
+                        });
+                    });
 
-            ServerPlayNetworking.registerGlobalReceiver(FIRST_LOADING_TERRAIN_SCREEN, (server, p, handler, buf, responseSender) -> {
-                // Read all data from the buffer immediately
-                int state = buf.readInt();
+            ServerPlayNetworking.registerGlobalReceiver(FIRST_LOADING_TERRAIN_SCREEN,
+                    (server, p, handler, buf, responseSender) -> {
+                        // Read all data from the buffer immediately
+                        int state = buf.readInt();
 
-                server.execute(() -> {
-                    // Validate that the player exists
-                    if (p == null) {
-                        return;
-                    }
+                        server.execute(() -> {
+                            // Validate that the player exists
+                            if (p == null) {
+                                return;
+                            }
 
-                    // Access player data
-                    PlayerData playerData = dataHandler.playerDataMap.get(p.getUuid());
+                            // Access player data
+                            PlayerData playerData = dataHandler.playerDataMap.get(p.getUuid());
 
-                    if (playerData == null) {
-                        return;
-                    }
+                            if (playerData == null) {
+                                return;
+                            }
 
-                    if (playerData.completeLoadingTerrainScreen) return;
+                            if (playerData.completeLoadingTerrainScreen)
+                                return;
 
-                    playerData.completeLoadingTerrainScreen = true;
-                });
-            });
+                            playerData.completeLoadingTerrainScreen = true;
+                        });
+                    });
         }
     }
 
-
     public void introMessages(ServerPlayerEntity player, boolean isDeath) {
-        //There're 2 cases will happen, one is the npc couldn't protect the player and let them fall to the ground lead to their death and respawn, second is
-        //the NPC successfully protected the player from falling from the summon ritual, both will have different messages from the NPC
+        // There're 2 cases will happen, one is the npc couldn't protect the player and
+        // let them fall to the ground lead to their death and respawn, second is
+        // the NPC successfully protected the player from falling from the summon
+        // ritual, both will have different messages from the NPC
 
         if (!isDeath) {
             Utils.UTILS.sendTextAfter(player, "Whew, that was close!", 20);
             Utils.UTILS.sendTextAfter(player, "That was a hard land, try pulling your self together.", 4 * 20);
-            Utils.UTILS.sendTextAfter(player, "Feeling less dizzy now? It looks like you're done with your old world... so welcome to this new one!", 13 * 20);
-            Utils.UTILS.sendTextAfter(player, "Oh, and here's a small gift for you. Sorry about the botched summoning ritual.", 18 * 20);
+            Utils.UTILS.sendTextAfter(player,
+                    "Feeling less dizzy now? It looks like you're done with your old world... so welcome to this new one!",
+                    13 * 20);
+            Utils.UTILS.sendTextAfter(player,
+                    "Oh, and here's a small gift for you. Sorry about the botched summoning ritual.", 18 * 20);
 
             Utils.addRunAfter(() -> {
                 giveStartingItemsHandler.giveMoreItems(player);
             }, 21 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.", 24 * 20);
+            Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.",
+                    24 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "I think I have a book that might help you progress in this magical world...", 28 * 20);
+            Utils.UTILS.sendTextAfter(player,
+                    "I think I have a book that might help you progress in this magical world...", 28 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item ID and quantity
+                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item
+                                                                                               // ID and quantity
                 if (book != null) {
                     GiveStartingItemsHandler.dropItemToPlayer(player, book);
                 }
@@ -342,54 +359,75 @@ public class IntroOfTheWorldHandler {
 
         } else {
             if (player.getWorld().getLevelProperties().isHardcore()) {
-                Utils.UTILS.sendTextAfter(player, "Oops, my protection spell came a bit late... Looks like it's time to create a new world!");
+                Utils.UTILS.sendTextAfter(player,
+                        "Oops, my protection spell came a bit late... Looks like it's time to create a new world!");
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
                 return;
             }
 
             Utils.UTILS.sendTextAfter(player, "Well, that was a disaster. I'm getting too old for this...", 2 * 20);
             Utils.UTILS.sendTextAfter(player, "But let's not dwell on the past. Welcome to this new world!", 6 * 20);
-            Utils.UTILS.sendTextAfter(player, "I can tell you're looking for adventure. That's why I summoned you here. Now, hold on a moment...", 10 * 20);
-
+            Utils.UTILS.sendTextAfter(player,
+                    "I can tell you're looking for adventure. That's why I summoned you here. Now, hold on a moment...",
+                    10 * 20);
 
             Utils.addRunAfter(() -> {
                 giveStartingItemsHandler.giveMoreItems(player);
             }, 14 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "Here you go—a, we've a 'friend' to keep you company, and a controller so you can guide it.", 15 * 20);
-            Utils.UTILS.sendTextAfter(player, "Well, maybe 'friendship' isn't the healthiest way to describe this...", 18 * 20);
+            Utils.UTILS.sendTextAfter(player,
+                    "Here you go—a, we've a 'friend' to keep you company, and a controller so you can guide it.",
+                    15 * 20);
+            Utils.UTILS.sendTextAfter(player, "Well, maybe 'friendship' isn't the healthiest way to describe this...",
+                    18 * 20);
 
             Utils.UTILS.sendTextAfter(player, "There's more, i think there's something for you to eat...", 21 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:cheese_wheel", 1); // Change to mod's item ID and quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:cheese_wheel", 1); // Change
+                                                                                                             // to mod's
+                                                                                                             // item ID
+                                                                                                             // and
+                                                                                                             // quantity
                 if (food != null) {
                     GiveStartingItemsHandler.dropItemToPlayer(player, food);
                 }
             }, 23 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:chocolate_cooke", 1); // Change to mod's item ID and quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:chocolate_cooke", 1); // Change
+                                                                                                                // to
+                                                                                                                // mod's
+                                                                                                                // item
+                                                                                                                // ID
+                                                                                                                // and
+                                                                                                                // quantity
                 if (food != null) {
                     GiveStartingItemsHandler.dropItemToPlayer(player, food);
                 }
             }, 25 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:steamed_rice", 1); // Change to mod's item ID and quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:steamed_rice", 1); // Change to
+                                                                                                       // mod's item ID
+                                                                                                       // and quantity
                 if (food != null) {
                     GiveStartingItemsHandler.dropItemToPlayer(player, food);
                 }
             }, 27 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:cooked_bacon", 1); // Change to mod's item ID and quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:cooked_bacon", 1); // Change to
+                                                                                                       // mod's item ID
+                                                                                                       // and quantity
                 if (food != null) {
                     GiveStartingItemsHandler.dropItemToPlayer(player, food);
                 }
             }, 29 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "I don't really into cooking much, so that's all from me, but the most important is... Enjoy Your New World!", 31 * 20);
+            Utils.UTILS.sendTextAfter(player,
+                    "I don't really into cooking much, so that's all from me, but the most important is... Enjoy Your New World!",
+                    31 * 20);
 
             Utils.addRunAfter(() -> {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
@@ -398,7 +436,8 @@ public class IntroOfTheWorldHandler {
             Utils.UTILS.sendTextAfter(player, "Wait, I forgot a really useful book, here you go", 42 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item ID and quantity
+                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item
+                                                                                               // ID and quantity
                 if (book != null) {
                     GiveStartingItemsHandler.dropItemToPlayer(player, book);
                 }
@@ -407,9 +446,11 @@ public class IntroOfTheWorldHandler {
     }
 
     public void spawnBlossom(ServerWorld world, PlayerEntity player) {
-        if (world.isClient) return;
+        if (world.isClient)
+            return;
 
-        if (player == null) return;
+        if (player == null)
+            return;
 
         Blossom blossom = EntitiesManager.BLOSSOM.create(world.toServerWorld());
 
@@ -427,7 +468,6 @@ public class IntroOfTheWorldHandler {
             Utils.addRunAfter(() -> {
                 blossom.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, player.getPos());
             }, 5);
-
 
             blossom.setIsGreeting(true);
             blossom.greetingTarget = player;
@@ -466,7 +506,8 @@ public class IntroOfTheWorldHandler {
         }
 
         // Check if position is within world bounds
-        if (!world.isInBuildLimit(pos)) return false;
+        if (!world.isInBuildLimit(pos))
+            return false;
 
         // Check block states only if chunk is loaded
         return world.getBlockState(pos).isAir() &&
@@ -475,7 +516,8 @@ public class IntroOfTheWorldHandler {
 
     private static BlockPos findSafeBelow(ServerWorld world, BlockPos startPos, ChunkPos centerChunk) {
         // Limit search to original chunk
-        if (!isSameChunk(startPos, centerChunk)) return null;
+        if (!isSameChunk(startPos, centerChunk))
+            return null;
 
         for (int i = 0; i < 5; i++) {
             BlockPos checkPos = startPos.down(i);
@@ -523,13 +565,13 @@ public class IntroOfTheWorldHandler {
         return new BlockPos(
                 (int) Math.floor(player.getX() + xOffset),
                 (int) Math.floor(player.getY() + 1.5), // Head height
-                (int) Math.floor(player.getZ() + zOffset)
-        );
+                (int) Math.floor(player.getZ() + zOffset));
     }
 
     private static boolean isPositionSafe(World world, BlockPos pos) {
         // Check if position is within world bounds
-        if (!world.isInBuildLimit(pos)) return false;
+        if (!world.isInBuildLimit(pos))
+            return false;
 
         // Check if block is passable and has space
         return world.getBlockState(pos).isAir() &&
@@ -545,14 +587,14 @@ public class IntroOfTheWorldHandler {
             }
         }
 
-
         return null;
     }
 
     public void spawnPhantom(ServerWorld world, PlayerEntity player) {
         // Get player's current position
 
-        if (player == null) return;
+        if (player == null)
+            return;
 
         int addDistance = 20;
         int distance = 80;
@@ -565,11 +607,13 @@ public class IntroOfTheWorldHandler {
             double offsetZ = (world.getRandom().nextDouble() - 0.5) * 2 * distance;
 
             // Calculate the spawn position
-            BlockPos spawnPos = new BlockPos((int) (playerPos.x + offsetX), (int) (playerPos.y + offsetY), (int) (playerPos.z + offsetZ));
+            BlockPos spawnPos = new BlockPos((int) (playerPos.x + offsetX), (int) (playerPos.y + offsetY),
+                    (int) (playerPos.z + offsetZ));
             // Create and spawn the Phantom entity
             PhantomEntity phantom = EntityType.PHANTOM.create(world.toServerWorld());
 
-            if (!world.getBlockState(spawnPos).isAir()) continue;
+            if (!world.getBlockState(spawnPos).isAir())
+                continue;
 
             if (phantom != null) {
                 phantom.setPhantomSize(rand.nextInt(50, 200));
@@ -585,8 +629,10 @@ public class IntroOfTheWorldHandler {
         double offsetZ = (world.getRandom().nextDouble() - 0.5) * 2 * 80;
 
         // Calculate the spawn position
-        BlockPos spawnPos = new BlockPos((int) (playerPos.x + offsetX), (int) (playerPos.y + offsetY), (int) (playerPos.z + offsetZ));
-        if (!world.getBlockState(spawnPos).isAir()) return;
+        BlockPos spawnPos = new BlockPos((int) (playerPos.x + offsetX), (int) (playerPos.y + offsetY),
+                (int) (playerPos.z + offsetZ));
+        if (!world.getBlockState(spawnPos).isAir())
+            return;
 
         // Create and spawn the Phantom entity
         PhantomEntity phantom = EntityType.PHANTOM.create(world.toServerWorld());

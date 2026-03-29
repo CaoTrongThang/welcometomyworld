@@ -405,17 +405,17 @@ public class BalanceDamageForBossesOrMobsFromOtherMods {
                     return originalDamage;
                 }
 
-                 WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
-                 WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
-                 WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
-                 WelcomeToMyWorld.LOGGER.info("ID ATTACKER: " + Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
-                 WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
+//                 WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
+//                 WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
+//                 WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
+//                 WelcomeToMyWorld.LOGGER.info("ID ATTACKER: " + Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
+//                 WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
 
                 DamageCalculator calculator = DAMAGE_MODIFIERS.get(Registries.ENTITY_TYPE.getId(attacker.getType()));
 
                 if (calculator != null) {
                     float scaledDamage = calculator.calculate(originalDamage, (LivingEntity) attacker, source);
-                    WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
+                    //WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
                     return scaledDamage;
                 }
             }
