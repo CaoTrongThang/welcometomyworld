@@ -1,0 +1,43 @@
+
+> Configure project :
+Fabric Loom: 1.8.13
+
+> Task :compileJava
+C:\JavaProjects\welcome-to-my-world-1.20.1\src\main\java\com\trongthang\welcometomyworld\entities\Blossom.java:221: error: cannot find symbol
+        this.goalSelector.add(1, new StopWhenUsingSkillGoal(this));
+                                     ^
+  symbol:   class StopWhenUsingSkillGoal
+  location: class Blossom
+C:\JavaProjects\welcome-to-my-world-1.20.1\src\main\java\com\trongthang\welcometomyworld\entities\Blossom.java:223: error: cannot find symbol
+        this.goalSelector.add(2, new FlyingPatrollingGoal(this, this.patrolRadius));
+                                     ^
+  symbol:   class FlyingPatrollingGoal
+  location: class Blossom
+C:\JavaProjects\welcome-to-my-world-1.20.1\src\main\java\com\trongthang\welcometomyworld\entities\Blossom.java:234: error: cannot infer type arguments for UniversalAngerGoal<>
+        this.targetSelector.add(4, new UniversalAngerGoal<>(this, true));
+                                   ^
+  reason: inference variable T has incompatible bounds
+    upper bounds: MobEntity,Angerable
+    lower bounds: Blossom
+  where T is a type-variable:
+    T extends MobEntity,Angerable declared in class UniversalAngerGoal
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+3 errors
+
+> Task :compileJava FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+
+BUILD FAILED in 13s
+1 actionable task: 1 executed

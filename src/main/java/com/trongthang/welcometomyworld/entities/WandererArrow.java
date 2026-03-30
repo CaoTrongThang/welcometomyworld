@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.entities;
 
+import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -20,11 +21,11 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import static com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight.spawnParticles;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static com.trongthang.welcometomyworld.entities.FallenKnight.spawnParticles;
 
 public class WandererArrow extends PersistentProjectileEntity {
 
@@ -52,7 +53,8 @@ public class WandererArrow extends PersistentProjectileEntity {
     @Override
     public void tick() {
         super.tick();
-        if (!this.getWorld().isClient) return; // Only spawn particles on the client side
+        if (!this.getWorld().isClient)
+            return; // Only spawn particles on the client side
 
         // Get the arrow's current position
         Vec3d pos = this.getPos();
@@ -78,7 +80,8 @@ public class WandererArrow extends PersistentProjectileEntity {
     @Override
     protected void onBlockHit(BlockHitResult blockHitResult) {
         super.onBlockHit(blockHitResult);
-        if(!canExplode) return;
+        if (!canExplode)
+            return;
         createShockwave();
     }
 
@@ -90,8 +93,9 @@ public class WandererArrow extends PersistentProjectileEntity {
 
         LivingEntity owner = (LivingEntity) this.getOwner();
 
-        if(owner != null){
-            entity.damage(this.getWorld().getDamageSources().mobAttack((LivingEntity) this.getOwner()), (float)(owner.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)));
+        if (owner != null) {
+            entity.damage(this.getWorld().getDamageSources().mobAttack((LivingEntity) this.getOwner()),
+                    (float) (owner.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)));
         }
 
         if (entity instanceof LivingEntity livingEntity) {
@@ -105,8 +109,9 @@ public class WandererArrow extends PersistentProjectileEntity {
     @Override
     public boolean canHit(Entity target) {
         // Check if the target is the owner of the arrow
-        if(this.getOwner() instanceof TameableEntity tameable){
-            if(tameable.getOwner() == target) return false;
+        if (this.getOwner() instanceof TameableEntity tameable) {
+            if (tameable.getOwner() == target)
+                return false;
         }
 
         if (target instanceof PersistentProjectileEntity) {
@@ -114,19 +119,22 @@ public class WandererArrow extends PersistentProjectileEntity {
         }
 
         if (this.getOwner() != null) {
-            if (target == this.getOwner()) return false;
+            if (target == this.getOwner())
+                return false;
         }
 
         if (target instanceof TameableEntity tameable) {
-            if(this.getOwner() instanceof TameableEntity tameable1){
+            if (this.getOwner() instanceof TameableEntity tameable1) {
                 if (tameable.isTamed() && tameable.getOwner() != null) {
-                    if (tameable.getOwner() == tameable1.getOwner()) return false;
+                    if (tameable.getOwner() == tameable1.getOwner())
+                        return false;
                 }
             }
         }
 
-        if (target instanceof Wanderer targetWanderer) {{
-                if(this.getOwner() instanceof TameableEntity tameable){
+        if (target instanceof Wanderer targetWanderer) {
+            {
+                if (this.getOwner() instanceof TameableEntity tameable) {
                     if (!targetWanderer.isTamed() && !tameable.isTamed()) {
                         return false;
                     }
@@ -147,7 +155,8 @@ public class WandererArrow extends PersistentProjectileEntity {
             BlockPos center = this.getBlockPos();
 
             Box checkArea = new Box(this.getBlockPos()).expand(explosionRange);
-            List<LivingEntity> damageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea, entity -> true);
+            List<LivingEntity> damageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
+                    entity -> true);
 
             // Set to track blocks where particles have been spawned
             Set<BlockPos> particleSpawnedBlocks = new HashSet<>();
@@ -173,19 +182,18 @@ public class WandererArrow extends PersistentProjectileEntity {
                 }
             }
 
-
             for (LivingEntity target : damageTarget) {
-                if(this.getOwner() instanceof TameableEntity tameable){
-                    if(tameable.getOwner() == target) continue;
+                if (this.getOwner() instanceof TameableEntity tameable) {
+                    if (tameable.getOwner() == target)
+                        continue;
 
                     if (target instanceof TameableEntity targetTameable) {
                         if (targetTameable.isTamed() && targetTameable.getOwner() != null) {
-                            if (targetTameable.getOwner() == tameable.getOwner()) continue;
+                            if (targetTameable.getOwner() == tameable.getOwner())
+                                continue;
                         }
                     }
                 }
-
-
 
                 // Handle FallenKnight-specific logic
                 if (target instanceof Wanderer wanderer) {
@@ -202,8 +210,9 @@ public class WandererArrow extends PersistentProjectileEntity {
                     }
                 }
 
-                if(((TameableEntity)this.getOwner()) != null){
-                    float damage = (float) ((TameableEntity) this.getOwner()).getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
+                if (((TameableEntity) this.getOwner()) != null) {
+                    float damage = (float) ((TameableEntity) this.getOwner()).getAttributes()
+                            .getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
                     target.damage(this.getWorld().getDamageSources().mobAttack((LivingEntity) this.getOwner()), damage);
                 }
             }

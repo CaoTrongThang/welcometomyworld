@@ -1,4 +1,4 @@
-package com.trongthang.welcometomyworld.entities;
+package com.trongthang.welcometomyworld.entities.FallenKnight;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
@@ -40,6 +40,7 @@ import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -48,6 +49,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.EntityView;
@@ -66,20 +68,20 @@ public class FallenKnight extends StrongTameableEntityDefault {
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
     private static final int WALK_CYCLE_DURATION_MS = 4000;
-    private static final int[] FOOTSTEP_TIMINGS_MS = {1080, 3210};
+    private static final int[] FOOTSTEP_TIMINGS_MS = { 1080, 3210 };
 
     private int previousWalkPosition = -1;
 
     private static final int ATTACK_2_DURATION_MS = 1460;
-    private static final int[] ATTACK_2_SOUND_TIMINGS_MS = {670};
+    private static final int[] ATTACK_2_SOUND_TIMINGS_MS = { 670 };
     private final Set<Integer> attack2PlayedFrames = new HashSet<>();
 
     private static final int ATTACK_3_DURATION_MS = 2500;
-    private static final int[] ATTACK_3_SOUND_TIMINGS_MS = {400, 1220};
+    private static final int[] ATTACK_3_SOUND_TIMINGS_MS = { 400, 1220 };
     private final Set<Integer> attack3PlayedFrames = new HashSet<>();
 
     private static final int TELEPORT_DURATION_MS = 8000;
-    private static final int[] TELEPORT_SOUND_TIMINGS_MS = {0, 4300, 4900};
+    private static final int[] TELEPORT_SOUND_TIMINGS_MS = { 0, 4300, 4900 };
     private final Set<Integer> teleportPlayedFrames = new HashSet<>();
 
     public final AnimationState idleAnimationState = new AnimationState();
@@ -134,14 +136,18 @@ public class FallenKnight extends StrongTameableEntityDefault {
             double scale = WelcomeToMyWorld.random.nextDouble(1, maxScale);
             skillCooldownDecreasedBasedOnMobScale = scale;
 
-
-            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
-            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 3));
-            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 5F));
-            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
+            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
+                    .setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
+            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(
+                    this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 3));
+            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR)
+                    .setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 5F));
+            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(
+                    this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
 
             if (skillCooldownDecreasedBasedOnMobScale / 3 > 1) {
-                this.setAllSkillCooldown((float) (this.getAllSkillCooldown() / (skillCooldownDecreasedBasedOnMobScale / 3)));
+                this.setAllSkillCooldown(
+                        (float) (this.getAllSkillCooldown() / (skillCooldownDecreasedBasedOnMobScale / 3)));
             }
 
             if (this.getAllSkillCooldown() <= 80) {
@@ -175,7 +181,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
         return new Identifier("welcometomyworld", "entities/fallen_knight");
     }
 
-
     @Override
     public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
         return false;
@@ -207,11 +212,11 @@ public class FallenKnight extends StrongTameableEntityDefault {
         super.tick();
         setAnimationStates();
 
-//        if (this.getWorld().isClient) {
-//            WelcomeToMyWorld.LOGGER.info("[CLIENT] SITTING: " + this.isInSittingPose());
-//        } else {
-//            WelcomeToMyWorld.LOGGER.info("[SERVER] SITTING: " + this.isInSittingPose());
-//        }
+        // if (this.getWorld().isClient) {
+        // WelcomeToMyWorld.LOGGER.info("[CLIENT] SITTING: " + this.isInSittingPose());
+        // } else {
+        // WelcomeToMyWorld.LOGGER.info("[SERVER] SITTING: " + this.isInSittingPose());
+        // }
 
         if (!this.getWorld().isClient) {
             if (this.getTarget() != null) {
@@ -228,7 +233,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
         usingSkillsHandler();
         handleAnimationSoundsAndEffect();
     }
-
 
     public void setAnimationStates() {
         if (this.getWorld().isClient) {
@@ -253,7 +257,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     }
                 }
 
-
             } else if (this.getCanBeTamed() && this.getOwner() == null) {
                 if (!this.tameableAnimationState.isRunning()) {
                     this.startAnimation(AnimationName.TAMEABLE);
@@ -261,15 +264,20 @@ public class FallenKnight extends StrongTameableEntityDefault {
             }
         } else {
             if (!this.getCanBeTamedSet()) {
-                if (this.getHealth() <= this.getMaxHealth() * percentHealthToBeTamed && (this.getOwner() == null || !this.isTamed())) {
+                if (this.getHealth() <= this.getMaxHealth() * percentHealthToBeTamed
+                        && (this.getOwner() == null || !this.isTamed())) {
                     if (!this.getCanBeTamed()) {
                         this.setCanBeTamed(WelcomeToMyWorld.random.nextInt(0, 100) < this.canBeTamedChance);
 
                         this.setCanBeTamedSet(true);
 
                         if (this.getCanBeTamed()) {
-                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_ARMOR_SHAKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
-                            Utils.addRunAfter(() -> Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_FALL, 0.5f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f)), 12);
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.FALLEN_KNIGHT_ARMOR_SHAKING, 0.8f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
+                            Utils.addRunAfter(() -> Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.FALLEN_KNIGHT_FALL, 0.5f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f)), 12);
                         }
                     }
                 }
@@ -296,12 +304,14 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 double distance = this.distanceTo(this.getTarget());
                 int timeout = 0;
 
-                if (distance > 15 || (this.getTarget().getY() > this.getY() && (Math.abs(this.getTarget().getY() - this.getY()) > 4))) {
+                if (distance > 15 || (this.getTarget().getY() > this.getY()
+                        && (Math.abs(this.getTarget().getY() - this.getY()) > 4))) {
                     timeout = 160;
                     Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
                     Utils.addRunAfter(() -> {
                         if (this.getTarget() != null) {
-                            this.teleport(this.getTarget().getX(), this.getTarget().getY() + 1, this.getTarget().getZ());
+                            this.teleport(this.getTarget().getX(), this.getTarget().getY() + 1,
+                                    this.getTarget().getZ());
                         }
                     }, 70);
                     Utils.addRunAfter(() -> {
@@ -343,7 +353,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                         Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
                         Utils.addRunAfter(() -> {
                             if (this.getTarget() != null) {
-                                this.teleport(this.getTarget().getX(), this.getTarget().getY() + 1, this.getTarget().getZ());
+                                this.teleport(this.getTarget().getX(), this.getTarget().getY() + 1,
+                                        this.getTarget().getZ());
                             }
                         }, 70);
                         Utils.addRunAfter(() -> {
@@ -365,9 +376,9 @@ public class FallenKnight extends StrongTameableEntityDefault {
         }, timeout);
     }
 
-
     private void handleAnimationSoundsAndEffect() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         if (walkAnimationState.isRunning()) {
             handleWalkSounds();
@@ -387,7 +398,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
     }
 
     private void handleWalkSounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         long animTime = walkAnimationState.getTimeRunning();
         int currentPos = (int) (animTime % WALK_CYCLE_DURATION_MS);
@@ -399,10 +411,9 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 boolean normalCross = previousWalkPosition < timingInCycle && currentPos >= timingInCycle;
                 boolean wrapAround = timingInCycle == 0 && previousWalkPosition > currentPos;
 
-
                 if (normalCross || wrapAround) {
-//                    Utils.sendSoundPacket(SoundsManager.FALLEN_KNIGHT_STEP, this.getBlockPos());
-                    //        Utils.sendSoundPacket(soundId, this.getBlockPos());
+                    // Utils.sendSoundPacket(SoundsManager.FALLEN_KNIGHT_STEP, this.getBlockPos());
+                    // Utils.sendSoundPacket(soundId, this.getBlockPos());
                     Utils.playClientSound(this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_STEP, 20);
                 }
             }
@@ -411,7 +422,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
     }
 
     private void handleAttack2Sounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         long animTime = attack2AnimationState.getTimeRunning();
         int currentPos = (int) (animTime % ATTACK_2_DURATION_MS);
@@ -442,13 +454,15 @@ public class FallenKnight extends StrongTameableEntityDefault {
             soundId = SoundsManager.FALLEN_KNIGHT_SWING;
         }
 
-        if (soundId == null) return;
+        if (soundId == null)
+            return;
 
         Utils.sendSoundPacketFromClient(soundId, this.getBlockPos());
     }
 
     private void handleAttack3Sounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         long animTime = attack3AnimationState.getTimeRunning();
         int currentPos = (int) (animTime % ATTACK_3_DURATION_MS);
@@ -481,14 +495,16 @@ public class FallenKnight extends StrongTameableEntityDefault {
             soundId = SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT;
         }
 
-        if (soundId == null) return;
+        if (soundId == null)
+            return;
 
-//        Utils.sendSoundPacket(soundId, getBlockPos());
+        // Utils.sendSoundPacket(soundId, getBlockPos());
         Utils.playClientSound(this.getBlockPos(), soundId, 30);
     }
 
     private void handleTeleportSounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         long animTime = teleportAnimationState.getTimeRunning();
         int currentPos = (int) animTime; // Remove modulo
@@ -523,13 +539,12 @@ public class FallenKnight extends StrongTameableEntityDefault {
             soundId = SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT;
         }
 
-        if (soundId == null) return;
+        if (soundId == null)
+            return;
         Utils.playClientSound(this.getBlockPos(), soundId, 30);
-//        Utils.sendSoundPacket(soundId, this.getBlockPos());
-
+        // Utils.sendSoundPacket(soundId, this.getBlockPos());
 
     }
-
 
     private void createShockwave() {
         if (!this.getWorld().isClient) {
@@ -537,8 +552,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
             BlockPos center = this.getBlockPos();
 
             Box checkArea = new Box(center).expand(attack3Range);
-            List<LivingEntity> damageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea, entity -> true);
-
+            List<LivingEntity> damageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
+                    entity -> true);
 
             for (int x = -attack3Range; x <= attack3Range; x++) {
                 for (int z = -attack3Range; z <= attack3Range; z++) {
@@ -562,15 +577,17 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 }
             }
 
-
             for (LivingEntity target : damageTarget) {
-                if (target == this) continue;
+                if (target == this)
+                    continue;
                 if (this.getOwner() != null) {
-                    if (target == this.getOwner()) continue;
+                    if (target == this.getOwner())
+                        continue;
                 }
                 if (target instanceof TameableEntity tameable) {
                     if (tameable.isTamed() && tameable.getOwner() != null) {
-                        if (tameable.getOwner() == this.getOwner()) continue;
+                        if (tameable.getOwner() == this.getOwner())
+                            continue;
                     }
                 }
 
@@ -595,7 +612,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     }
                 }
 
-                float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * this.attack3DamageMultiply;
+                float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                        * this.attack3DamageMultiply;
                 damageBlockingShield(target, damage);
                 if (target instanceof PlayerEntity) {
                     target.addVelocity(0, 1.4f, 0);
@@ -611,16 +629,20 @@ public class FallenKnight extends StrongTameableEntityDefault {
     private void createDamageBox() {
         if (!this.getWorld().isClient) {
             Box checkArea = new Box(this.getBlockPos()).expand(attack2Range);
-            List<LivingEntity> targetDamage = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea, entity -> true);
+            List<LivingEntity> targetDamage = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
+                    entity -> true);
 
             for (LivingEntity target : targetDamage) {
-                if (target == this) continue;
+                if (target == this)
+                    continue;
                 if (this.getOwner() != null) {
-                    if (target == this.getOwner()) continue;
+                    if (target == this.getOwner())
+                        continue;
                 }
                 if (target instanceof TameableEntity tameable) {
                     if (tameable.isTamed() && tameable.getOwner() != null) {
-                        if (tameable.getOwner() == this.getOwner()) continue;
+                        if (tameable.getOwner() == this.getOwner())
+                            continue;
                     }
                 }
 
@@ -639,10 +661,12 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     }
                 }
 
-                Vec3d knockbackDirection = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(), target.getZ() - this.getZ()).normalize();
+                Vec3d knockbackDirection = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(),
+                        target.getZ() - this.getZ()).normalize();
                 target.addVelocity(knockbackDirection.multiply(2, 0, 2));
 
-                float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * this.attack2DamageMultiply;
+                float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                        * this.attack2DamageMultiply;
                 damageBlockingShield(target, damage);
                 target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
             }
@@ -651,7 +675,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     private void damageBlockingShield(LivingEntity target, float damage) {
 
-        if (this.getTarget() == null) return;
+        if (this.getTarget() == null)
+            return;
         if (target.isBlocking() && target.getActiveItem().isDamageable()) {
             target.getActiveItem().damage((int) damage, target,
                     entity -> entity.sendToolBreakStatus(target.getActiveHand()));
@@ -670,7 +695,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         // Client-side checks
         if (world.isClient) {
-            if (this.getCanBeTamed() && itemStack.isOf(this.getTameFood()) && (this.getOwner() == null || !this.isTamed())) {
+            if (this.getCanBeTamed() && itemStack.isOf(this.getTameFood())
+                    && (this.getOwner() == null || !this.isTamed())) {
                 return ActionResult.CONSUME;
             }
 
@@ -680,7 +706,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
             return ActionResult.PASS;
         }
-
 
         // Handle sitting/unsitting when tamed and interacted by the owner
         if (this.isTamed() && this.getOwner() == player) {
@@ -776,14 +801,16 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
-        if (this.isDead()) return false;
+        if (this.isDead())
+            return false;
 
         if (!this.getWorld().isClient) {
             if (source.getSource() instanceof ArrowEntity) {
                 amount /= 2;
             }
 
-            if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner() && player.isSneaking()) {
+            if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner()
+                    && player.isSneaking()) {
                 this.patrolCenterPos = this.getBlockPos();
                 this.setIsPatrolling(!this.getIsPatrolling());
 
@@ -799,7 +826,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
             if (!this.getCanBeTamed() && source.getAttacker() != this.getOwner()) {
                 if (source.getAttacker() instanceof PlayerEntity player) {
-                    if (player.isCreative() || player.isSpectator()) return super.damage(source, amount);
+                    if (player.isCreative() || player.isSpectator())
+                        return super.damage(source, amount);
                 }
             }
         }
@@ -817,7 +845,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
     public void onAttacking(Entity target) {
         super.onAttacking(target);
         if (!this.getWorld().isClient) {
-            Vec3d knockbackDirection = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(), target.getZ() - this.getZ()).normalize();
+            Vec3d knockbackDirection = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(),
+                    target.getZ() - this.getZ()).normalize();
 
             if (target instanceof PlayerEntity) {
                 target.addVelocity(knockbackDirection.multiply(2, 0, 2));
@@ -854,16 +883,14 @@ public class FallenKnight extends StrongTameableEntityDefault {
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
-        nbt.putBoolean("canBeTamed", this.getCanBeTamed());
-        nbt.putBoolean("canBeTamedSet", this.getCanBeTamedSet());
-        nbt.putFloat("allSkillCooldown", this.getAllSkillCooldown());
-        nbt.putBoolean("isRandomFirstTime", this.getIsRandomFirstTime());
+        // super call now handles allSkillCooldown, isRandomFirstTime, isPatrolling,
+        // canBeTamed, canBeTamedSet
 
         if (this.patrolCenterPos != null) {
             NbtList homePos = new NbtList();
-            homePos.add(NbtDouble.of(this.getBlockX()));
-            homePos.add(NbtDouble.of(this.getBlockY()));
-            homePos.add(NbtDouble.of(this.getBlockZ()));
+            homePos.add(NbtDouble.of(this.patrolCenterPos.getX()));
+            homePos.add(NbtDouble.of(this.patrolCenterPos.getY()));
+            homePos.add(NbtDouble.of(this.patrolCenterPos.getZ()));
             nbt.put("patrolPos", homePos);
         }
     }
@@ -871,18 +898,13 @@ public class FallenKnight extends StrongTameableEntityDefault {
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
-        this.setCanBeTamed(nbt.getBoolean("canBeTamed"));
-        this.setCanBeTamedSet(nbt.getBoolean("canBeTamedSet"));
-        this.setIsRandomFirstTime(nbt.getBoolean("isRandomFirstTime"));
-
-        if (nbt.getFloat("allSkillCooldown") > 0) {
-            this.setAllSkillCooldown(nbt.getFloat("allSkillCooldown"));
-        }
-
+        // super call now handles allSkillCooldown, isRandomFirstTime, isPatrolling,
+        // canBeTamed, canBeTamedSet
 
         if (nbt.contains("patrolPos", NbtElement.LIST_TYPE)) {
             NbtList homePos = nbt.getList("patrolPos", NbtElement.DOUBLE_TYPE);
-            this.patrolCenterPos = new BlockPos((int) homePos.getDouble(0), (int) homePos.getDouble(1), (int) homePos.getDouble(2));
+            this.patrolCenterPos = new BlockPos((int) homePos.getDouble(0), (int) homePos.getDouble(1),
+                    (int) homePos.getDouble(2));
         } else {
             this.patrolCenterPos = null;
         }
@@ -905,11 +927,14 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.mob.hasPassengers()) return false;
-            if (this.mob.getRandom().nextInt(toGoalTicks(this.chance)) != 0) return false;
+            if (this.mob.hasPassengers())
+                return false;
+            if (this.mob.getRandom().nextInt(toGoalTicks(this.chance)) != 0)
+                return false;
 
             Vec3d target = getWanderTarget();
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             this.targetX = target.x;
             this.targetY = target.y;
@@ -923,7 +948,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
             double height = mob.getHeight(); // Get entity height
 
             // Ensure movement is at least 5 blocks and up to 20 blocks
-            double minDistance = 5 + width;  // Ensure no clipping
+            double minDistance = 5 + width; // Ensure no clipping
             double maxDistance = 20 + width; // Large mobs move farther
 
             // Generate a valid movement range
@@ -972,7 +997,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public void start() {
-            mob.getNavigation().stop();  // Stop navigation when sleeping
+            mob.getNavigation().stop(); // Stop navigation when sleeping
         }
 
         @Override
@@ -1004,7 +1029,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public void start() {
-            mob.getNavigation().stop();  // Stop navigation when sleeping
+            mob.getNavigation().stop(); // Stop navigation when sleeping
         }
 
         @Override
@@ -1062,7 +1087,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
             }
 
             LivingEntity target = this.mob.getTarget();
-            if (target == null) return;
+            if (target == null)
+                return;
 
             this.mob.getNavigation().startMovingTo(target, speed);
             this.mob.getLookControl().lookAt(target);
@@ -1099,6 +1125,12 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public void tick() {
+            // Keep the mob loaded while patrolling
+            if (mob.getWorld() instanceof ServerWorld serverWorld) {
+                serverWorld.getChunkManager().addTicket(ChunkTicketType.PORTAL, new ChunkPos(mob.getBlockPos()), 2,
+                        mob.getBlockPos());
+            }
+
             if (cooldown > 0) {
                 cooldown--;
                 return;
@@ -1149,8 +1181,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
             return new Vec3d(
                     mob.patrolCenterPos.getX() + (random.nextDouble() - 0.5) * 10,
                     mob.patrolCenterPos.getY(),
-                    mob.patrolCenterPos.getZ() + (random.nextDouble() - 0.5) * 10
-            );
+                    mob.patrolCenterPos.getZ() + (random.nextDouble() - 0.5) * 10);
         }
 
         @Override
@@ -1180,7 +1211,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 } else {
                     this.attacker = livingEntity.getAttacker();
                     int i = livingEntity.getLastAttackedTime();
-                    return i != this.lastAttackedTime && this.canTrack(this.attacker, TargetPredicate.DEFAULT) && this.mob.canAttackWithOwner(this.attacker, livingEntity);
+                    return i != this.lastAttackedTime && this.canTrack(this.attacker, TargetPredicate.DEFAULT)
+                            && this.mob.canAttackWithOwner(this.attacker, livingEntity);
                 }
             } else {
                 return false;
@@ -1226,7 +1258,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                             }
                         }
                     }
-                    return i != this.lastAttackTime && this.canTrack(this.attacking, TargetPredicate.DEFAULT) && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
+                    return i != this.lastAttackTime && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
+                            && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
                 }
             } else {
                 return false;

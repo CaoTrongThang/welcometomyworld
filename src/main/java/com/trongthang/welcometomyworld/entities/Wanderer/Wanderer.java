@@ -1,9 +1,11 @@
-package com.trongthang.welcometomyworld.entities;
+package com.trongthang.welcometomyworld.entities.Wanderer;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
+import com.trongthang.welcometomyworld.entities.EnderPest;
+import com.trongthang.welcometomyworld.entities.WandererArrow;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.minecraft.block.BlockState;
@@ -32,6 +34,7 @@ import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -56,22 +59,22 @@ public class Wanderer extends StrongTameableEntityDefault {
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
     private static final int WALK_CYCLE_DURATION_MS = 2670;
-    private static final int[] FOOTSTEP_TIMINGS_MS = {1250, 2250};
+    private static final int[] FOOTSTEP_TIMINGS_MS = { 1250, 2250 };
 
     private int previousWalkPosition = -1;
 
     private static final int SWORD_SLASH_DURATION_MS = 2130;
-    private static final int[] SWORD_SLASH_SOUND_TIMINGS_MS = {0, 700};
+    private static final int[] SWORD_SLASH_SOUND_TIMINGS_MS = { 0, 700 };
     private final Set<Integer> swordSlashPlayedFrames = new HashSet<>();
 
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState walkAnimationState = new AnimationState();
     public final AnimationState blockAnimationState = new AnimationState();
 
-    //SHOOT BOW
+    // SHOOT BOW
     public final AnimationState bowSkillAnimationState = new AnimationState();
 
-    //SHOOT BOW
+    // SHOOT BOW
     public final AnimationState bowSkill2AnimationState = new AnimationState();
 
     // SWORD ATTACK
@@ -109,7 +112,6 @@ public class Wanderer extends StrongTameableEntityDefault {
     private int drinkHealthCounter = 24000;
     private boolean isDrinkingHeal = false;
 
-
     public Wanderer(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
 
@@ -126,14 +128,17 @@ public class Wanderer extends StrongTameableEntityDefault {
         animationHashMap.put(AnimationName.MOVEMENT, backflipAnimationState);
         animationHashMap.put(AnimationName.BLOCK, blockAnimationState);
 
-
         if (!this.getIsRandomFirstTime() && !this.getWorld().isClient) {
             double scale = WelcomeToMyWorld.random.nextDouble(1, maxScale);
 
-            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
-            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 2));
-            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 3F));
-            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
+            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
+                    .setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH) * scale);
+            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(
+                    this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 2));
+            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR)
+                    .setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 3F));
+            this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(
+                    this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
 
             if (scale / 3 > 1) {
                 this.setAllSkillCooldown((float) (this.getAllSkillCooldown() / (scale / 3)));
@@ -164,7 +169,6 @@ public class Wanderer extends StrongTameableEntityDefault {
     public @Nullable PassiveEntity createChild(ServerWorld world, PassiveEntity entity) {
         return null;
     }
-
 
     @Override
     public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
@@ -222,10 +226,10 @@ public class Wanderer extends StrongTameableEntityDefault {
                 }
             }
 
-
         } else {
             if (!this.getCanBeTamedSet()) {
-                if (this.getHealth() <= this.getMaxHealth() * percentHealthToBeTamed && (this.getOwner() == null || !this.isTamed())) {
+                if (this.getHealth() <= this.getMaxHealth() * percentHealthToBeTamed
+                        && (this.getOwner() == null || !this.isTamed())) {
                     if (!this.getCanBeTamed()) {
                         if (WelcomeToMyWorld.random.nextInt(0, 100) < this.getTameChance()) {
                             this.setCanBeTamed(true);
@@ -236,8 +240,12 @@ public class Wanderer extends StrongTameableEntityDefault {
                         this.setCanBeTamedSet(true);
 
                         if (this.getCanBeTamed()) {
-                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_ARMOR_SHAKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
-                            Utils.addRunAfter(() -> Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.FALLEN_KNIGHT_FALL, 0.5f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f)), 12);
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.FALLEN_KNIGHT_ARMOR_SHAKING, 0.8f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
+                            Utils.addRunAfter(() -> Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.FALLEN_KNIGHT_FALL, 0.5f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f)), 12);
                         }
                     }
                 }
@@ -290,7 +298,6 @@ public class Wanderer extends StrongTameableEntityDefault {
                 this.drinkHealthCounter++;
             }
 
-
             if (this.useSkillCooldownCounter < this.getAllSkillCooldown()) {
                 this.useSkillCooldownCounter++;
                 return;
@@ -309,20 +316,29 @@ public class Wanderer extends StrongTameableEntityDefault {
                         Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.HEAL, timeout);
 
                         Utils.addRunAfter(() -> {
-                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
-                            this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.WANDERER_POTION_DRINKING, 0.8f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
+                            this.getWorld().sendEntityStatus(this,
+                                    EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
                             this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
                         }, 19);
 
                         Utils.addRunAfter(() -> {
-                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
-                            this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.WANDERER_POTION_DRINKING, 0.8f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
+                            this.getWorld().sendEntityStatus(this,
+                                    EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
                             this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
                         }, 30);
 
                         Utils.addRunAfter(() -> {
-                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_POTION_DRINKING, 0.8f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
-                            this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.WANDERER_POTION_DRINKING, 0.8f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.4f));
+                            this.getWorld().sendEntityStatus(this,
+                                    EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
                             this.setHealth(this.getHealth() + this.getMaxHealth() * 0.33f);
                         }, 40);
 
@@ -340,21 +356,22 @@ public class Wanderer extends StrongTameableEntityDefault {
                 double distance = this.distanceTo(this.getTarget());
                 int timeout = 0;
 
-                if (this.isDrinkingHeal) return;
+                if (this.isDrinkingHeal)
+                    return;
 
                 if (distance > 35) {
                     this.useSkillCooldownCounter = 0;
                     timeout = 40;
                     Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
                     Utils.addRunAfter(() -> {
-                        if (this.getTarget() == null) return;
+                        if (this.getTarget() == null)
+                            return;
 
                         // Calculate the direction vector from the mob to the target
                         Vec3d mobToTargetDirection = new Vec3d(
                                 this.getTarget().getX() - this.getX(),
                                 this.getTarget().getY() - this.getY(),
-                                this.getTarget().getZ() - this.getZ()
-                        ).normalize();
+                                this.getTarget().getZ() - this.getZ()).normalize();
 
                         // Scale the direction vector to determine the offset
                         Vec3d offset = mobToTargetDirection.multiply(2, 1, 2); // Scale X, Y, and Z appropriately
@@ -365,7 +382,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                         // Teleport the mob to the calculated position
                         this.setPos(blockFrontOfTarget.x, blockFrontOfTarget.y, blockFrontOfTarget.z);
 
-                        Utils.playSound(this.getWorld(), this.getTarget().getBlockPos(), SoundEvents.ENTITY_ENDERMAN_TELEPORT);
+                        Utils.playSound(this.getWorld(), this.getTarget().getBlockPos(),
+                                SoundEvents.ENTITY_ENDERMAN_TELEPORT);
 
                     }, 6);
                     Utils.addRunAfter(this::createSwordSlashShockwavePolar, 17);
@@ -383,7 +401,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                         }
                     } else {
                         this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 30f);
-                        Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_BOW_ATTACK, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
+                        Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                SoundsManager.WANDERER_BOW_ATTACK, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                         this.shootingArrow = true;
                         this.lookAtPos = this.getTarget().getPos();
 
@@ -399,7 +418,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                     resetSkill(timeout);
                 }
 
-                if (distance <= 12 && distance >= 8 || (this.getTarget().getY() > this.getY() && (Math.abs(this.getTarget().getY() - this.getY()) > 4))) {
+                if (distance <= 12 && distance >= 8 || (this.getTarget().getY() > this.getY()
+                        && (Math.abs(this.getTarget().getY() - this.getY()) > 4))) {
                     int rand = WelcomeToMyWorld.random.nextInt(0, 100);
                     if (rand < 10) {
 
@@ -429,24 +449,24 @@ public class Wanderer extends StrongTameableEntityDefault {
                             Vec3d backFlipDirection = new Vec3d(
                                     this.getX() - this.getTarget().getX(),
                                     2,
-                                    this.getZ() - this.getTarget().getZ()
-                            ).normalize();
+                                    this.getZ() - this.getTarget().getZ()).normalize();
                             canBackFlip = isFlipAreaClear(backFlipDirection);
                             if (canBackFlip) {
                                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
-                                this.addVelocity(backFlipDirection.x * flipStrength, 0.8f, backFlipDirection.z * flipStrength);
+                                this.addVelocity(backFlipDirection.x * flipStrength, 0.8f,
+                                        backFlipDirection.z * flipStrength);
 
                             }
                         } else {
                             Vec3d frontFlipDirection = new Vec3d(
                                     this.getTarget().getX() - this.getX(),
                                     2, // Ignore Y component
-                                    this.getTarget().getZ() - this.getZ()
-                            ).normalize();
+                                    this.getTarget().getZ() - this.getZ()).normalize();
                             canFrontFlip = isFlipAreaClear(frontFlipDirection);
                             if (canFrontFlip) {
                                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
-                                this.addVelocity(frontFlipDirection.x * flipStrength, 0.8f, frontFlipDirection.z * flipStrength);
+                                this.addVelocity(frontFlipDirection.x * flipStrength, 0.8f,
+                                        frontFlipDirection.z * flipStrength);
                             }
                         }
                     }
@@ -460,7 +480,9 @@ public class Wanderer extends StrongTameableEntityDefault {
                             this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 30f);
 
                             timeout = 20;
-                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_BOW_ATTACK, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.WANDERER_BOW_ATTACK, 0.4f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                             this.shootingArrow = true;
                             this.lookAtPos = this.getTarget().getPos();
 
@@ -478,7 +500,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                             rainOfArrowsSkill(this.getTarget().getPos());
                         }
                     } else {
-                        Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.WANDERER_BACKFLIP, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
+                        Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                SoundsManager.WANDERER_BACKFLIP, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                     }
                     resetSkill(timeout);
                 }
@@ -513,7 +536,6 @@ public class Wanderer extends StrongTameableEntityDefault {
         return true; // No obstacles found
     }
 
-
     private void resetSkill(int timeout) {
         this.setIsUsingSkill(true);
         Utils.addRunAfter(() -> {
@@ -528,7 +550,8 @@ public class Wanderer extends StrongTameableEntityDefault {
         double f = target.z - vec3d.z;
         double g = Math.sqrt(d * d + f * f);
         this.setPitch(MathHelper.wrapDegrees((float) (-(MathHelper.atan2(e, g) * (double) (180F / (float) Math.PI)))));
-        this.setYaw(MathHelper.wrapDegrees((float) (MathHelper.atan2(f, d) * (double) (180F / (float) Math.PI)) - 90.0F));
+        this.setYaw(
+                MathHelper.wrapDegrees((float) (MathHelper.atan2(f, d) * (double) (180F / (float) Math.PI)) - 90.0F));
         this.setHeadYaw(this.getYaw());
         this.prevPitch = this.getPitch();
         this.prevYaw = this.getYaw();
@@ -571,7 +594,8 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     private void rainOfArrowsSkill(Vec3d pos) {
         LivingEntity target = this.getTarget();
-        if (target == null) return;
+        if (target == null)
+            return;
 
         // Define the skill parameters
         double radius = 10; // Radius of the circular effect
@@ -606,14 +630,16 @@ public class Wanderer extends StrongTameableEntityDefault {
                 }
 
                 // Spawn particles for debugging (optional)
-                this.getWorld().addParticle(ParticleTypes.END_ROD, spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), 0, 0, 0);
+                this.getWorld().addParticle(ParticleTypes.END_ROD, spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), 0,
+                        0, 0);
 
             }, tick); // Run after `tick` ticks
         }
     }
 
     private void handleAnimationSoundsAndEffect() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         if (walkAnimationState.isRunning()) {
             handleWalkSounds();
@@ -626,7 +652,8 @@ public class Wanderer extends StrongTameableEntityDefault {
     }
 
     private void handleWalkSounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         long animTime = walkAnimationState.getTimeRunning();
         int currentPos = (int) (animTime % WALK_CYCLE_DURATION_MS);
@@ -638,7 +665,6 @@ public class Wanderer extends StrongTameableEntityDefault {
                 boolean normalCross = previousWalkPosition < timingInCycle && currentPos >= timingInCycle;
                 boolean wrapAround = timingInCycle == 0 && previousWalkPosition > currentPos;
 
-
                 if (normalCross || wrapAround) {
                     Utils.playClientSound(this.getBlockPos(), SoundsManager.WANDERER_WALK, 20, 0.4f, 1f);
                 }
@@ -648,14 +674,15 @@ public class Wanderer extends StrongTameableEntityDefault {
     }
 
     private void handleSwordSlashSounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         long animTime = swordSlashAnimationState.getTimeRunning();
         int currentPos = (int) (animTime % SWORD_SLASH_DURATION_MS);
 
         for (int timing : SWORD_SLASH_SOUND_TIMINGS_MS) {
             int windowStart = timing - 50; // Widen window to -50ms
-            int windowEnd = timing + 50;   // and +50ms
+            int windowEnd = timing + 50; // and +50ms
 
             boolean inWindow = currentPos >= windowStart && currentPos <= windowEnd;
             boolean cycleWrap = timing > SWORD_SLASH_DURATION_MS - 50 &&
@@ -682,7 +709,8 @@ public class Wanderer extends StrongTameableEntityDefault {
             soundId = SoundsManager.WANDERER_SWORD_SLASH;
         }
 
-        if (soundId == null) return;
+        if (soundId == null)
+            return;
 
         Utils.playClientSound(this.getBlockPos(), soundId, 16, 0.6f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
     }
@@ -697,20 +725,21 @@ public class Wanderer extends StrongTameableEntityDefault {
             double facingAngle = Math.atan2(lookVec.z, lookVec.x);
 
             // Configure the arc:
-            double arcAngle = Math.toRadians(90);  // 90° arc; adjust as needed.
+            double arcAngle = Math.toRadians(90); // 90° arc; adjust as needed.
             double halfArc = arcAngle / 2.0;
-            int slashLength = 25;                // Maximum distance of the slash.
+            int slashLength = 25; // Maximum distance of the slash.
 
             // Set resolution: how finely we sample the arc.
-            double radiusStep = 1.0;             // Start at 1 block out.
-            double angleStep = Math.toRadians(5);  // 5° increments.
+            double radiusStep = 1.0; // Start at 1 block out.
+            double angleStep = Math.toRadians(5); // 5° increments.
 
             // Use a set to prevent processing duplicate block positions.
             Set<BlockPos> processedPositions = new HashSet<>();
 
             // Pre-compute nearby entities for damage.
             Box checkArea = new Box(center).expand(slashLength);
-            List<LivingEntity> damageTargets = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea, entity -> true);
+            List<LivingEntity> damageTargets = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
+                    entity -> true);
 
             // Iterate using polar coordinates, starting at radiusStep.
             for (double r = radiusStep; r <= slashLength; r += radiusStep) {
@@ -739,19 +768,24 @@ public class Wanderer extends StrongTameableEntityDefault {
 
             // Damage handling (similar to your existing logic)
             for (LivingEntity target : damageTargets) {
-                if (target == this) continue;
+                if (target == this)
+                    continue;
                 double dx = target.getX() - center.getX();
                 double dz = target.getZ() - center.getZ();
                 double distance = Math.sqrt(dx * dx + dz * dz);
-                if (distance > slashLength) continue;
+                if (distance > slashLength)
+                    continue;
                 double targetAngle = Math.atan2(dz, dx);
                 double angleDiff = Math.abs(MathHelper.wrapDegrees(Math.toDegrees(targetAngle - facingAngle)));
-                if (angleDiff > Math.toDegrees(halfArc)) continue;
+                if (angleDiff > Math.toDegrees(halfArc))
+                    continue;
                 // Additional checks for friendly fire etc.
-                if (this.getOwner() != null && target == this.getOwner()) continue;
+                if (this.getOwner() != null && target == this.getOwner())
+                    continue;
                 if (target instanceof TameableEntity tameable) {
                     if (tameable.isTamed() && tameable.getOwner() != null &&
-                            tameable.getOwner() == this.getOwner()) continue;
+                            tameable.getOwner() == this.getOwner())
+                        continue;
                 }
 
                 if (target instanceof PlayerEntity) {
@@ -761,7 +795,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                 }
 
                 if (target instanceof Wanderer knight) {
-                    if (!this.isTamed() && !knight.isTamed()) continue;
+                    if (!this.isTamed() && !knight.isTamed())
+                        continue;
                     if (this.isTamed() && this.getOwner() != null &&
                             knight.isTamed() && knight.getOwner() != null &&
                             this.getOwner().equals(knight.getOwner())) {
@@ -775,8 +810,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                     Vec3d pushBackDirection = new Vec3d(
                             this.getTarget().getX() - this.getX(),
                             0, // Ignore Y component
-                            this.getTarget().getZ() - this.getZ()
-                    );
+                            this.getTarget().getZ() - this.getZ());
 
                     if (target instanceof PlayerEntity) {
                         target.addVelocity(pushBackDirection.x * 1.5f, 0.1f, pushBackDirection.z * 1.5f);
@@ -792,7 +826,8 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     private void damageBlockingShield(LivingEntity target, float damage) {
 
-        if (this.getTarget() == null) return;
+        if (this.getTarget() == null)
+            return;
         if (target.isBlocking() && target.getActiveItem().isDamageable()) {
 
             float reducedDamage = damage;
@@ -815,7 +850,8 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         // Client-side checks
         if (world.isClient) {
-            if (this.getCanBeTamed() && itemStack.isOf(this.getTameFood()) && (this.getOwner() == null || !this.isTamed())) {
+            if (this.getCanBeTamed() && itemStack.isOf(this.getTameFood())
+                    && (this.getOwner() == null || !this.isTamed())) {
                 return ActionResult.CONSUME;
             }
 
@@ -913,10 +949,12 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
-        if (this.isDead()) return false;
+        if (this.isDead())
+            return false;
 
         if (!this.getWorld().isClient) {
-            if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner() && player.isSneaking()) {
+            if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner()
+                    && player.isSneaking()) {
                 this.patrolCenterPos = this.getBlockPos();
                 this.setIsPatrolling(!this.getIsPatrolling());
 
@@ -933,21 +971,22 @@ public class Wanderer extends StrongTameableEntityDefault {
 
             if (!this.getCanBeTamed() && source.getAttacker() != this.getOwner()) {
                 if (source.getAttacker() instanceof PlayerEntity player) {
-                    if (player.isCreative() || player.isSpectator()) return super.damage(source, amount);
+                    if (player.isCreative() || player.isSpectator())
+                        return super.damage(source, amount);
                 }
             }
 
             int rand = WelcomeToMyWorld.random.nextInt(0, 100);
             if (rand <= 7 && (!this.getCanBeTamed() || this.isTamed() || this.getOwner() != null)) {
                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.BLOCK, 5);
-                this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(), SoundsManager.WANDERER_BLOCK, this.getSoundCategory(), 0.8F, 1.0F);
+                this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(), SoundsManager.WANDERER_BLOCK,
+                        this.getSoundCategory(), 0.8F, 1.0F);
                 return super.damage(source, 0);
             }
         }
 
         return super.damage(source, amount);
     }
-
 
     @Override
     public void onDeath(DamageSource source) {
@@ -970,17 +1009,15 @@ public class Wanderer extends StrongTameableEntityDefault {
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
-        nbt.putBoolean("canBeTamed", this.getCanBeTamed());
-        nbt.putBoolean("canBeTamedSet", this.getCanBeTamedSet());
-        nbt.putFloat("allSkillCooldown", this.getAllSkillCooldown());
-        nbt.putBoolean("isRandomFirstTime", this.getIsRandomFirstTime());
+        // super call now handles allSkillCooldown, isRandomFirstTime, isPatrolling,
+        // canBeTamed, canBeTamedSet
         nbt.putInt("drinkHealthCounter", this.drinkHealthCounter);
 
         if (this.patrolCenterPos != null) {
             NbtList homePos = new NbtList();
-            homePos.add(NbtDouble.of(this.getBlockX()));
-            homePos.add(NbtDouble.of(this.getBlockY()));
-            homePos.add(NbtDouble.of(this.getBlockZ()));
+            homePos.add(NbtDouble.of(this.patrolCenterPos.getX()));
+            homePos.add(NbtDouble.of(this.patrolCenterPos.getY()));
+            homePos.add(NbtDouble.of(this.patrolCenterPos.getZ()));
             nbt.put("patrolPos", homePos);
         }
     }
@@ -988,10 +1025,8 @@ public class Wanderer extends StrongTameableEntityDefault {
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
-        this.setCanBeTamed(nbt.getBoolean("canBeTamed"));
-        this.setCanBeTamedSet(nbt.getBoolean("canBeTamedSet"));
-        this.setIsRandomFirstTime(nbt.getBoolean("isRandomFirstTime"));
-
+        // super call now handles allSkillCooldown, isRandomFirstTime, isPatrolling,
+        // canBeTamed, canBeTamedSet
 
         int counter = nbt.getInt("drinkHealthCounter");
 
@@ -999,15 +1034,10 @@ public class Wanderer extends StrongTameableEntityDefault {
             this.drinkHealthCounter = nbt.getInt("drinkHealthCounter");
         }
 
-
-        if (nbt.getFloat("allSkillCooldown") > 0) {
-            this.setAllSkillCooldown(nbt.getFloat("allSkillCooldown"));
-        }
-
-
         if (nbt.contains("patrolPos", NbtElement.LIST_TYPE)) {
             NbtList homePos = nbt.getList("patrolPos", NbtElement.DOUBLE_TYPE);
-            this.patrolCenterPos = new BlockPos((int) homePos.getDouble(0), (int) homePos.getDouble(1), (int) homePos.getDouble(2));
+            this.patrolCenterPos = new BlockPos((int) homePos.getDouble(0), (int) homePos.getDouble(1),
+                    (int) homePos.getDouble(2));
         } else {
             this.patrolCenterPos = null;
         }
@@ -1030,11 +1060,14 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.mob.hasPassengers()) return false;
-            if (this.mob.getRandom().nextInt(toGoalTicks(this.chance)) != 0) return false;
+            if (this.mob.hasPassengers())
+                return false;
+            if (this.mob.getRandom().nextInt(toGoalTicks(this.chance)) != 0)
+                return false;
 
             Vec3d target = getWanderTarget();
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             this.targetX = target.x;
             this.targetY = target.y;
@@ -1048,7 +1081,7 @@ public class Wanderer extends StrongTameableEntityDefault {
             double height = mob.getHeight(); // Get entity height
 
             // Ensure movement is at least 5 blocks and up to 20 blocks
-            double minDistance = 5 + width;  // Ensure no clipping
+            double minDistance = 5 + width; // Ensure no clipping
             double maxDistance = 20 + width; // Large mobs move farther
 
             // Generate a valid movement range
@@ -1097,7 +1130,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         @Override
         public void start() {
-            mob.getNavigation().stop();  // Stop navigation when sleeping
+            mob.getNavigation().stop(); // Stop navigation when sleeping
         }
 
         @Override
@@ -1129,7 +1162,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         @Override
         public void start() {
-            mob.getNavigation().stop();  // Stop navigation when sleeping
+            mob.getNavigation().stop(); // Stop navigation when sleeping
         }
 
         @Override
@@ -1167,6 +1200,12 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         @Override
         public void tick() {
+            // Keep the mob loaded while patrolling
+            if (mob.getWorld() instanceof ServerWorld serverWorld) {
+                serverWorld.getChunkManager().addTicket(ChunkTicketType.PORTAL, new ChunkPos(mob.getBlockPos()), 2,
+                        mob.getBlockPos());
+            }
+
             if (cooldown > 0) {
                 cooldown--;
                 return;
@@ -1217,8 +1256,7 @@ public class Wanderer extends StrongTameableEntityDefault {
             return new Vec3d(
                     mob.patrolCenterPos.getX() + (random.nextDouble() - 0.5) * 10,
                     mob.patrolCenterPos.getY(),
-                    mob.patrolCenterPos.getZ() + (random.nextDouble() - 0.5) * 10
-            );
+                    mob.patrolCenterPos.getZ() + (random.nextDouble() - 0.5) * 10);
         }
 
         @Override
@@ -1248,7 +1286,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                 } else {
                     this.attacker = livingEntity.getAttacker();
                     int i = livingEntity.getLastAttackedTime();
-                    return i != this.lastAttackedTime && this.canTrack(this.attacker, TargetPredicate.DEFAULT) && this.mob.canAttackWithOwner(this.attacker, livingEntity);
+                    return i != this.lastAttackedTime && this.canTrack(this.attacker, TargetPredicate.DEFAULT)
+                            && this.mob.canAttackWithOwner(this.attacker, livingEntity);
                 }
             } else {
                 return false;
@@ -1294,7 +1333,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                             }
                         }
                     }
-                    return i != this.lastAttackTime && this.canTrack(this.attacking, TargetPredicate.DEFAULT) && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
+                    return i != this.lastAttackTime && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
+                            && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
                 }
             } else {
                 return false;

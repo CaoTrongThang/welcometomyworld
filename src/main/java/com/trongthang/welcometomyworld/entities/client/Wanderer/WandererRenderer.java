@@ -1,7 +1,8 @@
 package com.trongthang.welcometomyworld.entities.client.Wanderer;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.entities.Wanderer;
+import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -24,10 +25,9 @@ public class WandererRenderer extends MobEntityRenderer<Wanderer, WandererModel<
         return Identifier.of(WelcomeToMyWorld.MOD_ID, "textures/entity/wanderer.png");
     }
 
-
     @Override
     public void render(Wanderer livingEntity, float f, float g, MatrixStack matrixStack,
-                       VertexConsumerProvider vertexConsumerProvider, int i) {
+            VertexConsumerProvider vertexConsumerProvider, int i) {
 
         matrixStack.scale(2f, 2f, 2f);
         super.render(livingEntity, f, g, matrixStack, vertexConsumerProvider, i);

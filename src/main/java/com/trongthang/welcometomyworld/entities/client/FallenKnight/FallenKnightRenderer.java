@@ -1,7 +1,7 @@
 package com.trongthang.welcometomyworld.entities.client.FallenKnight;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.entities.FallenKnight;
+import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
 import com.trongthang.welcometomyworld.entities.client.Portaler.PortalerModel;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -23,10 +23,9 @@ public class FallenKnightRenderer extends MobEntityRenderer<FallenKnight, Fallen
         return Identifier.of(WelcomeToMyWorld.MOD_ID, "textures/entity/fallen_knight.png");
     }
 
-
     @Override
     public void render(FallenKnight livingEntity, float f, float g, MatrixStack matrixStack,
-                       VertexConsumerProvider vertexConsumerProvider, int i) {
+            VertexConsumerProvider vertexConsumerProvider, int i) {
 
         matrixStack.scale(3f, 3f, 3f);
         super.render(livingEntity, f, g, matrixStack, vertexConsumerProvider, i);

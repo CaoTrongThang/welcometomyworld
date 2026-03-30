@@ -2,6 +2,10 @@ package com.trongthang.welcometomyworld.managers;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.*;
+import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
+import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
+import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
+
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;

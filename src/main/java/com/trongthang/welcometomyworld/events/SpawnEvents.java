@@ -2,8 +2,9 @@ package com.trongthang.welcometomyworld.events;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.EnderPest;
-import com.trongthang.welcometomyworld.entities.FallenKnight;
-import com.trongthang.welcometomyworld.entities.Wanderer;
+import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
+import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
+
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.biome.v1.ModificationPhase;
@@ -31,12 +32,12 @@ public class SpawnEvents {
 
     public static final java.util.List<String> DISABLED_MOBS = java.util.Arrays.asList(
             "mobs_of_mythology:kobold",
-            "iceandfire:hippocampus"
-    );
+            "iceandfire:hippocampus");
 
-    public static void register(){
+    public static void register() {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            // Chặn những con đã lỡ save vào chunk từ trước, hoặc lách qua được Mixin của WorldGen
+            // Chặn những con đã lỡ save vào chunk từ trước, hoặc lách qua được Mixin của
+            // WorldGen
             if (entity instanceof net.minecraft.entity.LivingEntity) {
                 String entityId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(entity.getType()).toString();
                 if (DISABLED_MOBS.contains(entityId)) {
@@ -51,10 +52,12 @@ public class SpawnEvents {
                 }
             }
 
-
             if (entity instanceof PhantomEntity phantom) {
-                if(entity.getCustomName() == null){
-                    if(world.getBlockState(new BlockPos((int) entity.getX(), (int) entity.getY() + 30, (int) entity.getZ())).isAir()){
+                if (entity.getCustomName() == null) {
+                    if (world
+                            .getBlockState(
+                                    new BlockPos((int) entity.getX(), (int) entity.getY() + 30, (int) entity.getZ()))
+                            .isAir()) {
                         entity.teleport((int) entity.getX(), (int) entity.getY() + 30, (int) entity.getZ());
                     }
 

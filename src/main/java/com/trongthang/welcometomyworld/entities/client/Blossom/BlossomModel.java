@@ -1,8 +1,9 @@
 package com.trongthang.welcometomyworld.entities.client.Blossom;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.entities.Blossom;
 import com.trongthang.welcometomyworld.entities.Enderchester;
+import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
+
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.client.render.entity.model.SinglePartEntityModel;

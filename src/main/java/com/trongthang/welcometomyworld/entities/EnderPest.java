@@ -5,6 +5,7 @@ import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.StartAnimation;
 import com.trongthang.welcometomyworld.client.ClientScheduler;
+import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -51,12 +52,15 @@ public class EnderPest extends MobEntity implements StartAnimation {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
-    private static final TrackedData<Boolean> CAN_DISAPPEAR = DataTracker.registerData(EnderPest.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> IS_SCAM = DataTracker.registerData(EnderPest.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Integer> ATE_ENDER_EYES = DataTracker.registerData(EnderPest.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Boolean> CAN_DISAPPEAR = DataTracker.registerData(EnderPest.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Boolean> IS_SCAM = DataTracker.registerData(EnderPest.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Integer> ATE_ENDER_EYES = DataTracker.registerData(EnderPest.class,
+            TrackedDataHandlerRegistry.INTEGER);
 
     private static final int MOUNTH_OPEN_DURATION_MS = 8000;
-    private static final int[] MOUTH_OPEN_TIMINGS_MS = {0, 330, 790, 1170, 1500, 1790, 2040, 2250, 2420, 2500, 2558};
+    private static final int[] MOUTH_OPEN_TIMINGS_MS = { 0, 330, 790, 1170, 1500, 1790, 2040, 2250, 2420, 2500, 2558 };
     private final Set<Integer> portalPlayedFrames = new HashSet<>();
 
     public final AnimationState idleAnimationState = new AnimationState();
@@ -117,10 +121,8 @@ public class EnderPest extends MobEntity implements StartAnimation {
 
     @Override
     protected void initGoals() {
-        this.goalSelector.getGoals().removeIf(g ->
-                g.getGoal() instanceof WanderAroundGoal ||
-                        g.getGoal() instanceof WanderAroundFarGoal
-        );
+        this.goalSelector.getGoals().removeIf(g -> g.getGoal() instanceof WanderAroundGoal ||
+                g.getGoal() instanceof WanderAroundFarGoal);
     }
 
     public void setAnimationStates() {
@@ -158,7 +160,6 @@ public class EnderPest extends MobEntity implements StartAnimation {
             animationTimeout--;
         }
     }
-
 
     @Override
     public void tick() {
@@ -216,7 +217,7 @@ public class EnderPest extends MobEntity implements StartAnimation {
         spawnParticlesAround();
     }
 
-    public void openEnderPest(){
+    public void openEnderPest() {
         this.setCanDisappear(true);
         List<Item> items = getRandomItem(WelcomeToMyWorld.random.nextInt(minItem, maxItem));
         int startingTime = 51;
@@ -224,14 +225,15 @@ public class EnderPest extends MobEntity implements StartAnimation {
             for (Item item : items) {
                 startingTime += 3;
                 Utils.addRunAfter(() -> {
-                    if(this.isDead()) return;
+                    if (this.isDead())
+                        return;
                     shootItemUp(this.getWorld(), new Vec3d(this.getX(), this.getY(), this.getZ()), item);
                 }, startingTime);
             }
         }
     }
 
-    public void openEnderPest(int itemsAmount){
+    public void openEnderPest(int itemsAmount) {
         this.setCanDisappear(true);
         List<Item> items = getRandomItem(itemsAmount);
         int startingTime = 51;
@@ -251,7 +253,8 @@ public class EnderPest extends MobEntity implements StartAnimation {
     }
 
     private void handleAnimationSounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         if (mouthOpenAnimationState.isRunning() && !completeOpenMouthSound) {
             handleSwitchSounds();
@@ -259,8 +262,10 @@ public class EnderPest extends MobEntity implements StartAnimation {
     }
 
     private void handleSwitchSounds() {
-        if (!this.getWorld().isClient()) return;
-        if (!mouthOpenAnimationState.isRunning()) return;
+        if (!this.getWorld().isClient())
+            return;
+        if (!mouthOpenAnimationState.isRunning())
+            return;
 
         long animTime = mouthOpenAnimationState.getTimeRunning();
         int currentPos = (int) (animTime % MOUNTH_OPEN_DURATION_MS);
@@ -297,7 +302,6 @@ public class EnderPest extends MobEntity implements StartAnimation {
                 createSquarePillarEffect(20, 3.0f, -0.1f, 0.7f);
             }
 
-
         } else {
             soundId = SoundsManager.ENDER_PEST_SHAKE1;
         }
@@ -306,7 +310,8 @@ public class EnderPest extends MobEntity implements StartAnimation {
     }
 
     public static void shootItemUp(World world, Vec3d pos, Item item) {
-        if (world.isClient) return;
+        if (world.isClient)
+            return;
 
         ItemStack stack = new ItemStack(item);
         ItemEntity itemEntity = new ItemEntity(world, pos.x, pos.y, pos.z, stack);
@@ -320,15 +325,13 @@ public class EnderPest extends MobEntity implements StartAnimation {
         Vec3d velocity = new Vec3d(
                 Math.cos(angle) * horizontalSpeed,
                 verticalSpeed,
-                Math.sin(angle) * horizontalSpeed
-        );
+                Math.sin(angle) * horizontalSpeed);
 
         // Add slight random variation
         velocity = velocity.add(
                 (random.nextDouble() - 0.5) * 0.1,
                 random.nextDouble() * 0.1,
-                (random.nextDouble() - 0.5) * 0.1
-        );
+                (random.nextDouble() - 0.5) * 0.1);
 
         itemEntity.setVelocity(velocity);
         world.spawnEntity(itemEntity);
@@ -340,7 +343,8 @@ public class EnderPest extends MobEntity implements StartAnimation {
         List<Item> items = new ArrayList<>();
 
         int registrySize = Registries.ITEM.size();
-        if (registrySize == 0) return items;
+        if (registrySize == 0)
+            return items;
 
         for (int x = 0; x < totalItems; x++) {
             for (int i = 0; i < MAX_ATTEMPTS; i++) {
@@ -375,7 +379,7 @@ public class EnderPest extends MobEntity implements StartAnimation {
     @Override
     public boolean collidesWith(Entity other) {
 
-        if ( other instanceof Wanderer) {
+        if (other instanceof Wanderer) {
             return false;
         }
 
@@ -387,7 +391,7 @@ public class EnderPest extends MobEntity implements StartAnimation {
 
         // Every 20 ticks, spawn particles around the mob
         if (particleSpawnCounter >= DEFAULT_PARTICLE_SPAWN_COOLDOWN) {
-            particleSpawnCounter = 0;  // Reset the counter after each 20 ticks
+            particleSpawnCounter = 0; // Reset the counter after each 20 ticks
 
             World world = this.getWorld();
             if (world.isClient) {
@@ -396,9 +400,9 @@ public class EnderPest extends MobEntity implements StartAnimation {
                 double z = this.getZ();
 
                 // Spawn particles in a circle around the mob
-                for (int i = 0; i < 5; i++) {  // Adjust number of particles as needed
-                    double angle = Math.random() * 2 * Math.PI;  // Random angle in radians
-                    double radius = 0.8;  // Radius of the particle circle
+                for (int i = 0; i < 5; i++) { // Adjust number of particles as needed
+                    double angle = Math.random() * 2 * Math.PI; // Random angle in radians
+                    double radius = 0.8; // Radius of the particle circle
 
                     double offsetX = radius * Math.cos(angle);
                     double offsetZ = radius * Math.sin(angle);
@@ -442,11 +446,12 @@ public class EnderPest extends MobEntity implements StartAnimation {
         }
     }
 
-
     public void eatEnderEyesOnGround() {
 
-        if (this.getWorld().isClient) return;
-        if (this.isDead()) return;
+        if (this.getWorld().isClient)
+            return;
+        if (this.isDead())
+            return;
         if (this.getServer() == null) {
             return;
         }
@@ -486,18 +491,19 @@ public class EnderPest extends MobEntity implements StartAnimation {
         }
     }
 
-
     // Add to your EnderPest class
     private void createSquarePillarEffect(int durationTicks, float maxHeight, float yOffset, float maxRadius) {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
-        final int[] currentTick = {0};
+        final int[] currentTick = { 0 };
         final Vec3d startPos = this.getPos().add(0, yOffset, 0);
 
         Runnable effectTask = new Runnable() {
             @Override
             public void run() {
-                if (currentTick[0] > durationTicks) return;
+                if (currentTick[0] > durationTicks)
+                    return;
 
                 float progress = (float) currentTick[0] / durationTicks;
                 float currentHeight = maxHeight * progress;
@@ -551,8 +557,7 @@ public class EnderPest extends MobEntity implements StartAnimation {
                     pos.z,
                     (this.random.nextFloat() - 0.5f) * 0.1f,
                     0.1f,
-                    (this.random.nextFloat() - 0.5f) * 0.1f
-            );
+                    (this.random.nextFloat() - 0.5f) * 0.1f);
         }
     }
 

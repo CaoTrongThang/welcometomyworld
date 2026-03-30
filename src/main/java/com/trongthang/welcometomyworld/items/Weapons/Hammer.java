@@ -1,8 +1,8 @@
 package com.trongthang.welcometomyworld.items.Weapons;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.entities.FallenKnight;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
@@ -49,8 +49,6 @@ public class Hammer extends SwordItem {
             createShockwave(user, stack);
         }
 
-
-
         user.getItemCooldownManager().set(this, 100);
 
         return TypedActionResult.success(stack);
@@ -63,7 +61,8 @@ public class Hammer extends SwordItem {
             int radius = 9;
 
             Box checkArea = new Box(pos).expand(radius);
-            List<LivingEntity> livingEntities = user.getWorld().getEntitiesByClass(LivingEntity.class, checkArea, entity -> true);
+            List<LivingEntity> livingEntities = user.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
+                    entity -> true);
 
             Set<BlockPos> particleSpawnedBlocks = new HashSet<>();
 
@@ -89,10 +88,12 @@ public class Hammer extends SwordItem {
             }
 
             for (LivingEntity entity : livingEntities) {
-                if (entity == user) continue;
+                if (entity == user)
+                    continue;
                 if (entity instanceof TameableEntity tameable) {
                     if (tameable.isTamed() && tameable.getOwner() != null) {
-                        if (tameable.getOwner() == user) continue;
+                        if (tameable.getOwner() == user)
+                            continue;
                     }
                 }
 
@@ -118,4 +119,3 @@ public class Hammer extends SwordItem {
         tooltip.add(Text.literal("").append(line3));
     }
 }
-

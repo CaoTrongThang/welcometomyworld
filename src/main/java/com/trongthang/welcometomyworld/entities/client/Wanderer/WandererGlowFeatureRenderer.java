@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.entities.client.Wanderer;
 
-import com.trongthang.welcometomyworld.entities.Wanderer;
+import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.RenderLayer;
@@ -10,7 +11,8 @@ import net.minecraft.util.Identifier;
 
 @Environment(EnvType.CLIENT)
 public class WandererGlowFeatureRenderer<T extends Wanderer> extends EyesFeatureRenderer<T, WandererModel<T>> {
-    private static final RenderLayer GLOW = RenderLayer.getEyes(new Identifier("welcometomyworld:textures/entity/wanderer/wanderer_glow.png"));
+    private static final RenderLayer GLOW = RenderLayer
+            .getEyes(new Identifier("welcometomyworld:textures/entity/wanderer/wanderer_glow.png"));
 
     public WandererGlowFeatureRenderer(FeatureRendererContext<T, WandererModel<T>> context) {
         super(context);

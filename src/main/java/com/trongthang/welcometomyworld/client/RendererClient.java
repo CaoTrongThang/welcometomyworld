@@ -45,19 +45,19 @@ public class RendererClient implements ClientModInitializer {
         BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.CHALLENGER_TROPHY, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.MUSIC_TROPHY, RenderLayer.getCutout());
 
+        // BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAME_DISC_TROPHY,
+        // RenderLayer.getCutout());
 
-
-//        BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAME_DISC_TROPHY, RenderLayer.getCutout());
-
-        EntityModelLayerRegistry.registerModelLayer(AncientWhaleModel.ANCIENT_WHALE, AncientWhaleModel::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(AncientWhaleModel.ANCIENT_WHALE,
+                AncientWhaleModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.ANCIENT_WHALE, AncientWhaleRenderer::new);
 
-        EntityModelLayerRegistry.registerModelLayer(EnderchesterModel.A_LIVING_ENDER_CHEST, EnderchesterModel::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(EnderchesterModel.A_LIVING_ENDER_CHEST,
+                EnderchesterModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.ENDERCHESTER, EnderchesterRenderer::new);
 
         EntityModelLayerRegistry.registerModelLayer(ChesterModel.CHESTER, ChesterModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.CHESTER, ChesterRenderer::new);
-
 
         EntityModelLayerRegistry.registerModelLayer(PortalerModel.PORTALER, PortalerModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.PORTALER, PortalerRenderer::new);
@@ -65,13 +65,15 @@ public class RendererClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(EnderPestModel.ENDER_PEST, EnderPestModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.ENDER_PEST, EnderPestRenderer::new);
 
-        EntityModelLayerRegistry.registerModelLayer(FallenKnightModel.FALLEN_KNIGHT, FallenKnightModel::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(FallenKnightModel.FALLEN_KNIGHT,
+                FallenKnightModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.FALLEN_KNIGHT, FallenKnightRenderer::new);
 
         EntityModelLayerRegistry.registerModelLayer(WandererModel.WANDERER, WandererModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.WANDERER, WandererRenderer::new);
 
-        EntityModelLayerRegistry.registerModelLayer(WandererArrowModel.WANDERER_ARROW, WandererArrowModel::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(WandererArrowModel.WANDERER_ARROW,
+                WandererArrowModel::getTexturedModelData);
         EntityRendererRegistry.register(EntitiesManager.WANDERER_ARROW, WandererArrowRenderer::new);
 
         EntityModelLayerRegistry.registerModelLayer(BlossomModel.BLOSSOM, BlossomModel::getTexturedModelData);

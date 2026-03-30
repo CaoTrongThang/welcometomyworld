@@ -1,8 +1,8 @@
 package com.trongthang.welcometomyworld.entities.client.Blossom;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.entities.Blossom;
 import com.trongthang.welcometomyworld.entities.Enderchester;
+import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererGlowFeatureRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
