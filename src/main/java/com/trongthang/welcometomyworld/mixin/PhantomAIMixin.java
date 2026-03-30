@@ -47,15 +47,16 @@ public abstract class PhantomAIMixin extends Entity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     public void onTickMovement(CallbackInfo ci) {
-        if (!canPhantomAI) return;
-        if (!canGrab) return;
+        if (!canPhantomAI)
+            return;
+        if (!canGrab)
+            return;
 
         PhantomEntity phantom = (PhantomEntity) (Object) this;
         if (phantom.getPhantomSize() < 9) {
             canGrab = false;
             return;
         }
-
 
         if (!canLiftPlayer) {
             counter++;
@@ -65,7 +66,6 @@ public abstract class PhantomAIMixin extends Entity {
             }
             return;
         }
-
 
         // Lift the player and make the Phantom ascend
         if (currentLiftPlayer != null) {
@@ -79,7 +79,8 @@ public abstract class PhantomAIMixin extends Entity {
 
         LivingEntity attackEntity = phantom.getAttacking();
 
-        if (currentLiftPlayer != null) return;
+        if (currentLiftPlayer != null)
+            return;
 
         if (attackEntity instanceof PlayerEntity && currentLiftPlayer == null) {
             currentLiftPlayer = (PlayerEntity) attackEntity;
@@ -87,7 +88,8 @@ public abstract class PhantomAIMixin extends Entity {
     }
 
     private void liftAndTeleportPlayer(PhantomEntity phantom) {
-        if (currentLiftPlayer == null || currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator() || currentLiftPlayer.isDead()) {
+        if (currentLiftPlayer == null || currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator()
+                || currentLiftPlayer.isDead()) {
             dropPlayer(phantom);
             return;
         }
@@ -112,30 +114,6 @@ public abstract class PhantomAIMixin extends Entity {
             currentLiftPlayer = null;
         }
     }
-
-    private BlockPos scanAroundToFindAFlyUpPos(PhantomEntity phantom) {
-        BlockState up = phantom.getWorld().getBlockState(phantom.getBlockPos().up());
-        if (up.isAir()) {
-            return phantom.getBlockPos().up();
-        } else {
-
-            BlockPos[] poses = {
-                    phantom.getBlockPos().north(),
-                    phantom.getBlockPos().south(),
-                    phantom.getBlockPos().east(),
-                    phantom.getBlockPos().west(),
-                    phantom.getBlockPos().down()
-            };
-
-            for (BlockPos pos : poses) {
-                if (phantom.getWorld().getBlockState(pos).isAir()) {
-                    return pos;
-                }
-            }
-        }
-        return null;
-    }
-
 
     private void dropPlayer(PhantomEntity phantom) {
         canLiftPlayer = false;

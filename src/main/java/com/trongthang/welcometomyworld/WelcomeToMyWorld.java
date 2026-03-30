@@ -307,6 +307,8 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         blocksPlacedAndBrokenByMobsHandler.onSererTick(server);
 
+        PetTeleportManager.onServerTick(server);
+
         Utils.onServerTick(server);
         SpawnMonstersPackEveryMins.spawnMonsters(server);
     }

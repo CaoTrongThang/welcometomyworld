@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.classes.PlayerStatsData;
+import com.trongthang.welcometomyworld.classes.PetData;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
@@ -25,51 +26,66 @@ public class DataHandler {
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(BlockPos.class, new BlockPosAdapter())
             .registerTypeAdapter(BlockState.class, new BlockStateAdapter())
-            .registerTypeAdapter(Path.class, new PathAdapter())  // Add the Path adapter
+            .registerTypeAdapter(Path.class, new PathAdapter()) // Add the Path adapter
             .setPrettyPrinting()
             .disableHtmlEscaping()
             .create();
 
     public Path playerDataSavePath;
-    public static final Type PLAYER_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerData>>() {}.getType();
+    public static final Type PLAYER_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PlayerData>>() {
+    }.getType();
     public ConcurrentHashMap<UUID, PlayerData> playerDataMap = new ConcurrentHashMap<>();
 
     public Path blocksPlacedByMobs;
-    public static final Type BLOCKS_PLACED_BY_MOBS_DATA_TYPE = new TypeToken<ConcurrentHashMap<BlockPos, Integer>>() {}.getType();
+    public static final Type BLOCKS_PLACED_BY_MOBS_DATA_TYPE = new TypeToken<ConcurrentHashMap<BlockPos, Integer>>() {
+    }.getType();
     public ConcurrentHashMap<BlockPos, Integer> blocksPlacedByMobWillRemove = new ConcurrentHashMap<>();
 
     public Path blocksBrokenByMobs;
-    public static final Type BLOCKS_BROKEN_BY_MOBS_DATA_TYPE = new TypeToken<ConcurrentHashMap<BlockPos, BlockState>>() {}.getType();
+    public static final Type BLOCKS_BROKEN_BY_MOBS_DATA_TYPE = new TypeToken<ConcurrentHashMap<BlockPos, BlockState>>() {
+    }.getType();
     public ConcurrentHashMap<BlockPos, BlockState> blocksBrokenByMobWillRestore = new ConcurrentHashMap<>();
+
+    public Path petDataSavePath;
+    public static final Type PET_DATA_TYPE = new TypeToken<ConcurrentHashMap<UUID, PetData>>() {
+    }.getType();
+    public ConcurrentHashMap<UUID, PetData> petDataMap = new ConcurrentHashMap<>();
 
     public void initializeWorldData(MinecraftServer server) {
         // Generate a file path specific to the world being loaded
         playerDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerdata.json");
-        blocksPlacedByMobs = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksPlacedByMobs.json");
-//        blocksBrokenByMobs = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksBrokenByMobs.json");
+        blocksPlacedByMobs = server.getSavePath(WorldSavePath.ROOT)
+                .resolve("data/welcometomyworld/blocksPlacedByMobs.json");
+        petDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/petdata.json");
+        // blocksBrokenByMobs =
+        // server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksBrokenByMobs.json");
 
         playerDataMap.clear();
         blocksPlacedByMobWillRemove.clear();
-//        blocksBrokenByMobWillRestore.clear();
+        petDataMap.clear();
+        // blocksBrokenByMobWillRestore.clear();
 
         loadPlayerData();
         loadBlocksPlacedByMobsData();
-//        loadBlocksBrokenByMobsData();
+        loadPetData();
+        // loadBlocksBrokenByMobsData();
 
         findAndAddAlreadyExistPlayers(server);
     }
 
-
     public void saveData(MinecraftServer server) {
-        if(this.playerDataSavePath == null){
-            playerDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerdata.json");
+        if (this.playerDataSavePath == null) {
+            playerDataSavePath = server.getSavePath(WorldSavePath.ROOT)
+                    .resolve("data/welcometomyworld/playerdata.json");
         }
         savePlayerData();
         saveBlocksPlacedByMobsData();
-//        saveBlocksBrokenByMobsData();
+        savePetData();
+        // saveBlocksBrokenByMobsData();
 
         playerDataMap.clear();
         blocksPlacedByMobWillRemove.clear();
+        petDataMap.clear();
         blocksBrokenByMobWillRestore.clear();
     }
 
@@ -137,7 +153,8 @@ public class DataHandler {
 
         if (Files.exists(blocksPlacedByMobs)) {
             try (Reader reader = Files.newBufferedReader(blocksPlacedByMobs)) {
-                ConcurrentHashMap<BlockPos, Integer> loadedData = GSON.fromJson(reader, BLOCKS_PLACED_BY_MOBS_DATA_TYPE);
+                ConcurrentHashMap<BlockPos, Integer> loadedData = GSON.fromJson(reader,
+                        BLOCKS_PLACED_BY_MOBS_DATA_TYPE);
                 if (loadedData != null) {
                     blocksPlacedByMobWillRemove.putAll(loadedData);
                 }
@@ -161,6 +178,35 @@ public class DataHandler {
         }
     }
 
+    public void loadPetData() {
+        LOGGER.info("Loading pet data from: {}", petDataSavePath);
+
+        if (Files.exists(petDataSavePath)) {
+            try (Reader reader = Files.newBufferedReader(petDataSavePath)) {
+                ConcurrentHashMap<UUID, PetData> loadedData = GSON.fromJson(reader, PET_DATA_TYPE);
+                if (loadedData != null) {
+                    petDataMap.putAll(loadedData);
+                }
+            } catch (IOException e) {
+                LOGGER.error("Failed to load pet data", e);
+            }
+        }
+    }
+
+    public void savePetData() {
+        LOGGER.info("Saving pet data to: {}", petDataSavePath);
+
+        try {
+            Files.createDirectories(petDataSavePath.getParent());
+            try (Writer writer = Files.newBufferedWriter(petDataSavePath)) {
+                GSON.toJson(petDataMap, PET_DATA_TYPE, writer);
+            }
+            LOGGER.info("Saved {} pet entries to data file.", petDataMap.size());
+        } catch (IOException e) {
+            LOGGER.error("Failed to save pet data", e);
+        }
+    }
+
     // Custom Adapter for BlockPos
     public static class BlockPosAdapter implements JsonSerializer<BlockPos>, JsonDeserializer<BlockPos> {
         @Override
@@ -173,7 +219,8 @@ public class DataHandler {
         }
 
         @Override
-        public BlockPos deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public BlockPos deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
             if (json.isJsonObject()) {
                 JsonObject obj = json.getAsJsonObject();
                 return new BlockPos(obj.get("x").getAsInt(), obj.get("y").getAsInt(), obj.get("z").getAsInt());
@@ -215,7 +262,8 @@ public class DataHandler {
         }
 
         @Override
-        public Path deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public Path deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
             return Path.of(json.getAsString());
         }
     }

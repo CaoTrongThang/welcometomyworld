@@ -33,7 +33,8 @@
 		"BalanceEnchantments",
 		"BabyZombieReduce",
 		"MobEntityGearsUp",
-		"StopSpecificMobsToSpawn"
+		"StopSpecificMobsToSpawn",
+		"GraveyardTerrainFlatBypassMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

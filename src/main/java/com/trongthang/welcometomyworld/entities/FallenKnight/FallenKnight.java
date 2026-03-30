@@ -194,7 +194,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
         this.goalSelector.add(2, new SwimGoal(this));
         this.goalSelector.add(3, new SitGoal(this));
         this.goalSelector.add(4, new PatrollingGoal(this));
-        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 15, 25, false));
+        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 30, 40, false));
         this.goalSelector.add(6, new StopWhenUsingSkill(this));
         this.goalSelector.add(7, new CustomMeleeAttackGoal(this, 27, 1.5f));
         this.goalSelector.add(8, new LargeEntityWanderGoal(this, 1.0, 1));
