@@ -40,7 +40,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
@@ -53,18 +52,20 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.trongthang.welcometomyworld.Utilities.SpawnParticiles.spawnParticlesAroundEntity;
+import static com.trongthang.welcometomyworld.Utilities.SpawnParticles.spawnParticlesAroundEntity;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 import static com.trongthang.welcometomyworld.client.ClientData.LAST_INTERACTED_MOB_ID;
-
 
 public class Enderchester extends TameableEntity implements StartAnimation {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
-    private static final TrackedData<Boolean> IS_SLEEPING = DataTracker.registerData(Enderchester.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> CAN_SLEEP = DataTracker.registerData(Enderchester.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> IS_OPENING_CHEST = DataTracker.registerData(Enderchester.class, TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Boolean> IS_SLEEPING = DataTracker.registerData(Enderchester.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Boolean> CAN_SLEEP = DataTracker.registerData(Enderchester.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Boolean> IS_OPENING_CHEST = DataTracker.registerData(Enderchester.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
 
     List<Item> hateItems = List.of(
             Items.DIRT,
@@ -206,7 +207,6 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         }
     }
 
-
     @Override
     public void setTamed(boolean tamed) {
         byte b = this.dataTracker.get(TAMEABLE_FLAGS);
@@ -306,32 +306,31 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     public void tick() {
         super.tick();
 
-//        if(this.getWorld().isClient){
-//            LOGGER.info("CLIENT: " + this.isSitting());
-//        }else {
-//            LOGGER.info("SERVER: " + this.isSitting());
-//        }
+        // if(this.getWorld().isClient){
+        // LOGGER.info("CLIENT: " + this.isSitting());
+        // }else {
+        // LOGGER.info("SERVER: " + this.isSitting());
+        // }
 
         if (!this.getWorld().isClient()) {
             if (this.getCanSleepData()) {
 
-                if(this.getOwner() != null){
-                    if(checkOwnerOfflineCounter < checkOwnerOfflineCooldown){
+                if (this.getOwner() != null) {
+                    if (checkOwnerOfflineCounter < checkOwnerOfflineCooldown) {
                         checkOwnerOfflineCounter++;
                     }
 
-                    if(checkOwnerOfflineCounter >= checkOwnerOfflineCooldown){
+                    if (checkOwnerOfflineCounter >= checkOwnerOfflineCooldown) {
                         checkOwnerOfflineCounter = 0;
-                        if(this.getIsOpeningChestData()){
+                        if (this.getIsOpeningChestData()) {
                             ServerPlayerEntity owner = ((ServerWorld) this.getWorld()).getServer()
                                     .getPlayerManager().getPlayer(this.getOwnerUuid());
-                            if(owner == null){
+                            if (owner == null) {
                                 this.setIsOpeningChestData(false);
                             }
                         }
                     }
                 }
-
 
                 if (!this.getIsSleepingData() && this.getOwner() == null) {
                     if (this.checkMusicCounter < checkMusicCooldown) {
@@ -385,7 +384,6 @@ public class Enderchester extends TameableEntity implements StartAnimation {
             return;
         }
 
-
         if (!this.getCanSleepData()) {
             canSleepCounter++;
             if (canSleepCounter > canSleepCooldown) {
@@ -393,7 +391,6 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                 canSleepCounter = 0;
             }
         }
-
 
         if (isInCombat) {
             if (inCombatCounter <= inCombatCooldown) {
@@ -454,7 +451,6 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         return hasMusic;
     }
 
-
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
@@ -472,7 +468,8 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                 return ActionResult.SUCCESS;
             }
 
-            // If the mob is sleeping and the player is holding the correct food, consume the item
+            // If the mob is sleeping and the player is holding the correct food, consume
+            // the item
             if (this.getIsSleepingData() && itemStack.isOf(this.getTameFood())) {
                 return ActionResult.CONSUME;
             }
@@ -508,10 +505,12 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                 this.setSitting(false);
                 this.animationTimeout = 1;
 
-                // Show particle effects (for all players in range, not just the one interacting)
+                // Show particle effects (for all players in range, not just the one
+                // interacting)
                 this.getWorld().sendEntityStatus(this, EntityStatuses.ADD_POSITIVE_PLAYER_REACTION_PARTICLES);
 
-                // Send a packet to the player who tamed the mob (you can use this for specific reactions or animations)
+                // Send a packet to the player who tamed the mob (you can use this for specific
+                // reactions or animations)
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeInt(this.getId());
                 for (ServerPlayerEntity p : this.getServer().getPlayerManager().getPlayerList()) {
@@ -520,7 +519,7 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                     }
                 }
 
-                if(this instanceof Chester){
+                if (this instanceof Chester) {
                     Utils.grantAdvancement((ServerPlayerEntity) player, "tameable/is_that_a_dog");
                 } else {
                     Utils.grantAdvancement((ServerPlayerEntity) player, "tameable/ender_puppu");
@@ -537,14 +536,13 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         return ActionResult.PASS;
     }
 
-
     public void openMobChest(PlayerEntity player) {
         EnderChestInventory enderChestInventory = player.getEnderChestInventory();
         player.openHandledScreen(
                 new SimpleNamedScreenHandlerFactory(
-                        (syncId, inventory, playerx) -> GenericContainerScreenHandler.createGeneric9x3(syncId, inventory, enderChestInventory),
-                        Text.translatable("container.enderchest")
-                ));
+                        (syncId, inventory, playerx) -> GenericContainerScreenHandler.createGeneric9x3(syncId,
+                                inventory, enderChestInventory),
+                        Text.translatable("container.enderchest")));
     }
 
     @Override
@@ -599,9 +597,12 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
     public void eatItemsOnGround() {
 
-        if (this.getWorld().isClient) return;
-        if (this.isDead()) return;
-        if (this.getIsSleepingData()) return;
+        if (this.getWorld().isClient)
+            return;
+        if (this.isDead())
+            return;
+        if (this.getIsSleepingData())
+            return;
 
         // Ensure the mob has an owner
         if (this.getOwner() == null) {
@@ -622,7 +623,6 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
         SimpleInventory enderChestInventory = this.getChest(player);
 
-
         // Iterate through the found items
         boolean isAdded = false;
         for (ItemEntity itemEntity : itemEntities) {
@@ -634,7 +634,7 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                 // If the item was successfully added to the chest, remove it from the world
                 if (added) {
                     isAdded = true;
-                    itemEntity.discard();  // Remove the item from the world
+                    itemEntity.discard(); // Remove the item from the world
                 }
             }
         }
@@ -645,14 +645,14 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
             startAnimation(AnimationName.EAT_ITEMS, 30);
             ServerPlayNetworking.send((ServerPlayerEntity) this.getOwner(), A_LIVING_CHEST_EAT_ANIMATION, buf);
-            ServerPlayNetworking.send((ServerPlayerEntity) this.getOwner(), A_LIVING_CHEST_EATING_SOUND, PacketByteBufs.empty());
+            ServerPlayNetworking.send((ServerPlayerEntity) this.getOwner(), A_LIVING_CHEST_EATING_SOUND,
+                    PacketByteBufs.empty());
         }
     }
 
     public SimpleInventory getChest(PlayerEntity player) {
         return player.getEnderChestInventory();
     }
-
 
     public boolean addItemToChest(SimpleInventory chest, ItemStack stack) {
         int newStack = 0;
@@ -773,7 +773,7 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
         @Override
         public void start() {
-            mob.getNavigation().stop();  // Stop navigation when sleeping
+            mob.getNavigation().stop(); // Stop navigation when sleeping
         }
 
         @Override
@@ -797,7 +797,6 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         private PlayerEntity threateningEntity;
         private int cooldown;
 
-
         public FleeFromNearbyPlayersGoal(Enderchester mob, float checkDistance, double fleeSpeed) {
             this.mob = mob;
             this.checkDistance = checkDistance;
@@ -807,7 +806,8 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
         @Override
         public boolean canStart() {
-            if (mob.getIsSleepingData() || mob.getIsOpeningChestData() || mob.getOwner() != null) return false;
+            if (mob.getIsSleepingData() || mob.getIsOpeningChestData() || mob.getOwner() != null)
+                return false;
 
             if (cooldown > 0) {
                 cooldown--;
@@ -822,17 +822,18 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                     this.mob.getX(),
                     this.mob.getY(),
                     this.mob.getZ(),
-                    this.mob.getBoundingBox().expand(checkDistance)
-            );
+                    this.mob.getBoundingBox().expand(checkDistance));
 
-            if (threateningEntity == null) return false;
+            if (threateningEntity == null)
+                return false;
 
             if (threateningEntity.isSpectator() || threateningEntity.isCreative()) {
                 return false;
             }
 
             // No threat found
-            if (threateningEntity == null) return false;
+            if (threateningEntity == null)
+                return false;
 
             // Don't flee from owner or self
             if (threateningEntity.equals(mob) ||
@@ -859,7 +860,8 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
         @Override
         public boolean shouldContinue() {
-            if (mob.getIsSleepingData() || mob.getIsOpeningChestData() || mob.getOwner() != null) return false;
+            if (mob.getIsSleepingData() || mob.getIsOpeningChestData() || mob.getOwner() != null)
+                return false;
 
             boolean shouldContinue = !mob.getNavigation().isIdle() &&
                     threateningEntity.isAlive() &&
@@ -909,4 +911,3 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         }
     }
 }
-

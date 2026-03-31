@@ -5,7 +5,6 @@ import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
 import com.trongthang.welcometomyworld.classes.StartAnimation;
 import com.trongthang.welcometomyworld.client.ClientScheduler;
-import com.trongthang.welcometomyworld.entities.client.Portaler.PortalerRenderer;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.NoPenaltyTargeting;
@@ -39,26 +38,35 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.trongthang.welcometomyworld.Utilities.SpawnParticiles.spawnParticlesAroundEntity;
+import static com.trongthang.welcometomyworld.Utilities.SpawnParticles.spawnParticlesAroundEntity;
 
 //PORTALER: This mob is a portal that can move and can switch portal randomly, players can go to the portal to go to the end or the nether
 public class Portaler extends PathAwareEntity implements StartAnimation {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
-    //Texture Variant is used for new texture when it switches to new portal, only 2 available
-    private static final TrackedData<Integer> TEXTURE_VARIANT = DataTracker.registerData(Portaler.class, TrackedDataHandlerRegistry.INTEGER);
+    // Texture Variant is used for new texture when it switches to new portal, only
+    // 2 available
+    private static final TrackedData<Integer> TEXTURE_VARIANT = DataTracker.registerData(Portaler.class,
+            TrackedDataHandlerRegistry.INTEGER);
 
-    //If the mob is switching portal, it can't move, and play the animation, player can't go into the portal
-    private static final TrackedData<Boolean> IS_SWITCHING_PORTAL = DataTracker.registerData(Portaler.class, TrackedDataHandlerRegistry.BOOLEAN);
+    // If the mob is switching portal, it can't move, and play the animation, player
+    // can't go into the portal
+    private static final TrackedData<Boolean> IS_SWITCHING_PORTAL = DataTracker.registerData(Portaler.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
 
     private static final int WALK_CYCLE_DURATION_MS = 5380;
-    private static final int[] FOOTSTEP_TIMINGS_MS = {1280, 4000};
+    private static final int[] FOOTSTEP_TIMINGS_MS = { 1280, 4000 };
+
+    // Frame counts for the sprite animation, mirrored from PortalerRenderer to keep
+    // this class server-safe
+    public static final int NETHER_PORTAL_FRAME_COUNT = 30;
+    public static final int END_PORTAL_FRAME_COUNT = 1;
 
     private int previousWalkPosition = -1;
 
     private static final int PORTAL_ANIM_DURATION_MS = 1800;
-    private static final int[] PORTAL_SOUND_TIMINGS_MS = {50, 1500};
+    private static final int[] PORTAL_SOUND_TIMINGS_MS = { 50, 1500 };
     private final Set<Integer> portalPlayedFrames = new HashSet<>();
 
     public final AnimationState idleAnimationState = new AnimationState();
@@ -116,10 +124,8 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
 
     @Override
     protected void initGoals() {
-        this.goalSelector.getGoals().removeIf(g ->
-                g.getGoal() instanceof WanderAroundGoal ||
-                        g.getGoal() instanceof WanderAroundFarGoal
-        );
+        this.goalSelector.getGoals().removeIf(g -> g.getGoal() instanceof WanderAroundGoal ||
+                g.getGoal() instanceof WanderAroundFarGoal);
 
         this.goalSelector.add(1, new StopMovingAndLookingWhenSwitichPortalGoal(this));
         this.goalSelector.add(2, new LargeEntityWanderGoal(this, 1f, 1));
@@ -182,7 +188,6 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
         }
     }
 
-
     @Override
     public void tick() {
         super.tick();
@@ -205,9 +210,9 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
             }
         } else {
             particleCounter++;
-            if(particleCounter > particleCooldown){
+            if (particleCounter > particleCooldown) {
                 particleCounter = 0;
-                if(this.getTextureVariant() == 0){
+                if (this.getTextureVariant() == 0) {
                     spawnParticlesAroundEntity(this, ParticleTypes.PORTAL, 2, 0);
                 } else {
                     spawnParticlesAroundEntity(this, ParticleTypes.END_ROD, 2, 0);
@@ -230,7 +235,8 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     }
 
     private void handleAnimationSounds() {
-        if (!this.getWorld().isClient()) return;
+        if (!this.getWorld().isClient())
+            return;
 
         if (walkAnimationState.isRunning()) {
             handleWalkSounds();
@@ -242,8 +248,10 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     }
 
     private void handleWalkSounds() {
-        if (!this.getWorld().isClient()) return;
-        if (!walkAnimationState.isRunning()) return;
+        if (!this.getWorld().isClient())
+            return;
+        if (!walkAnimationState.isRunning())
+            return;
 
         long animTime = walkAnimationState.getTimeRunning();
         int currentPos = (int) (animTime % WALK_CYCLE_DURATION_MS);
@@ -265,8 +273,10 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     }
 
     private void handleSwitchSounds() {
-        if (!this.getWorld().isClient()) return;
-        if (!switchingPortalAnimationState.isRunning()) return;
+        if (!this.getWorld().isClient())
+            return;
+        if (!switchingPortalAnimationState.isRunning())
+            return;
 
         long animTime = switchingPortalAnimationState.getTimeRunning();
         int currentPos = (int) (animTime % PORTAL_ANIM_DURATION_MS);
@@ -306,7 +316,7 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
             soundId = SoundsManager.PORTALER_PORTAL_CHANGE;
         }
 
-        if(soundId != null) {
+        if (soundId != null) {
             Utils.sendSoundPacketFromClient(soundId, this.getBlockPos());
         }
 
@@ -322,7 +332,8 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
         super.onPlayerCollision(player);
 
         if (!this.getWorld().isClient) {
-            if (this.getVehicle() != null) return;
+            if (this.getVehicle() != null)
+                return;
             ServerPlayerEntity p = (ServerPlayerEntity) player;
             if (this.getTextureVariant() == 0) {
                 teleportPlayerRelativeToMob(p, World.NETHER);
@@ -411,12 +422,11 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
         animationCounter++;
         if (animationCounter >= 2) {
             animationCounter = 0;
-            if(this.getTextureVariant() == 0){
-                currentFrame = (currentFrame + 1) % PortalerRenderer.NETHER_PORTAL_PNGS.length;
+            if (this.getTextureVariant() == 0) {
+                currentFrame = (currentFrame + 1) % NETHER_PORTAL_FRAME_COUNT;
             } else {
-                currentFrame = (currentFrame + 1) % PortalerRenderer.END_PORTAL_PNG.length;
+                currentFrame = (currentFrame + 1) % END_PORTAL_FRAME_COUNT;
             }
-
         }
     }
 
@@ -477,7 +487,6 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
         }
     }
 
-
     public class LargeEntityWanderGoal extends Goal {
         private final PathAwareEntity mob;
         private double targetX, targetY, targetZ;
@@ -495,11 +504,14 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
 
         @Override
         public boolean canStart() {
-            if (this.mob.hasPassengers()) return false;
-            if (this.mob.getRandom().nextInt(toGoalTicks(this.chance)) != 0) return false;
+            if (this.mob.hasPassengers())
+                return false;
+            if (this.mob.getRandom().nextInt(toGoalTicks(this.chance)) != 0)
+                return false;
 
             Vec3d target = getWanderTarget();
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             this.targetX = target.x;
             this.targetY = target.y;
@@ -513,7 +525,7 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
             double height = mob.getHeight(); // Get entity height
 
             // Ensure movement is at least 5 blocks and up to 20 blocks
-            double minDistance = 5 + width;  // Ensure no clipping
+            double minDistance = 5 + width; // Ensure no clipping
             double maxDistance = 20 + width; // Large mobs move farther
 
             // Generate a valid movement range
@@ -530,7 +542,6 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
             }
             return target;
         }
-
 
         @Override
         public boolean shouldContinue() {
@@ -549,7 +560,8 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     }
 
     public void spawnPillarEffect(BlockPos pos, World world, ParticleEffect particleEffect) {
-        if (!this.getWorld().isClient) return;
+        if (!this.getWorld().isClient)
+            return;
 
         final int totalTicks = 80; // Total duration in ticks
         final int layers = 10; // Number of vertical circles
@@ -580,7 +592,7 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     }
 
     private void spawnVerticalBuildUp(BlockPos pos, World world, ParticleEffect particleEffect,
-                                      int currentTick, double totalHeight, int layers) {
+            int currentTick, double totalHeight, int layers) {
         double yIncrement = totalHeight / layers;
         double currentY = pos.getY() + (currentTick * yIncrement);
 
@@ -597,7 +609,7 @@ public class Portaler extends PathAwareEntity implements StartAnimation {
     }
 
     public void spawnSpinningParticlesAround(BlockPos pos, World world, int tickCount,
-                                             ParticleEffect particleEffect, double totalHeight, int layers) {
+            ParticleEffect particleEffect, double totalHeight, int layers) {
         double radius = 4.0;
         int particlesPerLayer = 20;
         double yIncrement = totalHeight / layers;

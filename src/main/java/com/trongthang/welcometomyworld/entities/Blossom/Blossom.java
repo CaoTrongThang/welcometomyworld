@@ -57,8 +57,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.EntityView;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
-import org.apache.logging.log4j.core.jmx.Server;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
@@ -67,7 +65,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.trongthang.welcometomyworld.Utilities.SpawnParticiles.spawnParticlesAroundEntity;
+import static com.trongthang.welcometomyworld.Utilities.SpawnParticles.spawnParticlesAroundEntity;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.PLAY_BLOCK_LEVER_CLICK;
 import static net.minecraft.entity.effect.StatusEffects.REGENERATION;
 import static net.minecraft.entity.effect.StatusEffects.RESISTANCE;

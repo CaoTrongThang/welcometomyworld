@@ -101,12 +101,16 @@ public class MobsGearsUp {
         validMobs.put(new Identifier("minecraft:skeleton"), new MobSettings().setRange(true).setMelee(false));
         validMobs.put(new Identifier("minecraft:ravager"), new MobSettings().setOffhand(false));
 
-        validMobs.put(new Identifier("myths_of_the_sea:leviathan"), new MobSettings().setOffhand(false).setMelee(false).setRange(false));
+        validMobs.put(new Identifier("myths_of_the_sea:leviathan"),
+                new MobSettings().setOffhand(false).setMelee(false).setRange(false));
 
-        validMobs.put(new Identifier("companions:sacred_pontiff"), new MobSettings().setOffhand(false).setMelee(false).setRange(false));
+        validMobs.put(new Identifier("companions:sacred_pontiff"),
+                new MobSettings().setOffhand(false).setMelee(false).setRange(false));
 
-        validMobs.put(new Identifier("saintsdragons:nulljaw"), new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
-        validMobs.put(new Identifier("saintsdragons:ignivorus"), new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
+        validMobs.put(new Identifier("saintsdragons:nulljaw"),
+                new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
+        validMobs.put(new Identifier("saintsdragons:ignivorus"),
+                new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
         validMobs.put(new Identifier("saintsdragons:raevyx"), new MobSettings().setOffhand(false).setMelee(false));
         validMobs.put(new Identifier("saintsdragons:cindervane"), new MobSettings().setOffhand(false).setMelee(false));
         validMobs.put(new Identifier("saintsdragons:stegonaut"), new MobSettings().setOffhand(false).setMelee(false));
@@ -176,6 +180,8 @@ public class MobsGearsUp {
                     case CHEST -> CHESTPLATES.add(item);
                     case LEGS -> LEGGINGS.add(item);
                     case FEET -> BOOTS.add(item);
+                    default -> {
+                    }
                 }
             } else if (item instanceof SwordItem swordItem) {
                 if (swordItem.getAttackDamage() <= 10.0F) {
@@ -196,7 +202,8 @@ public class MobsGearsUp {
 
         for (Identifier enchId : validEnchantments) {
             Enchantment ench = Registries.ENCHANTMENT.get(enchId);
-            if (ench == null) continue;
+            if (ench == null)
+                continue;
 
             EnchantmentCategory category = null;
 

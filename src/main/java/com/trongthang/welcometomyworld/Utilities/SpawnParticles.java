@@ -4,18 +4,16 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-public class SpawnParticiles {
-    public static void spawnExpandingParticleSquare(ServerWorld world, Entity entity, int minSize, int maxSize, int durationTicks, DefaultParticleType particle) {
+public class SpawnParticles {
+    public static void spawnExpandingParticleSquare(ServerWorld world, Entity entity, int minSize, int maxSize,
+            int durationTicks, DefaultParticleType particle) {
         // Get initial position at the player's feet
         BlockPos playerPos = entity.getBlockPos();
         Vec3d initialPos = new Vec3d(playerPos.getX() + 0.5, playerPos.getY(), playerPos.getZ() + 0.5);
-
 
         // Run a scheduled task to handle the expansion over time
         for (int tick = 0; tick <= durationTicks; tick++) {
@@ -31,15 +29,17 @@ public class SpawnParticiles {
         }
     }
 
-    public static void spawnParticlesAroundEntity(LivingEntity livingEntity, ParticleEffect particle, double radius, float eyeHeightDivide) {
-        if(particle == null) return;
+    public static void spawnParticlesAroundEntity(LivingEntity livingEntity, ParticleEffect particle, double radius,
+            float eyeHeightDivide) {
+        if (particle == null)
+            return;
 
         if (livingEntity.getWorld().isClient) {
 
             double x = livingEntity.getX();
             double y = 0;
 
-            if(eyeHeightDivide > 0){
+            if (eyeHeightDivide > 0) {
                 y = livingEntity.getY() + livingEntity.getHeight() / eyeHeightDivide;
             } else {
                 y = livingEntity.getY() + livingEntity.getHeight();
@@ -48,8 +48,8 @@ public class SpawnParticiles {
             double z = livingEntity.getZ();
 
             // Spawn particles in a circle around the mob
-            for (int i = 0; i < 5; i++) {  // Adjust number of particles as needed
-                double angle = Math.random() * 2 * Math.PI;  // Random angle in radians
+            for (int i = 0; i < 5; i++) { // Adjust number of particles as needed
+                double angle = Math.random() * 2 * Math.PI; // Random angle in radians
 
                 double offsetX = radius * Math.cos(angle);
                 double offsetZ = radius * Math.sin(angle);
@@ -61,7 +61,8 @@ public class SpawnParticiles {
     }
 
     private static void spawnSquareParticles(ServerWorld world, Vec3d center, int size, DefaultParticleType particle) {
-        if (size <= 0) return;
+        if (size <= 0)
+            return;
 
         double y = center.y;
         double minX = center.x - size;

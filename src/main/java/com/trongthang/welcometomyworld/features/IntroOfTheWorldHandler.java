@@ -1,7 +1,7 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.ConfigLoader;
-import com.trongthang.welcometomyworld.Utilities.SpawnParticiles;
+import com.trongthang.welcometomyworld.Utilities.SpawnParticles;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
 import com.trongthang.welcometomyworld.Utilities.Utils;
@@ -192,7 +192,7 @@ public class IntroOfTheWorldHandler {
                         new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
 
                 spawnLandEffect(player);
-                SpawnParticiles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
+                SpawnParticles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
                 // Set the player’s "firstLandFromSky" to true
                 playerData.firstTouchGround = true;
                 playerData.firstTeleportedToSky = true;
@@ -217,7 +217,7 @@ public class IntroOfTheWorldHandler {
                         new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
 
                 spawnLandEffect(player);
-                SpawnParticiles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
+                SpawnParticles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
                 // Set the player’s "firstLandFromSky" to true
                 playerData.firstTouchGround = true;
                 playerData.firstTeleportedToSky = true;

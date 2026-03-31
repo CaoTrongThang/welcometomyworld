@@ -21,12 +21,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -333,13 +331,15 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(1);
 
+    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
     public static void sendPlayerDataBatch(Collection<ServerPlayerEntity> players) {
         String url = ConfigLoader.getInstance().urlToSendChart;
         String modpackName = "ESC";
         String modpackVersion = ConfigLoader.getInstance().modpackVersion;
 
         EXECUTOR.submit(() -> {
-            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try {
                 StringBuilder jsonBuilder = new StringBuilder();
                 jsonBuilder.append("{\"players\":[");
 
@@ -363,16 +363,24 @@ public class WelcomeToMyWorld implements ModInitializer {
                 jsonBuilder.append("]}");
                 String json = jsonBuilder.toString();
 
-                HttpPost httpPost = new HttpPost(url);
-                httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(json))
+                        .build();
 
-                try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                    if (response.getStatusLine().getStatusCode() != 200) {
-                        LOGGER.warn("Batch update failed: {}", response.getStatusLine());
-                    }
-                }
+                HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                        .thenAccept(response -> {
+                            if (response.statusCode() != 200) {
+                                LOGGER.warn("log(\"Batch update failed status code\", {})", response.statusCode());
+                            }
+                        })
+                        .exceptionally(e -> {
+                            LOGGER.error("log(\"Batch update error\", {})", e.getMessage());
+                            return null;
+                        });
             } catch (Exception e) {
-                LOGGER.error("Batch update error: {}", e.getMessage());
+                LOGGER.error("log(\"Batch update setup error\", {})", e.getMessage());
             }
         });
     }
