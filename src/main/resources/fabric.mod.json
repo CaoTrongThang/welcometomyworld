@@ -28,7 +28,11 @@
 		]
 	},
 	"mixins": [
-		"welcometomyworld.mixins.json"
+		"welcometomyworld.mixins.json",
+		{
+			"config": "welcometomyworld.client.mixins.json",
+			"environment": "client"
+		}
 	],
 	"depends": {
 		"fabricloader": ">=0.16.7",

@@ -2,19 +2,17 @@ package com.trongthang.welcometomyworld.Utilities;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
-import com.trongthang.welcometomyworld.classes.CustomPositionedSound;
 import com.trongthang.welcometomyworld.classes.RunAfter;
 import com.trongthang.welcometomyworld.entities.BlockSlamGroundEntity;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffect;
@@ -56,8 +54,10 @@ public class Utils {
     public static final Utils UTILS = new Utils();
 
     public static void grantAdvancement(ServerPlayerEntity player, String achievement) {
-        if (player == null) return; // Prevent NPE
-        if(player.getServer() == null) return;
+        if (player == null)
+            return; // Prevent NPE
+        if (player.getServer() == null)
+            return;
         player.getServer().execute(() -> {
             Identifier advancementId = new Identifier("welcometomyworld", achievement);
             Advancement advancement = player.server.getAdvancementLoader().get(advancementId);
@@ -86,11 +86,11 @@ public class Utils {
         ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
     }
 
-    public void sendTextAfter(ServerPlayerEntity player, String text, int ticks
-    ) {
+    public void sendTextAfter(ServerPlayerEntity player, String text, int ticks) {
         addRunAfter(() -> {
             ServerPlayerEntity currentPlayer = player.getServer().getPlayerManager().getPlayer(player.getUuid());
-            if (currentPlayer == null) return;
+            if (currentPlayer == null)
+                return;
 
             Text message = Text.literal("").styled(style -> style.withColor(Formatting.WHITE))
                     .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)))
@@ -127,10 +127,10 @@ public class Utils {
 
                 world.spawnParticles(
                         ParticleTypes.PORTAL, // Purple portal particles
-                        x, centerY, z,        // Position of the particle
-                        1,                    // Number of particles (spawned in one call)
-                        0, 0, 0,              // Spread (no random motion here)
-                        0.0                   // Extra (speed multiplier for particle motion)
+                        x, centerY, z, // Position of the particle
+                        1, // Number of particles (spawned in one call)
+                        0, 0, 0, // Spread (no random motion here)
+                        0.0 // Extra (speed multiplier for particle motion)
                 );
             }, 2);
         }
@@ -162,19 +162,18 @@ public class Utils {
                 soundEvent,
                 SoundCategory.HOSTILE,
                 0.8F,
-                1.0F
-        );
+                1.0F);
     }
 
-    public static void playSound(ServerWorld serverWorld, BlockPos pos, SoundEvent soundEvent, float volume, float pitch) {
+    public static void playSound(ServerWorld serverWorld, BlockPos pos, SoundEvent soundEvent, float volume,
+            float pitch) {
         serverWorld.playSound(
                 null,
                 pos,
                 soundEvent,
                 SoundCategory.HOSTILE,
                 volume,
-                pitch
-        );
+                pitch);
     }
 
     public static void playSound(World world, BlockPos pos, SoundEvent soundEvent) {
@@ -184,25 +183,24 @@ public class Utils {
                 soundEvent,
                 SoundCategory.HOSTILE,
                 1f,
-                1f
-        );
+                1f);
     }
 
     public static void spawnParticles(ServerWorld serverWorld, BlockPos pos, DefaultParticleType particle) {
 
         for (int i = 0; i < 10; i++) {
             double offsetX = (serverWorld.getRandom().nextDouble() - 0.5) * 2; // Random X offset
-            double offsetY = serverWorld.getRandom().nextDouble() * 2;         // Random Y offset
+            double offsetY = serverWorld.getRandom().nextDouble() * 2; // Random Y offset
             double offsetZ = (serverWorld.getRandom().nextDouble() - 0.5) * 2; // Random Z offset
 
             serverWorld.spawnParticles(
-                    particle,                      // Particle type
-                    pos.getX() + offsetX,                    // X coordinate
-                    pos.getY() + offsetY,                    // Y coordinate
-                    pos.getZ() + offsetZ,                    // Z coordinate
-                    1,                                        // Particle count
-                    0.0, 0.0, 0.0,                           // No velocity
-                    0.0                                      // Speed multiplier
+                    particle, // Particle type
+                    pos.getX() + offsetX, // X coordinate
+                    pos.getY() + offsetY, // Y coordinate
+                    pos.getZ() + offsetZ, // Z coordinate
+                    1, // Particle count
+                    0.0, 0.0, 0.0, // No velocity
+                    0.0 // Speed multiplier
             );
         }
     }
@@ -211,9 +209,9 @@ public class Utils {
         world.spawnParticles(
                 particle, // Block particle
                 pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, // Position (centered)
-                20,  // Number of particles
+                20, // Number of particles
                 0.5, 0.5, 0.5, // Spread in X, Y, Z
-                0.1  // Speed multiplier
+                0.1 // Speed multiplier
         );
     }
 
@@ -246,14 +244,16 @@ public class Utils {
 
     // Spawns a mob entity at the given block position
     public static Entity spawnMob(World world, BlockPos blockPos, String mobId) {
-        if (blockPos == null) return null;
+        if (blockPos == null)
+            return null;
 
         Identifier mobIdentifier = new Identifier(mobId.toLowerCase());
         EntityType<?> entityType = Registries.ENTITY_TYPE.get(mobIdentifier);
         Entity entity = null;
 
         if (entityType != null) {
-//            entityType.spawn(player.getServer().getWorld(player.getWorld().getRegistryKey()), blockPos, null);
+            // entityType.spawn(player.getServer().getWorld(player.getWorld().getRegistryKey()),
+            // blockPos, null);
 
             // Create the entity instance
             entity = entityType.create(world);
@@ -264,9 +264,7 @@ public class Utils {
                         blockPos.getX(),
                         blockPos.getY(),
                         blockPos.getZ(),
-                        world.random.nextFloat() * 360F, 0
-                );
-
+                        world.random.nextFloat() * 360F, 0);
 
                 // Add the mob to the world
                 world.spawnEntity(mobEntity);
@@ -278,7 +276,8 @@ public class Utils {
         return entity;
     }
 
-    public static BlockPos findSafeSpawnHostileMobPositionAroundTheCenterPos(ServerWorld world, Vec3d centerPos, int searchRadius) {
+    public static BlockPos findSafeSpawnHostileMobPositionAroundTheCenterPos(ServerWorld world, Vec3d centerPos,
+            int searchRadius) {
         final int maxTries = 20;
         final int verticalSearchRange = 4;
 
@@ -335,7 +334,8 @@ public class Utils {
                 mob.addStatusEffect(new StatusEffectInstance(effect, currentEffect.getDuration(), newAmplifier));
             } else {
                 // Apply new effect
-                mob.addStatusEffect(new StatusEffectInstance(effect, durationInTicks, 0)); // Duration: 600 ticks (30 seconds)
+                mob.addStatusEffect(new StatusEffectInstance(effect, durationInTicks, 0)); // Duration: 600 ticks (30
+                                                                                           // seconds)
             }
         }
     }
@@ -345,7 +345,8 @@ public class Utils {
         World world = entity.getWorld();
         Box playerBox = entity.getBoundingBox();
 
-        // Define the area to check below the player's feet (slightly below the bounding box)
+        // Define the area to check below the player's feet (slightly below the bounding
+        // box)
         double checkHeight = 0.1; // Small offset below the player's feet
         Box checkBox = playerBox.offset(0, -checkHeight, 0);
 
@@ -408,7 +409,6 @@ public class Utils {
             return checkPos;
         }
 
-
         return null;
     }
 
@@ -444,7 +444,7 @@ public class Utils {
         entity.discard();
     }
 
-    public static void sendAnimationPacket(World world, LivingEntity entity, AnimationName animation, int timeout){
+    public static void sendAnimationPacket(World world, LivingEntity entity, AnimationName animation, int timeout) {
         for (ServerPlayerEntity player : ((ServerWorld) world).getPlayers()) {
             if (player.canSee(entity)) {
                 PacketByteBuf buf = PacketByteBufs.create();
@@ -456,87 +456,31 @@ public class Utils {
         }
     }
 
-    public static void sendSoundPacketFromClient(SoundEvent sound, BlockPos pos){
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeDouble(pos.getX())
-                .writeDouble(pos.getY())
-                .writeDouble(pos.getZ());
-        buf.writeIdentifier(sound.getId());
-
-        ClientPlayNetworking.send(
-                SOUND_PACKET_ID,
-                buf
-        );
+    public static void sendSoundPacketFromClient(SoundEvent sound, BlockPos pos) {
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            com.trongthang.welcometomyworld.client.ClientUtils.sendSoundPacketFromClient(sound, pos);
+        }
     }
 
-    public static void sendSoundPacketToClient(SoundEvent sound, BlockPos pos){
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeDouble(pos.getX())
-                .writeDouble(pos.getY())
-                .writeDouble(pos.getZ());
-        buf.writeIdentifier(sound.getId());
-
-        ClientPlayNetworking.send(
-                SOUND_PACKET_ID,
-                buf
-        );
+    public static void sendSoundPacketToClient(SoundEvent sound, BlockPos pos) {
+        // Implementation moved to client-only context or handled via
+        // ServerPlayNetworking
     }
 
     public static void playClientSound(BlockPos pos, SoundEvent sound, int maxDistance) {
-        // Get the client instance
-        MinecraftClient client = MinecraftClient.getInstance();
-
-        // Ensure the client's player exists
-        if (client.player == null) return;
-
-        // Calculate the distance between the player and the sound position
-        Vec3d playerPos = client.player.getPos();
-        double distance = playerPos.distanceTo(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
-
-        // Check if the player is within the maximum range
-        if (distance <= maxDistance) {
-            // Calculate the volume based on the distance
-            float volume = Math.max(0.1F, 1.0F - (float) (distance / maxDistance));
-
-            // Create and play the custom sound instance
-            SoundInstance soundInstance = new CustomPositionedSound(
-                    sound,
-                    pos,
-                    SoundCategory.BLOCKS,
-                    volume, // Dynamically calculated volume
-                    1.0F    // Pitch
-            );
-            client.getSoundManager().play(soundInstance);
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            com.trongthang.welcometomyworld.client.ClientUtils.playClientSound(pos, sound, maxDistance);
         }
     }
 
     public static void playClientSound(BlockPos pos, SoundEvent sound, int maxDistance, float volume, float pitch) {
-        // Get the client instance
-        MinecraftClient client = MinecraftClient.getInstance();
-
-        // Ensure the client's player exists
-        if (client.player == null) return;
-
-        // Calculate the distance between the player and the sound position
-        Vec3d playerPos = client.player.getPos();
-        double distance = playerPos.distanceTo(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
-
-        // Check if the player is within the maximum range
-        if (distance <= maxDistance) {
-            // Create and play the custom sound instance
-            SoundInstance soundInstance = new CustomPositionedSound(
-                    sound,
-                    pos,
-                    SoundCategory.BLOCKS,
-                    volume, // Dynamically calculated volume
-                    pitch    // Pitch
-            );
-            client.getSoundManager().play(soundInstance);
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            com.trongthang.welcometomyworld.client.ClientUtils.playClientSound(pos, sound, maxDistance, volume, pitch);
         }
     }
 
     public static BlockPos findSafeSpawnPositionByPack(ServerWorld world, BlockPos center,
-                                                       EntityType<?> entityType, int minRadius, int maxRadius) {
+            EntityType<?> entityType, int minRadius, int maxRadius) {
         final int MAX_ATTEMPTS = 70;
         final int HORIZONTAL_RANGE = maxRadius - minRadius;
 
@@ -564,16 +508,15 @@ public class Utils {
         return null;
     }
 
-    public static void CreateBlockSlamGround(ServerWorld world, BlockState state, BlockPos pos){
+    public static void CreateBlockSlamGround(ServerWorld world, BlockState state, BlockPos pos) {
         BlockSlamGroundEntity effectEntity = EntitiesManager.BLOCK_SLAM_GROUND.create(world);
         if (effectEntity != null) {
             effectEntity.setBlockState(state);
             effectEntity.setPosition(
-                    pos.getX() + 0.5,  // Center in block
+                    pos.getX() + 0.5, // Center in block
                     pos.getY() + 0.1, // Slightly above ground
-                    pos.getZ() + 0.5   // Center in block
+                    pos.getZ() + 0.5 // Center in block
             );
-
 
             world.spawnEntity(effectEntity);
         }
