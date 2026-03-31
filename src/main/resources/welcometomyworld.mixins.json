@@ -33,7 +33,8 @@
 		"BabyZombieReduce",
 		"MobEntityGearsUp",
 		"StopSpecificMobsToSpawn",
-		"GraveyardTerrainFlatBypassMixin"
+		"GraveyardTerrainFlatBypassMixin",
+		"DifficultyDataMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

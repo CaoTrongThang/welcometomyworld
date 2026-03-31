@@ -42,6 +42,10 @@ repositories {
             name = "Ladysnake Libs"
             url = 'https://maven.ladysnake.org/releases'
         }
+        maven {
+            name = "Flemmli97"
+            url "https://maven.blazing-coop.net/releases"
+        }
     }
 
 }
@@ -72,6 +76,8 @@ dependencies {
     modRuntimeOnly "lol.bai:badpackets:fabric-0.4.3"
 
     modImplementation "dev.emi:trinkets:3.7.2"
+
+    modCompileOnly("io.github.flemmli97:improvedmobs:${project.minecraft_version}-${project.improvedmobs_version}-fabric")
 }
 
 processResources {

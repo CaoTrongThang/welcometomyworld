@@ -22,7 +22,7 @@ public class MobsGearsUp {
         SHIELD,
     }
 
-    public static float DEFAULT_EQUIP_CHANCE = 0.1f;
+    public static float DEFAULT_EQUIP_CHANCE = 0.05f;
 
     public static final HashMap<EnchantmentCategory, List<Identifier>> CATEGORIZED_ENCHANTMENTS = new HashMap<>();
 

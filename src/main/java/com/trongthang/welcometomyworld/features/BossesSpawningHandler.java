@@ -21,7 +21,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
 
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,9 +38,9 @@ public class BossesSpawningHandler {
     final int SPAWN_MIN_DISTANCE = 32; // Minimum distance from player
     final int SPAWN_MAX_DISTANCE = 64; // Maximum distance from player
 
-
     private final ConcurrentHashMap<String, EntityType> ancientMobs = new ConcurrentHashMap<>();
-    List<AncientMobDrops> ancientMobDrops = List.of(new AncientMobDrops(ItemsManager.ANCIENT_FRAGMENT, 1), new AncientMobDrops(ItemsManager.REPAIR_KNOWLEDGE, 0.6));
+    List<AncientMobDrops> ancientMobDrops = List.of(new AncientMobDrops(ItemsManager.ANCIENT_FRAGMENT, 1),
+            new AncientMobDrops(ItemsManager.REPAIR_KNOWLEDGE, 0.6));
 
     class AncientMobDrops {
         private ItemStack dropItem;
@@ -125,20 +124,24 @@ public class BossesSpawningHandler {
     // Run in ticks
     public void spawnBossNearPlayers(ServerWorld world) {
         counter++;
-        if (counter < checkInterval) return;
+        if (counter < checkInterval)
+            return;
         counter = 0;
 
         double r = random.nextDouble();
 
-        if (r > bossSpawnChance) return;
+        if (r > bossSpawnChance)
+            return;
 
-        if (world.getPlayers().isEmpty()) return;
+        if (world.getPlayers().isEmpty())
+            return;
 
         int randIndex = random.nextInt(world.getPlayers().size());
 
         ServerPlayerEntity player = world.getPlayers().get(randIndex);
 
-        if (player == null) return;
+        if (player == null)
+            return;
 
         BlockPos playerPos = player.getBlockPos();
 
@@ -155,8 +158,7 @@ public class BossesSpawningHandler {
             MobEntity mob = mobEntityType.create(world);
             if (mob != null) {
                 mob.refreshPositionAndAngles(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), 0, 0);
-                mob.setCustomName(Text.literal(randomMobName).styled(style -> style.withColor(Formatting.DARK_PURPLE)));  // Set custom name to the randomly selected name
-
+                mob.setCustomName(Text.literal(randomMobName).styled(style -> style.withColor(Formatting.DARK_PURPLE)));
 
                 Utils.applyEffectForMobs(mob, 3, 200);
 
@@ -180,9 +182,12 @@ public class BossesSpawningHandler {
                 mob.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, glowEffectDuration, 0));
 
                 Utils.addRunAfter(() -> {
-                    mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(mob.getMaxHealth() + 100);
-                    mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 10);
-                    mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 10);
+                    mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
+                            .setBaseValue(mob.getMaxHealth() + 200);
+                    mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(
+                            mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() + 15);
+                    mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR)
+                            .setBaseValue(mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue() + 15);
 
                     mob.setHealth(mob.getMaxHealth());
                 }, 30);
@@ -190,14 +195,17 @@ public class BossesSpawningHandler {
         }
     }
 
-
     private BlockPos findValidSpawnPosition(ServerWorld world, BlockPos playerPos) {
         // No spawning at day
-        if (world.isDay()) return null;
+        if (world.isDay())
+            return null;
 
         for (int i = 0; i < 10; i++) {
             double angle = world.random.nextDouble() * 2 * Math.PI; // Random angle
-            int distance = SPAWN_MIN_DISTANCE + world.random.nextInt(SPAWN_MAX_DISTANCE - SPAWN_MIN_DISTANCE + 1); // Random distance within range
+            int distance = SPAWN_MIN_DISTANCE + world.random.nextInt(SPAWN_MAX_DISTANCE - SPAWN_MIN_DISTANCE + 1); // Random
+                                                                                                                   // distance
+                                                                                                                   // within
+                                                                                                                   // range
             int offsetX = (int) (Math.cos(angle) * distance);
             int offsetZ = (int) (Math.sin(angle) * distance);
 
@@ -209,22 +217,27 @@ public class BossesSpawningHandler {
         return null;
     }
 
-    //spawn a pillar up to the sky to notice the players there's a zombie just spawned
+    // spawn a pillar up to the sky to notice the players there's a zombie just
+    // spawned
     private void spawnParticlesUpToTheSky(ServerWorld world, MobEntity mob) {
         BlockPos mobPos = mob.getBlockPos();
-        int startY = mobPos.getY();  // Starting Y position of the mob
-        int maxY = 256;  // You can set the max height of the pillar here, or use world.getHeight() for the height limit
+        int startY = mobPos.getY(); // Starting Y position of the mob
+        int maxY = 256; // You can set the max height of the pillar here, or use world.getHeight() for
+                        // the height limit
 
-        // Loop from the mob's Y position to the maximum Y (or until the world height limit)
+        // Loop from the mob's Y position to the maximum Y (or until the world height
+        // limit)
         for (int y = startY; y <= maxY; y++) {
             BlockPos particlePos = new BlockPos(mobPos.getX(), y, mobPos.getZ());
 
             // Spawn the particle at the given position
-            world.spawnParticles(ParticleTypes.FLAME, particlePos.getX() + 0.5, particlePos.getY() + 0.5, particlePos.getZ() + 0.5, 1, 0, 0, 0, 0.05);
+            world.spawnParticles(ParticleTypes.FLAME, particlePos.getX() + 0.5, particlePos.getY() + 0.5,
+                    particlePos.getZ() + 0.5, 1, 0, 0, 0, 0.05);
         }
     }
 
-    // Need to do the spawn beacon particle to notice the player there's a zombie spawn right at the location
+    // Need to do the spawn beacon particle to notice the player there's a zombie
+    // spawn right at the location
     private void spawnLightningForNoticePlayers(ServerWorld world, MobEntity mob) {
         BlockPos pos = mob.getBlockPos();
         LightningEntity lightning = new LightningEntity(EntityType.LIGHTNING_BOLT, world);
@@ -233,21 +246,23 @@ public class BossesSpawningHandler {
         world.spawnEntity(lightning);
     }
 
-
     public void bossDropsRegister() {
-        if (!canBossesSpawningHanlder) return;
+        if (!canBossesSpawningHanlder)
+            return;
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, world1) -> {
             if (entity instanceof MobEntity) {
                 if (entity.getCustomName() != null && ancientMobs.containsKey((entity.getCustomName().getString()))) {
                     BlockPos deathPos = entity.getBlockPos();
                     ServerWorld serverWorld = entity.getServer().getOverworld();
 
-                    if (serverWorld == null) return;
+                    if (serverWorld == null)
+                        return;
 
                     for (AncientMobDrops i : ancientMobDrops) {
                         double r = random.nextDouble();
                         if (r < i.getDropChance()) {
-                            serverWorld.spawnEntity(new ItemEntity(serverWorld, deathPos.getX(), deathPos.getY() + 1, deathPos.getZ(), i.getDropItem()));
+                            serverWorld.spawnEntity(new ItemEntity(serverWorld, deathPos.getX(), deathPos.getY() + 1,
+                                    deathPos.getZ(), i.getDropItem()));
                         }
                     }
                 }

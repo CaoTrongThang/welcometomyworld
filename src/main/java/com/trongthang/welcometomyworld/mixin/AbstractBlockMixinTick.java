@@ -29,7 +29,6 @@ public class AbstractBlockMixinTick {
     private static final int MIN_ADD_TIME = 1;
     private static final int SCHEDULE_DELAY_TIME = 20;
 
-
     private static final int PLANKS_LOGS_TURN_TO_BURNING_BLOCK_TIME = 80;
 
     private static final ConcurrentHashMap<BlockPos, Integer> blockTurnIntoCounter = new ConcurrentHashMap<>();
@@ -40,7 +39,8 @@ public class AbstractBlockMixinTick {
     }
 
     @Inject(method = "onStateReplaced", at = @At("HEAD"))
-    private void onStateReplaced(BlockState oldState, World world, BlockPos pos, BlockState newState, boolean moved, CallbackInfo ci) {
+    private void onStateReplaced(BlockState oldState, World world, BlockPos pos, BlockState newState, boolean moved,
+            CallbackInfo ci) {
 
         stateAddAndRemove(BlockTags.LOGS, newState, oldState, world, pos);
         stateAddAndRemove(BlockTags.PLANKS, newState, oldState, world, pos);
@@ -48,10 +48,12 @@ public class AbstractBlockMixinTick {
         if (newState.isOf(Blocks.FIRE)) {
             BlockPos burningPos = checkFireDirection(newState, pos);
 
-            if (burningPos == null) return;
+            if (burningPos == null)
+                return;
 
             BlockState currentBurningState = world.getBlockState(burningPos);
-            if (!blockTurnIntoCounter.containsKey(burningPos)) ;
+            if (!blockTurnIntoCounter.containsKey(burningPos))
+                ;
             {
                 if (currentBurningState.isIn(BlockTags.PLANKS) || currentBurningState.isIn(BlockTags.LOGS)) {
                     world.scheduleBlockTick(burningPos, currentBurningState.getBlock(), 20);
@@ -77,7 +79,8 @@ public class AbstractBlockMixinTick {
 
                 if (counter > PLANKS_LOGS_TURN_TO_BURNING_BLOCK_TIME) {
                     if (world.getServer() != null) {
-                        Utils.spawnBlockBreakParticles(world.getServer().getOverworld(), pos, new BlockStateParticleEffect(ParticleTypes.BLOCK, state.getBlock().getDefaultState()));
+                        Utils.spawnBlockBreakParticles(world.getServer().getOverworld(), pos,
+                                new BlockStateParticleEffect(ParticleTypes.BLOCK, state.getBlock().getDefaultState()));
                     }
                     world.setBlockState(pos, BlocksManager.BURNING_PLANK.getDefaultState());
                     blockTurnIntoCounter.remove(pos);
@@ -87,7 +90,8 @@ public class AbstractBlockMixinTick {
                 blockTurnIntoCounter.put(pos, counter);
 
                 world.scheduleBlockTick(pos, state.getBlock(), SCHEDULE_DELAY_TIME);
-            };
+            }
+            ;
         }
     }
 
@@ -97,16 +101,6 @@ public class AbstractBlockMixinTick {
         }
 
         if (oldState.isIn(tag)) {
-            blockTurnIntoCounter.remove(pos);
-        }
-    }
-
-    private void stateAddAndRemove(Block checkBlock, BlockState newState, BlockState oldState, World world, BlockPos pos) {
-        if (newState.isOf(checkBlock)) {
-            world.scheduleBlockTick(pos, newState.getBlock(), 20);
-        }
-
-        if (oldState.isOf(checkBlock)) {
             blockTurnIntoCounter.remove(pos);
         }
     }

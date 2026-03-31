@@ -18,7 +18,7 @@ public class BabyZombieReduce {
 
     @Inject(method = "setBaby", at = @At("HEAD"), cancellable = true)
     private void setBaby(boolean baby, CallbackInfo ci) {
-        if (baby && WelcomeToMyWorld.random.nextFloat() > 0.001) {
+        if (baby && WelcomeToMyWorld.random.nextFloat() > 0.01) {
             ci.cancel();
         }
     }

@@ -25,14 +25,10 @@ import static com.trongthang.welcometomyworld.features.MobsGearsUp.DEFAULT_EQUIP
 @Mixin(MobEntity.class)
 public abstract class MobEntityGearsUp {
 
-
-    @Inject(
-            method = "initialize",
-            at = @At("HEAD")
-    )
+    @Inject(method = "initialize", at = @At("HEAD"))
     private void onInitialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason,
-                              @Nullable EntityData entityData, @Nullable NbtCompound entityNbt,
-                              CallbackInfoReturnable<EntityData> cir) {
+            @Nullable EntityData entityData, @Nullable NbtCompound entityNbt,
+            CallbackInfoReturnable<EntityData> cir) {
         MobEntity mob = (MobEntity) (Object) this;
         Identifier mobId = EntityType.getId(mob.getType());
 
@@ -49,10 +45,12 @@ public abstract class MobEntityGearsUp {
         if (settings.helmet && !MobsGearsUp.HELMETS.isEmpty() && mob.getEquippedStack(EquipmentSlot.HEAD).isEmpty()) {
             equipItem(mob, EquipmentSlot.HEAD, MobsGearsUp.HELMETS, settings);
         }
-        if (settings.chestplate && !MobsGearsUp.CHESTPLATES.isEmpty() && mob.getEquippedStack(EquipmentSlot.CHEST).isEmpty()) {
+        if (settings.chestplate && !MobsGearsUp.CHESTPLATES.isEmpty()
+                && mob.getEquippedStack(EquipmentSlot.CHEST).isEmpty()) {
             equipItem(mob, EquipmentSlot.CHEST, MobsGearsUp.CHESTPLATES, settings);
         }
-        if (settings.leggings && !MobsGearsUp.LEGGINGS.isEmpty() && mob.getEquippedStack(EquipmentSlot.LEGS).isEmpty()) {
+        if (settings.leggings && !MobsGearsUp.LEGGINGS.isEmpty()
+                && mob.getEquippedStack(EquipmentSlot.LEGS).isEmpty()) {
             equipItem(mob, EquipmentSlot.LEGS, MobsGearsUp.LEGGINGS, settings);
         }
         if (settings.boots && !MobsGearsUp.BOOTS.isEmpty() && mob.getEquippedStack(EquipmentSlot.FEET).isEmpty()) {
@@ -62,12 +60,15 @@ public abstract class MobEntityGearsUp {
 
     private void equipMainHand(LivingEntity mob, MobsGearsUp.MobSettings settings) {
         if (mob.getEquippedStack(EquipmentSlot.MAINHAND).isEmpty()) { // Check if empty
-            if (!equipArmorChance(mob)) return;
+            if (!checkChance(mob, 550.0f, 120.0f, 0.90f))
+                return;
 
             List<Item> mainHandOptions = new ArrayList<>();
 
-            if (settings.melee) mainHandOptions.addAll(MobsGearsUp.MELEE_WEAPONS);
-            if (settings.range) mainHandOptions.addAll(MobsGearsUp.RANGE_WEAPONS);
+            if (settings.melee)
+                mainHandOptions.addAll(MobsGearsUp.MELEE_WEAPONS);
+            if (settings.range)
+                mainHandOptions.addAll(MobsGearsUp.RANGE_WEAPONS);
 
             if (!mainHandOptions.isEmpty()) {
                 Item item = mainHandOptions.get(random.nextInt(mainHandOptions.size()));
@@ -80,7 +81,8 @@ public abstract class MobEntityGearsUp {
 
     private void equipOffhand(LivingEntity mob, MobsGearsUp.MobSettings settings) {
         if (mob.getEquippedStack(EquipmentSlot.OFFHAND).isEmpty()) { // Check if empty
-            if (!equipOffhandChance(mob)) return;
+            if (!checkChance(mob, 1320.0f, 285.0f, 0.40f))
+                return;
             if (settings.offhand && !MobsGearsUp.OFF_HANDS.isEmpty()) {
                 Item item = MobsGearsUp.OFF_HANDS.get(random.nextInt(MobsGearsUp.OFF_HANDS.size()));
                 ItemStack stack = new ItemStack(item);
@@ -92,7 +94,8 @@ public abstract class MobEntityGearsUp {
 
     private void equipItem(LivingEntity mob, EquipmentSlot slot, List<Item> items, MobsGearsUp.MobSettings settings) {
         if ((slot.isArmorSlot() && mob.getArmorItems() != null)) {
-            if(!equipArmorChance(mob)) return;
+            if (!checkChance(mob, 550.0f, 120.0f, 0.90f))
+                return;
 
             Item item = items.get(random.nextInt(items.size()));
             ItemStack stack = new ItemStack(item);
@@ -104,13 +107,17 @@ public abstract class MobEntityGearsUp {
     }
 
     private void applyEnchantments(LivingEntity mob, ItemStack stack, MobsGearsUp.MobSettings settings) {
-        if (!settings.enchantment) return;
-        if(!enchantmentChance(mob)) return;
+        if (!settings.enchantment)
+            return;
+        if (!checkChance(mob, 615.0f, 133.0f, 0.80f))
+            return;
 
         MobsGearsUp.EnchantmentCategory category = getItemCategory(stack.getItem());
-        if (category == null) return;
+        if (category == null)
+            return;
 
-        List<Identifier> enchantmentIds = MobsGearsUp.CATEGORIZED_ENCHANTMENTS.getOrDefault(category, Collections.emptyList());
+        List<Identifier> enchantmentIds = MobsGearsUp.CATEGORIZED_ENCHANTMENTS.getOrDefault(category,
+                Collections.emptyList());
         List<Enchantment> applicable = new ArrayList<>();
 
         for (Identifier id : enchantmentIds) {
@@ -130,8 +137,9 @@ public abstract class MobEntityGearsUp {
         }
 
         int counter = 0;
-        while(moreEnchantmentsChance(mob) && counter <= 5){
-            if(applicable.isEmpty()) break;
+        while (checkChance(mob, 2000.0f, 450.0f, 0.20f) && counter <= 5) {
+            if (applicable.isEmpty())
+                break;
 
             int rand = random.nextInt(applicable.size());
             Enchantment chosen = applicable.get(rand);
@@ -164,44 +172,25 @@ public abstract class MobEntityGearsUp {
         return null;
     }
 
-    private boolean equipArmorChance(LivingEntity mob){
-        long currentTime = mob.getWorld().getTimeOfDay();
-        int currentDay = (int) (currentTime / 24000);
-
-        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 50), 0.95f);
-        if(random.nextFloat() > newChance) return false;
-
-        return true;
+    private float getImprovedMobsDifficulty(LivingEntity mob) {
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("improvedmobs")) {
+            return io.github.flemmli97.improvedmobs.difficulty.DifficultyData.getDifficulty(mob.getWorld(), mob);
+        }
+        return -1;
     }
 
+    private boolean checkChance(LivingEntity mob, float diffDiv, float dayDiv, float maxChance) {
+        float difficulty = getImprovedMobsDifficulty(mob);
+        float chance;
 
-    private boolean equipOffhandChance(LivingEntity mob){
-        long currentTime = mob.getWorld().getTimeOfDay();
-        int currentDay = (int) (currentTime / 24000);
+        if (difficulty >= 0) {
+            chance = Math.min(DEFAULT_EQUIP_CHANCE + (difficulty / diffDiv), maxChance);
+        } else {
+            long currentTime = mob.getWorld().getTimeOfDay();
+            int currentDay = (int) (currentTime / 24000);
+            chance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / dayDiv), maxChance);
+        }
 
-        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 50), 0.45f);
-        if(random.nextFloat() > newChance) return false;
-
-        return true;
-    }
-
-    private boolean enchantmentChance(LivingEntity mob){
-        long currentTime = mob.getWorld().getTimeOfDay();
-        int currentDay = (int) (currentTime / 24000);
-
-        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 50), 0.8f);
-        if(random.nextFloat() > newChance) return false;
-
-        return true;
-    }
-
-    private boolean moreEnchantmentsChance(LivingEntity mob){
-        long currentTime = mob.getWorld().getTimeOfDay();
-        int currentDay = (int) (currentTime / 24000);
-
-        float newChance = Math.min(DEFAULT_EQUIP_CHANCE + ((float) currentDay / 100), 0.15f);
-        if(random.nextFloat() > newChance) return false;
-
-        return true;
+        return random.nextFloat() <= chance;
     }
 }

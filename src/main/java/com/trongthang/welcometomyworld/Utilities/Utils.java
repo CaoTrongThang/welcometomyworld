@@ -17,6 +17,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
@@ -316,26 +317,43 @@ public class Utils {
     }
 
     // Apply the effect to the mob (either increase level or apply new effect)
-    public static void applyEffectForMobs(LivingEntity mob, int howManyEffects, int durationInTicks) {
+    public static void applyEffectForMobs(LivingEntity entity, int effectCount, int duration) {
         // Use a HashSet to select unique effects
         Set<StatusEffect> selectedEffects = new HashSet<>();
+        int attempts = 0;
+        int maxAttempts = effectCount * 5; // Prevent getting stuck in a loop if Strength is frequently picked
 
-        for (int x = 0; x < howManyEffects; x++) {
+        while (selectedEffects.size() < effectCount && attempts < maxAttempts
+                && selectedEffects.size() < POSSIBLE_EFFECTS_FOR_MOBS.size()) {
+            attempts++;
             StatusEffect randomEffect = POSSIBLE_EFFECTS_FOR_MOBS.get(random.nextInt(POSSIBLE_EFFECTS_FOR_MOBS.size()));
+
+            if (randomEffect == StatusEffects.STRENGTH) {
+                StatusEffectInstance currentStrength = entity.getStatusEffect(StatusEffects.STRENGTH);
+                if (currentStrength != null && currentStrength.getAmplifier() >= 1) {
+                    continue;
+                }
+            }
+
             selectedEffects.add(randomEffect);
         }
 
         for (StatusEffect effect : selectedEffects) {
-            StatusEffectInstance currentEffect = mob.getStatusEffect(effect);
+            StatusEffectInstance currentEffect = entity.getStatusEffect(effect);
 
             if (currentEffect != null) {
-                // Increase effect level
-                int newAmplifier = Math.min(currentEffect.getAmplifier() + 1, 24);
-                mob.addStatusEffect(new StatusEffectInstance(effect, currentEffect.getDuration(), newAmplifier));
+                int nextAmplifier = currentEffect.getAmplifier() + 1;
+
+                // Strength is capped at level 2 (amplifier 1)
+                if (effect == StatusEffects.STRENGTH) {
+                    nextAmplifier = Math.min(nextAmplifier, 1);
+                } else {
+                    nextAmplifier = Math.min(nextAmplifier, 24);
+                }
+
+                entity.addStatusEffect(new StatusEffectInstance(effect, currentEffect.getDuration(), nextAmplifier));
             } else {
-                // Apply new effect
-                mob.addStatusEffect(new StatusEffectInstance(effect, durationInTicks, 0)); // Duration: 600 ticks (30
-                                                                                           // seconds)
+                entity.addStatusEffect(new StatusEffectInstance(effect, duration, 0));
             }
         }
     }
