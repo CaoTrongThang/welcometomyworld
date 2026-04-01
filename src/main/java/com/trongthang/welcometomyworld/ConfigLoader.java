@@ -87,6 +87,28 @@ public class ConfigLoader {
         @SerializedName("excludedUpgradeMobs")
         public List<String> excludedUpgradeMobs = new ArrayList<>(List.of("saintdragons:*"));
 
+        @Expose
+        @SerializedName("darknessLevels")
+        public DarknessLevelsConfig darknessLevels = new DarknessLevelsConfig();
+
+        public static class DarknessLevelsConfig {
+                @Expose
+                @SerializedName("_info")
+                public List<String> _info = List.of(
+                                "Darkness levels per dimension.",
+                                "Value is the curve power (e.g. 4.0 is very dark, 1.0 is vanilla).");
+
+                @Expose
+                @SerializedName("dimensions")
+                public Map<String, Float> dimensions = new HashMap<>();
+
+                public DarknessLevelsConfig() {
+                        dimensions.put("minecraft:overworld", 4.0f);
+                        dimensions.put("minecraft:the_nether", 1.0f);
+                        dimensions.put("minecraft:the_end", 1.0f);
+                }
+        }
+
         // All mobs can be geared with weapons, armors,... if you want specific mobs to
         // be geared the way you want, add them to validMobs
         // you can config for all mobs from that mod by using the "*" example:
