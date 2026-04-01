@@ -21,6 +21,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.server.command.CommandManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -106,6 +108,23 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     @Override
     public void onInitialize() {
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(CommandManager.literal("welcometomyworld")
+                    .requires(source -> source.hasPermissionLevel(2))
+                    .then(CommandManager.literal("reloadconfig")
+                            .executes(context -> {
+                                ConfigLoader.loadConfig();
+                                com.trongthang.welcometomyworld.features.MobsGearsUp.reload();
+                                context.getSource()
+                                        .sendFeedback(
+                                                () -> Text.literal(
+                                                        "§a[Welcome To My World] Configuration reloaded successfully!"),
+                                                false);
+                                return 1;
+                            })));
+        });
+
         ModTagsManager.registerTags();
         ConfigLoader.loadConfig();
         compatityChecker.OriginCheck();

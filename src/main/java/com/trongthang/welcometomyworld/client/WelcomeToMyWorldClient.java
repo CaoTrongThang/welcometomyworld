@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.client;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
 import com.trongthang.welcometomyworld.ModKeybindings;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
@@ -53,16 +54,15 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     public static BlockPos skullRevivePosition = null;
 
     private int messageCounter = 0;
-//    List<String> removeMessages = List.of("Installed datapacks:",
-//            "You can return to this menu with /function nucleus:menu",
-//            "Nucleus v0.2.0 installed successfully",
-//            "Sanguine v0.4.0 (Commands | Wiki)",
-//            "has made the advancement [Ice and Fire]",
-//            "Manic v1.1.0 (Commands | Wiki)");
+    // List<String> removeMessages = List.of("Installed datapacks:",
+    // "You can return to this menu with /function nucleus:menu",
+    // "Nucleus v0.2.0 installed successfully",
+    // "Sanguine v0.4.0 (Commands | Wiki)",
+    // "has made the advancement [Ice and Fire]",
+    // "Manic v1.1.0 (Commands | Wiki)");
 
     List<String> removeMessages = List.of("has made the advancement [Ice and Fire]",
             "has made the advancement [Mobs of Mythology]");
-
 
     @Override
     public void onInitializeClient() {
@@ -85,7 +85,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
         if (compatityChecker.OriginCheck()) {
             ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-                if (stopSendingOriginsScreen) return;
+                if (stopSendingOriginsScreen)
+                    return;
                 if (screen != null) {
                     String screenTitle = screen.getTitle() != null ? screen.getTitle().getString() : "No Title";
                     // Check for the Origins screen
@@ -125,11 +126,12 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             });
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(STOP_SENDING_ORIGINS_SCREEN, (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                stopSendingLoadingTerrainScreen = true;
-            });
-        });
+        ClientPlayNetworking.registerGlobalReceiver(STOP_SENDING_ORIGINS_SCREEN,
+                (client, handler, buf, responseSender) -> {
+                    client.execute(() -> {
+                        stopSendingLoadingTerrainScreen = true;
+                    });
+                });
 
         ClientPlayNetworking.registerGlobalReceiver(CHANGE_PERSPECTIVE, (client, handler, buf, responseSender) -> {
             client.execute(() -> {
@@ -146,8 +148,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
                 return false;
             }
 
-
-            if (!removeMessagesFirstJoin) return true;
+            if (!removeMessagesFirstJoin)
+                return true;
 
             for (String m : removeMessages) {
                 if (a.getString().toLowerCase().contains(m.toLowerCase())) {
@@ -178,7 +180,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     private boolean lastScreenTerain = false;
 
     private void handleTerrainScreen(MinecraftClient client) {
-        if (stopSendingLoadingTerrainScreen) return;
+        if (stopSendingLoadingTerrainScreen)
+            return;
 
         if (lastScreenTerain) {
             if (!(client.currentScreen instanceof DownloadingTerrainScreen)) {
@@ -199,17 +202,26 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     }
 
     private void handleOpenMobStats(MinecraftClient client) {
-        if (client.player == null || client.world == null) return;
+        if (client.player == null || client.world == null)
+            return;
 
         HitResult hitResult = client.crosshairTarget;
         if (hitResult instanceof EntityHitResult entityHitResult) {
             Entity targetEntity = entityHitResult.getEntity();
 
             if (targetEntity instanceof TameableEntity tameableEntity) {
+                String tameableId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(tameableEntity.getType())
+                        .toString();
+                if (Utils.matchesPattern(tameableId,
+                        ConfigLoader.getInstance().excludedUpgradeMobs)) {
+                    return;
+                }
+
                 if (tameableEntity.isTamed() && tameableEntity.getOwnerUuid() != null &&
                         tameableEntity.getOwnerUuid().equals(client.player.getUuid())) {
                     RequestMobStatsPacket requestPacket = new RequestMobStatsPacket(tameableEntity.getId());
-                    ClientPlayNetworking.send(REQUEST_MOB_STATS_PACKET, requestPacket.encode(new PacketByteBuf(Unpooled.buffer())));
+                    ClientPlayNetworking.send(REQUEST_MOB_STATS_PACKET,
+                            requestPacket.encode(new PacketByteBuf(Unpooled.buffer())));
 
                     client.setScreen(new MobUpgradeScreen(tameableEntity));
                 }
@@ -220,13 +232,13 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     private void switchPerspectiveOnDeath(MinecraftClient client) {
         boolean isDead = client.player.isDead();
         if (isDead && !wasPlayerDead) {
-            // Player has just died, save current perspective only if not already in third-person
+            // Player has just died, save current perspective only if not already in
+            // third-person
             if (client.options.getPerspective() == Perspective.FIRST_PERSON) {
                 previousPerspective = Perspective.FIRST_PERSON;
                 client.execute(() -> {
-                            client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
-                        }
-                );
+                    client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+                });
                 ; // Switch to third-person view on death
             } else {
                 previousPerspective = client.options.getPerspective(); // Save the current third-person perspective
@@ -251,7 +263,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
         assert player != null;
 
-        if (player.isCreative() || player.isSpectator() || player.isDead()) return;
+        if (player.isCreative() || player.isSpectator() || player.isDead())
+            return;
 
         Vec3d veloc = player.getVelocity();
 
@@ -278,7 +291,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     }
 
     private boolean hasLandedWater(ClientPlayerEntity player) {
-        // Check if the player has landed (on the ground or on any block or water below them)
+        // Check if the player has landed (on the ground or on any block or water below
+        // them)
         BlockPos below = player.getBlockPos().down(2);
         BlockState blockState = player.getWorld().getBlockState(below);
 
@@ -292,7 +306,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
     }
 
     private boolean hasLandedGround(ClientPlayerEntity player) {
-        // Check if the player has landed (on the ground or on any block or water below them)
+        // Check if the player has landed (on the ground or on any block or water below
+        // them)
         BlockPos below = player.getBlockPos().down();
 
         // Check if the player is on the ground or touching a water block
@@ -325,11 +340,9 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
                     // Mark the chunk's range for rendering
                     client.worldRenderer.scheduleBlockRenders(
                             chunkPos.getStartX(), 0, chunkPos.getStartZ(),
-                            chunkPos.getStartX() + 15, client.world.getHeight(), chunkPos.getStartZ() + 15
-                    );
+                            chunkPos.getStartX() + 15, client.world.getHeight(), chunkPos.getStartZ() + 15);
                 }
             }
         }
     }
 }
-

@@ -32,9 +32,8 @@ public abstract class MobEntityGearsUp {
         MobEntity mob = (MobEntity) (Object) this;
         Identifier mobId = EntityType.getId(mob.getType());
 
-        if (MobsGearsUp.validMobs.containsKey(mobId)) {
-            MobsGearsUp.MobSettings settings = MobsGearsUp.validMobs.get(mobId);
-
+        MobsGearsUp.MobSettings settings = MobsGearsUp.getSettings(mobId);
+        if (settings != null) {
             equipArmor(mob, settings);
             equipMainHand(mob, settings);
             equipOffhand(mob, settings);

@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld;
 
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.RequestMobStatsPacket;
 import com.trongthang.welcometomyworld.classes.tameablePacket.SyncMobStatsPacket;
 import com.trongthang.welcometomyworld.classes.tameablePacket.TameableEntityInterface;
@@ -20,7 +21,6 @@ import net.minecraft.world.World;
 
 import static com.trongthang.welcometomyworld.GlobalVariables.*;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
-
 
 public class ServerNetworking {
     public static void register() {
@@ -71,11 +71,9 @@ public class ServerNetworking {
                                 Registries.SOUND_EVENT.get(soundId),
                                 SoundCategory.BLOCKS,
                                 1.0F, // Volume
-                                0.8F + world.random.nextFloat() * 0.2F
-                        );
+                                0.8F + world.random.nextFloat() * 0.2F);
                     });
-                }
-        );
+                });
 
         ServerPlayNetworking.registerGlobalReceiver(UPDATE_MOB_STAT, (server, player, handler, buf, responseSender) -> {
             UpdateMobStatPacket packet = UpdateMobStatPacket.decode(buf);
@@ -86,15 +84,24 @@ public class ServerNetworking {
                 if (entity instanceof TameableEntity tameableEntity) {
                     TameableEntityInterface entityInterface = (TameableEntityInterface) tameableEntity;
 
-                    if (entityInterface.getPointAvailalble() <= 0) return;
+                    String tameableId = Registries.ENTITY_TYPE.getId(tameableEntity.getType()).toString();
+                    if (Utils.matchesPattern(tameableId,
+                            ConfigLoader.getInstance().excludedUpgradeMobs)) {
+                        return;
+                    }
+
+                    if (entityInterface.getPointAvailalble() <= 0)
+                        return;
 
                     switch (packet.statName) {
                         case "damage" -> {
                             int newDamageLevel = entityInterface.getDamageLevel() + packet.amount;
                             entityInterface.setDamageLevel(newDamageLevel);
 
-                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue();
-                            double addStat = Math.max(MIN_DAMAGE_MOB, Math.min(MAX_DAMAGE_MOB, oldStat * DAMAGE_ADD_PER_LEVEL_MOB_PERCENT / 100));
+                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    .getBaseValue();
+                            double addStat = Math.max(MIN_DAMAGE_MOB,
+                                    Math.min(MAX_DAMAGE_MOB, oldStat * DAMAGE_ADD_PER_LEVEL_MOB_PERCENT / 100));
                             double newStat = oldStat + random.nextDouble(addStat * 0.8f, addStat);
 
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)
@@ -104,9 +111,11 @@ public class ServerNetworking {
                             int newHealthLevel = entityInterface.getHealthLevel() + packet.amount;
                             entityInterface.setHealthLevel(newHealthLevel);
 
-                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).getBaseValue();
+                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
+                                    .getBaseValue();
 
-                            double addStat = Math.max(MIN_HEALTH_MOB, Math.min(MAX_HEALTH_MOB, oldStat * HEALTH_ADD_PER_LEVEL_PERCENT / 100));
+                            double addStat = Math.max(MIN_HEALTH_MOB,
+                                    Math.min(MAX_HEALTH_MOB, oldStat * HEALTH_ADD_PER_LEVEL_PERCENT / 100));
 
                             double newStat = oldStat + random.nextDouble(addStat * 0.8f, addStat);
 
@@ -117,9 +126,11 @@ public class ServerNetworking {
                             int newDefenseLevel = entityInterface.getDefenseLevel() + packet.amount;
                             entityInterface.setDefenseLevel(newDefenseLevel);
 
-                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getBaseValue();
+                            double oldStat = tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR)
+                                    .getBaseValue();
 
-                            double addStat = Math.max(MIN_ARMOR_MOB, Math.min(MAX_ARMOR_MOB, oldStat * ARMOR_ADD_PER_LEVEL_MOB_PERCENT / 100));
+                            double addStat = Math.max(MIN_ARMOR_MOB,
+                                    Math.min(MAX_ARMOR_MOB, oldStat * ARMOR_ADD_PER_LEVEL_MOB_PERCENT / 100));
 
                             double newStat = oldStat + random.nextDouble(addStat * 0.8f, addStat);
 
@@ -132,7 +143,9 @@ public class ServerNetworking {
 
                             // Update the movement speed attribute
                             tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
-                                    .setBaseValue(tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) + SPEED_ADD_PER_LEVEL);
+                                    .setBaseValue(
+                                            tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                                                    + SPEED_ADD_PER_LEVEL);
                         }
                     }
 
@@ -141,23 +154,33 @@ public class ServerNetworking {
                     // Send the updated stats to all nearby players
                     SyncMobStatsPacket syncPacket = new SyncMobStatsPacket(tameableEntity.getId(), tameableEntity);
                     player.getWorld().getPlayers().forEach(p -> {
-                        ServerPlayNetworking.send((ServerPlayerEntity) p, SYNC_MOB_STATS_CLIENT, syncPacket.encode(new PacketByteBuf(Unpooled.buffer())));
+                        ServerPlayNetworking.send((ServerPlayerEntity) p, SYNC_MOB_STATS_CLIENT,
+                                syncPacket.encode(new PacketByteBuf(Unpooled.buffer())));
                     });
                 }
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(REQUEST_MOB_STATS_PACKET, (server, player, handler, buf, responseSender) -> {
-            RequestMobStatsPacket packet = RequestMobStatsPacket.decode(buf);
+        ServerPlayNetworking.registerGlobalReceiver(REQUEST_MOB_STATS_PACKET,
+                (server, player, handler, buf, responseSender) -> {
+                    RequestMobStatsPacket packet = RequestMobStatsPacket.decode(buf);
 
-            server.execute(() -> {
-                var entity = player.getWorld().getEntityById(packet.entityId);
-                if (entity instanceof TameableEntity tameableEntity) {
-                    // Send the mob's stats to the client
-                    SyncMobStatsPacket syncPacket = new SyncMobStatsPacket(tameableEntity.getId(), tameableEntity);
-                    ServerPlayNetworking.send(player, SYNC_MOB_STATS_CLIENT, syncPacket.encode(new PacketByteBuf(Unpooled.buffer())));
-                }
-            });
-        });
+                    server.execute(() -> {
+                        var entity = player.getWorld().getEntityById(packet.entityId);
+                        if (entity instanceof TameableEntity tameableEntity) {
+                            String tameableId = Registries.ENTITY_TYPE.getId(tameableEntity.getType()).toString();
+                            if (Utils.matchesPattern(tameableId,
+                                    ConfigLoader.getInstance().excludedUpgradeMobs)) {
+                                return;
+                            }
+
+                            // Send the mob's stats to the client
+                            SyncMobStatsPacket syncPacket = new SyncMobStatsPacket(tameableEntity.getId(),
+                                    tameableEntity);
+                            ServerPlayNetworking.send(player, SYNC_MOB_STATS_CLIENT,
+                                    syncPacket.encode(new PacketByteBuf(Unpooled.buffer())));
+                        }
+                    });
+                });
     }
 }

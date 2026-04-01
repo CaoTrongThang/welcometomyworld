@@ -844,6 +844,10 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
+        ActionResult actionResult = super.interactMob(player, hand);
+        if (actionResult.isAccepted()) {
+            return actionResult;
+        }
         ItemStack itemStack = player.getStackInHand(hand);
         World world = this.getWorld();
 

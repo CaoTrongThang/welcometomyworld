@@ -1,38 +1,15 @@
 package com.trongthang.welcometomyworld.events;
 
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.EnderPest;
-import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
-import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
-
-import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
-import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
-import net.fabricmc.fabric.api.biome.v1.ModificationPhase;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.CreeperEntity;
-import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.PhantomEntity;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.SpawnSettings;
-import net.minecraft.world.dimension.DimensionType;
 
-import java.awt.*;
-
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
-import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH;
 
 public class SpawnEvents {
 
-    public static final java.util.List<String> DISABLED_MOBS = java.util.Arrays.asList(
-            "mobs_of_mythology:kobold",
-            "iceandfire:hippocampus");
+    // Removed hardcoded DISABLED_MOBS, now uses ConfigLoader
 
     public static void register() {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
@@ -40,7 +17,8 @@ public class SpawnEvents {
             // WorldGen
             if (entity instanceof net.minecraft.entity.LivingEntity) {
                 String entityId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(entity.getType()).toString();
-                if (DISABLED_MOBS.contains(entityId)) {
+                if (com.trongthang.welcometomyworld.Utilities.Utils.matchesPattern(entityId,
+                        com.trongthang.welcometomyworld.ConfigLoader.getInstance().disabledMobs)) {
                     entity.discard();
                     return;
                 }

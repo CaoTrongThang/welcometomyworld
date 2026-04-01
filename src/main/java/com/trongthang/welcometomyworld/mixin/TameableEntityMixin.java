@@ -1,5 +1,7 @@
 package com.trongthang.welcometomyworld.mixin;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.tameablePacket.TameableEntityInterface;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -57,7 +59,8 @@ public class TameableEntityMixin implements TameableEntityInterface {
         this.defenseLevel = nbt.contains("DefenseLevel") ? nbt.getInt("DefenseLevel") : 0;
         this.speedLevel = nbt.contains("SpeedLevel") ? nbt.getInt("SpeedLevel") : 0;
         this.currentLevel = nbt.contains("CurrentLevel") ? nbt.getFloat("CurrentLevel") : 0;
-        this.nextLevelRequireExp = nbt.contains("NextLevelRequireExp") ? nbt.getFloat("NextLevelRequireExp") : DEFAULT_XP_TAMEABLE_MOB; // Default value
+        this.nextLevelRequireExp = nbt.contains("NextLevelRequireExp") ? nbt.getFloat("NextLevelRequireExp")
+                : DEFAULT_XP_TAMEABLE_MOB; // Default value
         this.currentLevelExp = nbt.contains("CurrentLevelExp") ? nbt.getFloat("CurrentLevelExp") : 0;
         this.pointAvailable = nbt.contains("PointAvailable") ? nbt.getInt("PointAvailable") : 0;
     }
@@ -110,6 +113,12 @@ public class TameableEntityMixin implements TameableEntityInterface {
 
     @Override
     public void setCurrentLevel(float currentLevel) {
+        TameableEntity tameableEntity = (TameableEntity) (Object) this;
+        String tameableId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(tameableEntity.getType()).toString();
+        if (Utils.matchesPattern(tameableId,
+                ConfigLoader.getInstance().excludedUpgradeMobs)) {
+            return;
+        }
         this.currentLevel = currentLevel;
     }
 
@@ -130,6 +139,12 @@ public class TameableEntityMixin implements TameableEntityInterface {
 
     @Override
     public void setCurrentLevelExp(float currentLevelExp) {
+        TameableEntity tameableEntity = (TameableEntity) (Object) this;
+        String tameableId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(tameableEntity.getType()).toString();
+        if (Utils.matchesPattern(tameableId,
+                ConfigLoader.getInstance().excludedUpgradeMobs)) {
+            return;
+        }
         this.currentLevelExp = currentLevelExp;
     }
 
@@ -140,6 +155,12 @@ public class TameableEntityMixin implements TameableEntityInterface {
 
     @Override
     public void setPointAvailalble(int pointAvailable) {
+        TameableEntity tameableEntity = (TameableEntity) (Object) this;
+        String tameableId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(tameableEntity.getType()).toString();
+        if (Utils.matchesPattern(tameableId,
+                ConfigLoader.getInstance().excludedUpgradeMobs)) {
+            return;
+        }
         this.pointAvailable = pointAvailable;
     }
 }

@@ -1,5 +1,7 @@
 package com.trongthang.welcometomyworld.mixin;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.tameablePacket.TameableEntityInterface;
 import net.minecraft.entity.Entity;
@@ -26,13 +28,20 @@ public class TameableEntityKillMobMixin {
     public void onDeath(DamageSource damageSource, CallbackInfo ci) {
         // Ensure we're on the server side
         LivingEntity livingEntity = (LivingEntity) (Object) this;
-        if (livingEntity.getWorld().isClient) return;
+        if (livingEntity.getWorld().isClient)
+            return;
 
         // Get the attacker
         Entity attacker = damageSource.getAttacker();
 
         // Check if the attacker is a tameable mob
         if (attacker instanceof TameableEntity tameableEntity) {
+            String tameableId = net.minecraft.registry.Registries.ENTITY_TYPE.getId(tameableEntity.getType())
+                    .toString();
+            if (Utils.matchesPattern(tameableId,
+                    ConfigLoader.getInstance().excludedUpgradeMobs)) {
+                return;
+            }
 
             TameableEntityInterface entityInterface = (TameableEntityInterface) tameableEntity;
 
@@ -45,10 +54,12 @@ public class TameableEntityKillMobMixin {
             float expGained = Math.max(1, (targetHealth) / WelcomeToMyWorld.random.nextFloat(5f, scaleFactor));
             expGained += (float) (livingEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR));
 
-            double stateRate = tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) + tameableEntity.getMaxHealth();
+            double stateRate = tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR)
+                    + tameableEntity.getMaxHealth();
             double scaleXpByStateRate = 1000 / (stateRate + 1);
 
-            float newExp = (float) (entityInterface.getCurrentLevelExp() + (expGained + (expGained * scaleXpByStateRate)));
+            float newExp = (float) (entityInterface.getCurrentLevelExp()
+                    + (expGained + (expGained * scaleXpByStateRate)));
 
             entityInterface.setCurrentLevelExp(newExp);
 
@@ -62,7 +73,8 @@ public class TameableEntityKillMobMixin {
                 levelsGained++;
 
                 // Update required EXP for next level
-                requiredExp = (float) (DEFAULT_XP_TAMEABLE_MOB * (Math.pow(EXP_MULTIPLIER_EACH_LEVEL_MOB, entityInterface.getCurrentLevel())));
+                requiredExp = (float) (DEFAULT_XP_TAMEABLE_MOB
+                        * (Math.pow(EXP_MULTIPLIER_EACH_LEVEL_MOB, entityInterface.getCurrentLevel())));
                 counter++;
             }
 

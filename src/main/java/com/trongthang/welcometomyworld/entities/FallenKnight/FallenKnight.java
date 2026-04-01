@@ -689,6 +689,10 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
+        ActionResult actionResult = super.interactMob(player, hand);
+        if (actionResult.isAccepted()) {
+            return actionResult;
+        }
         ItemStack itemStack = player.getStackInHand(hand);
         World world = this.getWorld();
 
@@ -743,6 +747,11 @@ public class FallenKnight extends StrongTameableEntityDefault {
         }
 
         return ActionResult.PASS;
+    }
+
+    @Override
+    public Item healingFood() {
+        return Items.SOUL_CAMPFIRE;
     }
 
     private Item getTameFood() {

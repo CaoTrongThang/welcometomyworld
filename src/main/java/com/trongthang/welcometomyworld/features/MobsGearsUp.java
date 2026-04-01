@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public class MobsGearsUp {
 
@@ -88,91 +89,81 @@ public class MobsGearsUp {
         }
     }
 
-    public static final HashMap<Identifier, MobSettings> validMobs = new HashMap<>();
+    public static final HashMap<String, MobSettings> validMobs = new HashMap<>();
     public static final HashSet<Identifier> validEnchantments = new HashSet<>();
 
     static {
-        validMobs.put(new Identifier("minecraft:zombie"), new MobSettings());
-        validMobs.put(new Identifier("minecraft:zombie_villager"), new MobSettings());
-        validMobs.put(new Identifier("minecraft:vindicator"), new MobSettings());
-        validMobs.put(new Identifier("minecraft:giant"), new MobSettings());
-        validMobs.put(new Identifier("minecraft:enderman"), new MobSettings().setOffhand(false).setRange(false));
-        validMobs.put(new Identifier("minecraft:spider"), new MobSettings().setOffhand(false));
-        validMobs.put(new Identifier("minecraft:skeleton"), new MobSettings().setRange(true).setMelee(false));
-        validMobs.put(new Identifier("minecraft:ravager"), new MobSettings().setOffhand(false));
+        // Initialized in register() via loadFromConfig()
+    }
 
-        validMobs.put(new Identifier("myths_of_the_sea:leviathan"),
-                new MobSettings().setOffhand(false).setMelee(false).setRange(false));
+    private static void loadFromConfig() {
+        com.trongthang.welcometomyworld.ConfigLoader.MobsGearsUpConfig config = com.trongthang.welcometomyworld.ConfigLoader
+                .getInstance().mobsGearsUp;
 
-        validMobs.put(new Identifier("companions:sacred_pontiff"),
-                new MobSettings().setOffhand(false).setMelee(false).setRange(false));
+        // Load valid mobs
+        for (Map.Entry<String, com.trongthang.welcometomyworld.ConfigLoader.MobSettingsConfig> entry : config.validMobs
+                .entrySet()) {
+            com.trongthang.welcometomyworld.ConfigLoader.MobSettingsConfig cfg = entry.getValue();
+            MobSettings settings = new MobSettings()
+                    .setMelee(cfg.melee)
+                    .setRange(cfg.range)
+                    .setOffhand(cfg.offhand)
+                    .setHelmet(cfg.helmet)
+                    .setChestplate(cfg.chestplate)
+                    .setLeggings(cfg.leggings)
+                    .setBoots(cfg.boots)
+                    .setEnchantment(cfg.enchantment);
+            validMobs.put(entry.getKey(), settings);
+        }
 
-        validMobs.put(new Identifier("saintsdragons:nulljaw"),
-                new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
-        validMobs.put(new Identifier("saintsdragons:ignivorus"),
-                new MobSettings().setOffhand(false).setMelee(false).setChestplate(false).setEnchantment(false));
-        validMobs.put(new Identifier("saintsdragons:raevyx"), new MobSettings().setOffhand(false).setMelee(false));
-        validMobs.put(new Identifier("saintsdragons:cindervane"), new MobSettings().setOffhand(false).setMelee(false));
-        validMobs.put(new Identifier("saintsdragons:stegonaut"), new MobSettings().setOffhand(false).setMelee(false));
+        // Load valid enchantments
+        for (String enchId : config.validEnchantments) {
+            validEnchantments.add(new Identifier(enchId));
+        }
 
-        validMobs.put(new Identifier("takesapillage:legioner"), new MobSettings());
-        validMobs.put(new Identifier("takesapillage:skirmisher"), new MobSettings());
-        validMobs.put(new Identifier("takesapillage:archer"), new MobSettings().setRange(false).setMelee(true));
+        // Load extra off-hands
+        for (String itemId : config.extraOffHands) {
+            Item item = Registries.ITEM.get(new Identifier(itemId));
+            if (item != Items.AIR) {
+                OFF_HANDS.add(item);
+            }
+        }
+    }
 
-        validMobs.put(new Identifier("palegardenbackport:creaking"), new MobSettings());
+    public static MobSettings getSettings(Identifier id) {
+        String idStr = id.toString();
+        // 1. Exact match
+        if (validMobs.containsKey(idStr)) {
+            return validMobs.get(idStr);
+        }
 
-        validMobs.put(new Identifier("eldritch_end:eye"), new MobSettings().setOffhand(false).setMelee(false));
+        // 2. Namespace wildcard match (e.g., minecraft:*)
+        String namespace = id.getNamespace();
+        String wildcardPattern = namespace + ":*";
+        if (validMobs.containsKey(wildcardPattern)) {
+            return validMobs.get(wildcardPattern);
+        }
 
-        validEnchantments.add(new Identifier("minecraft:protection"));
-        validEnchantments.add(new Identifier("minecraft:fire_protection"));
-        validEnchantments.add(new Identifier("minecraft:feather_falling"));
-        validEnchantments.add(new Identifier("minecraft:blast_protection"));
-        validEnchantments.add(new Identifier("minecraft:projectile_protection"));
-        validEnchantments.add(new Identifier("minecraft:respiration"));
-        validEnchantments.add(new Identifier("minecraft:aqua_affinity"));
-        validEnchantments.add(new Identifier("minecraft:thorns"));
-        validEnchantments.add(new Identifier("minecraft:depth_strider"));
-        validEnchantments.add(new Identifier("minecraft:frost_walker"));
-        validEnchantments.add(new Identifier("minecraft:binding_curse"));
-        validEnchantments.add(new Identifier("minecraft:soul_speed"));
-        validEnchantments.add(new Identifier("minecraft:swift_sneak"));
-        validEnchantments.add(new Identifier("minecraft:sharpness"));
-        validEnchantments.add(new Identifier("minecraft:smite"));
-        validEnchantments.add(new Identifier("minecraft:bane_of_arthropods"));
-        validEnchantments.add(new Identifier("minecraft:knockback"));
-        validEnchantments.add(new Identifier("minecraft:fire_aspect"));
-        validEnchantments.add(new Identifier("minecraft:looting"));
-        validEnchantments.add(new Identifier("minecraft:sweeping"));
-        validEnchantments.add(new Identifier("minecraft:efficiency"));
-        validEnchantments.add(new Identifier("minecraft:silk_touch"));
-        validEnchantments.add(new Identifier("minecraft:unbreaking"));
-        validEnchantments.add(new Identifier("minecraft:power"));
-        validEnchantments.add(new Identifier("minecraft:punch"));
-        validEnchantments.add(new Identifier("minecraft:flame"));
-        validEnchantments.add(new Identifier("minecraft:infinity"));
-        validEnchantments.add(new Identifier("minecraft:impaling"));
-        validEnchantments.add(new Identifier("minecraft:riptide"));
-        validEnchantments.add(new Identifier("minecraft:channeling"));
-        validEnchantments.add(new Identifier("minecraft:multishot"));
-        validEnchantments.add(new Identifier("minecraft:quick_charge"));
-        validEnchantments.add(new Identifier("minecraft:piercing"));
-        validEnchantments.add(new Identifier("minecraft:vanishing_curse"));
-        validEnchantments.add(new Identifier("mcda:burning"));
-        validEnchantments.add(new Identifier("mcdw:ambush"));
-        validEnchantments.add(new Identifier("mcdw:multi_shot"));
-        validEnchantments.add(new Identifier("mcdw:cobweb_shot"));
-        validEnchantments.add(new Identifier("mcda:poison_focus"));
-        validEnchantments.add(new Identifier("mcdw:weakening"));
-        validEnchantments.add(new Identifier("mcdw:fuse_shot"));
-        validEnchantments.add(new Identifier("mcdw:gravity"));
-        validEnchantments.add(new Identifier("mcdw:levitation_shot"));
+        return null;
+    }
 
-        OFF_HANDS.add(Registries.ITEM.get(new Identifier("minecraft:flint_and_steel")));
-        OFF_HANDS.add(Registries.ITEM.get(new Identifier("minecraft:ender_pearl")));
-        OFF_HANDS.add(Registries.ITEM.get(new Identifier("minecraft:lava_bucket")));
+    public static void reload() {
+        validMobs.clear();
+        validEnchantments.clear();
+        CATEGORIZED_ENCHANTMENTS.clear();
+        MELEE_WEAPONS.clear();
+        RANGE_WEAPONS.clear();
+        OFF_HANDS.clear();
+        HELMETS.clear();
+        CHESTPLATES.clear();
+        LEGGINGS.clear();
+        BOOTS.clear();
+
+        register();
     }
 
     public static void register() {
+        loadFromConfig();
         Registries.ITEM.forEach(item -> {
             if (item instanceof ArmorItem armor) {
                 switch (armor.getSlotType()) {

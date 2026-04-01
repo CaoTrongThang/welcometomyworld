@@ -31,6 +31,8 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtDouble;
 import net.minecraft.nbt.NbtElement;
@@ -123,7 +125,7 @@ public class Blossom extends StrongTameableEntityDefault {
     private float selfHealPercent = 0.1f;
     private float groupHealPercent = 0.03f;
 
-    private int defaultHealCooldown = 1200;
+    private int defaultHealCooldown = 2400;
 
     private int particleCounter = 0;
     private int particleCooldown = 10;
@@ -364,7 +366,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
                         timeout = 41;
 
-                        Box checkArea = new Box(this.getBlockPos()).expand(15);
+                        Box checkArea = new Box(this.getBlockPos()).expand(50);
                         List<LivingEntity> allies = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
                                 entity -> {
                                     if (entity instanceof PlayerEntity) {
@@ -383,10 +385,10 @@ public class Blossom extends StrongTameableEntityDefault {
                         Utils.addRunAfter(() -> {
                             // Calculate buff parameters based on stats
                             int regenAmplifier = Math.min((int) (this.getMaxHealth() / 250), 10);
-                            int resistanceAmplifier = Math.min((int) (this.getArmor() / 3f), 10);
+                            int resistanceAmplifier = Math.min((int) (this.getArmor() / 5f), 3);
 
                             // Randomly choose between Regeneration or Resistance
-                            boolean useRegen = this.random.nextFloat() < 0.5f;
+                            boolean useRegen = this.random.nextFloat() < 0.7f;
                             int totalBuff = 0;
                             for (LivingEntity ally : allies) {
                                 StatusEffect effect = useRegen ? REGENERATION : RESISTANCE;
@@ -789,6 +791,10 @@ public class Blossom extends StrongTameableEntityDefault {
 
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
+        ActionResult actionResult = super.interactMob(player, hand);
+        if (actionResult.isAccepted()) {
+            return actionResult;
+        }
         World world = this.getWorld();
 
         if (world.isClient) {
@@ -803,8 +809,6 @@ public class Blossom extends StrongTameableEntityDefault {
             this.setSitting(!this.isSitting());
             this.setInSittingPose(this.isSitting());
             this.navigation.stop();
-            WelcomeToMyWorld.LOGGER.info("interactMob: setting setIsPatrolling(false) because of right-click for "
-                    + this.getName().getString());
             this.setIsPatrolling(false);
             this.targetSelector.remove(this.hostileTargetGoal);
 
@@ -821,6 +825,11 @@ public class Blossom extends StrongTameableEntityDefault {
 
         return ActionResult.PASS;
 
+    }
+
+    @Override
+    public Item healingFood() {
+        return Items.BONE_MEAL;
     }
 
     @Override

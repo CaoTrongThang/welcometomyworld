@@ -137,7 +137,7 @@ public class Utils {
         }
     }
 
-    static ConcurrentHashMap<UUID, RunAfter> runnableList = new ConcurrentHashMap();
+    static ConcurrentHashMap<UUID, RunAfter> runnableList = new ConcurrentHashMap<>();
 
     public static void addRunAfter(Runnable runFunction, int afterTicks) {
         UUID taskId = UUID.randomUUID();
@@ -538,6 +538,23 @@ public class Utils {
 
             world.spawnEntity(effectEntity);
         }
+    }
+
+    public static boolean matchesPattern(String id, List<String> patterns) {
+        if (patterns == null || patterns.isEmpty())
+            return false;
+
+        for (String pattern : patterns) {
+            if (pattern.endsWith(":*")) {
+                String namespace = pattern.split(":")[0];
+                if (id.startsWith(namespace + ":")) {
+                    return true;
+                }
+            } else if (id.equalsIgnoreCase(pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

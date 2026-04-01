@@ -12,425 +12,96 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @Mixin(LivingEntity.class)
 public class BalanceDamageForBossesOrMobsFromOtherMods {
-    private static final Map<Identifier, DamageCalculator> DAMAGE_MODIFIERS = new HashMap<>();
-
-    static {
-        // Example entries
-        DAMAGE_MODIFIERS.put(new Identifier("dungeonnowloading", "chaos_spawner"),
-                (original, attacker, damageSource) -> original * 0.85f);
-
-        DAMAGE_MODIFIERS.put(new Identifier("species", "cruncher"),
-                (original, attacker, damageSource) -> original + (float) Math.min(150,
-                        attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.005f));
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "alpha_yeti"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 15) {
-                        if (damageSource.getType().msgId().equals("twilightforest.yeeted")) {
-                            return original;
-                        }
-                        return original + (float) Math.min(70,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.009f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "giant_miner"),
-                (original, attacker, damageSource) -> original * 2.2f);
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "ur_ghast"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 40) {
-                        return original + (float) Math.min(80,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.009f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "carminite_ghastguard"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 15) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.015f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "carminite_ghastling"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 15) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.02f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "knight_phantom"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 40) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 2f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "slime_beetle"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 30) {
-                        return original * 1.5f;
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "blockchain_goblin"),
-                (original, attacker, damageSource) -> {
-
-                    return original * 0.9f;
-
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "upper_goblin_knight"),
-                (original, attacker, damageSource) -> {
-                    return original * 0.9f;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "knight_phantom"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 3f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "minotaur"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 40) {
-                        return Math.min(70, original * 1.5f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("twilightforest", "minoshroom"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return Math.min(70, original * 1.2f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("minecraft", "ghast"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 40) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.008f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "captain_cornelia"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 100) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0075f);
-                    }
-                    return original;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "maw"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(100, original * 2);
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "anglerfish"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 100) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0065f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "tortured_soul"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0068f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "eel"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(100, original * 1.10f);
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "maze_mother"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0075f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("aquamirae", "maze_mother"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0075f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("deeperdarker", "sculk_centipede"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.01f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("deeperdarker", "sculk_leech"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original * 4;
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("deeperdarker", "sculk_snapper"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return Math.min(100, original * 2);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("deeperdarker", "shattered"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.0075f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("deeperdarker", "shriek_worm"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return original + (float) Math.min(100,
-                                attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH) * 0.004f);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("deeperdarker", "sludge"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 50) {
-                        return Math.min(100, original * 2);
-                    }
-                    return 0;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("deeperdarker", "stalker"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(100, original * 0.8f);
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("minecraft", "warden"),
-                (original, attacker, damageSource) -> {
-                    if (damageSource.getType().msgId().equals("sonic_boom")) {
-                        return 10;
-                    }
-                    return Math.min(100, original * 0.5f);
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("graveyard", "lich"),
-                (original, attacker, damageSource) -> {
-                    if (original <= 25) {
-                        if (damageSource.getType().msgId().equals("explosion.player")) {
-                            return Math.min(original * 1.8f, 40);
-                        } else if (damageSource.getType().msgId().equals("indirectMagic")) {
-                            return Math.min(original * 1.8f, 40);
-                        }
-                    }
-
-                    return original;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("minecells", "concierge"),
-                (original, attacker, damageSource) -> {
-
-                    if (damageSource.getType().msgId().equals("minecells.aura")) {
-                        return original * 0.45f;
-                    }
-
-                    return original;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("minecells", "conjunctivius"),
-                (original, attacker, damageSource) -> {
-
-                    if (original > 250) {
-                        original = 115;
-                    } else if (original > 150) {
-                        original = 85;
-                    } else if (original < 50) {
-                        original = 50;
-                    }
-
-                    return Math.min(120, original);
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("palegardenbackport", "creaking"),
-                (original, attacker, damageSource) -> {
-                    return 100;
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "end_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(100, original * 0.8f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "badlands_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "crimson_forest_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "dark_oak_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "end_islands_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 1.4f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "coral_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 1.9f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "soulsand_valley_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 1.5f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "snowy_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 1.5f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "warped_forest_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 2f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "windswept_hills_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 1.8f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "scarab"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 3f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "ice_spikes_enderman"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 0.7f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("endermanoverhaul", "spirit"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(90, original * 1.5f);
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "female_orc_elite"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(150, original * 0.8f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "spriggan"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(50, original * 3);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "orc_champion"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(120, original * 0.9f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "orc_champion"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(120, original * 0.9f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "ogre"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(115, original * 0.9f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "crawler"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(95, original * 1.1f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("wandering_orc", "orc_chief"),
-                (original, attacker, damageSource) -> {
-                    if (original > 150) {
-                        original = 150;
-                    }
-
-                    return Math.min(150, original);
-                });
-
-        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "leviathan"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(110, original * 0.55f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "bunyip"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(80, original * 0.55f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "bake_kujira"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(80, original * 0.6f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("myths_of_the_sea", "kraken"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(95, original * 0.85f);
-                });
-        DAMAGE_MODIFIERS.put(new Identifier("saintsdragons", "nulljaw"),
-                (original, attacker, damageSource) -> {
-                    return Math.min(95, original);
-                });
-    }
 
     @ModifyVariable(method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z", // Explicit method descriptor
             at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private float modifyDamageAmount(float originalDamage, DamageSource source) {
         Entity attacker = source.getAttacker();
+        boolean showMobDamageLogs = com.trongthang.welcometomyworld.ConfigLoader
+                .getInstance().damageBalancing.showMobDamageLogs;
+
         if (attacker != null) {
+            if (source.getType().msgId().equals("thorns")) {
+                return originalDamage;
+            }
+            if (showMobDamageLogs) {
+                WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
+                WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
+                WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
+                WelcomeToMyWorld.LOGGER
+                        .info("ID ATTACKER: " +
+                                Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
+                WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
+            }
 
-            if (attacker != null) {
-                if (source.getType().msgId().equals("thorns")) {
-                    return originalDamage;
-                }
+            Identifier attackerId = Registries.ENTITY_TYPE.getId(attacker.getType());
+            List<com.trongthang.welcometomyworld.ConfigLoader.DamageRuleConfig> rules = getRulesForMob(attackerId);
 
-                // WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
-                // WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
-                // WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
-                // WelcomeToMyWorld.LOGGER
-                // .info("ID ATTACKER: " +
-                // Registries.ENTITY_TYPE.getId(attacker.getType()).toString());
-                // WelcomeToMyWorld.LOGGER.info("TYPE: " + source.getType());
-
-                DamageCalculator calculator = DAMAGE_MODIFIERS.get(Registries.ENTITY_TYPE.getId(attacker.getType()));
-
-                if (calculator != null) {
-                    float scaledDamage = calculator.calculate(originalDamage, (LivingEntity) attacker, source);
-                    // WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
-                    return scaledDamage;
+            if (rules != null) {
+                for (com.trongthang.welcometomyworld.ConfigLoader.DamageRuleConfig rule : rules) {
+                    if (ruleMatches(rule.condition, originalDamage, source)) {
+                        float scaledDamage = applyRuleAction(rule.action, originalDamage, (LivingEntity) attacker);
+                        if (showMobDamageLogs) {
+                            WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
+                        }
+                        return scaledDamage;
+                    }
                 }
             }
         }
 
         return originalDamage;
     }
+
+    private List<com.trongthang.welcometomyworld.ConfigLoader.DamageRuleConfig> getRulesForMob(Identifier id) {
+        java.util.Map<String, List<com.trongthang.welcometomyworld.ConfigLoader.DamageRuleConfig>> mobs = com.trongthang.welcometomyworld.ConfigLoader
+                .getInstance().damageBalancing.mobs;
+        String idStr = id.toString();
+        if (mobs.containsKey(idStr))
+            return mobs.get(idStr);
+        String wildcard = id.getNamespace() + ":*";
+        if (mobs.containsKey(wildcard))
+            return mobs.get(wildcard);
+        if (mobs.containsKey("*"))
+            return mobs.get("*");
+        return null;
+    }
+
+    private boolean ruleMatches(com.trongthang.welcometomyworld.ConfigLoader.DamageConditionConfig condition,
+            float originalDamage, DamageSource source) {
+        if (condition.minOriginalDamage != null && originalDamage < condition.minOriginalDamage)
+            return false;
+        if (condition.maxOriginalDamage != null && originalDamage > condition.maxOriginalDamage)
+            return false;
+
+        String msgId = source.getType().msgId();
+        if (condition.damageSourceTypes != null && !condition.damageSourceTypes.contains(msgId))
+            return false;
+        if (condition.excludeDamageSourceTypes != null && condition.excludeDamageSourceTypes.contains(msgId))
+            return false;
+
+        return true;
+    }
+
+    private float applyRuleAction(com.trongthang.welcometomyworld.ConfigLoader.DamageActionConfig action,
+            float originalDamage, LivingEntity attacker) {
+        if (action.fixedValue != null) {
+            return Math.min(action.maxFinalDamage, action.fixedValue);
+        }
+
+        float base = originalDamage * action.multiplier;
+        float bonus = 0f;
+        if (action.addMaxHealthFraction > 0) {
+            bonus = Math.min(action.maxHealthBonusCap,
+                    (float) attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)
+                            * action.addMaxHealthFraction);
+        }
+
+        return Math.min(action.maxFinalDamage, base + bonus);
+    }
+
 }
