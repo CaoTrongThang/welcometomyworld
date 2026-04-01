@@ -89,7 +89,7 @@ public class MobsGearsUp {
         }
     }
 
-    public static final HashMap<String, MobSettings> validMobs = new HashMap<>();
+    public static final HashMap<String, MobSettings> specificMobs = new HashMap<>();
     public static final HashSet<Identifier> validEnchantments = new HashSet<>();
 
     static {
@@ -101,7 +101,7 @@ public class MobsGearsUp {
                 .getInstance().mobsGearsUp;
 
         // Load valid mobs
-        for (Map.Entry<String, com.trongthang.welcometomyworld.ConfigLoader.MobSettingsConfig> entry : config.validMobs
+        for (Map.Entry<String, com.trongthang.welcometomyworld.ConfigLoader.MobSettingsConfig> entry : config.specificMobs
                 .entrySet()) {
             com.trongthang.welcometomyworld.ConfigLoader.MobSettingsConfig cfg = entry.getValue();
             MobSettings settings = new MobSettings()
@@ -113,16 +113,16 @@ public class MobsGearsUp {
                     .setLeggings(cfg.leggings)
                     .setBoots(cfg.boots)
                     .setEnchantment(cfg.enchantment);
-            validMobs.put(entry.getKey(), settings);
+            specificMobs.put(entry.getKey(), settings);
         }
 
         // Load valid enchantments
-        for (String enchId : config.validEnchantments) {
+        for (String enchId : config.allowedEnchantments) {
             validEnchantments.add(new Identifier(enchId));
         }
 
         // Load extra off-hands
-        for (String itemId : config.extraOffHands) {
+        for (String itemId : config.allowedOffhands) {
             Item item = Registries.ITEM.get(new Identifier(itemId));
             if (item != Items.AIR) {
                 OFF_HANDS.add(item);
@@ -133,22 +133,22 @@ public class MobsGearsUp {
     public static MobSettings getSettings(Identifier id) {
         String idStr = id.toString();
         // 1. Exact match
-        if (validMobs.containsKey(idStr)) {
-            return validMobs.get(idStr);
+        if (specificMobs.containsKey(idStr)) {
+            return specificMobs.get(idStr);
         }
 
         // 2. Namespace wildcard match (e.g., minecraft:*)
         String namespace = id.getNamespace();
         String wildcardPattern = namespace + ":*";
-        if (validMobs.containsKey(wildcardPattern)) {
-            return validMobs.get(wildcardPattern);
+        if (specificMobs.containsKey(wildcardPattern)) {
+            return specificMobs.get(wildcardPattern);
         }
 
         return null;
     }
 
     public static void reload() {
-        validMobs.clear();
+        specificMobs.clear();
         validEnchantments.clear();
         CATEGORIZED_ENCHANTMENTS.clear();
         MELEE_WEAPONS.clear();

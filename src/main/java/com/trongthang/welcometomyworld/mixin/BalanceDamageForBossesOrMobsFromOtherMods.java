@@ -1,7 +1,7 @@
 package com.trongthang.welcometomyworld.mixin;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import com.trongthang.welcometomyworld.classes.DamageCalculator;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -44,7 +44,7 @@ public class BalanceDamageForBossesOrMobsFromOtherMods {
             if (rules != null) {
                 for (com.trongthang.welcometomyworld.ConfigLoader.DamageRuleConfig rule : rules) {
                     if (ruleMatches(rule.condition, originalDamage, source)) {
-                        float scaledDamage = applyRuleAction(rule.action, originalDamage, (LivingEntity) attacker);
+                        float scaledDamage = applyRuleAction(rule.action, originalDamage, attacker);
                         if (showMobDamageLogs) {
                             WelcomeToMyWorld.LOGGER.info("SCALED DAMAGE: " + scaledDamage);
                         }
@@ -88,20 +88,32 @@ public class BalanceDamageForBossesOrMobsFromOtherMods {
     }
 
     private float applyRuleAction(com.trongthang.welcometomyworld.ConfigLoader.DamageActionConfig action,
-            float originalDamage, LivingEntity attacker) {
+            float originalDamage, Entity attacker) {
         if (action.fixedValue != null) {
-            return Math.min(action.maxFinalDamage, action.fixedValue);
+            float fixed = action.fixedValue;
+            if (action.maxFinalDamage != null) {
+                fixed = Math.min(action.maxFinalDamage, fixed);
+            }
+            return fixed;
         }
 
         float base = originalDamage * action.multiplier;
         float bonus = 0f;
-        if (action.addMaxHealthFraction > 0) {
-            bonus = Math.min(action.maxHealthBonusCap,
-                    (float) attacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)
-                            * action.addMaxHealthFraction);
+
+        if (action.addMaxHealthFraction > 0 && attacker instanceof LivingEntity livingAttacker) {
+            bonus = (float) livingAttacker.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH)
+                    * action.addMaxHealthFraction;
+            if (action.maxHealthBonusCap != null) {
+                bonus = Math.min(action.maxHealthBonusCap, bonus);
+            }
         }
 
-        return Math.min(action.maxFinalDamage, base + bonus);
+        float finalDamage = base + bonus;
+        if (action.maxFinalDamage != null) {
+            finalDamage = Math.min(action.maxFinalDamage, finalDamage);
+        }
+
+        return finalDamage;
     }
 
 }
