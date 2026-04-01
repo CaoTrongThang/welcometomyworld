@@ -1320,7 +1320,9 @@ public class Blossom extends StrongTameableEntityDefault {
         }
 
         private void attemptTeleport(Vec3d target) {
-            WelcomeToMyWorld.LOGGER.info("PatrollingGoal: center too far, attempting teleport to " + target);
+            if (mob.getWorld().isClient) {
+                return;
+            }
             if (mob.teleportTo(target.x, target.y, target.z)) {
                 WelcomeToMyWorld.LOGGER.info("PatrollingGoal: teleport successful.");
                 cooldown = 100;
