@@ -22,7 +22,9 @@ public class ConfigLoader {
         // send to url if you're playing the modpack
         @Expose
         @SerializedName("_info")
-        public String _info = "Welcome to My World Mod Configuration. Standard JSON doesn't support comments, so we use these '_info' fields for documentation.";
+        public List<String> _info = List.of(
+                        "Welcome to My World Mod Configuration.",
+                        "Standard JSON doesn't support comments, so we use these '_info' fields for documentation.");
 
         @Expose
         @SerializedName("urlToSendChart")
@@ -62,7 +64,9 @@ public class ConfigLoader {
         // mobs from a mod example: "minecraft:*" will disable all mobs from minecraft
         @Expose
         @SerializedName("_disabledMobs_info")
-        public String _disabledMobs_info = "Mobs here won't be spawned. Use 'modid:*' to disable all mobs from a mod.";
+        public List<String> _disabledMobs_info = List.of(
+                        "Mobs here won't be spawned.",
+                        "Use 'modid:*' to disable all mobs from a mod.");
 
         @Expose
         @SerializedName("disabledMobs")
@@ -75,7 +79,9 @@ public class ConfigLoader {
         // "saintdragons:*"
         @Expose
         @SerializedName("_excludedUpgradeMobs_info")
-        public String _excludedUpgradeMobs_info = "Mobs here can't be leveled up or upgraded via the 'M' menu. Use 'modid:*' for wildcards.";
+        public List<String> _excludedUpgradeMobs_info = List.of(
+                        "Mobs here can't be leveled up or upgraded via the 'M' menu.",
+                        "Use 'modid:*' for wildcards.");
 
         @Expose
         @SerializedName("excludedUpgradeMobs")
@@ -92,7 +98,10 @@ public class ConfigLoader {
         public static class MobsGearsUpConfig {
                 @Expose
                 @SerializedName("_info")
-                public String _info = "Specific mobs gear settings. Use 'modid:*' for all mobs in a mod, or 'modid:name' for specific. Default settings are used if not listed.";
+                public List<String> _info = List.of(
+                                "Specific mobs gear settings.",
+                                "Use 'modid:*' for all mobs in a mod, or 'modid:name' for specific.",
+                                "Default settings are used if not listed.");
 
                 @Expose
                 @SerializedName("specificMobs")
@@ -224,7 +233,12 @@ public class ConfigLoader {
         public static class DamageBalancingConfig {
                 @Expose
                 @SerializedName("_info")
-                public String _info = "Damage balancing rules. Checked top-to-bottom. Condition: filters by minOriginalDamage, maxOriginalDamage, and damageSourceTypes (e.g. 'thorns', 'sonic_boom'). Action Formula: [final = (original * multiplier) + min(maxHealthBonusCap, AttackerMaxHP * addMaxHealthFraction)]. Capped by maxFinalDamage. fixedValue overrides all.";
+                public List<String> _info = List.of(
+                                "Damage balancing rules.",
+                                "Checked top-to-bottom.",
+                                "Condition: filters by minOriginalDamage, maxOriginalDamage, and damageSourceTypes (e.g. 'thorns', 'sonic_boom').",
+                                "Action Formula: [final = (original * multiplier) + min(maxHealthBonusCap, AttackerMaxHP * addMaxHealthFraction)].",
+                                "Capped by maxFinalDamage. fixedValue overrides all.");
 
                 @Expose
                 @SerializedName("showMobDamageLogs")
@@ -549,7 +563,8 @@ public class ConfigLoader {
 
         public static void loadConfig() {
                 File configFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), CONFIG_FILE_NAME);
-                Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+                Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation()
+                                .disableHtmlEscaping().create();
 
                 if (configFile.exists()) {
                         try (FileReader reader = new FileReader(configFile)) {
