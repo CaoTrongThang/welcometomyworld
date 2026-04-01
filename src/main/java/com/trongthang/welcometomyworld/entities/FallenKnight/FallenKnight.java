@@ -567,7 +567,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
                             }
 
                             if (ra < 0.05f) {
-                                Utils.CreateBlockSlamGround(serverWorld, state, pos);
+                                Utils.createBlockSlamGround(serverWorld, state, pos, true);
                             }
 
                             break;

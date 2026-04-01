@@ -39,6 +39,15 @@ public class BlockSlamGroundEntity extends Entity {
     public void tick() {
         super.tick();
 
+        if (this.getVelocity().lengthSquared() > 0) {
+            this.setPosition(this.getX() + this.getVelocity().x, this.getY() + this.getVelocity().y,
+                    this.getZ() + this.getVelocity().z);
+            this.setVelocity(this.getVelocity().multiply(0.98));
+            if (!this.hasNoGravity()) {
+                this.setVelocity(this.getVelocity().add(0, -0.04, 0));
+            }
+        }
+
         if (this.age >= 100) {
             this.discard();
         }
