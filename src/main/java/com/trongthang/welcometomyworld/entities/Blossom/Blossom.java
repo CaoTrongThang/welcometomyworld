@@ -674,7 +674,7 @@ public class Blossom extends StrongTameableEntityDefault {
                             }
 
                             if (ra < 0.04f) {
-                                Utils.createBlockSlamGround(serverWorld, state, pos, false);
+                                Utils.CreateBlockSlamGround(serverWorld, state, pos);
                             }
 
                             break;

@@ -526,7 +526,7 @@ public class Utils {
         return null;
     }
 
-    public static void createBlockSlamGround(ServerWorld world, BlockState state, BlockPos pos, boolean bouncedUp) {
+    public static void CreateBlockSlamGround(ServerWorld world, BlockState state, BlockPos pos) {
         BlockSlamGroundEntity effectEntity = EntitiesManager.BLOCK_SLAM_GROUND.create(world);
         if (effectEntity != null) {
             effectEntity.setBlockState(state);
@@ -536,19 +536,7 @@ public class Utils {
                     pos.getZ() + 0.5 // Center in block
             );
 
-            if (bouncedUp) {
-                effectEntity.setVelocity(0, 0.4, 0);
-            }
-
             world.spawnEntity(effectEntity);
-        }
-
-        if (bouncedUp) {
-            Box box = new Box(pos).expand(1.0, 2.0, 1.0);
-            for (LivingEntity livingEntity : world.getNonSpectatingEntities(LivingEntity.class, box)) {
-                livingEntity.addVelocity(0, 0.6, 0);
-                livingEntity.velocityModified = true;
-            }
         }
     }
 
