@@ -39,7 +39,7 @@ public class BlockSlamGroundEntity extends Entity {
     public void tick() {
         super.tick();
 
-        if (this.age >= 100) {
+        if (this.age >= 90) {
             this.discard();
         }
     }
