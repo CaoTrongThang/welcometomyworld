@@ -5,10 +5,10 @@ import dev.kosmx.playerAnim.api.layered.modifier.AbstractModifier;
 import dev.kosmx.playerAnim.core.util.Vec3f;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 
-public class AttackMaskModifier extends AbstractModifier {
+public class AnimationMaskModifier extends AbstractModifier {
     private final AbstractClientPlayerEntity player;
 
-    public AttackMaskModifier(AbstractClientPlayerEntity player) {
+    public AnimationMaskModifier(AbstractClientPlayerEntity player) {
         this.player = player;
     }
 

@@ -3,10 +3,10 @@
   "package": "com.trongthang.welcometomyworld.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "FixSupporoformTinkerArmorBar",
-    "LightmapMixin",
-    "ClientPlayerEntityMixin",
-    "WailaConfigMixin"
+    "client.FixSupportForTinkersArmorBarMixin",
+    "client.LightmapMixin",
+    "player.ClientPlayerEntityMixin",
+    "client.WailaConfigMixin"
   ],
   "injectors": {
     "defaultRequire": 1

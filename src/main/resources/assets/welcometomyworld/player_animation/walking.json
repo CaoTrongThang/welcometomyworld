@@ -11,14 +11,6 @@
 							"post": [5.00381, -4.99924, 0.08715],
 							"lerp_mode": "catmullrom"
 						},
-						"0.1667": {
-							"post": [4.96861, 9.99842, -0.17979],
-							"lerp_mode": "catmullrom"
-						},
-						"0.5": {
-							"post": [5.00286, -7.49886, 0.13064],
-							"lerp_mode": "catmullrom"
-						},
 						"0.6667": {
 							"post": [5.00381, -4.99924, 0.08715],
 							"lerp_mode": "catmullrom"
