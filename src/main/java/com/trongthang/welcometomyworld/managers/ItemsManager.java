@@ -22,134 +22,140 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class ItemsManager {
 
-    public static final Item THE_FALLEN_HAMMER = registerItem(
-            new Hammer(ModToolMaterial.HAMMER, 15, -2.5f, new FabricItemSettings()), "fallen_hammer");
+        public static final Item THE_FALLEN_HAMMER = registerItem(
+                        new Hammer(ModToolMaterial.HAMMER, 15, -2.5f, new FabricItemSettings()), "fallen_hammer");
 
-    public static final Item REPAIR_KNOWLEDGE = registerItem(new RepairKnowledge(new FabricItemSettings()),
-            "repair_knowledge");
+        public static final Item REPAIR_KNOWLEDGE = registerItem(new RepairKnowledge(new FabricItemSettings()),
+                        "repair_knowledge");
 
-    public static final Item REPAIR_TALISMAN_IRON = registerItem(new RepairTalisman(new FabricItemSettings(), 15),
-            "repair_talisman_iron");
-    public static final Item REPAIR_TALISMAN_GOLD = registerItem(new RepairTalisman(new FabricItemSettings(), 30),
-            "repair_talisman_gold");
-    public static final Item REPAIR_TALISMAN_EMERALD = registerItem(new RepairTalisman(new FabricItemSettings(), 60),
-            "repair_talisman_emerald");
+        public static final Item REPAIR_TALISMAN_IRON = registerItem(new RepairTalisman(new FabricItemSettings(), 15),
+                        "repair_talisman_iron");
+        public static final Item REPAIR_TALISMAN_GOLD = registerItem(new RepairTalisman(new FabricItemSettings(), 30),
+                        "repair_talisman_gold");
+        public static final Item REPAIR_TALISMAN_EMERALD = registerItem(
+                        new RepairTalisman(new FabricItemSettings(), 60),
+                        "repair_talisman_emerald");
 
-    public static final Item ANCIENT_FRAGMENT = registerItem(new Item(new FabricItemSettings()), "ancient_fragment");
-    public static final Item POWER_TALISMAN = registerItem(
-            new BuffTalisman(new FabricItemSettings(), StatusEffects.STRENGTH, 2), "power_talisman");
-    public static final Item SPEED_TALISMAN = registerItem(
-            new BuffTalisman(new FabricItemSettings(), StatusEffects.SPEED, 1), "speed_talisman");
-    public static final Item LIFE_TALISMAN = registerItem(
-            new BuffTalisman(new FabricItemSettings(), StatusEffects.REGENERATION, 1), "life_talisman");
-    public static final Item RESISTANCE_TALISMAN = registerItem(
-            new BuffTalisman(new FabricItemSettings(), StatusEffects.RESISTANCE, 2), "resistance_talisman");
-    public static final Item CREEPER_TALISMAN = registerItem(new CreeperTalisman(new FabricItemSettings()),
-            "creeper_talisman");
+        public static final Item ANCIENT_FRAGMENT = registerItem(new Item(new FabricItemSettings()),
+                        "ancient_fragment");
+        public static final Item POWER_TALISMAN = registerItem(
+                        new BuffTalisman(new FabricItemSettings(), StatusEffects.STRENGTH, 2), "power_talisman");
+        public static final Item SPEED_TALISMAN = registerItem(
+                        new BuffTalisman(new FabricItemSettings(), StatusEffects.SPEED, 1), "speed_talisman");
+        public static final Item LIFE_TALISMAN = registerItem(
+                        new BuffTalisman(new FabricItemSettings(), StatusEffects.REGENERATION, 1), "life_talisman");
+        public static final Item RESISTANCE_TALISMAN = registerItem(
+                        new BuffTalisman(new FabricItemSettings(), StatusEffects.RESISTANCE, 2), "resistance_talisman");
+        public static final Item CREEPER_TALISMAN = registerItem(new CreeperTalisman(new FabricItemSettings()),
+                        "creeper_talisman");
 
-    public static final Item ENDERCHESTER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.ENDERCHESTER, "enderchester");
-    public static final Item CHESTER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.CHESTER, "chester");
-    public static final Item THE_ENDER_CHEST_SPAWN_EGG = registerSpawnEgg(EntitiesManager.ENDER_PEST, "ender_pest");
+        public static final Item ENDERCHESTER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.ENDERCHESTER,
+                        "enderchester");
+        public static final Item CHESTER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.CHESTER, "chester");
+        public static final Item THE_ENDER_CHEST_SPAWN_EGG = registerSpawnEgg(EntitiesManager.ENDER_PEST, "ender_pest");
 
-    public static final Item PORTALER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.PORTALER, "portaler", 0x7b7b7b,
-            0xb500d1);
-    public static final Item THE_FALLEN_KNIGHT_SPAWN_EGG = registerSpawnEgg(EntitiesManager.FALLEN_KNIGHT,
-            "fallen_knight", 0x525252, 0x727272);
-    public static final Item WANDERER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.WANDERER, "wanderer", 0x000000,
-            0xFFFFFF);
-    public static final Item BLOSSOM_SPAWN_EGG = registerSpawnEgg(EntitiesManager.BLOSSOM, "blossom", 0x00b00b,
-            0x00d120);
+        public static final Item PORTALER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.PORTALER, "portaler", 0x7b7b7b,
+                        0xb500d1);
+        public static final Item THE_FALLEN_KNIGHT_SPAWN_EGG = registerSpawnEgg(EntitiesManager.FALLEN_KNIGHT,
+                        "fallen_knight", 0x525252, 0x727272);
+        public static final Item WANDERER_SPAWN_EGG = registerSpawnEgg(EntitiesManager.WANDERER, "wanderer", 0x000000,
+                        0xFFFFFF);
+        public static final Item BLOSSOM_SPAWN_EGG = registerSpawnEgg(EntitiesManager.BLOSSOM, "blossom", 0x00b00b,
+                        0x00d120);
 
-    public static Enchantment silenceEnchantment = new SilenceEnchantment();
+        public static Enchantment silenceEnchantment = new SilenceEnchantment();
 
-    public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
-            .displayName(Text.translatable("itemGroup.welcometomyworld.general"))
-            .icon(() -> new ItemStack(POWER_TALISMAN)) // Set the icon of the item group
-            .build();
+        public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
+                        .displayName(Text.translatable("itemGroup.welcometomyworld.general"))
+                        .icon(() -> new ItemStack(POWER_TALISMAN)) // Set the icon of the item group
+                        .build();
 
-    public static Item registerSpawnEgg(EntityType entityType, String id) {
-        Item item = new SpawnEggItem(entityType, 0xFFFFFF, 0xFFFFFF, new Item.Settings());
-        Item registeredItem = Registry.register(Registries.ITEM, new Identifier(WelcomeToMyWorld.MOD_ID, id), item);
+        public static Item registerSpawnEgg(EntityType entityType, String id) {
+                Item item = new SpawnEggItem(entityType, 0xFFFFFF, 0xFFFFFF, new Item.Settings());
+                Item registeredItem = Registry.register(Registries.ITEM, new Identifier(WelcomeToMyWorld.MOD_ID, id),
+                                item);
 
-        return registeredItem;
-    }
+                return registeredItem;
+        }
 
-    public static <T extends MobEntity> Item registerSpawnEgg(EntityType<T> entityType, String id, int primaryColor,
-            int secondaryColor) {
-        SpawnEggItem item = new SpawnEggItem(
-                entityType,
-                primaryColor,
-                secondaryColor,
-                new FabricItemSettings());
+        public static <T extends MobEntity> Item registerSpawnEgg(EntityType<T> entityType, String id, int primaryColor,
+                        int secondaryColor) {
+                SpawnEggItem item = new SpawnEggItem(
+                                entityType,
+                                primaryColor,
+                                secondaryColor,
+                                new FabricItemSettings());
 
-        return Registry.register(
-                Registries.ITEM,
-                new Identifier(WelcomeToMyWorld.MOD_ID, id + "_spawn_egg"),
-                item);
-    }
+                return Registry.register(
+                                Registries.ITEM,
+                                new Identifier(WelcomeToMyWorld.MOD_ID, id + "_spawn_egg"),
+                                item);
+        }
 
-    public static Item registerItem(Item item, String id) {
-        Identifier itemID = new Identifier(WelcomeToMyWorld.MOD_ID, id);
-        Item registeredItem = Registry.register(Registries.ITEM, itemID, item);
+        public static Item registerItem(Item item, String id) {
+                Identifier itemID = new Identifier(WelcomeToMyWorld.MOD_ID, id);
+                Item registeredItem = Registry.register(Registries.ITEM, itemID, item);
 
-        return registeredItem;
-    }
+                return registeredItem;
+        }
 
-    public static void initialize() {
-        // Register the custom item group with the registry
-        Identifier itemGroupId = new Identifier(WelcomeToMyWorld.MOD_ID, "general");
+        public static void initialize() {
+                // Register the custom item group with the registry
+                Identifier itemGroupId = new Identifier(WelcomeToMyWorld.MOD_ID, "general");
 
-        Registry.register(Registries.ITEM_GROUP, itemGroupId, WELCOME_TO_MY_WORLD_GROUP);
+                Registry.register(Registries.ITEM_GROUP, itemGroupId, WELCOME_TO_MY_WORLD_GROUP);
 
-        // Create a RegistryKey for the custom item group
-        RegistryKey<ItemGroup> groupKey = RegistryKey.of(Registries.ITEM_GROUP.getKey(), itemGroupId);
+                // Create a RegistryKey for the custom item group
+                RegistryKey<ItemGroup> groupKey = RegistryKey.of(Registries.ITEM_GROUP.getKey(), itemGroupId);
 
-        Registry.register(Registries.ENCHANTMENT, new Identifier(WelcomeToMyWorld.MOD_ID, "silence"),
-                silenceEnchantment);
+                Registry.register(Registries.ENCHANTMENT, new Identifier(WelcomeToMyWorld.MOD_ID, "silence"),
+                                silenceEnchantment);
 
-        // Modify entries for your custom item group using the RegistryKey
-        ItemGroupEvents.modifyEntriesEvent(groupKey)
-                .register(itemGroup -> {
-                    itemGroup.add(ItemsManager.THE_FALLEN_HAMMER);
+                com.trongthang.welcometomyworld.compat.TrinketsCompat.registerTrinket(CREEPER_TALISMAN);
 
-                    itemGroup.add(ItemsManager.ANCIENT_FRAGMENT);
-                    itemGroup.add(ItemsManager.REPAIR_KNOWLEDGE);
+                // Modify entries for your custom item group using the RegistryKey
+                ItemGroupEvents.modifyEntriesEvent(groupKey)
+                                .register(itemGroup -> {
+                                        itemGroup.add(ItemsManager.THE_FALLEN_HAMMER);
 
-                    itemGroup.add(ItemsManager.POWER_TALISMAN);
-                    itemGroup.add(ItemsManager.SPEED_TALISMAN);
-                    itemGroup.add(ItemsManager.LIFE_TALISMAN);
-                    itemGroup.add(ItemsManager.RESISTANCE_TALISMAN);
+                                        itemGroup.add(ItemsManager.ANCIENT_FRAGMENT);
+                                        itemGroup.add(ItemsManager.REPAIR_KNOWLEDGE);
 
-                    itemGroup.add(ItemsManager.REPAIR_TALISMAN_IRON);
-                    itemGroup.add(ItemsManager.REPAIR_TALISMAN_GOLD);
-                    itemGroup.add(ItemsManager.REPAIR_TALISMAN_EMERALD);
+                                        itemGroup.add(ItemsManager.POWER_TALISMAN);
+                                        itemGroup.add(ItemsManager.SPEED_TALISMAN);
+                                        itemGroup.add(ItemsManager.LIFE_TALISMAN);
+                                        itemGroup.add(ItemsManager.RESISTANCE_TALISMAN);
 
-                    itemGroup.add(ItemsManager.CREEPER_TALISMAN);
+                                        itemGroup.add(ItemsManager.REPAIR_TALISMAN_IRON);
+                                        itemGroup.add(ItemsManager.REPAIR_TALISMAN_GOLD);
+                                        itemGroup.add(ItemsManager.REPAIR_TALISMAN_EMERALD);
 
-                    itemGroup.add(ItemsManager.ENDERCHESTER_SPAWN_EGG);
-                    itemGroup.add(ItemsManager.CHESTER_SPAWN_EGG);
-                    itemGroup.add(ItemsManager.PORTALER_SPAWN_EGG);
-                    itemGroup.add(ItemsManager.THE_ENDER_CHEST_SPAWN_EGG);
-                    itemGroup.add(ItemsManager.THE_FALLEN_KNIGHT_SPAWN_EGG);
-                    itemGroup.add(ItemsManager.WANDERER_SPAWN_EGG);
-                    itemGroup.add(ItemsManager.BLOSSOM_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.CREEPER_TALISMAN);
 
-                    itemGroup.add(BlocksManager.TOUGHER_IRON_BLOCK);
-                    itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK);
-                    itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK_STAGE2);
-                    itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK_STAGE3);
+                                        itemGroup.add(ItemsManager.ENDERCHESTER_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.CHESTER_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.PORTALER_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.THE_ENDER_CHEST_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.THE_FALLEN_KNIGHT_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.WANDERER_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.BLOSSOM_SPAWN_EGG);
 
-                    itemGroup.add(BlocksManager.TOUGHER_IRON_BARS);
-                    itemGroup.add(BlocksManager.RUSTED_IRON_BARS);
+                                        itemGroup.add(BlocksManager.TOUGHER_IRON_BLOCK);
+                                        itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK);
+                                        itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK_STAGE2);
+                                        itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK_STAGE3);
 
-                    itemGroup.add(BlocksManager.BURNING_PLANK);
-                    itemGroup.add(BlocksManager.BURNED_PLANK);
-                    itemGroup.add(BlocksManager.CUSTOM_VINE);
+                                        itemGroup.add(BlocksManager.TOUGHER_IRON_BARS);
+                                        itemGroup.add(BlocksManager.RUSTED_IRON_BARS);
 
-                    itemGroup.add(BlocksManager.EASYCRAFT_TROPHY);
-                    itemGroup.add(BlocksManager.GAMING_DISC_TROPHY);
-                    itemGroup.add(BlocksManager.CHALLENGER_TROPHY);
-                    itemGroup.add(BlocksManager.MUSIC_TROPHY);
-                });
-    }
+                                        itemGroup.add(BlocksManager.BURNING_PLANK);
+                                        itemGroup.add(BlocksManager.BURNED_PLANK);
+                                        itemGroup.add(BlocksManager.CUSTOM_VINE);
+
+                                        itemGroup.add(BlocksManager.EASYCRAFT_TROPHY);
+                                        itemGroup.add(BlocksManager.GAMING_DISC_TROPHY);
+                                        itemGroup.add(BlocksManager.CHALLENGER_TROPHY);
+                                        itemGroup.add(BlocksManager.MUSIC_TROPHY);
+                                });
+        }
 }

@@ -55,6 +55,10 @@ public class ConfigLoader {
         @SerializedName("oneShotDebugLog")
         public boolean oneShotDebugLog = false;
 
+        @Expose
+        @SerializedName("enableCustomAnimations")
+        public boolean enableCustomAnimations = true;
+
         // Usually there'll be alot of hostile mobs at night spawned from my mobs
         @Expose
         @SerializedName("hostileMobsEventsStopSpawningDay")
@@ -96,14 +100,15 @@ public class ConfigLoader {
                 @SerializedName("_info")
                 public List<String> _info = List.of(
                                 "Darkness levels per dimension.",
-                                "Value is the curve power (e.g. 4.0 is very dark, 1.0 is vanilla).");
+                                "Value is the curve power (e.g. 6.0 is very dark, 1.0 is vanilla).",
+                                "If you use the /welcometomyworld reloadconfig command, you have to switch world then switch back to see the changes");
 
                 @Expose
                 @SerializedName("dimensions")
                 public Map<String, Float> dimensions = new HashMap<>();
 
                 public DarknessLevelsConfig() {
-                        dimensions.put("minecraft:overworld", 4.0f);
+                        dimensions.put("minecraft:overworld", 6.0f);
                         dimensions.put("minecraft:the_nether", 1.0f);
                         dimensions.put("minecraft:the_end", 1.0f);
                 }

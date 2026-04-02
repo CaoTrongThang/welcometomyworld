@@ -72,10 +72,11 @@ dependencies {
 
     modCompileOnly "mcp.mobius.waila:wthit-api:fabric-8.16.1"
 
-    modRuntimeOnly "mcp.mobius.waila:wthit:fabric-8.16.1"
+    modImplementation "mcp.mobius.waila:wthit:fabric-8.16.1"
     modRuntimeOnly "lol.bai:badpackets:fabric-0.4.3"
 
-    modImplementation "dev.emi:trinkets:3.7.2"
+    modCompileOnly "dev.emi:trinkets:3.7.2"
+    modLocalRuntime "dev.emi:trinkets:3.7.2"
 
     modCompileOnly("io.github.flemmli97:improvedmobs:${project.minecraft_version}-${project.improvedmobs_version}-fabric")
 }

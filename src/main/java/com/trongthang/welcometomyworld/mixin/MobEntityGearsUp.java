@@ -172,10 +172,7 @@ public abstract class MobEntityGearsUp {
     }
 
     private float getImprovedMobsDifficulty(LivingEntity mob) {
-        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("improvedmobs")) {
-            return io.github.flemmli97.improvedmobs.difficulty.DifficultyData.getDifficulty(mob.getWorld(), mob);
-        }
-        return -1;
+        return com.trongthang.welcometomyworld.compat.ImprovedMobsCompat.getDifficulty(mob.getWorld(), mob);
     }
 
     private boolean checkChance(LivingEntity mob, float diffDiv, float dayDiv, float maxChance) {

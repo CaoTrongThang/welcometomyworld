@@ -1,0 +1,169 @@
+package com.trongthang.welcometomyworld.client;
+
+import com.trongthang.welcometomyworld.ConfigLoader;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+
+public class PlayerAnimationHandler {
+    private static final String MOD_ID = "welcometomyworld";
+
+    public static void update(AbstractClientPlayerEntity player, boolean wasOnGround, float fallDistance) {
+        if (player == null)
+            return;
+
+        if (!ConfigLoader.getInstance().enableCustomAnimations) {
+            AnimationUtils.stopAnimation(player);
+            return;
+        }
+
+        // Riding a vehicle (boat, horse, minecart, ...) — stop any playing animation
+        if (player.hasVehicle()) {
+            AnimationUtils.stopAnimation(player);
+            return;
+        }
+
+        boolean isOnGround = player.isOnGround();
+
+        // Flying (creative) or elytra — play flying animation, skip fall/land/jump
+        // logic
+        if (player.getAbilities().flying || player.isFallFlying()) {
+            handleFlying(player);
+            return;
+        }
+
+        // 1. Handle Landing Event (Transition from air to ground)
+        if (isOnGround && !wasOnGround) {
+            handleLanding(player, fallDistance);
+            return;
+        }
+
+        // 2. Handle Air State
+        if (!isOnGround) {
+            if (wasOnGround && player.getVelocity().y > 0) {
+                handleJump(player);
+            }
+            handleAir(player, fallDistance);
+        }
+        // 3. Handle Grounded State
+        else {
+            handleGrounded(player);
+        }
+    }
+
+    private static void handleLanding(AbstractClientPlayerEntity player, float fallDistance) {
+        IAnimatedPlayer animatedPlayer = (IAnimatedPlayer) player;
+        float customFallDist = (float) Math.max(fallDistance,
+                animatedPlayer.welcometomyworld_getFallStartHeight() - player.getY());
+
+        if (player.hurtTime > 0 || customFallDist > 6.0f) {
+            AnimationUtils.playAnimation(player, MOD_ID, "landing_fail");
+        } else if (customFallDist > 2.0f) {
+            // landing_success only plays for meaningful falls (2+ blocks) without damage
+            AnimationUtils.playAnimation(player, MOD_ID, "landing_success");
+        } else {
+            // Short drop — just stop the falling animation if it exists
+            if (AnimationUtils.isAnimationPlaying(player, "falling")) {
+                AnimationUtils.stopAnimation(player);
+            }
+        }
+    }
+
+    private static void handleJump(AbstractClientPlayerEntity player) {
+        // Only trigger jump animations if space is actually held or we have upward
+        // momentum
+        net.minecraft.client.network.ClientPlayerEntity clientPlayer = (net.minecraft.client.network.ClientPlayerEntity) player;
+        if (!clientPlayer.input.jumping && player.getVelocity().y < 0.2)
+            return;
+
+        boolean isMoving = player.limbAnimator.getSpeed() > 0.05f;
+        IAnimatedPlayer animatedPlayer = (IAnimatedPlayer) player;
+
+        if (isMoving) {
+            boolean jumpLeft = !animatedPlayer.welcometomyworld_isLastJumpLeft();
+            animatedPlayer.welcometomyworld_setLastJumpLeft(jumpLeft);
+            String jumpAnim = jumpLeft ? "jumping_left" : "jumping_right";
+            AnimationUtils.playAnimation(player, MOD_ID, jumpAnim);
+        } else {
+            AnimationUtils.playAnimation(player, MOD_ID, "jumping_idle");
+        }
+    }
+
+    private static void handleAir(AbstractClientPlayerEntity player, float fallDistance) {
+        // Interrupt ground animations if we start falling (large distance) or jumping
+        // Grace period for small drops (stepping off stairs/slabs)
+
+        if (fallDistance > 0.5f || player.getVelocity().y > 0.1) {
+            if (AnimationUtils.isAnimationPlaying(player, "walking") ||
+                    AnimationUtils.isAnimationPlaying(player, "running") ||
+                    AnimationUtils.isAnimationPlaying(player, "landing_fail") ||
+                    AnimationUtils.isAnimationPlaying(player, "landing_success")) {
+                AnimationUtils.stopAnimation(player);
+            }
+        }
+
+        IAnimatedPlayer animatedPlayer = (IAnimatedPlayer) player;
+        float customFallDist = (float) Math.max(fallDistance,
+                animatedPlayer.welcometomyworld_getFallStartHeight() - player.getY());
+
+        if (customFallDist > 3.0f && !AnimationUtils.isAnimationPlaying(player, "falling")) {
+            AnimationUtils.playAnimation(player, MOD_ID, "falling");
+        }
+    }
+
+    private static void handleGrounded(AbstractClientPlayerEntity player) {
+        // Stop airborne animations if we are on ground (fallback)
+        if (AnimationUtils.isAnimationPlaying(player, "falling") ||
+                AnimationUtils.isAnimationPlaying(player, "jumping_idle") ||
+                AnimationUtils.isAnimationPlaying(player, "jumping_left") ||
+                AnimationUtils.isAnimationPlaying(player, "jumping_right")) {
+            AnimationUtils.stopAnimation(player);
+        }
+
+        // If we are playing success but just got hurt, upgrade to fail animation.
+        // This handles cases where the damage packet arrives a few ticks after landing.
+        if (AnimationUtils.isAnimationPlaying(player, "landing_success") && player.hurtTime > 0) {
+            AnimationUtils.playAnimation(player, MOD_ID, "landing_fail");
+            return;
+        }
+
+        // Do not interrupt landing animations! Let them fully play out.
+        if (AnimationUtils.isAnimationPlaying(player, "landing_fail") ||
+                AnimationUtils.isAnimationPlaying(player, "landing_success")) {
+            return;
+        }
+
+        // Use limbAnimator to accurately detect walking state, avoids velocity
+        // zero-crossing jitters
+        boolean isMoving = player.limbAnimator.getSpeed() > 0.05f;
+
+        if (isMoving) {
+            String walkAnim = player.isSprinting() ? "running" : "walking";
+            if (!AnimationUtils.isAnimationPlaying(player, walkAnim)) {
+                AnimationUtils.playAnimation(player, MOD_ID, walkAnim);
+            }
+        } else {
+            // If not falling, moving, or landing, stop walking if it's playing
+            if (AnimationUtils.isAnimationPlaying(player, "walking") ||
+                    AnimationUtils.isAnimationPlaying(player, "running")) {
+                AnimationUtils.stopAnimation(player);
+            }
+        }
+    }
+
+    private static void handleFlying(AbstractClientPlayerEntity player) {
+        boolean isMoving = player.limbAnimator.getSpeed() > 0.05f;
+
+        if (isMoving) {
+            if (!AnimationUtils.isAnimationPlaying(player, "flying")) {
+                AnimationUtils.playAnimation(player, MOD_ID, "flying");
+            }
+        } else {
+            // Idle while flying — stop custom animation, let vanilla handle it
+            if (AnimationUtils.isAnimationPlaying(player, "flying") ||
+                    AnimationUtils.isAnimationPlaying(player, "falling") ||
+                    AnimationUtils.isAnimationPlaying(player, "landing_fail") ||
+                    AnimationUtils.isAnimationPlaying(player, "landing_success")) {
+                AnimationUtils.stopAnimation(player);
+            }
+        }
+    }
+}

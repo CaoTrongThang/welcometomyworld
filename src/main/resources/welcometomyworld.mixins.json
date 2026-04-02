@@ -2,6 +2,7 @@
 	"required": true,
 	"package": "com.trongthang.welcometomyworld.mixin",
 	"compatibilityLevel": "JAVA_17",
+	"plugin": "com.trongthang.welcometomyworld.mixin.ModMixinPlugin",
 	"mixins": [
 		"ServerPlayerEntityMixin",
 		"SunBurnImmuneMixin",

@@ -164,6 +164,13 @@ public class IntroOfTheWorldHandler {
             return;
         }
 
+        // LOGGER.info("world.getBlockState(player.getBlockPos().down(40)).isAir(): {}",
+        // world.getBlockState(player.getBlockPos().down(40)).isAir());
+        // LOGGER.info("playerData.playerFirstIntroDeathChance: {}",
+        // playerData.playerFirstIntroDeathChance);
+        // LOGGER.info("playersDeathChanceInTheIntro: {}",
+        // playersDeathChanceInTheIntro);
+
         if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
             if (!world.getBlockState(player.getBlockPos().down(40)).isAir()) {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 200, 255));
