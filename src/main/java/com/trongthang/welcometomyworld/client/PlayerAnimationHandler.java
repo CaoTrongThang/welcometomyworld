@@ -15,8 +15,8 @@ public class PlayerAnimationHandler {
             return;
         }
 
-        // Riding a vehicle (boat, horse, minecart, ...) — stop any playing animation
-        if (player.hasVehicle()) {
+        // Riding a vehicle or swimming — stop any playing animation
+        if (player.hasVehicle() || player.isSwimming()) {
             AnimationUtils.stopAnimation(player);
             return;
         }
