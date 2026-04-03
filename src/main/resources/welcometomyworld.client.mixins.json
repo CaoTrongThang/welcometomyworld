@@ -6,7 +6,8 @@
     "client.FixSupportForTinkersArmorBarMixin",
     "client.LightmapMixin",
     "player.ClientPlayerEntityMixin",
-    "client.WailaConfigMixin"
+    "client.WailaConfigMixin",
+    "client.GameRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

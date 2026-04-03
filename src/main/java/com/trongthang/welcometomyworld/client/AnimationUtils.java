@@ -34,4 +34,8 @@ public class AnimationUtils {
     public static boolean isAnimationPlaying(AbstractClientPlayerEntity player, String animationName) {
         return ((IAnimatedPlayer) player).welcometomyworld_isAnimationPlaying(animationName);
     }
+
+    public static void setAnimationSpeed(AbstractClientPlayerEntity player, float speed) {
+        ((IAnimatedPlayer) player).welcometomyworld_setAnimationSpeed(speed);
+    }
 }

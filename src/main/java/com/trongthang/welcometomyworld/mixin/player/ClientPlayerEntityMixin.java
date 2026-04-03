@@ -9,6 +9,7 @@ import dev.kosmx.playerAnim.api.layered.KeyframeAnimationPlayer;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationAccess;
 import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
+import dev.kosmx.playerAnim.api.layered.modifier.SpeedModifier;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
 import dev.kosmx.playerAnim.core.util.Ease;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -36,6 +37,9 @@ public abstract class ClientPlayerEntityMixin extends PlayerEntity implements IA
     private String currentAnimationName = null;
 
     @Unique
+    private final SpeedModifier speedModifier = new SpeedModifier(1f);
+
+    @Unique
     private boolean lastOnGround = true;
 
     @Unique
@@ -52,6 +56,8 @@ public abstract class ClientPlayerEntityMixin extends PlayerEntity implements IA
                 modAnimationContainer);
         // Add a modifier to mask arms when player is swinging (attacking)
         modAnimationContainer.addModifier(new AnimationMaskModifier((AbstractClientPlayerEntity) (Object) this), 0);
+        // Add speed modifier
+        modAnimationContainer.addModifier(speedModifier, 1);
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
@@ -126,5 +132,10 @@ public abstract class ClientPlayerEntityMixin extends PlayerEntity implements IA
     @Override
     public double welcometomyworld_getFallStartHeight() {
         return this.fallStartHeight;
+    }
+
+    @Override
+    public void welcometomyworld_setAnimationSpeed(float speed) {
+        speedModifier.speed = speed;
     }
 }

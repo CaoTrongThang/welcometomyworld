@@ -5,18 +5,6 @@
 			"loop": true,
 			"animation_length": 0.6667,
 			"bones": {
-				"head": {
-					"rotation": {
-						"0.0": {
-							"post": [5.00381, -4.99924, 0.08715],
-							"lerp_mode": "catmullrom"
-						},
-						"0.6667": {
-							"post": [5.00381, -4.99924, 0.08715],
-							"lerp_mode": "catmullrom"
-						}
-					}
-				},
 				"body": {
 					"rotation": {
 						"0.0": {

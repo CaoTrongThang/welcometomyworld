@@ -19,28 +19,6 @@
 						}
 					}
 				},
-				"head": {
-					"rotation": {
-						"0.0": {
-							"post": [0, 0, 0],
-							"lerp_mode": "catmullrom"
-						},
-						"0.4167": {
-							"post": [-12.48574, -9.48605, 3.16828],
-							"lerp_mode": "catmullrom"
-						},
-						"1.9583": {
-							"post": [-7.48574, -9.48605, 3.16828],
-							"lerp_mode": "catmullrom"
-						}
-					},
-					"position": {
-						"0.0": {
-							"post": [0, 0, 0],
-							"lerp_mode": "catmullrom"
-						}
-					}
-				},
 				"right_arm": {
 					"rotation": {
 						"0.0": {

@@ -42,6 +42,7 @@ public class PlayerAnimationHandler {
                 handleJump(player);
             }
             handleAir(player, fallDistance);
+            AnimationUtils.setAnimationSpeed(player, 1.0f);
         }
         // 3. Handle Grounded State
         else {
@@ -65,13 +66,14 @@ public class PlayerAnimationHandler {
                 AnimationUtils.stopAnimation(player);
             }
         }
+        AnimationUtils.setAnimationSpeed(player, 1.0f);
     }
 
     private static void handleJump(AbstractClientPlayerEntity player) {
         // Only trigger jump animations if space is actually held or we have upward
         // momentum
         net.minecraft.client.network.ClientPlayerEntity clientPlayer = (net.minecraft.client.network.ClientPlayerEntity) player;
-        if (!clientPlayer.input.jumping && player.getVelocity().y < 0.2)
+        if (!clientPlayer.input.jumping)
             return;
 
         boolean isMoving = player.limbAnimator.getSpeed() > 0.05f;
@@ -85,6 +87,7 @@ public class PlayerAnimationHandler {
         } else {
             AnimationUtils.playAnimation(player, MOD_ID, "jumping_idle");
         }
+        AnimationUtils.setAnimationSpeed(player, 1.0f);
     }
 
     private static void handleAir(AbstractClientPlayerEntity player, float fallDistance) {
@@ -140,6 +143,13 @@ public class PlayerAnimationHandler {
             if (!AnimationUtils.isAnimationPlaying(player, walkAnim)) {
                 AnimationUtils.playAnimation(player, MOD_ID, walkAnim);
             }
+
+            // getMovementSpeed() = player speed attribute. Base walk = 0.1f.
+            // Scales correctly with Speed effects, Slowness, sprinting, etc.
+            final float BASE_WALK_SPEED = 0.1f;
+            float speedMultiplier = player.getMovementSpeed() / BASE_WALK_SPEED;
+            speedMultiplier = Math.max(0.5f, Math.min(speedMultiplier, 3.0f));
+            AnimationUtils.setAnimationSpeed(player, speedMultiplier);
         } else {
             // If not falling, moving, or landing, stop walking if it's playing
             if (AnimationUtils.isAnimationPlaying(player, "walking") ||
@@ -156,6 +166,9 @@ public class PlayerAnimationHandler {
             if (!AnimationUtils.isAnimationPlaying(player, "flying")) {
                 AnimationUtils.playAnimation(player, MOD_ID, "flying");
             }
+            // Optional: speed scaling for flying? User didn't ask but maybe good.
+            // For now use default speed.
+            AnimationUtils.setAnimationSpeed(player, 1.0f);
         } else {
             // Idle while flying — stop custom animation, let vanilla handle it
             if (AnimationUtils.isAnimationPlaying(player, "flying") ||

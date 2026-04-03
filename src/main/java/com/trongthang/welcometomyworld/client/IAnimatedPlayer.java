@@ -20,4 +20,6 @@ public interface IAnimatedPlayer {
     void welcometomyworld_setLastJumpLeft(boolean val);
 
     double welcometomyworld_getFallStartHeight();
+
+    void welcometomyworld_setAnimationSpeed(float speed);
 }
