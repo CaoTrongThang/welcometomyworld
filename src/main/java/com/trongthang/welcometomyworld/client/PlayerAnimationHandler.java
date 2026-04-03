@@ -26,7 +26,7 @@ public class PlayerAnimationHandler {
         // Flying (creative) or elytra — play flying animation, skip fall/land/jump
         // logic
         if (player.getAbilities().flying || player.isFallFlying()) {
-            handleFlying(player);
+            // handleFlying(player);
             return;
         }
 
@@ -173,7 +173,7 @@ public class PlayerAnimationHandler {
     }
 
     private static void handleFlying(AbstractClientPlayerEntity player) {
-        boolean isMoving = player.limbAnimator.getSpeed() > 0.05f;
+        boolean isMoving = player.limbAnimator.getSpeed() > 0.4f;
 
         if (isMoving) {
             if (!AnimationUtils.isAnimationPlaying(player, "flying")) {
