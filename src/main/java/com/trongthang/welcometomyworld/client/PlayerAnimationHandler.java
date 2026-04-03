@@ -15,8 +15,8 @@ public class PlayerAnimationHandler {
             return;
         }
 
-        // Riding a vehicle or swimming — stop any playing animation
-        if (player.hasVehicle() || player.isSwimming()) {
+        // Riding a vehicle or swimming or in water — stop any playing animation
+        if (player.hasVehicle() || player.isSwimming() || player.isInsideWaterOrBubbleColumn()) {
             AnimationUtils.stopAnimation(player);
             return;
         }
@@ -26,7 +26,7 @@ public class PlayerAnimationHandler {
         // Flying (creative) or elytra — play flying animation, skip fall/land/jump
         // logic
         if (player.getAbilities().flying || player.isFallFlying()) {
-            // handleFlying(player);
+            handleFlying(player);
             return;
         }
 
@@ -176,8 +176,9 @@ public class PlayerAnimationHandler {
         boolean isMoving = player.limbAnimator.getSpeed() > 0.4f;
 
         if (isMoving) {
-            if (!AnimationUtils.isAnimationPlaying(player, "flying")) {
-                AnimationUtils.playAnimation(player, MOD_ID, "flying");
+            String animName = player.isFallFlying() ? "flying_elytra" : "flying";
+            if (!AnimationUtils.isAnimationPlaying(player, animName)) {
+                AnimationUtils.playAnimation(player, MOD_ID, animName);
             }
             // Optional: speed scaling for flying? User didn't ask but maybe good.
             // For now use default speed.
@@ -185,9 +186,13 @@ public class PlayerAnimationHandler {
         } else {
             // Idle while flying — stop custom animation, let vanilla handle it
             if (AnimationUtils.isAnimationPlaying(player, "flying") ||
+                    AnimationUtils.isAnimationPlaying(player, "flying_elytra") ||
                     AnimationUtils.isAnimationPlaying(player, "falling") ||
                     AnimationUtils.isAnimationPlaying(player, "landing_fail") ||
-                    AnimationUtils.isAnimationPlaying(player, "landing_success")) {
+                    AnimationUtils.isAnimationPlaying(player, "landing_success") ||
+                    AnimationUtils.isAnimationPlaying(player, "jumping_idle") ||
+                    AnimationUtils.isAnimationPlaying(player, "jumping_left") ||
+                    AnimationUtils.isAnimationPlaying(player, "jumping_right")) {
                 AnimationUtils.stopAnimation(player);
             }
         }

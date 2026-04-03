@@ -26,7 +26,7 @@ public abstract class FallingTreeMixin {
     @org.spongepowered.asm.mixin.Unique
     private final java.util.Set<LivingEntity> hitEntities = new java.util.HashSet<>();
 
-    @Inject(method = "tick", at = @At("TAIL"))
+    @Inject(method = { "tick", "method_5773" }, at = @At("TAIL"), remap = false)
     private void addTreeDamage(CallbackInfo ci) {
         if (!com.trongthang.welcometomyworld.ConfigLoader.getInstance().enableTreeFallingDamage)
             return;
@@ -43,8 +43,9 @@ public abstract class FallingTreeMixin {
             if (height <= 1)
                 return;
 
-            // Fabric version uses getHorizontalFacing instead of getDirection
-            Direction direction = (Direction) invokeAny(self, "getHorizontalFacing", "getDirection");
+            // We can directly call getHorizontalFacing on Entity in Fabric context,
+            // which avoids reflection mapping issues in production modpacks.
+            Direction direction = self.getHorizontalFacing();
             if (direction == null)
                 return;
 
