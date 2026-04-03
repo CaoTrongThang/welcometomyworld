@@ -57,7 +57,7 @@ public class PlayerAnimationHandler {
 
         if (player.hurtTime > 0 || customFallDist > 6.0f) {
             AnimationUtils.playAnimation(player, MOD_ID, "landing_fail");
-        } else if (customFallDist > 2.0f) {
+        } else if (customFallDist > 3.0f) {
             // landing_success only plays for meaningful falls (2+ blocks) without damage
             AnimationUtils.playAnimation(player, MOD_ID, "landing_success");
         } else {
@@ -128,15 +128,28 @@ public class PlayerAnimationHandler {
             return;
         }
 
-        // Do not interrupt landing animations! Let them fully play out.
-        if (AnimationUtils.isAnimationPlaying(player, "landing_fail") ||
-                AnimationUtils.isAnimationPlaying(player, "landing_success")) {
-            return;
-        }
-
         // Use limbAnimator to accurately detect walking state, avoids velocity
         // zero-crossing jitters
         boolean isMoving = player.limbAnimator.getSpeed() > 0.05f;
+
+        // Do not interrupt landing animations unless the player is actively moving
+        // (pressing keys)
+        if (AnimationUtils.isAnimationPlaying(player, "landing_fail") ||
+                AnimationUtils.isAnimationPlaying(player, "landing_success")) {
+
+            boolean hasInput = false;
+            if (player instanceof net.minecraft.client.network.ClientPlayerEntity clientPlayer) {
+                hasInput = clientPlayer.input.movementForward != 0 || clientPlayer.input.movementSideways != 0;
+            }
+
+            // If player isn't pressing movement keys, residual momentum keeps them in
+            // landing animation.
+            // If they are pressing keys, wait for limb speed to hit normal walking
+            // threshold before breaking out.
+            if (!hasInput || player.limbAnimator.getSpeed() < 0.5f) {
+                return;
+            }
+        }
 
         if (isMoving) {
             String walkAnim = player.isSprinting() ? "running" : "walking";
