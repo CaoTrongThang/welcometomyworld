@@ -36,8 +36,8 @@ public class ConfigLoader {
 
         // the falling intro and stuff to the world
         @Expose
-        @SerializedName("introOfTheWorld")
-        public boolean introOfTheWorld = true;
+        @SerializedName("enableIntroOfTheWorld")
+        public boolean enableIntroOfTheWorld = true;
 
         @Expose
         @SerializedName("clearItemsBeforeGivingStartingItems")
@@ -59,7 +59,17 @@ public class ConfigLoader {
         @SerializedName("enableCustomAnimations")
         public boolean enableCustomAnimations = true;
 
-        // Usually there'll be alot of hostile mobs at night spawned from my mobs
+        @Expose
+        @SerializedName("_disableTreeFallingDamage_info")
+        public List<String> _disableTreeFallingDamage_info = List.of(
+                        "Disable tree falling damage.",
+                        "This only support if you have Enhanced Falling Trees mod for Fabric 1.20.1.");
+
+        @Expose
+        @SerializedName("enableTreeFallingDamage")
+        public boolean enableTreeFallingDamage = true;
+
+        // Usually there'll be alot of hostile mobs at night spawned from my mod
         @Expose
         @SerializedName("hostileMobsEventsStopSpawningDay")
         public int hostileMobsEventsStopSpawningDay = 500;
@@ -100,7 +110,7 @@ public class ConfigLoader {
                 @SerializedName("_info")
                 public List<String> _info = List.of(
                                 "Darkness levels per dimension.",
-                                "Value is the curve power (e.g. 6.0 is very dark, 1.0 is vanilla).",
+                                "Value is the curve power (e.g. 7.0 is very dark, 1.0 is vanilla).",
                                 "If you use the /welcometomyworld reloadconfig command, you have to switch world then switch back to see the changes");
 
                 @Expose
@@ -108,7 +118,7 @@ public class ConfigLoader {
                 public Map<String, Float> dimensions = new HashMap<>();
 
                 public DarknessLevelsConfig() {
-                        dimensions.put("minecraft:overworld", 6.0f);
+                        dimensions.put("minecraft:overworld", 7.0f);
                         dimensions.put("minecraft:the_nether", 1.0f);
                         dimensions.put("minecraft:the_end", 1.0f);
                 }
@@ -133,7 +143,7 @@ public class ConfigLoader {
 
                 @Expose
                 @SerializedName("bloodMoonChance")
-                public float bloodMoonChance = 0.05f;
+                public float bloodMoonChance = 0.1f;
 
                 @Expose
                 @SerializedName("bloodMoonWorldWhitelist")

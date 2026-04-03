@@ -250,7 +250,7 @@ public class IntroOfTheWorldHandler {
     }
 
     public void registerIntroEvents() {
-        if (ConfigLoader.getInstance().introOfTheWorld) {
+        if (ConfigLoader.getInstance().enableIntroOfTheWorld) {
             ServerPlayerEvents.AFTER_RESPAWN.register((serverPlayerEntity1, serverPlayerEntity, c) -> {
                 PlayerData playerData = dataHandler.playerDataMap.get(serverPlayerEntity.getUuid());
                 if (playerData == null)

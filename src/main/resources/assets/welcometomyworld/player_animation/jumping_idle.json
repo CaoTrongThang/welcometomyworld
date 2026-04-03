@@ -80,11 +80,11 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.25": {
-							"post": [-1, 2, -3],
+							"post": [0, 2, -2],
 							"lerp_mode": "catmullrom"
 						},
 						"1.0": {
-							"post": [-1, 3, -4],
+							"post": [0, 3, -3],
 							"lerp_mode": "catmullrom"
 						}
 					}
@@ -106,11 +106,11 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.25": {
-							"post": [1, 2, -1],
+							"post": [0, 2, -1],
 							"lerp_mode": "catmullrom"
 						},
 						"1.0": {
-							"post": [1, 3, -2],
+							"post": [0, 3, -1],
 							"lerp_mode": "catmullrom"
 						}
 					}

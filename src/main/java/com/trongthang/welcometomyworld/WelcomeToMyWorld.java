@@ -271,7 +271,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         HostileMobsAwareness.onServerTick(server);
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            if (ConfigLoader.getInstance().introOfTheWorld) {
+            if (ConfigLoader.getInstance().enableIntroOfTheWorld) {
                 introOfTheWorldHandler.handlePlayerFirstJoin(player);
             }
 

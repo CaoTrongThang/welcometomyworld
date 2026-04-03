@@ -38,7 +38,8 @@
 		"entity.DifficultyDataMixin",
 		"ai.CreeperAIMixin",
 		"ai.SpiderAIMixin",
-		"client.BackgroundRendererMixin"
+		"client.BackgroundRendererMixin",
+		"world.FallingTreeMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
