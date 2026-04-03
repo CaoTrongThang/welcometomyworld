@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.NoiseSource;
 import com.trongthang.welcometomyworld.managers.ItemsManager;
 import it.unimi.dsi.fastutil.longs.*;
@@ -56,15 +57,26 @@ public class HostileMobsAwareness {
         public static final double BLOCK_PLACE_NOISE = 7.0;
     }
 
-    private static final List<String> ALERT_MESSAGES = List.of("Did something hear me?", "I think they noticed me!", "Was that movement over there?", "I need to be quieter...", "Something's following!", "Not alone anymore...", "They know I'm here!", "Need to find cover!", "Too much noise!", "Can't stay in one place!", "Movement in the dark...", "Need to move carefully...", "They're homing in!", "Should've been quieter...");
+    private static final List<String> ALERT_MESSAGES = List.of("Did something hear me?", "I think they noticed me!",
+            "Was that movement over there?", "I need to be quieter...", "Something's following!",
+            "Not alone anymore...", "They know I'm here!", "Need to find cover!", "Too much noise!",
+            "Can't stay in one place!", "Movement in the dark...", "Need to move carefully...", "They're homing in!",
+            "Should've been quieter...");
 
-    public static final Set<Identifier> TRACKED_MOBS = new HashSet<>(Set.of(new Identifier("minecraft", "zombie"), new Identifier("minecraft", "skeleton"), new Identifier("minecraft", "creeper"), new Identifier("minecraft", "witch"),
+    public static final Set<Identifier> TRACKED_MOBS = new HashSet<>(Set.of(new Identifier("minecraft", "zombie"),
+            new Identifier("minecraft", "skeleton"), new Identifier("minecraft", "creeper"),
+            new Identifier("minecraft", "witch"),
 
-            new Identifier("minecraft", "pillager"), new Identifier("minecraft", "vindicator"), new Identifier("minecraft", "ravager"), new Identifier("minecraft", "evoker"),
+            new Identifier("minecraft", "pillager"), new Identifier("minecraft", "vindicator"),
+            new Identifier("minecraft", "ravager"), new Identifier("minecraft", "evoker"),
 
-            new Identifier("wandering_orc", "orc_archer"), new Identifier("wandering_orc", "orc_warrior"), new Identifier("wandering_orc", "minotaur"), new Identifier("wandering_orc", "troll"), new Identifier("wandering_orc", "orc_champion"), new Identifier("wandering_orc", "orc_warlock"), new Identifier("wandering_orc", "troll_doctor"),
+            new Identifier("wandering_orc", "orc_archer"), new Identifier("wandering_orc", "orc_warrior"),
+            new Identifier("wandering_orc", "minotaur"), new Identifier("wandering_orc", "troll"),
+            new Identifier("wandering_orc", "orc_champion"), new Identifier("wandering_orc", "orc_warlock"),
+            new Identifier("wandering_orc", "troll_doctor"),
 
-            new Identifier("mutantmonsters", "mutant_zombie"), new Identifier("mutantmonsters", "mutant_skeleton"), new Identifier("mutantmonsters", "mutant_enderman"), new Identifier("mutantmonsters", "mutant_creeper")
+            new Identifier("mutantmonsters", "mutant_zombie"), new Identifier("mutantmonsters", "mutant_skeleton"),
+            new Identifier("mutantmonsters", "mutant_enderman"), new Identifier("mutantmonsters", "mutant_creeper")
 
     ));
 
@@ -77,25 +89,30 @@ public class HostileMobsAwareness {
 
     public static void onServerTick(MinecraftServer server) {
 
-        if (server.getOverworld().isClient) return;
+        if (server.getOverworld().isClient)
+            return;
 
         if (++tickCounter >= Config.CHECK_INTERVAL) {
             tickCounter = 0;
 
-            noiseSourceMap.replaceAll((pos, existing) -> new NoiseSource(Math.max(existing.noise - Config.CURRENT_NOISE_DECREASE_OVERTIME, 0), Math.max(existing.cooldown - Config.CHECK_INTERVAL, 0)));
+            noiseSourceMap.replaceAll((pos, existing) -> new NoiseSource(
+                    Math.max(existing.noise - Config.CURRENT_NOISE_DECREASE_OVERTIME, 0),
+                    Math.max(existing.cooldown - Config.CHECK_INTERVAL, 0)));
 
             noiseSourceMap.keySet().removeIf(pos -> noiseSourceMap.get(pos).noise <= 0);
             checkPlayerMovement(server);
         }
     }
 
-
     private static void checkPlayerMovement(MinecraftServer server) {
-        if (activeMobs.isEmpty()) return;
-        if (server.getOverworld().isDay()) return;
+        if (activeMobs.isEmpty())
+            return;
+        if (server.getOverworld().isDay())
+            return;
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            if (!(player.getWorld().getRegistryKey() == World.OVERWORLD)) continue;
+            if (!(player.getWorld().getRegistryKey() == World.OVERWORLD))
+                continue;
 
             long uuidLSB = player.getUuid().getLeastSignificantBits();
             Vec3d currentPos = player.getPos();
@@ -120,8 +137,10 @@ public class HostileMobsAwareness {
     }
 
     private static float calculateMovementNoise(ServerPlayerEntity player) {
-        if (player.isSneaking()) return 4;
-        if (player.isSprinting()) return 15;
+        if (player.isSneaking())
+            return 4;
+        if (player.isSprinting())
+            return 15;
         return 7;
     }
 
@@ -162,8 +181,10 @@ public class HostileMobsAwareness {
         });
 
         ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> {
-            Config.CURRENT_MAX_NOISE = Config.CURRENT_MAX_NOISE + Math.min(minecraftServer.getPlayerManager().getCurrentPlayerCount() * 20, 200);
-            Config.CURRENT_NOISE_DECREASE_OVERTIME = Config.BASE_NOISE_DECREASE_OVERTIME + Math.min(minecraftServer.getPlayerManager().getCurrentPlayerCount() * 5, 30);
+            Config.CURRENT_MAX_NOISE = Config.CURRENT_MAX_NOISE
+                    + Math.min(minecraftServer.getPlayerManager().getCurrentPlayerCount() * 20, 200);
+            Config.CURRENT_NOISE_DECREASE_OVERTIME = Config.BASE_NOISE_DECREASE_OVERTIME
+                    + Math.min(minecraftServer.getPlayerManager().getCurrentPlayerCount() * 5, 30);
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -173,8 +194,10 @@ public class HostileMobsAwareness {
                 lastPositions.remove(uuidLong);
             }
 
-            Config.CURRENT_MAX_NOISE = Config.CURRENT_MAX_NOISE + Math.min(server.getPlayerManager().getCurrentPlayerCount() * 20, 200);
-            Config.CURRENT_NOISE_DECREASE_OVERTIME = Config.BASE_NOISE_DECREASE_OVERTIME + Math.min(server.getPlayerManager().getCurrentPlayerCount() * 5, 30);
+            Config.CURRENT_MAX_NOISE = Config.CURRENT_MAX_NOISE
+                    + Math.min(server.getPlayerManager().getCurrentPlayerCount() * 20, 200);
+            Config.CURRENT_NOISE_DECREASE_OVERTIME = Config.BASE_NOISE_DECREASE_OVERTIME
+                    + Math.min(server.getPlayerManager().getCurrentPlayerCount() * 5, 30);
 
             if (Config.CURRENT_MAX_NOISE < Config.BASE_MAX_NOISE) {
                 Config.CURRENT_MAX_NOISE = Config.BASE_MAX_NOISE;
@@ -192,8 +215,15 @@ public class HostileMobsAwareness {
     }
 
     private static void handleNoise(PlayerEntity player, double noiseAmount) {
-        if (!validateConditions(player)) return;
-        if (player.isSneaking()) noiseAmount *= 0.5;
+        if (!validateConditions(player))
+            return;
+
+        if (WelcomeToMyWorld.dataHandler.worldData.isBloodMoon) {
+            noiseAmount *= 3.0;
+        }
+
+        if (player.isSneaking())
+            noiseAmount *= 0.5;
 
         int silenceLevel = hasSilenceEnchantment(player);
 
@@ -201,14 +231,17 @@ public class HostileMobsAwareness {
             noiseAmount *= Math.max(0, 1 - (0.35f * silenceLevel));
         }
 
-        if (noiseAmount == 0) return;
+        if (noiseAmount == 0)
+            return;
 
         boolean foundNoiseSource = false;
 
         for (BlockPos pos : noiseSourceMap.keySet()) {
             NoiseSource noise = noiseSourceMap.get(pos);
 
-            if (Math.abs(pos.getX() - player.getX()) <= Config.DISTANCE_FROM_NOISE_SOURCE && Math.abs(pos.getY() - player.getY()) <= Config.DISTANCE_FROM_NOISE_SOURCE && Math.abs(pos.getZ() - player.getZ()) <= Config.DISTANCE_FROM_NOISE_SOURCE) {
+            if (Math.abs(pos.getX() - player.getX()) <= Config.DISTANCE_FROM_NOISE_SOURCE
+                    && Math.abs(pos.getY() - player.getY()) <= Config.DISTANCE_FROM_NOISE_SOURCE
+                    && Math.abs(pos.getZ() - player.getZ()) <= Config.DISTANCE_FROM_NOISE_SOURCE) {
 
                 double newNoise = Math.min(Config.CURRENT_MAX_NOISE, noise.noise + noiseAmount);
                 NoiseSource newNoiseSource = new NoiseSource();
@@ -238,23 +271,27 @@ public class HostileMobsAwareness {
     }
 
     private static boolean alertMobs(Vec3d noisePos, PlayerEntity player) {
-        if (!(player.getWorld() instanceof ServerWorld world)) return false;
+        if (!(player.getWorld() instanceof ServerWorld world))
+            return false;
 
         // Safely filter and collect ServerPlayerEntity instances
         List<ServerPlayerEntity> targets = world.getPlayers().stream()
-            .filter(p -> p instanceof ServerPlayerEntity)
-            .map(p -> (ServerPlayerEntity) p)
-            .filter(p -> {
-                Vec3d playerPos = p.getPos();
-                return Math.abs(noisePos.x - playerPos.x) <= 30 
-                    && Math.abs(noisePos.y - playerPos.y) <= 30 
-                    && Math.abs(noisePos.z - playerPos.z) <= 30;
-            })
-            .collect(Collectors.toList());
+                .filter(p -> p instanceof ServerPlayerEntity)
+                .map(p -> (ServerPlayerEntity) p)
+                .filter(p -> {
+                    Vec3d playerPos = p.getPos();
+                    return Math.abs(noisePos.x - playerPos.x) <= 30
+                            && Math.abs(noisePos.y - playerPos.y) <= 30
+                            && Math.abs(noisePos.z - playerPos.z) <= 30;
+                })
+                .collect(Collectors.toList());
 
-        if (targets.isEmpty()) return false;
+        if (targets.isEmpty())
+            return false;
 
-        List<HostileEntity> availableMobs = activeMobs.values().stream().filter(mob -> mob.squaredDistanceTo(noisePos) <= Config.DETECTION_DISTANCE_SQ).limit(Config.MAX_MOBS_PER_CHECK).collect(Collectors.toList());
+        List<HostileEntity> availableMobs = activeMobs.values().stream()
+                .filter(mob -> mob.squaredDistanceTo(noisePos) <= Config.DETECTION_DISTANCE_SQ)
+                .limit(Config.MAX_MOBS_PER_CHECK).collect(Collectors.toList());
 
         // 3. Distribute mobs evenly
         int mobsPerPlayer = availableMobs.size() / targets.size();
@@ -281,9 +318,11 @@ public class HostileMobsAwareness {
         return !availableMobs.isEmpty();
     }
 
-
     private static boolean validateConditions(PlayerEntity player) {
-        return !player.getWorld().isClient() && player.getWorld().isNight() && player.getWorld().getRegistryKey() == World.OVERWORLD && player.getWorld().getDifficulty() != Difficulty.PEACEFUL && !player.isSpectator() && !player.isCreative();
+        return !player.getWorld().isClient() && player.getWorld().isNight()
+                && player.getWorld().getRegistryKey() == World.OVERWORLD
+                && player.getWorld().getDifficulty() != Difficulty.PEACEFUL && !player.isSpectator()
+                && !player.isCreative();
     }
 
     private static int hasSilenceEnchantment(PlayerEntity player) {

@@ -30,8 +30,11 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.client.world.ClientWorld;
 
 import java.util.List;
 
@@ -162,14 +165,39 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             }
             return true;
         });
+        ClientPlayNetworking.registerGlobalReceiver(BLOOD_MOON_SYNC, (client, handler, buf, responseSender) -> {
+            boolean active = buf.readBoolean();
+            boolean instant = false;
+            if (buf.isReadable()) {
+                instant = buf.readBoolean();
+            }
+            final boolean finalInstant = instant;
+            client.execute(() -> {
+                BloodMoonClient.isBloodMoon = active;
+                if (finalInstant) {
+                    BloodMoonClient.overlayAlpha = active ? 1.0f : 0.0f;
+                }
+            });
+        });
     }
 
     private void onTicks(MinecraftClient client) {
-
-        if (client.player != null) {
+        if (client.player != null && client.world != null) {
             this.waterFallDamage(client);
             this.switchPerspectiveOnDeath(client);
             handleTerrainScreen(client);
+
+            if (client.world.getRegistryKey().equals(World.OVERWORLD)) {
+                boolean inCave = isInCave(client.player.getBlockPos(), client.world);
+                boolean shouldShow = BloodMoonClient.isBloodMoon && !inCave;
+
+                float speed = 0.0033333334F;
+                if (shouldShow) {
+                    BloodMoonClient.overlayAlpha = Math.min(1f, BloodMoonClient.overlayAlpha + speed);
+                } else {
+                    BloodMoonClient.overlayAlpha = Math.max(0f, BloodMoonClient.overlayAlpha - speed);
+                }
+            }
         }
 
         if (ModKeybindings.openMobStats.wasPressed()) {
@@ -305,22 +333,11 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         return land;
     }
 
-    private boolean hasLandedGround(ClientPlayerEntity player) {
-        // Check if the player has landed (on the ground or on any block or water below
-        // them)
-        BlockPos below = player.getBlockPos().down();
-
-        // Check if the player is on the ground or touching a water block
-        return player.isOnGround() && !player.getWorld().isAir(below);
-    }
-
     private float calculateFallDamage(double fallDistance) {
         return (float) (((Math.abs(fallDistance - 5))));
     }
 
     private void preRenderChunks(MinecraftClient client) {
-
-        LOGGER.info("Pre render chunks...");
 
         if (client.world == null || client.player == null) {
             return;
@@ -344,5 +361,16 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
                 }
             }
         }
+    }
+
+    private boolean isInCave(BlockPos pos, ClientWorld level) {
+        int y = pos.getY();
+        if (y >= 50)
+            return false;
+
+        int skyLight = level.getLightLevel(LightType.SKY, pos);
+        BlockState above = level.getBlockState(pos.up());
+        return !level.isSkyVisible(pos) && skyLight <= 2 &&
+                !above.isAir() && above.isOpaque();
     }
 }

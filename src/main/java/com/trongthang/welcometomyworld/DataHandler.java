@@ -1,9 +1,9 @@
 package com.trongthang.welcometomyworld;
 
 import com.google.gson.*;
+import com.google.gson.annotations.Expose;
 import com.google.gson.reflect.TypeToken;
 import com.trongthang.welcometomyworld.classes.PlayerData;
-import com.trongthang.welcometomyworld.classes.PlayerStatsData;
 import com.trongthang.welcometomyworld.classes.PetData;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -51,24 +51,25 @@ public class DataHandler {
     }.getType();
     public ConcurrentHashMap<UUID, PetData> petDataMap = new ConcurrentHashMap<>();
 
+    public Path worldDataSavePath;
+    public boolean isBloodMoon = false;
+
     public void initializeWorldData(MinecraftServer server) {
         // Generate a file path specific to the world being loaded
         playerDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/playerdata.json");
         blocksPlacedByMobs = server.getSavePath(WorldSavePath.ROOT)
                 .resolve("data/welcometomyworld/blocksPlacedByMobs.json");
         petDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/petdata.json");
-        // blocksBrokenByMobs =
-        // server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/blocksBrokenByMobs.json");
+        worldDataSavePath = server.getSavePath(WorldSavePath.ROOT).resolve("data/welcometomyworld/worlddata.json");
 
         playerDataMap.clear();
         blocksPlacedByMobWillRemove.clear();
         petDataMap.clear();
-        // blocksBrokenByMobWillRestore.clear();
 
         loadPlayerData();
         loadBlocksPlacedByMobsData();
         loadPetData();
-        // loadBlocksBrokenByMobsData();
+        loadWorldData();
 
         findAndAddAlreadyExistPlayers(server);
     }
@@ -78,10 +79,14 @@ public class DataHandler {
             playerDataSavePath = server.getSavePath(WorldSavePath.ROOT)
                     .resolve("data/welcometomyworld/playerdata.json");
         }
+        if (this.worldDataSavePath == null) {
+            worldDataSavePath = server.getSavePath(WorldSavePath.ROOT)
+                    .resolve("data/welcometomyworld/worlddata.json");
+        }
         savePlayerData();
         saveBlocksPlacedByMobsData();
         savePetData();
-        // saveBlocksBrokenByMobsData();
+        saveWorldData();
 
         playerDataMap.clear();
         blocksPlacedByMobWillRemove.clear();
@@ -204,6 +209,45 @@ public class DataHandler {
             LOGGER.info("Saved {} pet entries to data file.", petDataMap.size());
         } catch (IOException e) {
             LOGGER.error("Failed to save pet data", e);
+        }
+    }
+
+    public static class WorldData {
+        @Expose
+        public boolean isBloodMoon = false;
+    }
+
+    public WorldData worldData = new WorldData();
+
+    public void loadWorldData() {
+        if (worldDataSavePath == null)
+            return;
+        LOGGER.info("Loading world data from: {}", worldDataSavePath);
+
+        if (Files.exists(worldDataSavePath)) {
+            try (Reader reader = Files.newBufferedReader(worldDataSavePath)) {
+                WorldData loadedData = GSON.fromJson(reader, WorldData.class);
+                if (loadedData != null) {
+                    worldData = loadedData;
+                }
+            } catch (IOException e) {
+                LOGGER.error("Failed to load world data", e);
+            }
+        }
+    }
+
+    public void saveWorldData() {
+        if (worldDataSavePath == null)
+            return;
+        LOGGER.info("Saving world data to: {}", worldDataSavePath);
+
+        try {
+            Files.createDirectories(worldDataSavePath.getParent());
+            try (Writer writer = Files.newBufferedWriter(worldDataSavePath)) {
+                GSON.toJson(worldData, WorldData.class, writer);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to save world data", e);
         }
     }
 

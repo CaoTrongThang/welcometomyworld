@@ -31,26 +31,35 @@ public class SpawnMonstersAtNight {
     private static int monsterDespawnAfterTick = 2000;
 
     public static void spawnMonsters(ServerWorld world, int currentDay) {
-        if (currentDay <= 1 || currentDay >= ConfigLoader.getInstance().hostileMobsEventsStopSpawningDay) return;
+        if (currentDay <= 1 || currentDay >= ConfigLoader.getInstance().hostileMobsEventsStopSpawningDay)
+            return;
 
-        if (random.nextInt(0, 100) > chanceToHappen) return;
+        if (random.nextInt(0, 100) > chanceToHappen)
+            return;
 
         List<ServerPlayerEntity> players = world.getPlayers();
 
         int counter = 0;
         int maxMonsterCounter = 0;
 
-        int totalMonstersWillSpawn = ((currentDay / monsterWillIncreasePerDay) * increaseMonsterByDay) + (players.size() * eachPlayerIncreaseMonster);
+        int totalMonstersWillSpawn = ((currentDay / monsterWillIncreasePerDay) * increaseMonsterByDay)
+                + (players.size() * eachPlayerIncreaseMonster);
+
+        if (com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler.worldData.isBloodMoon) {
+            totalMonstersWillSpawn *= 2;
+        }
 
         int monsterWillSpawnForEachPlayer = totalMonstersWillSpawn / players.size();
 
-//        LOGGER.info("SPAWN AT NIGHT");
+        // LOGGER.info("SPAWN AT NIGHT");
 
         for (ServerPlayerEntity player : players) {
-            if(player.isCreative() || player.isSpectator() || player.isDead()) continue;
+            if (player.isCreative() || player.isSpectator() || player.isDead())
+                continue;
 
             World w = player.getWorld();
-            if (!(w.getRegistryKey() == World.OVERWORLD)) continue;
+            if (!(w.getRegistryKey() == World.OVERWORLD))
+                continue;
 
             for (int y = 0; y <= monsterWillSpawnForEachPlayer; y++) {
 
@@ -58,12 +67,14 @@ public class SpawnMonstersAtNight {
                         .filter(m -> m.spawnDay <= currentDay)
                         .toList();
 
-                if (availableMonsters.isEmpty()) return;
+                if (availableMonsters.isEmpty())
+                    return;
 
                 MonsterSpawn mon = availableMonsters.get(random.nextInt(availableMonsters.size()));
 
                 EntityType<?> entityType = EntityType.get(mon.getId()).orElse(null);
-                if (entityType == null) continue;
+                if (entityType == null)
+                    continue;
 
                 BlockPos spawnPos = findSafeSpawnPositionByPack(world, player.getBlockPos(), entityType);
                 if (spawnPos == null) {
@@ -83,18 +94,19 @@ public class SpawnMonstersAtNight {
 
                 mobEntity.setHealth(mobEntity.getMaxHealth());
 
-                    if (mobEntity.canSee(player)) {
-                        mobEntity.setTarget(player);
-                    }
+                if (mobEntity.canSee(player)) {
+                    mobEntity.setTarget(player);
+                }
 
-                    tryDiscardSpawnedMobAfterTime(world, mobEntity, monsterDespawnAfterTick);
+                tryDiscardSpawnedMobAfterTime(world, mobEntity, monsterDespawnAfterTick);
 
                 counter++;
                 maxMonsterCounter++;
-                if (counter >= MAX_MONSTERS_FOR_EACH_PLAYER) break;
+                if (counter >= MAX_MONSTERS_FOR_EACH_PLAYER)
+                    break;
             }
 
-            if(maxMonsterCounter > MAX_MONSTERS){
+            if (maxMonsterCounter > MAX_MONSTERS) {
                 break;
             }
             counter = 0;

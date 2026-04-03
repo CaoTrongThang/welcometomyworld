@@ -114,6 +114,32 @@ public class ConfigLoader {
                 }
         }
 
+        @Expose
+        @SerializedName("bloodMoon")
+        public BloodMoonConfig bloodMoon = new BloodMoonConfig();
+
+        public static class BloodMoonConfig {
+                @Expose
+                @SerializedName("_info")
+                public List<String> _info = List.of(
+                                "Blood Moon settings.",
+                                "disableBloodMoon: set to true to turn off all blood moon effects.",
+                                "bloodMoonChance: probability (0.0-1.0) that any given night becomes a blood moon.",
+                                "bloodMoonWorldWhitelist: dimensions where Blood Moon can occur (e.g. 'minecraft:overworld').");
+
+                @Expose
+                @SerializedName("disableBloodMoon")
+                public boolean disableBloodMoon = false;
+
+                @Expose
+                @SerializedName("bloodMoonChance")
+                public float bloodMoonChance = 0.05f;
+
+                @Expose
+                @SerializedName("bloodMoonWorldWhitelist")
+                public List<String> bloodMoonWorldWhitelist = new ArrayList<>(List.of("minecraft:overworld"));
+        }
+
         // All mobs can be geared with weapons, armors,... if you want specific mobs to
         // be geared the way you want, add them to validMobs
         // you can config for all mobs from that mod by using the "*" example:

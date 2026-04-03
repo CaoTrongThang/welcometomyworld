@@ -7,6 +7,8 @@ import com.trongthang.welcometomyworld.managers.*;
 import com.trongthang.welcometomyworld.features.*;
 import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.classes.PlayerData;
+import com.trongthang.welcometomyworld.commands.ModCommands;
+
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -14,6 +16,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -21,8 +24,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.server.command.CommandManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -89,6 +90,8 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     public static final Identifier FALLING_TO_WATER = new Identifier(MOD_ID, "falling_to_water");
 
+    public static final Identifier BLOOD_MOON_SYNC = new Identifier(MOD_ID, "blood_moon_sync");
+
     public static DeathCounter deathCounter = new DeathCounter();
 
     public static FallingToWaterDamage fallingToWaterDamage = new FallingToWaterDamage();
@@ -109,21 +112,7 @@ public class WelcomeToMyWorld implements ModInitializer {
     @Override
     public void onInitialize() {
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            dispatcher.register(CommandManager.literal("welcometomyworld")
-                    .requires(source -> source.hasPermissionLevel(2))
-                    .then(CommandManager.literal("reloadconfig")
-                            .executes(context -> {
-                                ConfigLoader.loadConfig();
-                                com.trongthang.welcometomyworld.features.MobsGearsUp.reload();
-                                context.getSource()
-                                        .sendFeedback(
-                                                () -> Text.literal(
-                                                        "§a[Welcome To My World] Configuration reloaded successfully!"),
-                                                false);
-                                return 1;
-                            })));
-        });
+        ModCommands.register();
 
         ModTagsManager.registerTags();
         ConfigLoader.loadConfig();
@@ -168,6 +157,13 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> {
             performAllActionsFirstJoin(serverPlayNetworkHandler.getPlayer());
+
+            if (dataHandler.worldData.isBloodMoon) {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeBoolean(true);
+                buf.writeBoolean(true);
+                ServerPlayNetworking.send(serverPlayNetworkHandler.getPlayer(), BLOOD_MOON_SYNC, buf);
+            }
 
             UUID playerUUID = serverPlayNetworkHandler.getPlayer().getUuid();
 

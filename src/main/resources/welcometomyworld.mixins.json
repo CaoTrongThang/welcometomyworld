@@ -37,7 +37,8 @@
 		"world.GraveyardTerrainMixin",
 		"entity.DifficultyDataMixin",
 		"ai.CreeperAIMixin",
-		"ai.SpiderAIMixin"
+		"ai.SpiderAIMixin",
+		"client.BackgroundRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

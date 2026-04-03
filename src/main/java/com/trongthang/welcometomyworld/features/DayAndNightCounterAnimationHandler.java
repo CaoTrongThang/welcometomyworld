@@ -6,6 +6,7 @@ import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -88,17 +89,33 @@ public class DayAndNightCounterAnimationHandler {
         }
 
         counter++;
-        if (counter < checkInterval) return;
+        if (counter < checkInterval)
+            return;
         counter = 0;
 
-        long currentTime = world.getTimeOfDay();  // Get the current time in the world (in ticks)
+        long currentTime = world.getTimeOfDay(); // Get the current time in the world (in ticks)
         long currentTimeInDay = currentTime % 24000;
 
+        // Safety check: Blood moon should only be active at night
+        if (WelcomeToMyWorld.dataHandler.worldData.isBloodMoon && currentTimeInDay < 13000) {
+            WelcomeToMyWorld.dataHandler.worldData.isBloodMoon = false;
+            WelcomeToMyWorld.dataHandler.saveWorldData();
+            sendBloodMoonPacket(world, false);
+        }
+
         // Check if it's the start of a new day
-        if (currentTimeInDay < 13000 && !isAnimatingDay && (currentTime / TICKS_IN_DAY > currentDay || !dayAnimationComplete)) {
+        if (currentTimeInDay < 13000 && !isAnimatingDay
+                && (currentTime / TICKS_IN_DAY > currentDay || !dayAnimationComplete)) {
             currentDay = (int) (currentTime / TICKS_IN_DAY);
             dayAnimationComplete = true;
             nightAnimationComplete = false;
+
+            // Blood moon ends at dawn — notify all players
+            if (WelcomeToMyWorld.dataHandler.worldData.isBloodMoon) {
+                WelcomeToMyWorld.dataHandler.worldData.isBloodMoon = false;
+                WelcomeToMyWorld.dataHandler.saveWorldData();
+                sendBloodMoonPacket(world, false);
+            }
 
             if (currentDay == ConfigLoader.getInstance().hostileMobsEventsStopSpawningDay) {
                 for (ServerPlayerEntity p : world.getPlayers()) {
@@ -111,8 +128,26 @@ public class DayAndNightCounterAnimationHandler {
             }
         }
 
-        if ((currentTimeInDay >= 13000 && currentTimeInDay < 23999) && !isAnimatingNight && (currentTime / TICKS_IN_DAY > currentDay || !nightAnimationComplete)) {
+        if ((currentTimeInDay >= 13000 && currentTimeInDay < 23999) && !isAnimatingNight
+                && (currentTime / TICKS_IN_DAY > currentDay || !nightAnimationComplete)) {
             startNightAnimation(world);
+
+            // Roll blood moon chance at the start of each night
+            ConfigLoader.BloodMoonConfig bmCfg = ConfigLoader.getInstance().bloodMoon;
+
+            // Whitelist check
+            String worldId = world.getRegistryKey().getValue().toString();
+            boolean isWhitelisted = bmCfg.bloodMoonWorldWhitelist.contains(worldId);
+
+            if (WelcomeToMyWorld.dataHandler.worldData.isBloodMoon) {
+                // If it's already true (e.g. forced via command or loaded from previous session
+                // during night)
+                sendBloodMoonPacket(world, true);
+            } else if (isWhitelisted && !bmCfg.disableBloodMoon && rand.nextFloat() < bmCfg.bloodMoonChance) {
+                WelcomeToMyWorld.dataHandler.worldData.isBloodMoon = true;
+                WelcomeToMyWorld.dataHandler.saveWorldData();
+                sendBloodMoonPacket(world, true);
+            }
 
             if (GlobalConfig.canSpawnMonstersAtNight) {
                 SpawnMonstersAtNight.spawnMonsters(world, currentDay);
@@ -127,24 +162,31 @@ public class DayAndNightCounterAnimationHandler {
     }
 
     public static int getCurrentDay(World world) {
-        long currentTime = world.getTimeOfDay();  // Get the current time in the world (in ticks)
-        return  (int) (currentTime / TICKS_IN_DAY);
+        long currentTime = world.getTimeOfDay(); // Get the current time in the world (in ticks)
+        return (int) (currentTime / TICKS_IN_DAY);
     }
 
     private void startDayAnimation(ServerWorld world, int day) {
-        animationText = "- DAY " + day + " -";  // Hyphens included here
+        animationText = "- DAY " + day + " -"; // Hyphens included here
         currentCharIndex = 0;
         delayTick = 0;
         isAnimatingDay = true;
     }
 
-
     private void startNightAnimation(ServerWorld world) {
         // Prepare the "Nighttime is coming..." message split into words.
         currentCharIndex = 0;
         delayTick = 0;
-        isAnimatingNight = true;  // Start the animation
+        isAnimatingNight = true; // Start the animation
+    }
 
+    private void sendBloodMoonPacket(ServerWorld world, boolean active) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeBoolean(active);
+        buf.writeBoolean(false);
+        for (ServerPlayerEntity p : world.getPlayers()) {
+            ServerPlayNetworking.send(p, WelcomeToMyWorld.BLOOD_MOON_SYNC, buf);
+        }
     }
 
     private void sendAnimationUpdate(ServerWorld world, String textToSend, boolean nighttime) {

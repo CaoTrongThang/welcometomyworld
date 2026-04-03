@@ -3,13 +3,14 @@ package com.trongthang.welcometomyworld.features;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,9 +29,18 @@ public class AllowSleepAllTime {
             return ActionResult.SUCCESS;
         });
 
+        EntitySleepEvents.ALLOW_SLEEPING.register((player, sleepingPos) -> {
+            if (WelcomeToMyWorld.dataHandler.worldData.isBloodMoon) {
+                player.sendMessage(
+                        Text.literal("I can't sleep...").formatted(Formatting.GRAY),
+                        false);
+                return PlayerEntity.SleepFailureReason.OTHER_PROBLEM;
+            }
+            return null;
+        });
 
         EntitySleepEvents.START_SLEEPING.register((livingEntity, blockPos) -> {
-                canCheck = true;
+            canCheck = true;
         });
 
         EntitySleepEvents.STOP_SLEEPING.register((livingEntity, blockPos) -> {
@@ -45,7 +55,8 @@ public class AllowSleepAllTime {
 
     public static void onServerTick(MinecraftServer server) {
         // Process ALL loaded worlds
-        if(!canCheck) return;
+        if (!canCheck)
+            return;
 
         for (ServerWorld world : server.getWorlds()) {
             Identifier dimensionId = world.getRegistryKey().getValue();

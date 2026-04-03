@@ -115,7 +115,10 @@ public class SpawnMonstersPackEveryMins {
 
         if (CHANCE_TO_HAPPEN <= 100) {
             CHANCE_TO_HAPPEN += currentDay;
-            if (random.nextInt(100) >= (CHANCE_TO_HAPPEN))
+
+            double bloodMoonChanceBoost = WelcomeToMyWorld.dataHandler.worldData.isBloodMoon ? 30 : 0;
+
+            if (random.nextInt(100) >= (CHANCE_TO_HAPPEN + bloodMoonChanceBoost))
                 return;
         }
 
@@ -201,8 +204,13 @@ public class SpawnMonstersPackEveryMins {
         // Spawn each mob type in specified quantities
         for (Pair<String, Integer> entry : packMonsters) {
             int totalMonster = entry.second();
+
+            float bloodMoonMultiplier = WelcomeToMyWorld.dataHandler.worldData.isBloodMoon ? 1.5f : 1.0f;
+
             if (random.nextInt(100) < 10) {
-                totalMonster *= 2;
+                totalMonster *= 2 * bloodMoonMultiplier;
+            } else {
+                totalMonster *= bloodMoonMultiplier;
             }
             for (int i = 0; i < totalMonster; i++) {
                 EntityType<?> entityType = EntityType.get(entry.first()).orElse(null);
