@@ -196,7 +196,7 @@ public class IntroOfTheWorldHandler {
                     player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4));
                 }, 20);
                 player.addStatusEffect(
-                        new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
+                        new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 3));
 
                 spawnLandEffect(player);
                 SpawnParticles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
