@@ -11,8 +11,7 @@ public class GlobalVariables {
             StatusEffects.STRENGTH,
             StatusEffects.HASTE,
             StatusEffects.REGENERATION,
-            StatusEffects.RESISTANCE
-    );
+            StatusEffects.RESISTANCE);
 
     public static final int RAIN_SPEED_UP_RUSTY_TIME = 240;
 
@@ -33,6 +32,6 @@ public class GlobalVariables {
 
     public static final float SPEED_ADD_PER_LEVEL = 0.01f;
 
-    public static final int MAX_HEALTH_ADD_TO_HOSTILE_MOB_BY_DAYS = 60;
+    public static final int MAX_HEALTH_ADD_TO_HOSTILE_MOB_BY_DAYS = 100;
     public static final int MAX_ARMOR_ADD_TO_HOSTILE_MOB_BY_DAYS = 20;
 }

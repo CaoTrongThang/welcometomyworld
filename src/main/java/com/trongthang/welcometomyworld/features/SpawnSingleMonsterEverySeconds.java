@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.ConfigLoader;
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.MonsterSpawn;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -20,7 +21,8 @@ public class SpawnSingleMonsterEverySeconds {
     private static double spawnChance = 0.5;
 
     public static void spawnMonsters(ServerWorld world, int currentDay) {
-        if (currentDay <= 1 || currentDay >= ConfigLoader.getInstance().hostileMobsEventsStopSpawningDay)
+        if ((currentDay <= 1 || currentDay >= ConfigLoader.getInstance().hostileMobsEventsStopSpawningDay)
+                && !WelcomeToMyWorld.dataHandler.worldData.isBloodMoon)
             return;
 
         counter++;

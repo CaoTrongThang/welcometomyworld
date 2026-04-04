@@ -150,12 +150,57 @@ public class ConfigLoader {
                 public List<String> bloodMoonWorldWhitelist = new ArrayList<>(List.of("minecraft:overworld"));
         }
 
+        @Expose
+        @SerializedName("mobsSetFixedStats")
+        public MobsSetFixedStatsConfig mobsSetFixedStats = new MobsSetFixedStatsConfig();
+
+        public static class MobsSetFixedStatsConfig {
+                @Expose
+                @SerializedName("_info")
+                public List<String> _info = List.of(
+                                "Fixed stats for specific mobs.",
+                                "Damage, armor, and max health can be set.");
+
+                @Expose
+                @SerializedName("mobs")
+                public Map<String, MobFixedStatsConfig> mobs = new HashMap<>();
+
+                public MobsSetFixedStatsConfig() {
+                        // Example: minecraft:zombie
+                        mobs.put("minecraft:cat", new MobFixedStatsConfig(30f, 0f, 0f));
+                }
+        }
+
+        public static class MobFixedStatsConfig {
+                @Expose
+                @SerializedName("maxHealth")
+                public Float maxHealth = null;
+
+                @Expose
+                @SerializedName("damage")
+                public Float damage = null;
+
+                @Expose
+                @SerializedName("armor")
+                public Float armor = null;
+
+                public MobFixedStatsConfig() {
+                }
+
+                public MobFixedStatsConfig(Float maxHealth, Float damage, Float armor) {
+                        this.maxHealth = maxHealth;
+                        this.damage = damage;
+                        this.armor = armor;
+                }
+        }
+
         // All mobs can be geared with weapons, armors,... if you want specific mobs to
         // be geared the way you want, add them to validMobs
         // you can config for all mobs from that mod by using the "*" example:
         // "saintdragons:*"
         @Expose
         @SerializedName("mobsGearsUp")
+
         public MobsGearsUpConfig mobsGearsUp = new MobsGearsUpConfig();
 
         public static class MobsGearsUpConfig {

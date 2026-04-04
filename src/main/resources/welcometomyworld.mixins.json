@@ -39,7 +39,9 @@
 		"ai.CreeperAIMixin",
 		"ai.SpiderAIMixin",
 		"client.BackgroundRendererMixin",
-		"world.FallingTreeMixin"
+		"world.FallingTreeMixin",
+		"ai.HostileMobsStrongerInBloodMoonMixin",
+		"ai.MobsStatsSetMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

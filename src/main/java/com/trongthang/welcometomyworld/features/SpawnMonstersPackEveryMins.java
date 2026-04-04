@@ -81,9 +81,10 @@ public class SpawnMonstersPackEveryMins {
             return;
         counter = 0;
 
-        if (WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay <= 1
+        if ((WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay <= 1
                 || WelcomeToMyWorld.dayAndNightCounterAnimationHandler.currentDay >= ConfigLoader
                         .getInstance().hostileMobsEventsStopSpawningDay)
+                && !WelcomeToMyWorld.dataHandler.worldData.isBloodMoon)
             return;
 
         ServerWorld world = server.getOverworld();
@@ -173,7 +174,6 @@ public class SpawnMonstersPackEveryMins {
     public enum MonstersPackTypes {
         VANILLA,
         PILLAGER,
-        ORCS,
         MUTANTS
     }
 
@@ -182,9 +182,7 @@ public class SpawnMonstersPackEveryMins {
         MonstersPackTypes packType = getRandomPackType();
         List<Pair<String, Integer>> packMonsters = null;
 
-        if (packType == MonstersPackTypes.ORCS) {
-            packMonsters = orcPackComposition;
-        } else if (packType == MonstersPackTypes.MUTANTS) {
+        if (packType == MonstersPackTypes.MUTANTS) {
             packMonsters = mutantMonsterPackComposition;
         } else if (packType == MonstersPackTypes.VANILLA) {
             packMonsters = vanillaComposition;
@@ -267,9 +265,7 @@ public class SpawnMonstersPackEveryMins {
         int roll = random.nextInt(100);
         if (roll < 30)
             return MonstersPackTypes.VANILLA;
-        if (roll < 50)
-            return MonstersPackTypes.ORCS;
-        if (roll < 80)
+        if (roll < 60)
             return MonstersPackTypes.PILLAGER;
         return MonstersPackTypes.MUTANTS;
     }

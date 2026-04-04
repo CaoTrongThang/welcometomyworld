@@ -297,7 +297,7 @@ public class IntroOfTheWorldHandler {
             ServerPlayNetworking.registerGlobalReceiver(FIRST_LOADING_TERRAIN_SCREEN,
                     (server, p, handler, buf, responseSender) -> {
                         // Read all data from the buffer immediately
-                        int state = buf.readInt();
+                        buf.readInt(); // state variable removed as it was unused
 
                         server.execute(() -> {
                             // Validate that the player exists
@@ -337,7 +337,19 @@ public class IntroOfTheWorldHandler {
                     "Oh, and here's a small gift for you. Sorry about the botched summoning ritual.", 18 * 20);
 
             Utils.addRunAfter(() -> {
-                giveStartingItemsHandler.giveMoreItems(player);
+                if (player == null)
+                    return;
+
+                ItemStack summonGolem = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_spawner", 1);
+                ItemStack golemController = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_control", 1);
+
+                if (summonGolem != null) {
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, summonGolem, 2);
+                }
+
+                if (golemController != null) {
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, golemController, 3);
+                }
             }, 21 * 20);
 
             Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.",
@@ -347,10 +359,9 @@ public class IntroOfTheWorldHandler {
                     "I think I have a book that might help you progress in this magical world...", 28 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item
-                                                                                               // ID and quantity
+                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1);
                 if (book != null) {
-                    GiveStartingItemsHandler.dropItemToPlayer(player, book);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, book, 4);
                 }
             }, 32 * 20);
 
@@ -379,7 +390,19 @@ public class IntroOfTheWorldHandler {
                     10 * 20);
 
             Utils.addRunAfter(() -> {
-                giveStartingItemsHandler.giveMoreItems(player);
+                if (player == null)
+                    return;
+
+                ItemStack summonGolem = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_spawner", 1);
+                ItemStack golemController = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_control", 1);
+
+                if (summonGolem != null) {
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, summonGolem, 2);
+                }
+
+                if (golemController != null) {
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, golemController, 3);
+                }
             }, 14 * 20);
 
             Utils.UTILS.sendTextAfter(player,
@@ -391,44 +414,30 @@ public class IntroOfTheWorldHandler {
             Utils.UTILS.sendTextAfter(player, "There's more, i think there's something for you to eat...", 21 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:cheese_wheel", 1); // Change
-                                                                                                             // to mod's
-                                                                                                             // item ID
-                                                                                                             // and
-                                                                                                             // quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:cheese_wheel", 1);
                 if (food != null) {
-                    GiveStartingItemsHandler.dropItemToPlayer(player, food);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 4);
                 }
             }, 23 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:chocolate_cooke", 1); // Change
-                                                                                                                // to
-                                                                                                                // mod's
-                                                                                                                // item
-                                                                                                                // ID
-                                                                                                                // and
-                                                                                                                // quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:chocolate_cooke", 1);
                 if (food != null) {
-                    GiveStartingItemsHandler.dropItemToPlayer(player, food);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 1);
                 }
             }, 25 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:steamed_rice", 1); // Change to
-                                                                                                       // mod's item ID
-                                                                                                       // and quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:steamed_rice", 5);
                 if (food != null) {
-                    GiveStartingItemsHandler.dropItemToPlayer(player, food);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 5);
                 }
             }, 27 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:cooked_bacon", 1); // Change to
-                                                                                                       // mod's item ID
-                                                                                                       // and quantity
+                ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:cooked_bacon", 1);
                 if (food != null) {
-                    GiveStartingItemsHandler.dropItemToPlayer(player, food);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 6);
                 }
             }, 29 * 20);
 
@@ -443,10 +452,9 @@ public class IntroOfTheWorldHandler {
             Utils.UTILS.sendTextAfter(player, "Wait, I forgot a really useful book, here you go", 42 * 20);
 
             Utils.addRunAfter(() -> {
-                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1); // Change to mod's item
-                                                                                               // ID and quantity
+                ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1);
                 if (book != null) {
-                    GiveStartingItemsHandler.dropItemToPlayer(player, book);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, book, 7);
                 }
             }, 44 * 20);
         }

@@ -1,7 +1,9 @@
 package com.trongthang.welcometomyworld.mixin.entity;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import net.minecraft.entity.EntityData;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.GoalSelector;
@@ -11,6 +13,7 @@ import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.ServerWorldAccess;
 import org.jetbrains.annotations.Nullable;
@@ -35,8 +38,17 @@ public class HostileEntityBuffMixin {
     @Unique
     private boolean isMobBuffed = false;
 
-    private void buff() {
-        MobEntity mobEntity = (MobEntity) (Object) this;
+    @Unique
+    private double getDifficulty(MobEntity mob) {
+        float difficulty = com.trongthang.welcometomyworld.compat.ImprovedMobsCompat.getDifficulty(mob.getWorld(), mob);
+        if (difficulty >= 0) {
+            return difficulty / 4.6; // Scale difficulty to match day-based progression roughly
+        }
+        long currentTime = mob.getWorld().getTimeOfDay();
+        return (double) currentTime / 24000;
+    }
+
+    private void buff(MobEntity mobEntity) {
 
         if (this.isMobBuffed) {
             return;
@@ -44,8 +56,7 @@ public class HostileEntityBuffMixin {
 
         this.isMobBuffed = true;
 
-        long currentTime = mobEntity.getWorld().getTimeOfDay();
-        double currentDay = Math.min(currentTime / 24000, 200);
+        double currentDay = Math.min(getDifficulty(mobEntity), 200);
 
         EntityAttributeInstance healthAttribute = mobEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         EntityAttributeInstance armorAttribute = mobEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR);
@@ -82,8 +93,15 @@ public class HostileEntityBuffMixin {
     protected void initDataTracker(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason,
             @Nullable EntityData entityData, @Nullable NbtCompound entityNbt, CallbackInfoReturnable<EntityData> cir) {
         MobEntity mobEntity = (MobEntity) (Object) this;
+        Identifier mobId = EntityType.getId(mobEntity.getType());
+        String mobIdString = mobId.toString();
 
-        buff();
+        ConfigLoader.MobFixedStatsConfig config = ConfigLoader.getInstance().mobsSetFixedStats.mobs
+                .get(mobIdString);
+
+        if (config == null) {
+            buff(mobEntity);
+        }
 
         Utils.addRunAfter(() -> {
             if (mobEntity instanceof HostileEntity entity) {

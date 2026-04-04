@@ -5,7 +5,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.PhantomEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,20 +18,22 @@ import static com.trongthang.welcometomyworld.GlobalConfig.canPhantomAI;
 @Mixin(PhantomEntity.class)
 public abstract class PhantomAIMixin extends Entity {
 
+    @Unique
     private int maxHeight = 300;
 
+    @Unique
     private int cooldown = 120;
+    @Unique
     private int counter = 0;
+    @Unique
     private boolean canLiftPlayer = true;
 
+    @Unique
     private boolean canGrab = true;
 
     public PhantomAIMixin(EntityType<?> type, World world) {
         super(type, world);
     }
-
-    @Unique
-    private PlayerEntity currentLiftPlayer = null;
 
     @Inject(method = "onSizeChanged", at = @At("HEAD"), cancellable = true)
     private void onSizeChanged(CallbackInfo ci) {
@@ -57,61 +58,53 @@ public abstract class PhantomAIMixin extends Entity {
             counter++;
             if (counter > cooldown) {
                 canLiftPlayer = true;
-                cooldown++;
+                counter = 0;
             }
             return;
         }
 
-        // Lift the player and make the Phantom ascend
-        if (currentLiftPlayer != null) {
-            if (phantom != null && phantom.getServer() != null &&
-                    phantom.getServer().getPlayerManager().getPlayer(currentLiftPlayer.getUuid()) != null) {
-                liftAndTeleportPlayer(phantom);
+        // If currently carrying a passenger
+        if (phantom.hasPassengers()) {
+            Entity passenger = phantom.getFirstPassenger();
+            if (passenger instanceof PlayerEntity) {
+                PlayerEntity currentLiftPlayer = (PlayerEntity) passenger;
+
+                // Drop conditions
+                if (currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator() || currentLiftPlayer.isDead() ||
+                        phantom.getHealth() < phantom.getMaxHealth() / 3 ||
+                        !phantom.getWorld().isAir(phantom.getBlockPos().up(1)) ||
+                        phantom.getY() > maxHeight) {
+                    phantom.removeAllPassengers();
+                    canLiftPlayer = false; // Start cooldown
+                }
             } else {
-                dropPlayer(phantom); // Player invalid, reset
+                phantom.removeAllPassengers();
             }
-        }
-
-        LivingEntity attackEntity = phantom.getAttacking();
-
-        if (currentLiftPlayer != null)
-            return;
-
-        if (attackEntity instanceof PlayerEntity && currentLiftPlayer == null) {
-            currentLiftPlayer = (PlayerEntity) attackEntity;
-        }
-    }
-
-    private void liftAndTeleportPlayer(PhantomEntity phantom) {
-        if (currentLiftPlayer == null || currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator()
-                || currentLiftPlayer.isDead()) {
-            dropPlayer(phantom);
-            return;
-        }
-
-        if (phantom.distanceTo(currentLiftPlayer) <= 10.0 && phantom.getHealth() >= phantom.getMaxHealth() / 3) {
-            Vec3d phantomPos = phantom.getPos();
-            World world = phantom.getWorld();
-
-            if (!world.isAir(phantom.getBlockPos().up(1))) {
-                dropPlayer(phantom);
-                return;
-            }
-
-            if (phantom.getY() > maxHeight) {
-                dropPlayer(phantom);
-                return;
-            }
-
-            currentLiftPlayer.teleport(phantomPos.getX(), phantomPos.getY() - 1.2, phantomPos.getZ());
-
         } else {
-            currentLiftPlayer = null;
+            // Check to grab a new player
+            LivingEntity target = phantom.getTarget();
+            if (target == null) {
+                target = phantom.getAttacking(); // fallback to whatever was being attacked
+            }
+
+            if (target instanceof PlayerEntity && phantom.isAlive()) {
+                PlayerEntity player = (PlayerEntity) target;
+                if (!player.isCreative() && !player.isSpectator() && !player.isDead()) {
+                    if (phantom.distanceTo(player) <= 5.0 && phantom.getHealth() >= phantom.getMaxHealth() / 3) {
+                        player.startRiding(phantom, true);
+                    }
+                }
+            }
         }
     }
 
-    private void dropPlayer(PhantomEntity phantom) {
-        canLiftPlayer = false;
-        currentLiftPlayer = null; // Reset after dropping
+    @Override
+    protected void updatePassengerPosition(Entity passenger, Entity.PositionUpdater positionUpdater) {
+        super.updatePassengerPosition(passenger, positionUpdater);
+        if (passenger instanceof PlayerEntity) {
+            // Position the player below the phantom as if being carried by its claws
+            double yOffset = this.getY() - passenger.getHeight() * 0.8;
+            positionUpdater.accept(passenger, this.getX(), yOffset, this.getZ());
+        }
     }
 }

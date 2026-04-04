@@ -14,12 +14,27 @@ import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class AllowSleepAllTime {
     public static final int nightTime = 13000;
     private static boolean canCheck = false;
 
     private static final Map<Identifier, Boolean> dimensionSleepChecks = new HashMap<>();
+    private static final Random random = new Random();
+
+    private static final String[] BLOOD_MOON_SLEEP_MESSAGES = {
+            "The moon... it's watching me.",
+            "The air feels heavy... I can't close my eyes.",
+            "Something is wrong. Very wrong.",
+            "I hear them... they're getting closer.",
+            "The red light... it burns through my eyelids.",
+            "I can't shake this feeling of dread.",
+            "Not tonight. Not while the moon screams.",
+            "My heart is racing... sleep won't come.",
+            "The shadows are moving... I must stay awake.",
+            "The blood... it's everywhere in my dreams."
+    };
 
     public static void registerEvents() {
         EntitySleepEvents.ALLOW_SLEEP_TIME.register((player, sleepingPos, vanillaResult) -> {
@@ -31,8 +46,9 @@ public class AllowSleepAllTime {
 
         EntitySleepEvents.ALLOW_SLEEPING.register((player, sleepingPos) -> {
             if (WelcomeToMyWorld.dataHandler.worldData.isBloodMoon) {
+                String message = BLOOD_MOON_SLEEP_MESSAGES[random.nextInt(BLOOD_MOON_SLEEP_MESSAGES.length)];
                 player.sendMessage(
-                        Text.literal("I can't sleep...").formatted(Formatting.GRAY),
+                        Text.literal(message).formatted(Formatting.GRAY),
                         false);
                 return PlayerEntity.SleepFailureReason.OTHER_PROBLEM;
             }
