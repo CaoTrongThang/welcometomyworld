@@ -17,37 +17,44 @@ repositories {
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
 
-    repositories {
-        maven {
-            url "https://maven2.bai.lol"
-            content {
-                includeGroup "lol.bai"
-                includeGroup "mcp.mobius.waila"
-            }
-        }
-        maven { url 'https://api.modrinth.com/maven' }
-        maven {
-            name "KosmX's maven"
-            url 'https://maven.kosmx.dev/'
-        }
-        maven { url "https://maven.shedaniel.me/" }
-        maven { url "https://maven.terraformersmc.com/releases/" }
-
-
-        maven {
-            name = "TerraformersMC"
-            url = "https://maven.terraformersmc.com/"
-        }
-        maven {
-            name = "Ladysnake Libs"
-            url = 'https://maven.ladysnake.org/releases'
-        }
-        maven {
-            name = "Flemmli97"
-            url "https://maven.blazing-coop.net/releases"
+    mavenCentral()
+    maven {
+        url "https://maven2.bai.lol"
+        content {
+            includeGroup "lol.bai"
+            includeGroup "mcp.mobius.waila"
         }
     }
+    maven { url 'https://api.modrinth.com/maven' }
+    maven {
+        name "KosmX's maven"
+        url 'https://maven.kosmx.dev/'
+    }
+    maven { url "https://maven.shedaniel.me/" }
+    maven { url "https://maven.terraformersmc.com/releases/" }
 
+
+    maven {
+        name = "TerraformersMC"
+        url = "https://maven.terraformersmc.com/"
+    }
+    maven {
+        name = "Ladysnake Libs"
+        url = 'https://maven.ladysnake.org/releases'
+    }
+    maven {
+        name = "Flemmli97"
+        url "https://maven.blazing-coop.net/releases"
+    }
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex("software\\.bernie.*")
+            includeGroup("com.eliotlash.mclib")
+        }
+    }
+    maven { url 'https://maven.blamejared.com' }
 }
 
 fabricApi {
@@ -79,6 +86,9 @@ dependencies {
     modLocalRuntime "dev.emi:trinkets:3.7.2"
 
     modCompileOnly("io.github.flemmli97:improvedmobs:${project.minecraft_version}-${project.improvedmobs_version}-fabric")
+    modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}")
+    modImplementation("com.eliotlash.mclib:mclib:20")
+
 }
 
 processResources {

@@ -5,6 +5,7 @@ import com.trongthang.welcometomyworld.entities.*;
 import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
 import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
 import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
+import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -90,6 +91,13 @@ public class EntitiesManager {
                                         .dimensions(EntityDimensions.changing(1, 1f))
                                         .build());
 
+        public static final EntityType<Unknown> UNKNOWN = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "unknown"),
+                        FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, Unknown::new)
+                                        .dimensions(EntityDimensions.changing(0.8f, 2f)) // Basic dimensions
+                                        .build());
+
         public static final EntityType<BlockSlamGroundEntity> BLOCK_SLAM_GROUND = Registry.register(
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "block_slam_ground"),
@@ -113,6 +121,8 @@ public class EntitiesManager {
                 FabricDefaultAttributeRegistry.register(WANDERER, Wanderer.setAttributes());
 
                 FabricDefaultAttributeRegistry.register(BLOSSOM, Blossom.setAttributes());
+
+                FabricDefaultAttributeRegistry.register(UNKNOWN, Unknown.setAttributes());
 
                 addSpawn();
 

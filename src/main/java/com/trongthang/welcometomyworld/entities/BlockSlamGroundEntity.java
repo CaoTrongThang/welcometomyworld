@@ -1,7 +1,5 @@
 package com.trongthang.welcometomyworld.entities;
 
-import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.render.WorldRenderer;
@@ -14,16 +12,17 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
 
 public class BlockSlamGroundEntity extends Entity {
+    private float targetYOffset;
     private static final TrackedData<BlockState> BLOCK_STATE = DataTracker.registerData(BlockSlamGroundEntity.class,
             TrackedDataHandlerRegistry.BLOCK_STATE);
 
-    private static final TrackedData<Float> PITCH = DataTracker.registerData(FallenKnight.class,
+    private static final TrackedData<Float> PITCH = DataTracker.registerData(BlockSlamGroundEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> YAW = DataTracker.registerData(FallenKnight.class,
+    private static final TrackedData<Float> YAW = DataTracker.registerData(BlockSlamGroundEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> ROLL = DataTracker.registerData(FallenKnight.class,
+    private static final TrackedData<Float> ROLL = DataTracker.registerData(BlockSlamGroundEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> Y_OFFSET = DataTracker.registerData(FallenKnight.class,
+    private static final TrackedData<Float> Y_OFFSET = DataTracker.registerData(BlockSlamGroundEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
 
     public BlockSlamGroundEntity(EntityType<? extends BlockSlamGroundEntity> type, World world) {
@@ -32,14 +31,31 @@ public class BlockSlamGroundEntity extends Entity {
         this.setPitch(world.getRandom().nextFloat() * 30f - 15f);
         this.setYaw(world.getRandom().nextFloat() * 360f);
         this.setRoll(world.getRandom().nextFloat() * 15f - 7.5f);
-        this.setYOffset(world.getRandom().nextFloat() * 0.2f - 0.1f);
+
+        // Target Y offset it will hover at
+        this.targetYOffset = world.getRandom().nextFloat() * 0.2f - 0.1f;
+        // Start below the ground
+        this.setYOffset(-1.2f);
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        if (this.age >= 90) {
+        // Rising out of the ground animation
+        if (this.age <= 10) {
+            float currentY = this.getYOffset();
+            if (currentY < this.targetYOffset) {
+                this.setYOffset(Math.min(currentY + 0.8f, this.targetYOffset));
+            }
+        }
+
+        // Start sinking into the ground after age 45
+        if (this.age > 45) {
+            this.setYOffset(this.getYOffset() - 0.04f);
+        }
+
+        if (this.age >= 120) {
             this.discard();
         }
     }

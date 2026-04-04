@@ -532,7 +532,7 @@ public class Utils {
             effectEntity.setBlockState(state);
             effectEntity.setPosition(
                     pos.getX() + 0.5, // Center in block
-                    pos.getY() + 0.1, // Slightly above ground
+                    pos.getY() + 0.2, // Slightly above ground
                     pos.getZ() + 0.5 // Center in block
             );
 
