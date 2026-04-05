@@ -8,7 +8,8 @@
     "player.ClientPlayerEntityMixin",
     "client.WailaConfigMixin",
     "client.GameRendererMixin",
-    "client.BipedEntityModelMixin"
+    "client.BipedEntityModelMixin",
+    "client.InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1

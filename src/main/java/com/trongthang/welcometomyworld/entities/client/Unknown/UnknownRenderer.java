@@ -10,6 +10,7 @@ import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 import software.bernie.geckolib.renderer.layer.BlockAndItemGeoLayer;
 
 public class UnknownRenderer extends GeoEntityRenderer<Unknown> {
@@ -60,6 +61,7 @@ public class UnknownRenderer extends GeoEntityRenderer<Unknown> {
                 poseStack.pop();
             }
         });
+        this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
     }
 
 }

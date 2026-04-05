@@ -2,8 +2,6 @@ package com.trongthang.welcometomyworld.entities.Unknown;
 
 import net.minecraft.entity.ai.goal.Goal;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
-
 import java.util.EnumSet;
 import java.util.List;
 
@@ -30,8 +28,8 @@ import net.minecraft.world.World;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.util.math.Vec3d;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+
 import com.trongthang.welcometomyworld.managers.SoundsManager;
-import com.trongthang.welcometomyworld.WelcomeToMyWorld; // Added for logger
 
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -44,11 +42,12 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
 import net.minecraft.item.ShieldItem;
 import net.minecraft.util.Hand;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.particle.ItemStackParticleEffect;
+import net.minecraft.item.PotionItem;
+import net.minecraft.potion.PotionUtil;
 
 public class Unknown extends HostileEntity implements GeoEntity {
 
@@ -66,24 +65,26 @@ public class Unknown extends HostileEntity implements GeoEntity {
             TrackedDataHandlerRegistry.BOOLEAN);
 
     private static final int SKILL_PUNCH = 1;
-    private static final int SKILL_SLAM = 2;
+    private static final int SKILL_GROUND_SLAM_KICK = 15;
     private static final int SKILL_DASH_FORWARD = 3;
     private static final int SKILL_LEG_TRIP = 4;
-    private static final int SKILL_GROUND_SLAM_KICK = 5;
     private static final int SKILL_JUMP = 6;
     private static final int SKILL_SLAM_GROUND_AFTER_JUMP = 7;
     private static final int SKILL_STEAL_ITEM = 8;
     private static final int SKILL_USE_ITEM = 9;
     private static final int SKILL_DESTROY_ITEM = 10;
     private static final int SKILL_PREPARE_STEAL = 11;
+    private static final int SKILL_POINT_FINGER = 12;
+    private static final int SKILL_GRAB_JUMP_SLAM = 13;
 
-    private static final int SLAM_HIT_TICK = 15; // 0.75s × 20 TPS
     private static final int PUNCH_HIT_TICK = 20; // 1s × 20 TPS
     private static final int LEG_TRIP_HIT_TICK = 10;
     private static final int GROUND_SLAM_KICK_HIT_TICK = 20;
     private static final int SLAM_AFTER_JUMP_HIT_TICK = 3; // Change if slam animation impact deviates
     private static final int STEAL_HIT_TICK = 8;
     private static final int USE_HIT_TICK = 43;
+    private static final int POINT_FINGER_HIT_TICK = 5;
+    private static final int GRAB_SLAM_HIT_TICK = 41;
     private static final int[] DESTROY_HIT_TICKS = { 15, 38, 58 };
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -104,7 +105,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         return HostileEntity.createHostileAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 200.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10.0D)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.0D) // 0 for testing
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 100f);
     }
@@ -155,25 +156,26 @@ public class Unknown extends HostileEntity implements GeoEntity {
             boolean isUsingSkill = this.dataTracker.get(IS_USING_SKILL);
             int skillId = this.dataTracker.get(SKILL_ID);
 
+            state.getController().setAnimationSpeed(1.0D);
+
             if (isUsingSkill) {
                 state.getController().transitionLength(0);
                 if (prevSkillId[0] != skillId) {
                     state.getController().forceAnimationReset();
+
                 }
                 prevSkillId[0] = skillId;
 
                 switch (skillId) {
                     case SKILL_PUNCH:
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_saitama_punch"));
-                    case SKILL_SLAM:
+                    case SKILL_GROUND_SLAM_KICK:
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_slam_ground_kick"));
                     case SKILL_DASH_FORWARD:
                         // Placeholder if not exists, user said "unknown_dash_forward"
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_dash_forward"));
                     case SKILL_LEG_TRIP:
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_leg_trip"));
-                    case SKILL_GROUND_SLAM_KICK:
-                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_slam_ground_kick"));
                     case SKILL_JUMP:
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_jump"));
                     case SKILL_SLAM_GROUND_AFTER_JUMP:
@@ -185,7 +187,13 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     case SKILL_DESTROY_ITEM:
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_destroy_the_item"));
                     case SKILL_PREPARE_STEAL:
+                        state.getController().setAnimationSpeed(2.0D);
                         return state.setAndContinue(RawAnimation.begin().thenLoop("unknown_walking"));
+                    case SKILL_POINT_FINGER:
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_point_finger"));
+                    case SKILL_GRAB_JUMP_SLAM:
+                        return state
+                                .setAndContinue(RawAnimation.begin().thenPlay("unknown_grab_player_jump_slam_ground"));
                 }
             }
             prevSkillId[0] = 0;
@@ -201,7 +209,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
             }
 
             // --- Normal movement ---
-            state.getController().transitionLength(5);
+            state.getController().transitionLength(12);
             prevDir[0] = 0;
             boolean isMoving = this.getVelocity().x != 0 || this.getVelocity().z != 0; // best moving check for even
                                                                                        // slow movement
@@ -209,15 +217,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 return state.setAndContinue(RawAnimation.begin().thenLoop("unknown_walking"));
             }
             return state.setAndContinue(RawAnimation.begin().thenLoop("unknown_idle_ground"));
-        })
-                // Client-side: fire particles/sound at exactly 0.75s keyframe
-                .setCustomInstructionKeyframeHandler(event -> {
-                    if ("slam_aoe".equals(event.getKeyframeData().getInstructions())) {
-                        // TODO: spawn ground-slam particles / play sound here (client only)
-                    }
-                }));
+        }));
 
-        controllers.add(new AnimationController<>(this, "tauntController", 5, state -> {
+        controllers.add(new AnimationController<>(this, "tauntController", 15, state -> {
             if (this.dataTracker.get(IS_TAUNTING) && !this.dataTracker.get(IS_USING_SKILL)) {
                 return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_taunt"));
             }
@@ -253,7 +255,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
             // Handle skill completion and chaining
             if (skillTick >= skillTotalTicks) {
-                handleSkillCompletion(skillId);
+                handleSkillCompletionChain(skillId);
             }
             return;
         }
@@ -267,17 +269,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 // Case 1: Close range (Slam or Steal)
                 if (distSq <= 7.0 * 7.0) {
                     if (target instanceof PlayerEntity player && target.isUsingItem()) {
-                        // Apply Slowness 255 for 10s (200 ticks)
-                        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 254));
                         stolenItemCandidate = player.getMainHandStack().copy();
-                        triggerSkill(SKILL_PREPARE_STEAL, 100);
+                        triggerSkill(SKILL_POINT_FINGER, 20);
                         skillCooldown = 200;
                     } else if (distSq <= 6.0 * 6.0) {
                         if (Math.random() < 0.5) {
                             triggerSkill(SKILL_PUNCH, 40);
                             skillCooldown = 80;
                         } else {
-                            triggerSkill(SKILL_SLAM, 40);
+                            triggerSkill(SKILL_GROUND_SLAM_KICK, 40);
                             skillCooldown = 120;
                         }
                     }
@@ -289,7 +289,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 }
                 // Case 3: Far range (Punch or Jump)
                 else {
-                    if (distSq > 25.0 * 25.0) {
+                    if (distSq < 25.0 * 25.0) {
                         if (Math.random() < 0.5) {
                             triggerSkill(SKILL_JUMP, 20);
                             skillCooldown = 150;
@@ -353,16 +353,21 @@ public class Unknown extends HostileEntity implements GeoEntity {
         return this.dataTracker.get(IS_USING_SKILL);
     }
 
+    public int getSkillId() {
+        return this.dataTracker.get(SKILL_ID);
+    }
+
     private void handleSkillEffects(int skillId) {
         switch (skillId) {
-            case SKILL_SLAM:
-                if (skillTick == SLAM_HIT_TICK - 2) { // Play slightly before impact for better sync
+            case SKILL_GROUND_SLAM_KICK:
+                if (skillTick == GROUND_SLAM_KICK_HIT_TICK - 5) { // Play slightly before impact for better sync
                     this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT, this.getSoundCategory(), 1.0F, 1.0F);
                 }
-                if (!skillHitFired && skillTick >= SLAM_HIT_TICK) {
+                if (!skillHitFired && skillTick >= GROUND_SLAM_KICK_HIT_TICK) {
 
                     skillHitFired = true;
+                    this.removeAllPassengers(); // Release the player when the slam hits
                     dealAoeGroundDamage(6.0, (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE),
                             true);
                 }
@@ -441,29 +446,69 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     this.velocityModified = true;
                 }
                 break;
+            case SKILL_GRAB_JUMP_SLAM:
+                if (skillTick == 5) {
+                    LivingEntity target = this.getTarget();
+                    if (target != null) {
+                        target.startRiding(this, true);
+                    }
+                } else if (skillTick >= 10 && skillTick < 16) { // Blast into the sky for 6 ticks
+                    this.setVelocity(0, 5.0, 0); // 5 blocks up per tick = 30 blocks total height roughly
+                    this.velocityModified = true;
+                } else if (skillTick >= 16 && skillTick < 38) {
+                    // Hover in sky
+                    this.setVelocity(0, 0.05, 0);
+                    this.velocityModified = true;
+                } else if (skillTick == 38) {
+                    // Plunge to the ground incredibly fast for 3 ticks right before the slam
+                    this.setVelocity(0, -15.0, 0);
+                    this.velocityModified = true;
+                } else if (!skillHitFired && skillTick >= GRAB_SLAM_HIT_TICK) {
+                    skillHitFired = true;
+
+                    double currentY = this.getY();
+                    // Create smokes around the slam area
+                    if (this.getWorld() instanceof ServerWorld serverWorld) {
+                        BlockPos pos = BlockPos.ofFloored(this.getX(), this.getY(), this.getZ());
+                        while (pos.getY() > serverWorld.getBottomY()
+                                && serverWorld.getBlockState(pos.down()).isReplaceable()) {
+                            pos = pos.down();
+                        }
+                        currentY = pos.getY();
+
+                        // Create smokes around the slam area
+                        serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, this.getX(), currentY + 1.0, this.getZ(),
+                                80, 2.0, 0.5, 2.0, 0.05);
+                        serverWorld.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, this.getX(), currentY + 0.5,
+                                this.getZ(), 60, 3.0, 0.5, 3.0, 0.1);
+                    }
+                    this.refreshPositionAndAngles(this.getX(), currentY, this.getZ(), this.getYaw(), this.getPitch());
+                    this.setPosition(this.getX(), currentY, this.getZ());
+                    this.velocityModified = true;
+
+                    dealAoeGroundDamage(9.0,
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.5f, true);
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, this.getSoundCategory(), 1.0F, 1.0F);
+                } else if (skillTick == GRAB_SLAM_HIT_TICK + 4) {
+                    // Delaying dismount by a few ticks to let the client smoothly interpolate the
+                    // teleport downward together
+                    for (net.minecraft.entity.Entity passenger : this.getPassengerList()) {
+                        passenger.fallDistance = 0;
+                    }
+                    this.removeAllPassengers();
+                }
+                break;
             case SKILL_LEG_TRIP:
                 if (!skillHitFired && skillTick >= LEG_TRIP_HIT_TICK) {
                     skillHitFired = true;
-                    List<LivingEntity> entities = dealAoeGroundDamage(4.0,
+                    List<LivingEntity> entities = dealAoeGroundDamage(10.0,
                             (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 0.7f, false);
                     for (LivingEntity entity : entities) {
                         entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 255));
                     }
 
                 }
-                break;
-            case SKILL_GROUND_SLAM_KICK:
-                if (skillTick == GROUND_SLAM_KICK_HIT_TICK - 2) { // Play slightly before impact
-                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
-                            SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT, this.getSoundCategory(), 1.0F, 1.0F);
-                }
-                if (!skillHitFired && skillTick >= GROUND_SLAM_KICK_HIT_TICK) {
-
-                    skillHitFired = true;
-                    dealAoeGroundDamage(8.0,
-                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.0f, true);
-                }
-
                 break;
             case SKILL_SLAM_GROUND_AFTER_JUMP:
                 if (!skillHitFired && skillTick >= SLAM_AFTER_JUMP_HIT_TICK) {
@@ -484,10 +529,10 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         player.stopUsingItem(); // Forced stop
                     }
 
-                    this.getNavigation().startMovingTo(stealTarget, 1.5);
+                    this.getNavigation().startMovingTo(stealTarget, 2);
                     double distSq = this.squaredDistanceTo(stealTarget);
 
-                    if (distSq <= 1) {
+                    if (distSq <= 2.0 * 2.0) {
                         this.getNavigation().stop();
                         triggerSkill(SKILL_STEAL_ITEM, 60);
                     }
@@ -518,41 +563,54 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     }
                 }
                 break;
-            case SKILL_USE_ITEM:
-                // Play effects periodically while eating (ticks 10 to 43)
+            case SKILL_USE_ITEM: {
+                ItemStack currentStack = this.getMainHandStack();
+                boolean isPotion = currentStack.getItem() instanceof PotionItem;
+                boolean isFood = currentStack.isFood();
+
+                // Play effects periodically while eating/drinking (ticks 10 to 43)
                 if (skillTick >= 10 && skillTick <= USE_HIT_TICK) {
                     if (skillTick % 8 == 0) {
-                        ItemStack bossStack = this.getMainHandStack();
-                        if (bossStack.isFood() && this.getWorld() instanceof ServerWorld serverWorld) {
+                        if ((isFood || isPotion) && this.getWorld() instanceof ServerWorld serverWorld) {
                             Vec3d lookVec = this.getRotationVec(1.0F);
                             double px = this.getX() + lookVec.x * 0.5;
                             double py = this.getY() + this.getStandingEyeHeight();
                             double pz = this.getZ() + lookVec.z * 0.5;
 
-                            serverWorld.spawnParticles(new ItemStackParticleEffect(ParticleTypes.ITEM, bossStack),
+                            serverWorld.spawnParticles(new ItemStackParticleEffect(ParticleTypes.ITEM, currentStack),
                                     px, py, pz, 5, 0.05, 0.05, 0.05, 0.03);
-                            this.playSound(SoundEvents.ENTITY_GENERIC_EAT, 0.5F, 1.0F);
+
+                            this.playSound(isPotion ? SoundEvents.ENTITY_GENERIC_DRINK : SoundEvents.ENTITY_GENERIC_EAT,
+                                    0.5F, 1.0F);
                         }
                     }
                 }
 
                 if (!skillHitFired && skillTick >= USE_HIT_TICK) {
                     skillHitFired = true;
-                    ItemStack bossStack = this.getMainHandStack();
-                    if (bossStack.isFood()) {
+                    if (isFood) {
                         // "Use" the item (remove it)
                         this.setStackInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
-                        this.heal(10.0F * bossStack.getCount() * 2);
+                        this.heal(10.0F * currentStack.getCount() * 2);
 
-                        stolenItemCandidate.getItem().getFoodComponent().getStatusEffects().forEach(effect -> {
-                            this.addStatusEffect(new StatusEffectInstance(effect.getFirst()));
+                        if (currentStack.getItem().isFood()) {
+                            currentStack.getItem().getFoodComponent().getStatusEffects().forEach(effect -> {
+                                this.addStatusEffect(new StatusEffectInstance(effect.getFirst()));
+                            });
+                        }
+
+                        this.playSound(SoundEvents.ENTITY_PLAYER_BURP, 1.0F, 1.0F);
+                    } else if (isPotion) {
+                        this.setStackInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
+                        PotionUtil.getPotionEffects(currentStack).forEach(effect -> {
+                            this.addStatusEffect(new StatusEffectInstance(effect));
                         });
-
                         this.playSound(SoundEvents.ENTITY_PLAYER_BURP, 1.0F, 1.0F);
                     }
                 }
                 break;
-            case SKILL_DESTROY_ITEM:
+            }
+            case SKILL_DESTROY_ITEM: {
                 // Play effects periodically during breaking sequence
                 boolean isHitTick = skillTick == DESTROY_HIT_TICKS[0] || skillTick == DESTROY_HIT_TICKS[1]
                         || skillTick == DESTROY_HIT_TICKS[2];
@@ -597,21 +655,46 @@ public class Unknown extends HostileEntity implements GeoEntity {
                                 } else {
                                     bossStack.setDamage(newDamage);
                                 }
+
+                                // Final hit: if the shield is still not broken, drop it to the ground
+                                if (skillTick == DESTROY_HIT_TICKS[2]
+                                        && bossStack.getDamage() < bossStack.getMaxDamage()) {
+                                    this.dropStack(bossStack);
+                                    this.setStackInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
+                                    this.playSound(SoundEvents.ENTITY_ITEM_BREAK, 1.0F, 0.5F);
+                                }
                             }
                         }
                     }
                 }
                 break;
+            }
+            case SKILL_POINT_FINGER: {
+                if (!skillHitFired && skillTick >= POINT_FINGER_HIT_TICK) {
+                    skillHitFired = true;
+                    LivingEntity target = this.getTarget();
+                    if (target instanceof PlayerEntity player) {
+                        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 254));
+                        player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 200, 1));
+                    }
+                }
+                break;
+            }
         }
     }
 
-    private void handleSkillCompletion(int skillId) {
+    private void handleSkillCompletionChain(int skillId) {
         switch (skillId) {
             case SKILL_DASH_FORWARD:
-                triggerSkill(SKILL_LEG_TRIP, 20); // Chain to Leg Trip
+                double chance = this.random.nextDouble();
+                if (chance < 0.5) {
+                    triggerSkill(SKILL_GRAB_JUMP_SLAM, 60);
+                } else {
+                    triggerSkill(SKILL_LEG_TRIP, 30);
+                }
                 break;
             case SKILL_LEG_TRIP:
-                triggerSkill(SKILL_GROUND_SLAM_KICK, 40); // Chain to Ground Slam Kick
+                triggerSkill(SKILL_GROUND_SLAM_KICK, 40);
                 break;
             case SKILL_JUMP:
                 LivingEntity target = this.getTarget();
@@ -649,8 +732,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, tx, ty + 1, tz, 15, 0.5, 1.0, 0.5,
                                 0.05);
                     }
-                } else {
-                    WelcomeToMyWorld.LOGGER.info("log(\"teleportTarget\", \"still null\")");
                 }
                 triggerSkill(SKILL_SLAM_GROUND_AFTER_JUMP, 30); // Chain to Slam After Jump
                 break;
@@ -674,10 +755,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
             case SKILL_STEAL_ITEM:
                 ItemStack stolenItem = this.getMainHandStack();
                 if (!stolenItem.isEmpty()) {
-                    if (stolenItem.isFood()) {
+                    if (stolenItem.isFood() || stolenItem.getItem() instanceof PotionItem) {
                         triggerSkill(SKILL_USE_ITEM, 70);
-                    } else if (stolenItem.getItem() instanceof SwordItem
-                            || stolenItem.getItem() instanceof ShieldItem) {
+                    } else if (stolenItem.getItem() instanceof ShieldItem) {
                         triggerSkill(SKILL_DESTROY_ITEM, 80);
                     } else {
                         this.dataTracker.set(IS_USING_SKILL, false);
@@ -688,11 +768,75 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     this.dataTracker.set(SKILL_ID, 0);
                 }
                 break;
+            case SKILL_POINT_FINGER: {
+                LivingEntity pointTarget = this.getTarget();
+                if (pointTarget != null) {
+                    double distSq = this.squaredDistanceTo(pointTarget);
+                    if (distSq <= 3.0 * 3.0) {
+                        triggerSkill(SKILL_STEAL_ITEM, 60);
+                    } else {
+                        triggerSkill(SKILL_PREPARE_STEAL, 100);
+                    }
+                } else {
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
+                break;
+            }
             default:
                 // End skill
+                this.removeAllPassengers();
                 this.dataTracker.set(IS_USING_SKILL, false);
                 this.dataTracker.set(SKILL_ID, 0);
                 break;
+        }
+    }
+
+    private Vec3d getLocalOffsetTarget(double forwardOffset, double rightOffset, double heightOffset) {
+        float yaw = this.bodyYaw * ((float) Math.PI / 180F);
+
+        double offsetX = -Math.sin(yaw) * forwardOffset - Math.cos(yaw) * rightOffset;
+        double offsetZ = Math.cos(yaw) * forwardOffset - Math.sin(yaw) * rightOffset;
+
+        return new Vec3d(this.getX() + offsetX, this.getY() + heightOffset, this.getZ() + offsetZ);
+    }
+
+    @Override
+    protected void updatePassengerPosition(net.minecraft.entity.Entity passenger,
+            net.minecraft.entity.Entity.PositionUpdater positionUpdater) {
+        if (!this.hasPassenger(passenger))
+            return;
+
+        if (this.isUsingSkill() && this.getSkillId() == SKILL_GRAB_JUMP_SLAM) {
+            double right = 0.0; // Middle front
+            double forward = 1.0;
+            double up = 0.5;
+            // Animate the passenger location smoothly to follow the grabbing arm!
+            if (skillTick <= 10) {
+                // Tick 0-10: Player grabbed and lifted slightly
+                up = 1;
+                forward = 1.0;
+            } else if (skillTick < 38) {
+                // Tick 10-38: Boss holds player high above head while rising/hovering in the
+                // sky
+                up = 2;
+                forward = 0.5;
+            } else if (skillTick <= 38) {
+                // Tick 38-41: The exact moment of the plunge, the arm visibly thrusts the
+                // player directly into the floor!
+                float progress = (skillTick - 38) / 3.0f;
+                up = net.minecraft.util.math.MathHelper.lerp(progress, 2, 0.0);
+                forward = net.minecraft.util.math.MathHelper.lerp(progress, 0.5, 1.5);
+            } else {
+                // Pinned to the floor after the slam
+                up = 0.0;
+                forward = 1.5;
+            }
+
+            Vec3d targetPos = getLocalOffsetTarget(forward, right, up);
+            positionUpdater.accept(passenger, targetPos.x, targetPos.y, targetPos.z);
+        } else {
+            super.updatePassengerPosition(passenger, positionUpdater);
         }
     }
 
@@ -708,7 +852,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         if (tauntCooldown > 0) {
             tauntCooldown--;
-            if (tauntCooldown == 140) {
+            if (tauntCooldown == 100) { // 100 ticks (5 seconds total elapsed since start) to allow it to fully finish
+                                        // and blend
                 this.dataTracker.set(IS_TAUNTING, false);
             }
         }
@@ -725,7 +870,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         if (!this.getWorld().isClient() && dodgeCooldown <= 0 && Math.random() < 0.45 && !isUsingSkill()) {
             tryDodge();
-            return super.damage(source, 0);
+            return false;
         }
         return super.damage(source, amount);
     }
@@ -747,15 +892,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         // Spawn visual blocks representing the ground slam impact (ripple effect)
         if (createBlock && this.getWorld() instanceof ServerWorld serverWorld) {
-            int delay = 0;
             // The boss position when the slam hits
             final double originX = this.getX();
             final double originY = this.getY();
             final double originZ = this.getZ();
 
+            int ringIndex = 0;
             for (double r = 1.5; r <= radius + 0.5; r += 1.5) {
                 final double currentRadius = r;
-                final int finalDelay = delay;
+                final int finalDelay = ringIndex / 2; // 2 rings per tick (0.5 tick per ring-step)
 
                 Utils.addRunAfter(() -> {
                     int blockCount = (int) (currentRadius * 8); // denser rings
@@ -775,7 +920,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     }
                 }, finalDelay);
 
-                delay += 1;
+                ringIndex++;
             }
         }
         return nearby;
@@ -840,9 +985,10 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         // 2) Visuals propagating outwards
         int segments = (int) length;
+        int blocksPerTick = 4; // 4 blocks per tick = much faster shockwave
         for (int i = 1; i <= segments; i++) {
             final double dist = i;
-            final int delay = i; // 1 tick per block of distance = shockwave speed
+            final int delay = (i - 1) / blocksPerTick;
 
             Utils.addRunAfter(() -> {
                 double targetX = originX + dx * dist;
@@ -883,13 +1029,18 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         double impulseX = dodgeLeft ? -rightX : rightX;
         double impulseZ = dodgeLeft ? -rightZ : rightZ;
-        double dodgeSpeed = 1.5;
+        double dodgeSpeed = 2;
 
         this.setVelocity(impulseX * dodgeSpeed, this.getVelocity().y, impulseZ * dodgeSpeed);
         this.velocityModified = true;
 
         this.triggerDash(dodgeLeft, 15);
         this.dodgeCooldown = 40;
+    }
+
+    @Override
+    public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
+        return false;
     }
 
     @Override
