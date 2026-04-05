@@ -61,7 +61,7 @@ public class UnknownRenderer extends GeoEntityRenderer<Unknown> {
                 poseStack.pop();
             }
         });
-        this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
+        // this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
     }
 
 }

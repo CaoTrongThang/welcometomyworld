@@ -77,10 +77,10 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private static final int SKILL_POINT_FINGER = 12;
     private static final int SKILL_GRAB_JUMP_SLAM = 13;
 
-    private static final int PUNCH_HIT_TICK = 20; // 1s × 20 TPS
-    private static final int LEG_TRIP_HIT_TICK = 10;
+    private static final int PUNCH_HIT_TICK = 20;
+    private static final int LEG_TRIP_HIT_TICK = 8;
     private static final int GROUND_SLAM_KICK_HIT_TICK = 20;
-    private static final int SLAM_AFTER_JUMP_HIT_TICK = 3; // Change if slam animation impact deviates
+    private static final int SLAM_AFTER_JUMP_HIT_TICK = 3;
     private static final int STEAL_HIT_TICK = 8;
     private static final int USE_HIT_TICK = 43;
     private static final int POINT_FINGER_HIT_TICK = 5;
@@ -637,15 +637,14 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         }
 
                         if (isHitTick) {
-                            int damageAmount = 500;
                             if (bossStack.isDamageable()) {
                                 int remainingDurability = bossStack.getMaxDamage() - bossStack.getDamage();
-                                if (remainingDurability < 500) {
-                                    if (skillTick == DESTROY_HIT_TICKS[2]) {
-                                        damageAmount = 500;
-                                    } else {
-                                        damageAmount = Math.max(1, remainingDurability / 3);
-                                    }
+                                int damageAmount;
+
+                                if (skillTick == DESTROY_HIT_TICKS[2]) {
+                                    damageAmount = 500;
+                                } else {
+                                    damageAmount = Math.max(1, remainingDurability / 3);
                                 }
 
                                 int newDamage = bossStack.getDamage() + damageAmount;
@@ -690,7 +689,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 if (chance < 0.5) {
                     triggerSkill(SKILL_GRAB_JUMP_SLAM, 60);
                 } else {
-                    triggerSkill(SKILL_LEG_TRIP, 30);
+                    triggerSkill(SKILL_LEG_TRIP, 25);
                 }
                 break;
             case SKILL_LEG_TRIP:
