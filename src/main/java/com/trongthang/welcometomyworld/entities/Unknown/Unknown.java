@@ -8,7 +8,6 @@ import java.util.List;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.RevengeGoal;
 import net.minecraft.entity.ai.goal.WanderAroundGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -75,7 +74,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private static final int SKILL_DESTROY_ITEM = 10;
     private static final int SKILL_PREPARE_STEAL = 11;
     private static final int SKILL_POINT_FINGER = 12;
-    private static final int SKILL_GRAB_JUMP_SLAM = 13;
+    public static final int SKILL_GRAB_JUMP_SLAM = 13;
 
     private static final int PUNCH_HIT_TICK = 20;
     private static final int LEG_TRIP_HIT_TICK = 8;
@@ -130,8 +129,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         this.goalSelector.add(5, new LookAroundGoal(this));
 
         // --- Target goals ---
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, LivingEntity.class, false));
-        this.targetSelector.add(2, new RevengeGoal(this));
+        this.targetSelector.add(1, new RevengeGoal(this));
     }
 
     @Override
@@ -490,12 +488,22 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.5f, true);
                     this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, this.getSoundCategory(), 1.0F, 1.0F);
+
+                    // give the player slowness
+                    for (net.minecraft.entity.Entity passenger : this.getPassengerList()) {
+                        if (passenger instanceof PlayerEntity player) {
+                            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 255));
+                        }
+                    }
+
                 } else if (skillTick == GRAB_SLAM_HIT_TICK + 4) {
                     // Delaying dismount by a few ticks to let the client smoothly interpolate the
                     // teleport downward together
                     for (net.minecraft.entity.Entity passenger : this.getPassengerList()) {
                         passenger.fallDistance = 0;
                     }
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_ID, 0);
                     this.removeAllPassengers();
                 }
                 break;
@@ -784,9 +792,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
             }
             default:
                 // End skill
-                this.removeAllPassengers();
                 this.dataTracker.set(IS_USING_SKILL, false);
                 this.dataTracker.set(SKILL_ID, 0);
+                this.removeAllPassengers();
                 break;
         }
     }
@@ -820,15 +828,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 // sky
                 up = 2;
                 forward = 0.5;
-            } else if (skillTick <= 38) {
+            } else if (skillTick <= 41) {
                 // Tick 38-41: The exact moment of the plunge, the arm visibly thrusts the
                 // player directly into the floor!
-                float progress = (skillTick - 38) / 3.0f;
-                up = net.minecraft.util.math.MathHelper.lerp(progress, 2, 0.0);
+                float progress = Math.min(1.0f, (skillTick - 38) / 3.0f);
+                up = net.minecraft.util.math.MathHelper.lerp(progress, 2.0, -0.7);
                 forward = net.minecraft.util.math.MathHelper.lerp(progress, 0.5, 1.5);
             } else {
                 // Pinned to the floor after the slam
-                up = 0.0;
+                up = -0.7;
                 forward = 1.5;
             }
 

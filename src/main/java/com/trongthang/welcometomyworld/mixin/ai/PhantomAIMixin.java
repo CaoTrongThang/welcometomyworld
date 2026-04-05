@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.mixin.ai;
 
+import com.trongthang.welcometomyworld.interfaces.PhantomGrabber;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -16,7 +17,7 @@ import static com.trongthang.welcometomyworld.GlobalConfig.canPhantomAI;
 
 // TODO: Make Phantom spawn like neutral
 @Mixin(PhantomEntity.class)
-public abstract class PhantomAIMixin extends Entity {
+public abstract class PhantomAIMixin extends Entity implements PhantomGrabber {
 
     @Unique
     private int maxHeight = 300;
@@ -30,6 +31,19 @@ public abstract class PhantomAIMixin extends Entity {
 
     @Unique
     private boolean canGrab = true;
+
+    @Unique
+    private boolean isGrabbing = false;
+
+    @Override
+    public boolean welcomeToMyWorld$isGrabbingPlayer() {
+        return isGrabbing;
+    }
+
+    @Override
+    public void welcomeToMyWorld$setGrabbingPlayer(boolean grabbing) {
+        this.isGrabbing = grabbing;
+    }
 
     public PhantomAIMixin(EntityType<?> type, World world) {
         super(type, world);
@@ -75,10 +89,14 @@ public abstract class PhantomAIMixin extends Entity {
                         !phantom.getWorld().isAir(phantom.getBlockPos().up(1)) ||
                         phantom.getY() > maxHeight) {
                     phantom.removeAllPassengers();
+                    this.isGrabbing = false;
                     canLiftPlayer = false; // Start cooldown
+                } else {
+                    this.isGrabbing = true;
                 }
             } else {
                 phantom.removeAllPassengers();
+                this.isGrabbing = false;
             }
         } else {
             // Check to grab a new player
@@ -92,6 +110,7 @@ public abstract class PhantomAIMixin extends Entity {
                 if (!player.isCreative() && !player.isSpectator() && !player.isDead()) {
                     if (phantom.distanceTo(player) <= 5.0 && phantom.getHealth() >= phantom.getMaxHealth() / 3) {
                         player.startRiding(phantom, true);
+                        this.isGrabbing = true;
                     }
                 }
             }
