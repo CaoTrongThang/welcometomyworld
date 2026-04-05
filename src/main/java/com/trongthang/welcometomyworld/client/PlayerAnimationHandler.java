@@ -146,7 +146,10 @@ public class PlayerAnimationHandler {
             // landing animation.
             // If they are pressing keys, wait for limb speed to hit normal walking
             // threshold before breaking out.
-            if (!hasInput || player.limbAnimator.getSpeed() < 0.5f) {
+            // NEW CASE: If they are extremely slow (Slowness 255 stun), stay in
+            // landing_fail.
+            if (!hasInput || player.limbAnimator.getSpeed() < 0.2f ||
+                    (AnimationUtils.isAnimationPlaying(player, "landing_fail") && player.getMovementSpeed() < 0.01f)) {
                 return;
             }
         }

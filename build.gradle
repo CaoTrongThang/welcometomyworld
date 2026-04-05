@@ -55,6 +55,8 @@ repositories {
         }
     }
     maven { url 'https://maven.blamejared.com' }
+    maven { url "https://maven.firstdarkdev.xyz/snapshots" } // LDLib, Photon
+
 }
 
 fabricApi {
@@ -89,6 +91,8 @@ dependencies {
     modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}")
     modImplementation("com.eliotlash.mclib:mclib:20")
 
+    modImplementation("com.lowdragmc.photon:photon-fabric-1.20.1:${project.photon_version}") { transitive = false }
+    modImplementation("com.lowdragmc.ldlib:ldlib-fabric-1.20.1:${project.ldlib_version}") { transitive = false }
 }
 
 processResources {
