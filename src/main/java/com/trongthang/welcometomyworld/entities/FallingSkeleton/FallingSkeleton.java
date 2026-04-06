@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld.entities.FallingSkeleton;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -21,7 +22,8 @@ public class FallingSkeleton extends HostileEntity implements GeoEntity {
     private static final TrackedData<Boolean> HAS_LANDED = DataTracker.registerData(FallingSkeleton.class,
             TrackedDataHandlerRegistry.BOOLEAN);
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private int landedTicks = 0;
+    private int ticksSinceLanded = 0;
+    private int survivalTicks = 0;
 
     public FallingSkeleton(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
@@ -42,19 +44,21 @@ public class FallingSkeleton extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean handleFallDamage(float fallDistance, float damageMultiplier,
-            net.minecraft.entity.damage.DamageSource damageSource) {
+            DamageSource damageSource) {
         return false;
     }
 
     @Override
     public void tick() {
         if (!this.isOnGround() && this.getVelocity().y < 0) {
-            this.setVelocity(this.getVelocity().multiply(1.0, 0.8, 1.0));
+            this.setVelocity(this.getVelocity().multiply(1.0, 1.0, 1.0));
         }
         super.tick();
 
         if (this.getWorld().isClient())
             return;
+
+        survivalTicks++;
 
         if (!this.dataTracker.get(HAS_LANDED)) {
             if (this.isOnGround()) {
@@ -63,12 +67,17 @@ public class FallingSkeleton extends HostileEntity implements GeoEntity {
                         SoundEvents.ENTITY_SKELETON_DEATH, this.getSoundCategory(), 1.0F, 1.0F);
             }
         } else {
-            landedTicks++;
-            if (landedTicks >= 100) { // 5 seconds
-                this.dropItem(Items.BONE, 1);
-                this.discard();
-            }
+            ticksSinceLanded++;
         }
+
+        if (ticksSinceLanded >= 100 || survivalTicks >= 3000) { // 5 seconds after landing or safety timeout
+            this.discard();
+        }
+    }
+
+    @Override
+    protected void dropLoot(DamageSource source, boolean causedByPlayer) {
+        super.dropLoot(source, causedByPlayer);
     }
 
     @Override

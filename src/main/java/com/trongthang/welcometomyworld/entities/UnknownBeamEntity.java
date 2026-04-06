@@ -117,11 +117,8 @@ public class UnknownBeamEntity extends Entity {
                 float damage = (float) owner
                         .getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE)
                         * 0.5f;
-                if (damage <= 0)
-                    damage = 0f; // Default if 0 for testing
-                {
-                    target.damage(this.getWorld().getDamageSources().mobAttack(owner), damage);
-                }
+
+                com.trongthang.welcometomyworld.entities.Unknown.Unknown.dealUnknownDamage(owner, target, damage);
 
                 target.setFireTicks(20);
                 // Knockback away from the beam center

@@ -44,18 +44,13 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.item.ShieldItem;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.particle.ItemStackParticleEffect;
 import net.minecraft.item.PotionItem;
 import net.minecraft.potion.PotionUtil;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 
 public class Unknown extends HostileEntity implements GeoEntity {
 
@@ -1052,12 +1047,32 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
+        LivingEntity currentTarget = this.getTarget();
 
         if (!this.getWorld().isClient() && dodgeCooldown <= 0 && Math.random() < 0.45 && !isUsingSkill()) {
             tryDodge();
             return false;
         }
-        return super.damage(source, amount);
+
+        boolean result = super.damage(source, amount);
+
+        // Smarter targeting: if we are hit by a new attacker, check if we should switch
+        if (result && source.getAttacker() instanceof LivingEntity attacker) {
+            if (currentTarget != null && currentTarget.isAlive() && currentTarget != attacker) {
+                double distToCurrent = this.distanceTo(currentTarget);
+                double distToNew = this.distanceTo(attacker);
+
+                // If currently fighting someone close (< 8 blocks) and hit by someone far away,
+                // stay focused on the close target.
+                // RevengeGoal naturally swaps the target to the last attacker, so we swap back
+                // if the distance gap is significant.
+                if (distToCurrent < 8.0 && distToNew > distToCurrent + 2.0) {
+                    this.setTarget(currentTarget);
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -1070,9 +1085,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
         Box area = this.getBoundingBox().expand(radius);
         List<LivingEntity> nearby = this.getWorld().getEntitiesByClass(
                 LivingEntity.class, area, e -> e != this);
-        DamageSource source = this.getDamageSources().mobAttack(this);
+
         for (LivingEntity target : nearby) {
-            target.damage(source, damage);
+            dealUnknownDamage(this, target, damage);
         }
 
         // Spawn visual blocks representing the ground slam impact (ripple effect)
@@ -1109,6 +1124,17 @@ public class Unknown extends HostileEntity implements GeoEntity {
             }
         }
         return nearby;
+    }
+
+    public static void dealUnknownDamage(LivingEntity attacker, LivingEntity target, float amount) {
+        if (target.isBlocking() && target.getActiveItem().getItem() instanceof ShieldItem) {
+            int shieldDamage = (int) (amount * 0.8f);
+            if (shieldDamage > 0) {
+                target.getActiveItem().damage(shieldDamage, target,
+                        (e) -> e.sendToolBreakStatus(target.getActiveHand()));
+            }
+        }
+        target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
     }
 
     /**
@@ -1148,7 +1174,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
         // 1) Deal damage immediately
         Box checkArea = this.getBoundingBox().expand(length);
         List<LivingEntity> nearby = serverWorld.getEntitiesByClass(LivingEntity.class, checkArea, e -> e != this);
-        DamageSource source = this.getDamageSources().mobAttack(this);
 
         for (LivingEntity target : nearby) {
             double vecX = target.getX() - originX;
@@ -1163,7 +1188,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         (target.getZ() - closestZ) * (target.getZ() - closestZ);
 
                 if (distSq <= (width / 2.0) * (width / 2.0)) {
-                    target.damage(source, damage);
+                    dealUnknownDamage(this, target, damage);
                 }
             }
         }

@@ -8,7 +8,22 @@
         "water_fog_color": 329011,
         "sky_color": 0
     },
-    "spawners": {},
+    "spawners": {
+        "monster": [
+            {
+                "type": "minecraft:skeleton",
+                "weight": 100,
+                "minCount": 4,
+                "maxCount": 4
+            },
+            {
+                "type": "minecraft:zombie",
+                "weight": 80,
+                "minCount": 4,
+                "maxCount": 4
+            }
+        ]
+    },
     "spawn_costs": {},
     "carvers": {},
     "features": []

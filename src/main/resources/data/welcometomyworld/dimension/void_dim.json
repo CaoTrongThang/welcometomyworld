@@ -25,8 +25,18 @@
                 "fluid_level_floodedness": 0,
                 "fluid_level_spread": 0,
                 "lava": 0,
-                "temperature": 0,
-                "vegetation": 0,
+                "temperature": {
+                    "type": "minecraft:noise",
+                    "noise": "minecraft:temperature",
+                    "xz_scale": 0.25,
+                    "y_scale": 0
+                },
+                "vegetation": {
+                    "type": "minecraft:noise",
+                    "noise": "minecraft:vegetation",
+                    "xz_scale": 0.25,
+                    "y_scale": 0
+                },
                 "continents": 0,
                 "erosion": 0,
                 "depth": 0,
@@ -89,6 +99,51 @@
                     {
                         "type": "minecraft:condition",
                         "if_true": {
+                            "type": "minecraft:biome",
+                            "biome_is": [
+                                "welcometomyworld:void_sculk_biome"
+                            ]
+                        },
+                        "then_run": {
+                            "type": "minecraft:condition",
+                            "if_true": {
+                                "type": "minecraft:stone_depth",
+                                "offset": 0,
+                                "surface_type": "floor",
+                                "add_surface_depth": false,
+                                "secondary_depth_range": 0
+                            },
+                            "then_run": {
+                                "type": "minecraft:sequence",
+                                "sequence": [
+                                    {
+                                        "type": "minecraft:condition",
+                                        "if_true": {
+                                            "type": "minecraft:noise_threshold",
+                                            "noise": "minecraft:surface",
+                                            "min_threshold": -0.4,
+                                            "max_threshold": 1.0
+                                        },
+                                        "then_run": {
+                                            "type": "minecraft:block",
+                                            "result_state": {
+                                                "Name": "minecraft:sculk"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "minecraft:block",
+                                        "result_state": {
+                                            "Name": "minecraft:deepslate"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "type": "minecraft:condition",
+                        "if_true": {
                             "type": "minecraft:stone_depth",
                             "offset": 0,
                             "surface_type": "floor",
@@ -98,21 +153,6 @@
                         "then_run": {
                             "type": "minecraft:sequence",
                             "sequence": [
-                                {
-                                    "type": "minecraft:condition",
-                                    "if_true": {
-                                        "type": "minecraft:noise_threshold",
-                                        "noise": "minecraft:surface",
-                                        "min_threshold": -0.4,
-                                        "max_threshold": 0.2
-                                    },
-                                    "then_run": {
-                                        "type": "minecraft:block",
-                                        "result_state": {
-                                            "Name": "minecraft:sculk"
-                                        }
-                                    }
-                                },
                                 {
                                     "type": "minecraft:condition",
                                     "if_true": {
@@ -142,8 +182,33 @@
             "name": "welcometomyworld:void_dim"
         },
         "biome_source": {
-            "type": "minecraft:fixed",
-            "biome": "welcometomyworld:void_biome"
+            "type": "minecraft:multi_noise",
+            "biomes": [
+                {
+                    "biome": "welcometomyworld:void_biome",
+                    "parameters": {
+                        "temperature": 0,
+                        "humidity": 0,
+                        "continentalness": 0,
+                        "erosion": 0,
+                        "depth": 0,
+                        "weirdness": 0,
+                        "offset": 0
+                    }
+                },
+                {
+                    "biome": "welcometomyworld:void_sculk_biome",
+                    "parameters": {
+                        "temperature": 0.6,
+                        "humidity": 0.6,
+                        "continentalness": 0,
+                        "erosion": 0,
+                        "depth": 0,
+                        "weirdness": 0,
+                        "offset": 0
+                    }
+                }
+            ]
         }
     }
 }

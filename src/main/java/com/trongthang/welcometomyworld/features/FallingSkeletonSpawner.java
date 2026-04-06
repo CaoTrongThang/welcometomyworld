@@ -32,6 +32,10 @@ public class FallingSkeletonSpawner {
             return;
 
         for (ServerPlayerEntity player : voidWorld.getPlayers()) {
+            // check if the player is flying with Elytra
+            if (player.getAbilities().flying) {
+                continue;
+            }
             if (random.nextDouble() < SPAWN_CHANCE) {
                 spawnAbovePlayer(voidWorld, player);
                 count++;
