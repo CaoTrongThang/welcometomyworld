@@ -38,7 +38,7 @@
 		"entity.DifficultyDataMixin",
 		"ai.CreeperAIMixin",
 		"ai.SpiderAIMixin",
-		"client.BackgroundRendererMixin",
+		"client.BackgroundRendererFogMixin",
 		"world.FallingTreeMixin",
 		"ai.HostileMobsStrongerInBloodMoonMixin",
 		"ai.MobsStatsSetMixin",

@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.trongthang.welcometomyworld.client.BloodMoonClient;
 
 @Mixin(BackgroundRenderer.class)
-public class BackgroundRendererMixin {
+public class BackgroundRendererFogMixin {
     @Shadow
     private static float red;
     @Shadow
