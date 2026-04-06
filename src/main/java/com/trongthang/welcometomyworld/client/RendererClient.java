@@ -18,6 +18,7 @@ import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererArrow.Wa
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererModel;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownRenderer;
+import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownBeamRenderer;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -75,5 +76,6 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.BLOSSOM, BlossomRenderer::new);
 
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN, UnknownRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.UNKNOWN_BEAM, UnknownBeamRenderer::new);
         }
 }

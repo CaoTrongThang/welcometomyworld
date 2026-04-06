@@ -2,6 +2,8 @@ package com.trongthang.welcometomyworld.mixin.entity;
 
 import com.trongthang.welcometomyworld.ConfigLoader;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+
 import net.minecraft.entity.EntityData;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
@@ -105,7 +107,7 @@ public class HostileEntityBuffMixin {
 
         Utils.addRunAfter(() -> {
             if (mobEntity instanceof HostileEntity entity) {
-                if (!(entity instanceof EndermanEntity)) {
+                if (!(entity instanceof EndermanEntity) && !(entity instanceof Unknown)) {
                     this.targetSelector.add(15, new ActiveTargetGoal<>(entity, TameableEntity.class, true,
                             target -> !Registries.ENTITY_TYPE.getId(target.getType()).getNamespace()
                                     .contains("iceandfire")));

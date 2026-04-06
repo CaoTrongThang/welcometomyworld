@@ -105,6 +105,13 @@ public class EntitiesManager {
                                         .dimensions(EntityDimensions.fixed(0.5f, 0.5f)) // Adjust width and height
                                         .build());
 
+        public static final EntityType<UnknownBeamEntity> UNKNOWN_BEAM = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "unknown_beam"),
+                        FabricEntityTypeBuilder.<UnknownBeamEntity>create(SpawnGroup.MISC, UnknownBeamEntity::new)
+                                        .dimensions(EntityDimensions.fixed(0.5f, 0.5f))
+                                        .build());
+
         public static void register() {
                 // FabricDefaultAttributeRegistry.register(A_LIVING_LOG, setAttributes(8, 0.1));
 

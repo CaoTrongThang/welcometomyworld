@@ -56,6 +56,7 @@ repositories {
     }
     maven { url 'https://maven.blamejared.com' }
     maven { url "https://maven.firstdarkdev.xyz/snapshots" } // LDLib, Photon
+    maven { url = "https://maven.kyrptonaught.dev" }
 
 }
 
@@ -90,6 +91,9 @@ dependencies {
     modCompileOnly("io.github.flemmli97:improvedmobs:${project.minecraft_version}-${project.improvedmobs_version}-fabric")
     modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}")
     modImplementation("com.eliotlash.mclib:mclib:20")
+
+    modImplementation "net.kyrptonaught:customportalapi:0.0.1-beta65-1.20"
+    include "net.kyrptonaught:customportalapi:0.0.1-beta65-1.20"
 
 
 }

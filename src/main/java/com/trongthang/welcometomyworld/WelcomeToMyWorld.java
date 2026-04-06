@@ -8,6 +8,7 @@ import com.trongthang.welcometomyworld.features.*;
 import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.commands.ModCommands;
+import com.trongthang.welcometomyworld.managers.PortalManager;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -208,6 +209,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         AllowSleepAllTime.registerEvents();
         BalanceSpawnWeight.register();
         MobsGearsUp.register();
+        PortalManager.initialize();
         startScheduledSender();
         NoTeleportWithBoat.register();
 

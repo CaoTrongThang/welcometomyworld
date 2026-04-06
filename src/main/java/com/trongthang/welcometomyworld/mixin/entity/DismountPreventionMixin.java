@@ -33,9 +33,7 @@ public abstract class DismountPreventionMixin {
         if (vehicle instanceof Unknown unknown) {
             boolean usingSkill = unknown.isUsingSkill();
             int skillId = unknown.getSkillId();
-            LOGGER.info("DismountPreventionMixin check: usingSkill=" + usingSkill + ", skillId=" + skillId);
-            if (usingSkill && skillId == Unknown.SKILL_GRAB_JUMP_SLAM) {
-                LOGGER.info("DismountPreventionMixin: CANCELLED dismount from Unknown");
+            if (usingSkill && skillId == Unknown.GRAB_JUMP_SLAM.id) {
                 ci.cancel();
             }
         }

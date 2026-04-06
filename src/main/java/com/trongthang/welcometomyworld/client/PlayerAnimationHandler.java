@@ -46,7 +46,7 @@ public class PlayerAnimationHandler {
         }
         // 3. Handle Grounded State
         else {
-            handleGrounded(player);
+            handleGrounded(player, fallDistance);
         }
     }
 
@@ -112,7 +112,7 @@ public class PlayerAnimationHandler {
         }
     }
 
-    private static void handleGrounded(AbstractClientPlayerEntity player) {
+    private static void handleGrounded(AbstractClientPlayerEntity player, float fallDistance) {
         // Stop airborne animations if we are on ground (fallback)
         if (AnimationUtils.isAnimationPlaying(player, "falling") ||
                 AnimationUtils.isAnimationPlaying(player, "jumping_idle") ||

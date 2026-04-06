@@ -42,7 +42,8 @@
 		"world.FallingTreeMixin",
 		"ai.HostileMobsStrongerInBloodMoonMixin",
 		"ai.MobsStatsSetMixin",
-		"entity.DismountPreventionMixin"
+		"entity.DismountPreventionMixin",
+		"entity.HungerManagerNerf"
 	],
 	"injectors": {
 		"defaultRequire": 1
