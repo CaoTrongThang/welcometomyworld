@@ -107,6 +107,7 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static NauseaInWaterHandler nauseaInWaterHandler = new NauseaInWaterHandler();
     public static BossesSpawningHandler bossesSpawningHandler = new BossesSpawningHandler();
     public static LightningsStrikePlayersInRain lightningsStrikePlayersInRain = new LightningsStrikePlayersInRain();
+    public static FallingSkeletonSpawner fallingSkeletonSpawner = new FallingSkeletonSpawner();
 
     MinecraftServer server;
 
@@ -326,6 +327,7 @@ public class WelcomeToMyWorld implements ModInitializer {
 
         Utils.onServerTick(server);
         SpawnMonstersPackEveryMins.spawnMonsters(server);
+        fallingSkeletonSpawner.tick(server);
     }
 
     public void registerEvents() {

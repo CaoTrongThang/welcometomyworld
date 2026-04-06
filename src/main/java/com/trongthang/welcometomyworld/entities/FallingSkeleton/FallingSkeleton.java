@@ -48,6 +48,9 @@ public class FallingSkeleton extends HostileEntity implements GeoEntity {
 
     @Override
     public void tick() {
+        if (!this.isOnGround() && this.getVelocity().y < 0) {
+            this.setVelocity(this.getVelocity().multiply(1.0, 0.8, 1.0));
+        }
         super.tick();
 
         if (this.getWorld().isClient())
