@@ -9,7 +9,8 @@
     "client.WailaConfigMixin",
     "client.GameRendererMixin",
     "client.BipedEntityModelMixin",
-    "client.InGameHudMixin"
+    "client.InGameHudMixin",
+    "client.CancelLoadingScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

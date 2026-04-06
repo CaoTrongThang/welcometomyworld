@@ -4,6 +4,8 @@ import com.trongthang.welcometomyworld.entities.client.Blossom.BlossomModel;
 import com.trongthang.welcometomyworld.entities.client.Blossom.BlossomRenderer;
 import com.trongthang.welcometomyworld.entities.client.Enderchester.EnderchesterModel;
 import com.trongthang.welcometomyworld.entities.client.Enderchester.EnderchesterRenderer;
+import com.trongthang.welcometomyworld.entities.client.FallingSkeleton.FallingSkeletonRenderer;
+
 import com.trongthang.welcometomyworld.entities.client.BlockSlamGroudEntity.BlockSlamGroundRenderer;
 import com.trongthang.welcometomyworld.entities.client.Chester.ChesterModel;
 import com.trongthang.welcometomyworld.entities.client.Chester.ChesterRenderer;
@@ -21,8 +23,12 @@ import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownBeamRenderer;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
+import com.trongthang.welcometomyworld.world.dimension.VoidDimension;
+import com.trongthang.welcometomyworld.world.dimension.VoidDimensionEffect;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.fabricmc.fabric.api.client.rendering.v1.DimensionRenderingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.render.RenderLayer;
@@ -41,6 +47,15 @@ public class RendererClient implements ClientModInitializer {
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.EASYCRAFT_TROPHY, RenderLayer.getCutout());
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.CHALLENGER_TROPHY, RenderLayer.getCutout());
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.MUSIC_TROPHY, RenderLayer.getCutout());
+
+                DimensionRenderingRegistry.registerDimensionEffects(VoidDimension.VOID_DIM_EFFECTS_ID,
+                                new VoidDimensionEffect());
+
+                DimensionRenderingRegistry.registerSkyRenderer(VoidDimension.VOID_DIM_LEVEL_KEY, context -> {
+                });
+
+                DimensionRenderingRegistry.registerCloudRenderer(VoidDimension.VOID_DIM_LEVEL_KEY, context -> {
+                });
 
                 // BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAME_DISC_TROPHY,
                 // RenderLayer.getCutout());
@@ -77,5 +92,6 @@ public class RendererClient implements ClientModInitializer {
 
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN, UnknownRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN_BEAM, UnknownBeamRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.FALLING_SKELETON, FallingSkeletonRenderer::new);
         }
 }

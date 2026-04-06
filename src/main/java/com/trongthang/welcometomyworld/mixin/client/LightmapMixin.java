@@ -38,7 +38,6 @@ public class LightmapMixin {
         if (client.world == null) {
             return;
         }
-
         Identifier currentDim = client.world.getRegistryKey().getValue();
         if (!currentDim.equals(cachedDimension)) {
             cachedDimension = currentDim;

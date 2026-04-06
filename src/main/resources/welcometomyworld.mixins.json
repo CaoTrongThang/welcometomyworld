@@ -43,7 +43,9 @@
 		"ai.HostileMobsStrongerInBloodMoonMixin",
 		"ai.MobsStatsSetMixin",
 		"entity.DismountPreventionMixin",
-		"entity.HungerManagerNerf"
+		"entity.HungerManagerNerf",
+		"player.VoidDimensionTransitionMixin",
+		"entity.VoidDimensionDamageMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

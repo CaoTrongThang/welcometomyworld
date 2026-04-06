@@ -6,6 +6,7 @@ import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
 import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
 import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.entities.FallingSkeleton.FallingSkeleton;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -112,6 +113,13 @@ public class EntitiesManager {
                                         .dimensions(EntityDimensions.fixed(0.5f, 0.5f))
                                         .build());
 
+        public static final EntityType<FallingSkeleton> FALLING_SKELETON = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "falling_skeleton"),
+                        FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, FallingSkeleton::new)
+                                        .dimensions(EntityDimensions.fixed(0.6f, 1.99f))
+                                        .build());
+
         public static void register() {
                 // FabricDefaultAttributeRegistry.register(A_LIVING_LOG, setAttributes(8, 0.1));
 
@@ -130,6 +138,8 @@ public class EntitiesManager {
                 FabricDefaultAttributeRegistry.register(BLOSSOM, Blossom.setAttributes());
 
                 FabricDefaultAttributeRegistry.register(UNKNOWN, Unknown.setAttributes());
+
+                FabricDefaultAttributeRegistry.register(FALLING_SKELETON, FallingSkeleton.setAttributes());
 
                 addSpawn();
 
