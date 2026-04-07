@@ -19,6 +19,8 @@ public class UnknownBeamEntity extends Entity {
             TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> RADIUS = DataTracker.registerData(UnknownBeamEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> DAMAGE = DataTracker.registerData(UnknownBeamEntity.class,
+            TrackedDataHandlerRegistry.FLOAT);
 
     private UUID ownerUuid;
     private int maxAge = 40; // 60 - 21 + 1
@@ -44,6 +46,14 @@ public class UnknownBeamEntity extends Entity {
         this.dataTracker.set(RADIUS, radius);
     }
 
+    public void setDamage(float damage) {
+        this.dataTracker.set(DAMAGE, damage);
+    }
+
+    public float getDamage() {
+        return this.dataTracker.get(DAMAGE);
+    }
+
     public float getRadius() {
         return this.dataTracker.get(RADIUS);
     }
@@ -52,6 +62,7 @@ public class UnknownBeamEntity extends Entity {
     protected void initDataTracker() {
         this.dataTracker.startTracking(LENGTH, 20.0f);
         this.dataTracker.startTracking(RADIUS, 1.0f);
+        this.dataTracker.startTracking(DAMAGE, 1.0f);
     }
 
     @Override
@@ -85,11 +96,6 @@ public class UnknownBeamEntity extends Entity {
         this.setYaw(owner.getYaw());
         this.setPitch(owner.getPitch());
 
-        if (this.age == 1) {
-            System.out.println("[UnknownBeamEntity] ownerYaw: " + owner.getYaw() + ", ownerPitch: " + owner.getPitch()
-                    + ", lookVec: " + lookVec);
-        }
-
         // Perform damage
         if (this.age % 2 == 0) {
             damageInBeam(owner);
@@ -114,11 +120,8 @@ public class UnknownBeamEntity extends Entity {
             });
 
             for (LivingEntity target : targets) {
-                float damage = (float) owner
-                        .getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE)
-                        * 0.5f;
 
-                com.trongthang.welcometomyworld.entities.Unknown.Unknown.dealUnknownDamage(owner, target, damage);
+                com.trongthang.welcometomyworld.entities.Unknown.Unknown.dealUnknownDamage(owner, target, getDamage());
 
                 target.setFireTicks(20);
                 // Knockback away from the beam center

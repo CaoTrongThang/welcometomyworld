@@ -8,7 +8,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -89,18 +88,16 @@ public class WandererArrow extends PersistentProjectileEntity {
     protected void onEntityHit(EntityHitResult entityHitResult) {
         super.onEntityHit(entityHitResult);
 
-        Entity entity = entityHitResult.getEntity();
+        Entity target = entityHitResult.getEntity();
 
-        LivingEntity owner = (LivingEntity) this.getOwner();
-
-        if (owner != null) {
-            entity.damage(this.getWorld().getDamageSources().mobAttack((LivingEntity) this.getOwner()),
-                    (float) (owner.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)));
+        if (this.getOwner() instanceof LivingEntity owner) {
+            float damage = (float) owner.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+            target.damage(this.getWorld().getDamageSources().mobAttack(owner), damage);
         }
 
-        if (entity instanceof LivingEntity livingEntity) {
+        if (target instanceof LivingEntity livingTarget) {
             // Check if the entity is blocking with a shield
-            if (livingEntity.isBlocking() && livingEntity.getActiveItem().isOf(Items.SHIELD)) {
+            if (livingTarget.isBlocking() && livingTarget.getActiveItem().isOf(Items.SHIELD)) {
                 this.canExplode = false;
             }
         }
@@ -108,40 +105,49 @@ public class WandererArrow extends PersistentProjectileEntity {
 
     @Override
     public boolean canHit(Entity target) {
-        // Check if the target is the owner of the arrow
-        if (this.getOwner() instanceof TameableEntity tameable) {
-            if (tameable.getOwner() == target)
-                return false;
-        }
-
-        if (target instanceof PersistentProjectileEntity) {
+        // Only hit LivingEntities to avoid hitting other projectiles (like other
+        // arrows) or non-living objects
+        if (!(target instanceof LivingEntity)) {
             return false;
         }
 
-        if (this.getOwner() != null) {
-            if (target == this.getOwner())
-                return false;
+        Entity owner = this.getOwner();
+        if (owner == null) {
+            return true;
         }
 
-        if (target instanceof TameableEntity tameable) {
-            if (this.getOwner() instanceof TameableEntity tameable1) {
-                if (tameable.isTamed() && tameable.getOwner() != null) {
-                    if (tameable.getOwner() == tameable1.getOwner())
+        // Don't hit the owner or itself
+        if (target == owner || target == this) {
+            return false;
+        }
+
+        // Handle team-based or owner-based collision filtering for Tameable units like
+        // Wanderers
+        if (owner instanceof TameableEntity ownerTameable) {
+            // Don't hit the owner of the shooter (e.g. the Player)
+            if (ownerTameable.getOwner() == target) {
+                return false;
+            }
+
+            // Don't hit other entities sharing the same owner
+            if (target instanceof TameableEntity targetTameable) {
+                if (targetTameable.isTamed() && targetTameable.getOwner() != null) {
+                    if (targetTameable.getOwner() == ownerTameable.getOwner()) {
                         return false;
+                    }
                 }
             }
-        }
 
-        if (target instanceof Wanderer targetWanderer) {
-            {
-                if (this.getOwner() instanceof TameableEntity tameable) {
-                    if (!targetWanderer.isTamed() && !tameable.isTamed()) {
-                        return false;
-                    }
+            // Specific check for Wanderer interactions
+            if (target instanceof Wanderer targetWanderer) {
+                // If both are untamed, they shouldn't hit each other (generic monster team)
+                if (!targetWanderer.isTamed() && !ownerTameable.isTamed()) {
+                    return false;
+                }
 
-                    if (tameable.getOwner() == targetWanderer.getOwner()) {
-                        return false;
-                    }
+                // If they have the same owner, they are on the same team
+                if (targetWanderer.getOwner() != null && targetWanderer.getOwner() == ownerTameable.getOwner()) {
+                    return false;
                 }
             }
         }
@@ -210,10 +216,9 @@ public class WandererArrow extends PersistentProjectileEntity {
                     }
                 }
 
-                if (((TameableEntity) this.getOwner()) != null) {
-                    float damage = (float) ((TameableEntity) this.getOwner()).getAttributes()
-                            .getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
-                    target.damage(this.getWorld().getDamageSources().mobAttack((LivingEntity) this.getOwner()), damage);
+                if (this.getOwner() instanceof LivingEntity ownerEntity) {
+                    float damage = (float) ownerEntity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
+                    target.damage(this.getWorld().getDamageSources().mobAttack(ownerEntity), damage);
                 }
             }
         }

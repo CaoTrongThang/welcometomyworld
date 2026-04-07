@@ -83,25 +83,37 @@ public class LightmapMixin {
                 int green = (color >> 8) & 0xFF;
                 int red = color & 0xFF;
 
-                if (useCurve) {
+                if (useCurve && !(b == 15 && s == 15)) {
                     int[] table = powerTables[s];
                     red = table[red];
                     green = table[green];
                     blue = table[blue];
                 }
 
+                int newColor = (alpha << 24) | (blue << 16) | (green << 8) | red;
+
                 // Blood moon red tint: shift channels toward red proportional to overlayAlpha
                 // We skip tinting the (15, 15) pixel because it's used by most HUD/Font
                 // rendering
                 if (bloodAlpha > 0f && !(b == 15 && s == 15)) {
+                    red = (newColor & 0xFF);
+                    green = (newColor >> 8) & 0xFF;
+                    blue = (newColor >> 16) & 0xFF;
+
                     red = Math.max(0, red - (int) (10 * bloodAlpha));
                     green = Math.max(0, green - (int) (40 * bloodAlpha));
                     blue = Math.max(0, blue - (int) (40 * bloodAlpha));
+                    newColor = (alpha << 24) | (blue << 16) | (green << 8) | red;
                 }
 
-                int newColor = (alpha << 24) | (blue << 16) | (green << 8) | red;
                 this.image.setColor(b, s, newColor);
             }
         }
+
+        // Final override for (15, 15) to guarantee pure white emissives
+        // Using 0xFFFFFFFF (Full Alpha, Full White) assuming NativeImage format is ARGB
+        // or ABGR.
+        // Minecraft's LightmapTextureManager usually uses 0xFFFFFFFF for max light.
+        this.image.setColor(15, 15, 0xFFFFFFFF);
     }
 }

@@ -2,9 +2,9 @@ package com.trongthang.welcometomyworld.entities;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MovementType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -12,7 +12,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
 
 public class BlockSlamGroundEntity extends Entity {
-    private float targetYOffset;
+
     private static final TrackedData<BlockState> BLOCK_STATE = DataTracker.registerData(BlockSlamGroundEntity.class,
             TrackedDataHandlerRegistry.BLOCK_STATE);
 
@@ -22,41 +22,48 @@ public class BlockSlamGroundEntity extends Entity {
             TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> ROLL = DataTracker.registerData(BlockSlamGroundEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> Y_OFFSET = DataTracker.registerData(BlockSlamGroundEntity.class,
-            TrackedDataHandlerRegistry.FLOAT);
 
     public BlockSlamGroundEntity(EntityType<? extends BlockSlamGroundEntity> type, World world) {
         super(type, world);
 
-        this.setPitch(world.getRandom().nextFloat() * 30f - 15f);
+        // Random rotations for the block look
+        this.setPitch(world.getRandom().nextFloat() * 20f - 10f);
         this.setYaw(world.getRandom().nextFloat() * 360f);
-        this.setRoll(world.getRandom().nextFloat() * 15f - 7.5f);
-
-        // Target Y offset it will hover at
-        this.targetYOffset = world.getRandom().nextFloat() * 0.2f - 0.1f;
-        // Start below the ground
-        this.setYOffset(-1.2f);
+        this.setRoll(world.getRandom().nextFloat() * 20f - 10f);
+        this.noClip = true; // Start as noClip for initial pop
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        // Rising out of the ground animation
-        if (this.age <= 10) {
-            float currentY = this.getYOffset();
-            if (currentY < this.targetYOffset) {
-                this.setYOffset(Math.min(currentY + 0.8f, this.targetYOffset));
+        // Apply physics logic on both client and server for maximum smoothness
+        if (this.age < 12) {
+            // Initial jump phase: noClip is false to allow landing
+            this.noClip = false;
+        }
+
+        if (this.age < 60) {
+            if (!this.isOnGround() && !this.noClip) {
+                // Apply gravity + air friction
+                this.setVelocity(this.getVelocity().add(0, -0.05, 0).multiply(0.98));
+            } else if (this.isOnGround()) {
+                // Landed on ground
+                this.setVelocity(0, 0, 0);
             }
+        } else {
+            // Sinking phase
+            this.noClip = true;
+            this.setVelocity(0, -0.015, 0);
         }
 
-        // Start sinking into the ground after age 45
-        if (this.age > 45) {
-            this.setYOffset(this.getYOffset() - 0.04f);
-        }
+        this.move(MovementType.SELF, this.getVelocity());
 
-        if (this.age >= 120) {
-            this.discard();
+        if (!this.getWorld().isClient()) {
+            this.velocityDirty = true;
+            if (this.age >= 140) {
+                this.discard();
+            }
         }
     }
 
@@ -66,7 +73,6 @@ public class BlockSlamGroundEntity extends Entity {
         this.dataTracker.startTracking(PITCH, 0f);
         this.dataTracker.startTracking(YAW, 0f);
         this.dataTracker.startTracking(ROLL, 0f);
-        this.dataTracker.startTracking(Y_OFFSET, 0f);
     }
 
     public float getPitch() {
@@ -93,14 +99,6 @@ public class BlockSlamGroundEntity extends Entity {
         this.dataTracker.set(ROLL, value);
     }
 
-    public float getYOffset() {
-        return this.dataTracker.get(Y_OFFSET);
-    }
-
-    public void setYOffset(float value) {
-        this.dataTracker.set(Y_OFFSET, value);
-    }
-
     public BlockState getBlockState() {
         return this.dataTracker.get(BLOCK_STATE);
     }
@@ -111,21 +109,24 @@ public class BlockSlamGroundEntity extends Entity {
 
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
-
     }
 
     @Override
     protected void writeCustomDataToNbt(NbtCompound nbt) {
-
     }
 
     @Override
     public boolean isCollidable() {
-        return false; // Disable general collision checks
+        return false;
     }
 
     @Override
     public boolean canHit() {
-        return false; // Disable projectile/attack interactions
+        return false;
+    }
+
+    @Override
+    public boolean isAttackable() {
+        return false;
     }
 }

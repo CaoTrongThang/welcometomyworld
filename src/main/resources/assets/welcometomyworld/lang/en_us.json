@@ -1,34 +1,28 @@
 {
   "itemGroup.welcometomyworld.general": "Welcome to My World",
-
   "item.welcometomyworld.repair_knowledge": "Repair Knowledge",
-
   "item.welcometomyworld.repair_talisman_iron": "Iron Repair Talisman",
   "item.welcometomyworld.repair_talisman_gold": "Gold Repair Talisman",
   "item.welcometomyworld.repair_talisman_emerald": "Emerald Repair Talisman",
-
   "item.welcometomyworld.ancient_fragment": "Ancient Fragment",
   "item.welcometomyworld.power_talisman": "Power Talisman",
   "item.welcometomyworld.speed_talisman": "Speed Talisman",
   "item.welcometomyworld.life_talisman": "Life Talisman",
   "item.welcometomyworld.resistance_talisman": "Resistance Talisman",
   "item.welcometomyworld.creeper_talisman": "Creeper's Talisman",
-
   "item.welcometomyworld.a_living_log": "A Living Log Spawn Egg",
   "item.welcometomyworld.a_living_flower": "A Living Flower Spawn Egg",
   "item.welcometomyworld.enderchester": "Enderchester Spawn Egg",
   "item.welcometomyworld.chester": "Chester Spawn Egg",
   "item.welcometomyworld.ender_pest": "Ender Pest Spawn Egg",
   "item.welcometomyworld.fallen_hammer": "The Fallen Hammer",
-
   "item.welcometomyworld.wanderer_spawn_egg": "Wanderer Spawn Egg",
   "item.welcometomyworld.fallen_knight_spawn_egg": "The Fallen Knight Spawn Egg",
   "item.welcometomyworld.portaler_spawn_egg": "Portaler Spawn Egg",
   "item.welcometomyworld.blossom_spawn_egg": "Blossom Spawn Egg",
-
+  "item.welcometomyworld.unknown_spawn_egg": "Unknown Spawn Egg",
   "enchantment.welcometomyworld.silence": "Silence",
   "enchantment.welcometomyworld.silence.desc": "This enchantment reduces the noises caused by players.",
-
   "entity.welcometomyworld.a_living_log": "A Living Log",
   "entity.welcometomyworld.a_living_flower": "A Living Flower",
   "entity.welcometomyworld.enderchester": "Enderchester",
@@ -39,10 +33,9 @@
   "entity.welcometomyworld.fallen_knight": "The Fallen Knight",
   "entity.welcometomyworld.wanderer": "Wanderer",
   "entity.welcometomyworld.blossom": "Blossom",
-
+  "entity.welcometomyworld.unknown": "Unknown",
   "block.welcometomyworld.tougher_iron_bars": "Tougher Iron Bars",
   "block.welcometomyworld.rusted_iron_bars": "Weathered Iron Bars",
-
   "block.welcometomyworld.tougher_iron_block": "Tougher Iron Block",
   "block.welcometomyworld.rusted_iron_block": "Weathered Iron Block",
   "block.welcometomyworld.rusted_iron_block_stage2": "Aged Iron Block",
@@ -51,12 +44,13 @@
   "block.welcometomyworld.trophies.easycraft_trophy": "Easycraft Trophy",
   "block.welcometomyworld.trophies.music_trophy": "Music Trophy",
   "block.welcometomyworld.trophies.challenger_trophy": "Challenger Trophy",
-
   "block.welcometomyworld.burning_plank": "Burning Plank",
   "block.welcometomyworld.burned_plank": "Burned Plank",
   "block.welcometomyworld.custom_vine": "Vine",
-
+  "block.welcometomyworld.glowing_white_block": "Glowing White Block",
+  "block.welcometomyworld.pure_black_block": "Pure Black Block",
+  "block.welcometomyworld.glowing_white_grass": "Glowing White Grass",
+  "block.welcometomyworld.void_block": "Void Block",
   "category.welcometomyworld.keys": "Welcome To My World Keys",
   "key.welcometomyworld.open_mob_stats": "Open Mob Stats"
-
 }

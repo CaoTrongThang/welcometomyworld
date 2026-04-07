@@ -144,6 +144,67 @@
                     {
                         "type": "minecraft:condition",
                         "if_true": {
+                            "type": "minecraft:biome",
+                            "biome_is": [
+                                "welcometomyworld:void_portal_biome"
+                            ]
+                        },
+                        "then_run": {
+                            "type": "minecraft:condition",
+                            "if_true": {
+                                "type": "minecraft:stone_depth",
+                                "offset": 0,
+                                "surface_type": "floor",
+                                "add_surface_depth": false,
+                                "secondary_depth_range": 0
+                            },
+                            "then_run": {
+                                "type": "minecraft:block",
+                                "result_state": {
+                                    "Name": "minecraft:blackstone"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "type": "minecraft:condition",
+                        "if_true": {
+                            "type": "minecraft:biome",
+                            "biome_is": [
+                                "welcometomyworld:monochrome_biome"
+                            ]
+                        },
+                        "then_run": {
+                            "type": "minecraft:sequence",
+                            "sequence": [
+                                {
+                                    "type": "minecraft:condition",
+                                    "if_true": {
+                                        "type": "minecraft:stone_depth",
+                                        "offset": 0,
+                                        "surface_type": "floor",
+                                        "add_surface_depth": false,
+                                        "secondary_depth_range": 0
+                                    },
+                                    "then_run": {
+                                        "type": "minecraft:block",
+                                        "result_state": {
+                                            "Name": "welcometomyworld:glowing_white_block"
+                                        }
+                                    }
+                                },
+                                {
+                                    "type": "minecraft:block",
+                                    "result_state": {
+                                        "Name": "welcometomyworld:pure_black_block"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "minecraft:condition",
+                        "if_true": {
                             "type": "minecraft:stone_depth",
                             "offset": 0,
                             "surface_type": "floor",
@@ -206,6 +267,30 @@
                         "depth": 0,
                         "weirdness": 0,
                         "offset": 0
+                    }
+                },
+                {
+                    "biome": "welcometomyworld:monochrome_biome",
+                    "parameters": {
+                        "temperature": -0.8,
+                        "humidity": -0.8,
+                        "continentalness": 0.3,
+                        "erosion": 0,
+                        "depth": 0,
+                        "weirdness": 0.3,
+                        "offset": 0.2
+                    }
+                },
+                {
+                    "biome": "welcometomyworld:void_portal_biome",
+                    "parameters": {
+                        "temperature": 0.8,
+                        "humidity": -0.8,
+                        "continentalness": 0.5,
+                        "erosion": 0,
+                        "depth": 0,
+                        "weirdness": 0.5,
+                        "offset": 0.4
                     }
                 }
             ]

@@ -536,6 +536,7 @@ public class Utils {
                     pos.getZ() + 0.5 // Center in block
             );
 
+            effectEntity.setVelocity(0, 0.35 + world.getRandom().nextFloat() * 0.10, 0);
             world.spawnEntity(effectEntity);
         }
     }

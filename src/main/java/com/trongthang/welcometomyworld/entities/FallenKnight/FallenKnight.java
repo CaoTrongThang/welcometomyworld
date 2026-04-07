@@ -154,7 +154,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 666666)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 400)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1f)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 40f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 40f)

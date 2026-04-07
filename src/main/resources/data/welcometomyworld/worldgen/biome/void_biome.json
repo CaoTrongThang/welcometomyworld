@@ -26,5 +26,17 @@
     },
     "spawn_costs": {},
     "carvers": {},
-    "features": []
+    "features": [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [
+            "welcometomyworld:rare_monochrome_grass"
+        ]
+    ]
 }

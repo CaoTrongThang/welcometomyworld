@@ -62,6 +62,8 @@ public class ItemsManager {
                         0xFFFFFF);
         public static final Item BLOSSOM_SPAWN_EGG = registerSpawnEgg(EntitiesManager.BLOSSOM, "blossom", 0x00b00b,
                         0x00d120);
+        public static final Item UNKNOWN_SPAWN_EGG = registerSpawnEgg(EntitiesManager.UNKNOWN, "unknown", 0x000000,
+                        0xFFFFFF);
 
         public static Enchantment silenceEnchantment = new SilenceEnchantment();
 
@@ -139,6 +141,7 @@ public class ItemsManager {
                                         itemGroup.add(ItemsManager.THE_FALLEN_KNIGHT_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.WANDERER_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.BLOSSOM_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.UNKNOWN_SPAWN_EGG);
 
                                         itemGroup.add(BlocksManager.TOUGHER_IRON_BLOCK);
                                         itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK);
@@ -156,6 +159,12 @@ public class ItemsManager {
                                         itemGroup.add(BlocksManager.GAMING_DISC_TROPHY);
                                         itemGroup.add(BlocksManager.CHALLENGER_TROPHY);
                                         itemGroup.add(BlocksManager.MUSIC_TROPHY);
+
+                                        itemGroup.add(BlocksManager.GLOWING_WHITE_BLOCK);
+                                        itemGroup.add(BlocksManager.PURE_BLACK_BLOCK);
+                                        itemGroup.add(BlocksManager.GLOWING_WHITE_GRASS);
+
+                                        itemGroup.add(BlocksManager.VOID_BLOCK);
                                 });
         }
 }

@@ -2,7 +2,6 @@ package com.trongthang.welcometomyworld.entities.client.FallenKnight;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
-import com.trongthang.welcometomyworld.entities.client.Portaler.PortalerModel;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.VertexConsumerProvider;

@@ -2,6 +2,7 @@ package com.trongthang.welcometomyworld.API;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
+import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import mcp.mobius.waila.api.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
@@ -21,6 +22,8 @@ public class WthitPlugin implements IWailaPlugin {
         registrar.addRayCastVector(new SpyglassRayCastProvider());
         // Existing entity component registration
         registrar.addComponent(new EntityComponentProvider(), TooltipPosition.HEAD, StrongTameableEntityDefault.class);
+        registrar.addComponent(new UnknownComponentProvider(), TooltipPosition.HEAD, Unknown.class);
+        registrar.addComponent(new UnknownComponentProvider(), TooltipPosition.BODY, Unknown.class);
     }
 
     public static class SpyglassRayCastProvider implements IRayCastVectorProvider {
@@ -44,7 +47,6 @@ public class WthitPlugin implements IWailaPlugin {
             double distance = isUsingSpyglass(player) ? 60.0 : 1;
             return baseDirection.multiply(distance);
         }
-        
 
         private boolean isUsingSpyglass(PlayerEntity player) {
             return player.getActiveItem().getItem() instanceof SpyglassItem;
@@ -65,6 +67,28 @@ public class WthitPlugin implements IWailaPlugin {
                 }
                 tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, name);
             }
+        }
+    }
+
+    // Entity component provider for Unknown
+    public static class UnknownComponentProvider implements IEntityComponentProvider {
+        @Override
+        public void appendHead(ITooltip tooltip, IEntityAccessor accessor, IPluginConfig config) {
+            if (accessor.getEntity() instanceof Unknown entity) {
+
+                String glitchStr = "§k" + generateRandomGlitchString(8);
+
+                tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, Text.literal(glitchStr));
+            }
+        }
+
+        private String generateRandomGlitchString(int length) {
+            String chars = "!@#$%^&*()_+-=[]{}|;':\",.<>/?0123456789";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < length; i++) {
+                sb.append(chars.charAt((int) (Math.random() * chars.length())));
+            }
+            return sb.toString();
         }
     }
 }

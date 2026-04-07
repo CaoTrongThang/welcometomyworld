@@ -102,7 +102,7 @@ public class EntitiesManager {
         public static final EntityType<BlockSlamGroundEntity> BLOCK_SLAM_GROUND = Registry.register(
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "block_slam_ground"),
-                        FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, BlockSlamGroundEntity::new)
+                        FabricEntityTypeBuilder.create(SpawnGroup.MISC, BlockSlamGroundEntity::new)
                                         .dimensions(EntityDimensions.fixed(0.5f, 0.5f)) // Adjust width and height
                                         .build());
 

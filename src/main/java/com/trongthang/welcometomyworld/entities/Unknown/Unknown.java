@@ -5,7 +5,9 @@ import net.minecraft.entity.ai.goal.Goal;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -19,6 +21,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -31,7 +34,7 @@ import net.minecraft.util.math.Vec3d;
 import com.trongthang.welcometomyworld.entities.UnknownBeamEntity;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.Utilities.Utils;
-
+import com.trongthang.welcometomyworld.classes.CustomTameableEntity;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -104,6 +107,12 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private static final int GRAB_SLAM_HIT_TICK = 41;
     private static final int[] DESTROY_HIT_TICKS = { 15, 38, 58 };
 
+    private static final int GROUND_SLAM_KICK_DAMAGE_MULTIPLIER = 4;
+    private static final int LEG_TRIP_DAMAGE_MULTIPLIER = 2;
+    private static final int SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER = 3;;
+    private static final int GRAB_SLAM_DAMAGE_MULTIPLIER = 2;
+    private static final int KAMEHAMEHA_DAMAGE_MULTIPLIER = 2;
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private int dashTimer = 0;
     private boolean skillHitFired = false;
@@ -126,11 +135,12 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 200.0D)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 666666.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.5D) // 0 for testing
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D) // 0 for testing
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 100f);
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 50f)
+                .add(EntityAttributes.GENERIC_ARMOR, 30f);
     }
 
     @Override
@@ -296,10 +306,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         double random = Math.random();
 
-        if (this.getTarget() != null) {
-            LOGGER.info("Distance to target: " + this.distanceTo(this.getTarget()));
-        }
-
         // --- Trigger logic ---
         if (globalSkillCooldown <= 0 && !isUsingSkill()) {
             LivingEntity target = this.getTarget();
@@ -462,7 +468,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
                     skillHitFired = true;
                     this.removeAllPassengers(); // Release the player when the slam hits
-                    dealAoeGroundDamage(6.0, (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE),
+                    dealAoeGroundDamage(6.0,
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * GROUND_SLAM_KICK_DAMAGE_MULTIPLIER,
                             true);
                 }
 
@@ -581,7 +589,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     this.velocityModified = true;
 
                     dealAoeGroundDamage(9.0,
-                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.5f, true);
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * GRAB_SLAM_DAMAGE_MULTIPLIER,
+                            true);
                     this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, this.getSoundCategory(), 1.0F, 1.0F);
 
@@ -607,7 +617,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 if (!skillHitFired && skillTick >= LEG_TRIP_HIT_TICK) {
                     skillHitFired = true;
                     List<LivingEntity> entities = dealAoeGroundDamage(10.0,
-                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 0.7f, false);
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * LEG_TRIP_DAMAGE_MULTIPLIER,
+                            false);
                     for (LivingEntity entity : entities) {
                         entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 255));
                     }
@@ -622,7 +634,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
                     skillHitFired = true;
                     dealAoeGroundDamage(9.0,
-                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.5f, true);
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER,
+                            true);
                 }
 
                 break;
@@ -806,17 +820,14 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     beam.setOwner(this);
                     beam.setLength(50.0f); // Longer
                     beam.setRadius(3.5f); // Thicker
+                    beam.setDamage((float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                            * KAMEHAMEHA_DAMAGE_MULTIPLIER);
                     beam.refreshPositionAndAngles(this.getX(), this.getEyeY(), this.getZ(), this.getYaw(),
                             this.getPitch());
                     this.getWorld().spawnEntity(beam);
 
                     this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                             net.minecraft.sound.SoundEvents.BLOCK_BEACON_ACTIVATE, this.getSoundCategory(), 2.0F, 1.0F);
-
-                    System.out.println("[Unknown] Spawning Kamehameha! Atk: "
-                            + this.getAttributeValue(
-                                    net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE)
-                            + ", length: 50, radius: 3.5");
                 }
                 break;
             }
@@ -1098,6 +1109,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
             final double originZ = this.getZ();
 
             int ringIndex = 0;
+            Set<BlockPos> spawnedPositions = new HashSet<>();
+
             for (double r = 1.5; r <= radius + 0.5; r += 1.5) {
                 final double currentRadius = r;
                 final int finalDelay = ringIndex / 2; // 2 rings per tick (0.5 tick per ring-step)
@@ -1109,6 +1122,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         double x = originX + currentRadius * Math.cos(angle);
                         double z = originZ + currentRadius * Math.sin(angle);
                         BlockPos spawnPos = BlockPos.ofFloored(x, originY, z);
+
+                        if (spawnedPositions.contains(spawnPos)) {
+                            continue;
+                        }
+                        spawnedPositions.add(spawnPos);
 
                         // Try to use the block state from the ground for the effect
                         BlockState groundState = serverWorld.getBlockState(spawnPos.down());
@@ -1134,7 +1152,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         (e) -> e.sendToolBreakStatus(target.getActiveHand()));
             }
         }
-        target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
+        // this also deal additional damage if the target health is more than 100, deal
+        // more than 1% of the target health
+        if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
+            target.damage(attacker.getDamageSources().mobAttack(attacker),
+                    amount + Math.min(target.getMaxHealth() * 0.1f, 1000));
+        } else {
+            target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
+        }
+
     }
 
     /**
@@ -1196,6 +1222,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
         // 2) Visuals propagating outwards
         int segments = (int) length;
         int blocksPerTick = 4; // 4 blocks per tick = much faster shockwave
+        Set<BlockPos> spawnedPositions = new HashSet<>();
+
         for (int i = 1; i <= segments; i++) {
             final double dist = i;
             final int delay = (i - 1) / blocksPerTick;
@@ -1212,6 +1240,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     double spawnZ = targetZ + orthoZ * w;
 
                     BlockPos spawnPos = BlockPos.ofFloored(spawnX, originY, spawnZ);
+
+                    if (spawnedPositions.contains(spawnPos)) {
+                        continue;
+                    }
+                    spawnedPositions.add(spawnPos);
 
                     BlockState groundState = serverWorld.getBlockState(spawnPos.down());
                     if (groundState.isAir() || !groundState.isOpaqueFullCube(serverWorld, spawnPos.down())) {

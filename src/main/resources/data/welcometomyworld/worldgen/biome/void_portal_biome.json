@@ -1,0 +1,44 @@
+{
+    "has_precipitation": false,
+    "temperature": 0.8,
+    "downfall": 0.0,
+    "effects": {
+        "fog_color": 2949197,
+        "water_color": 4159204,
+        "water_fog_color": 329011,
+        "sky_color": 2949197,
+        "ambient_sound": "minecraft:ambient.crimson_forest.loop",
+        "mood_sound": {
+            "sound": "minecraft:ambient.crimson_forest.mood",
+            "tick_delay": 6000,
+            "block_search_extent": 8,
+            "offset": 2.0
+        }
+    },
+    "spawners": {
+        "monster": [
+            {
+                "type": "minecraft:enderman",
+                "weight": 100,
+                "minCount": 1,
+                "maxCount": 4
+            }
+        ]
+    },
+    "spawn_costs": {},
+    "carvers": {},
+    "features": [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [
+            "welcometomyworld:void_tree",
+            "welcometomyworld:void_block_patch"
+        ]
+    ]
+}

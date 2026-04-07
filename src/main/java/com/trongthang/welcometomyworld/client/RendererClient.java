@@ -19,8 +19,11 @@ import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererArrow.Wa
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererArrow.WandererArrowRenderer;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererModel;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererRenderer;
-import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownBeamRenderer;
+import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownRenderer;
+import com.trongthang.welcometomyworld.entities.client.VoidBlockRenderer;
+import com.trongthang.welcometomyworld.blockentities.VoidBlockEntity;
+import com.trongthang.welcometomyworld.managers.BlocksEntitiesManager;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.world.dimension.VoidDimension;
@@ -28,6 +31,7 @@ import com.trongthang.welcometomyworld.world.dimension.VoidDimensionEffect;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.fabricmc.fabric.api.client.rendering.v1.DimensionRenderingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -40,6 +44,7 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.BLOCK_SLAM_GROUND, BlockSlamGroundRenderer::new);
 
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.CUSTOM_VINE, RenderLayer.getCutout());
+                BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GLOWING_WHITE_GRASS, RenderLayer.getCutout());
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.RUSTED_IRON_BARS, RenderLayer.getCutout());
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.TOUGHER_IRON_BARS, RenderLayer.getCutout());
 
@@ -93,5 +98,7 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN, UnknownRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN_BEAM, UnknownBeamRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.FALLING_SKELETON, FallingSkeletonRenderer::new);
+
+                BlockEntityRendererFactories.register(BlocksEntitiesManager.VOID_BLOCK_ENTITY, VoidBlockRenderer::new);
         }
 }

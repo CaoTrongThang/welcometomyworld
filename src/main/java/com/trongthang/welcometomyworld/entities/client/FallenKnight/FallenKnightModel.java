@@ -240,7 +240,6 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
         public void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw,
                         float headPitch) {
                 this.getPart().traverse().forEach(ModelPart::resetTransform);
-                this.setHeadAngles(headYaw, headPitch);
 
                 this.updateAnimation(entity.walkAnimationState, FallenKnightAnimations.WALK, animationProgress, 1f);
                 this.updateAnimation(entity.idleAnimationState, FallenKnightAnimations.IDLE, animationProgress, 1f);
@@ -254,11 +253,13 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                 this.updateAnimation(entity.sitAnimationState, FallenKnightAnimations.SIT, animationProgress, 1f);
                 this.updateAnimation(entity.teleportAnimationState, FallenKnightAnimations.TELEPORT, animationProgress,
                                 1f);
+
+                this.setHeadAngles(headYaw, headPitch);
         }
 
         private void setHeadAngles(float headYaw, float headPitch) {
-                headYaw = MathHelper.clamp(headYaw, -30.0F, 30.0F);
-                headPitch = MathHelper.clamp(headPitch, -25.0F, 45.0F);
+                headYaw = MathHelper.clamp(headYaw, -70.0F, 70.0F);
+                headPitch = MathHelper.clamp(headPitch, -45.0F, 45.0F);
 
                 this.head.yaw = headYaw * 0.017453292F;
                 this.head.pitch = headPitch * 0.017453292F;
