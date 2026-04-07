@@ -45,7 +45,8 @@
 		"entity.DismountPreventionMixin",
 		"entity.HungerManagerNerf",
 		"player.VoidDimensionTransitionMixin",
-		"entity.VoidDimensionDamageMixin"
+		"entity.VoidDimensionDamageMixin",
+		"world.VoidSpawnerLightMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

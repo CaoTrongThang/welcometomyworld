@@ -18,10 +18,10 @@ public class FasterSpawnerMixin {
     private int spawnDelay;
 
     // Inject at the very start of updateSpawns and cancel the default behavior
-    @Inject(method = "updateSpawns", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "updateSpawns", at = @At("HEAD"))
     private void onUpdateSpawns(World world, BlockPos pos, CallbackInfo ci) {
-        // Directly set spawnDelay to 1 tick (or 0 if you truly want instant)
-        this.spawnDelay = random.nextInt(150, 450);
-        ci.cancel(); // Skip all vanilla delay-setting logic
+        if (this.spawnDelay == -1) {
+            this.spawnDelay = random.nextInt(150, 450);
+        }
     }
 }

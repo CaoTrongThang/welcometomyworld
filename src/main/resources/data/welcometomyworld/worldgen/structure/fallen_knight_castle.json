@@ -1,0 +1,7 @@
+{
+    "type": "welcometomyworld:fallen_knight_castle",
+    "biomes": "welcometomyworld:void_portal_biome",
+    "step": "surface_structures",
+    "spawn_overrides": {},
+    "terrain_adaptation": "beard_thin"
+}

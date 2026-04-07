@@ -107,11 +107,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private static final int GRAB_SLAM_HIT_TICK = 41;
     private static final int[] DESTROY_HIT_TICKS = { 15, 38, 58 };
 
-    private static final int GROUND_SLAM_KICK_DAMAGE_MULTIPLIER = 4;
-    private static final int LEG_TRIP_DAMAGE_MULTIPLIER = 2;
-    private static final int SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER = 3;;
-    private static final int GRAB_SLAM_DAMAGE_MULTIPLIER = 2;
-    private static final int KAMEHAMEHA_DAMAGE_MULTIPLIER = 2;
+    private static final float GROUND_SLAM_KICK_DAMAGE_MULTIPLIER = 2.5f;
+    private static final float LEG_TRIP_DAMAGE_MULTIPLIER = 1.5f;
+    private static final float SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER = 2.5f;;
+    private static final float GRAB_SLAM_DAMAGE_MULTIPLIER = 2.5f;
+    private static final float KAMEHAMEHA_DAMAGE_MULTIPLIER = 2f;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private int dashTimer = 0;

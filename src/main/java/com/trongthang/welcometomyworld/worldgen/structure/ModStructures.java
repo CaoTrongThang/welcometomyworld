@@ -20,5 +20,9 @@ public class ModStructures {
 
         FALLEN_KNIGHT_CASTLE_PIECE = Registry.register(Registries.STRUCTURE_PIECE,
                 new Identifier(WelcomeToMyWorld.MOD_ID, "fallen_knight_castle_piece"), FallenKnightCastlePiece::new);
+
+        FALLEN_KNIGHT_CHEST_PROCESSOR = Registry.register(Registries.STRUCTURE_PROCESSOR,
+                new Identifier(WelcomeToMyWorld.MOD_ID, "fallen_knight_chest_processor"),
+                () -> FallenKnightChestProcessor.CODEC);
     }
 }

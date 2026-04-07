@@ -5,8 +5,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import net.minecraft.world.WorldProperties;
+import com.trongthang.welcometomyworld.world.dimension.VoidDimension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,6 +33,12 @@ public abstract class HarderSpawnerMixin {
 
     private static float onGetBlockHardness(BlockView worldIn) {
         WorldProperties worldInfo = ((WorldAccess) worldIn).getLevelProperties();
-        return worldInfo.isHardcore() ? 55.0F : hardnessByDifficulty[worldInfo.getDifficulty().ordinal()];
+        float hardness = worldInfo.isHardcore() ? 55.0F : hardnessByDifficulty[worldInfo.getDifficulty().ordinal()];
+
+        if (worldIn instanceof World world && world.getRegistryKey() == VoidDimension.VOID_DIM_LEVEL_KEY) {
+            hardness *= 2;
+        }
+
+        return hardness;
     }
 }
