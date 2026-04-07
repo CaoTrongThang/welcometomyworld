@@ -9,6 +9,7 @@ import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.commands.ModCommands;
 import com.trongthang.welcometomyworld.managers.PortalManager;
+import com.trongthang.welcometomyworld.worldgen.structure.ModStructures;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -200,6 +201,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         EntitiesManager.register();
         BlocksEntitiesManager.initialize();
         BlocksManager.registerModBlocks();
+        ModStructures.register();
 
         SoundsManager.registerSounds();
         ServerNetworking.register();
