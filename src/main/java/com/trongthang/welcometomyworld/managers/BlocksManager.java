@@ -71,7 +71,11 @@ public class BlocksManager {
                                         .requiresTool()));
 
         public static final Block GLOWING_WHITE_GRASS = registerBlock("glowing_white_grass",
-                        new FernBlock(FabricBlockSettings.copyOf(Blocks.GRASS)
+                        new CustomPlantBlock(FabricBlockSettings.copyOf(Blocks.GRASS)
+                                        .emissiveLighting((state, world, pos) -> true)));
+
+        public static final Block GLOWING_PURPLE_GRASS = registerBlock("glowing_purple_grass",
+                        new CustomPlantBlock(FabricBlockSettings.copyOf(Blocks.GRASS)
                                         .emissiveLighting((state, world, pos) -> true)));
 
         public static final Block GAMING_DISC_TROPHY = registerBlock("trophies/gaming_disc_trophy",

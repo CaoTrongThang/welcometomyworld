@@ -78,6 +78,7 @@ public class FallingSkeleton extends HostileEntity implements GeoEntity {
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
         super.dropLoot(source, causedByPlayer);
+        this.dropItem(Items.BONE);
     }
 
     @Override

@@ -1,9 +1,9 @@
 {
-    "feature": "welcometomyworld:monochrome_grass",
+    "feature": "welcometomyworld:purple_grass",
     "placement": [
         {
             "type": "minecraft:rarity_filter",
-            "chance": 12
+            "chance": 20
         },
         {
             "type": "minecraft:in_square"

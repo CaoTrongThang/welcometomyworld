@@ -1,0 +1,31 @@
+{
+    "type": "minecraft:disk",
+    "config": {
+        "state_provider": {
+            "fallback": {
+                "type": "minecraft:simple_state_provider",
+                "state": {
+                    "Name": "welcometomyworld:death_water_block",
+                    "Properties": {
+                        "level": "0"
+                    }
+                }
+            },
+            "rules": []
+        },
+        "target": {
+            "type": "minecraft:matching_blocks",
+            "blocks": [
+                "minecraft:deepslate"
+            ]
+        },
+        "radius": {
+            "type": "minecraft:uniform",
+            "value": {
+                "min_inclusive": 8,
+                "max_inclusive": 8
+            }
+        },
+        "half_height": 3
+    }
+}

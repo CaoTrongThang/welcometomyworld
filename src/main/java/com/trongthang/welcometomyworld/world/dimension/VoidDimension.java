@@ -27,7 +27,7 @@ public class VoidDimension {
                 // how do i change water color?
                 context.register(VOID_DIM_TYPE, new DimensionType(
                                 OptionalLong.of(18000L),
-                                false, false, false, false, 1.0, false, false, -128, 384, 384,
+                                true, false, false, false, 1.0, false, false, -128, 384, 384,
                                 BlockTags.INFINIBURN_OVERWORLD,
                                 VOID_DIM_EFFECTS_ID, // Use the constant
                                 0.0f,

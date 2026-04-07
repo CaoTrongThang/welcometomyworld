@@ -1,0 +1,6 @@
+{
+    "parent": "minecraft:block/cross",
+    "textures": {
+        "cross": "welcometomyworld:block/glowing_purple_grass"
+    }
+}
