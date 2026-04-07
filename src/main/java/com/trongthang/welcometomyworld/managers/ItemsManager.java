@@ -63,7 +63,7 @@ public class ItemsManager {
         public static final Item BLOSSOM_SPAWN_EGG = registerSpawnEgg(EntitiesManager.BLOSSOM, "blossom", 0x00b00b,
                         0x00d120);
         public static final Item UNKNOWN_SPAWN_EGG = registerSpawnEgg(EntitiesManager.UNKNOWN, "unknown", 0x000000,
-                        0xFFFFFF);
+                        0x000000);
 
         public static final Item UNKNOWN_HOOD = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
                         ArmorItem.Type.HELMET, new FabricItemSettings(), StatusEffects.NIGHT_VISION), "unknown_hood");

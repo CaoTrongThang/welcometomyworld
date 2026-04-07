@@ -194,7 +194,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
                 new SimpleFluidRenderHandler(
                         new Identifier("welcometomyworld:block/death_water_still"),
                         new Identifier("welcometomyworld:block/death_water_flow"),
-                        0xFFFFFF // White tint since we'll use placeholder white textures
+                        0x9933FF // Purple tint for Death's Water
                 ));
 
         BlockRenderLayerMap.INSTANCE.putFluids(RenderLayer.getTranslucent(), FluidsManager.STILL_DEATH_WATER,

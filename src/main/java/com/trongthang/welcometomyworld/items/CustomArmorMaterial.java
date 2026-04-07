@@ -10,8 +10,10 @@ import net.minecraft.sound.SoundEvents;
 import java.util.EnumMap;
 import java.util.function.Supplier;
 
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
+
 public enum CustomArmorMaterial implements ArmorMaterial {
-    UNKNOWN_GEAR("unknown_gear", 25, new int[] { 3, 8, 6, 3 }, 15,
+    UNKNOWN_GEAR(WelcomeToMyWorld.MOD_ID + ":unknown_gear", 25, new int[] { 3, 8, 6, 3 }, 15,
             SoundEvents.ITEM_ARMOR_EQUIP_IRON, 2.0f, 0.0f, () -> Ingredient.ofItems(Items.NETHERITE_INGOT));
 
     private static final EnumMap<ArmorItem.Type, Integer> BASE_DURABILITY = new EnumMap<>(ArmorItem.Type.class);

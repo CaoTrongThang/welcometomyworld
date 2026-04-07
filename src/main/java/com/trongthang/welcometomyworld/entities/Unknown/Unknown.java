@@ -381,7 +381,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             else
                                 triggerSkill(KAMEHAMEHA);
                         } else if (canJump && canPunch) {
-                            if (random < 0.5)
+                            if (random < 0.3)
                                 triggerSkill(JUMP_HIGH);
                             else
                                 triggerSkill(PUNCH);
