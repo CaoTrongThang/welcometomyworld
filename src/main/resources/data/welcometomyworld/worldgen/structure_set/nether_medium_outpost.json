@@ -1,0 +1,14 @@
+{
+    "structures": [
+        {
+            "structure": "welcometomyworld:nether_medium_outpost",
+            "weight": 1
+        }
+    ],
+    "placement": {
+        "type": "minecraft:random_spread",
+        "spacing": 40,
+        "separation": 20,
+        "salt": 987654321
+    }
+}

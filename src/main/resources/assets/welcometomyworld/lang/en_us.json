@@ -51,6 +51,13 @@
   "block.welcometomyworld.pure_black_block": "Pure Black Block",
   "block.welcometomyworld.glowing_white_grass": "Glowing White Grass",
   "block.welcometomyworld.void_block": "Void Block",
+  "item.welcometomyworld.unknown_hood": "Unknown's Hood",
+  "item.welcometomyworld.unknown_cloak": "Unknown's Cloak",
+  "item.welcometomyworld.unknown_leggings": "Unknown's Leggings",
+  "item.welcometomyworld.unknown_boots": "Unknown's Boots",
+  "item.welcometomyworld.death_water_bucket": "Death's Water Bucket",
+  "block.welcometomyworld.death_water_block": "Death's Water",
+  "fluid.welcometomyworld.death_water": "Death's Water",
   "category.welcometomyworld.keys": "Welcome To My World Keys",
   "key.welcometomyworld.open_mob_stats": "Open Mob Stats"
 }

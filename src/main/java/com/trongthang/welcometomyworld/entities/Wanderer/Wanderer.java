@@ -442,14 +442,21 @@ public class Wanderer extends StrongTameableEntityDefault {
                     boolean canBackFlip = false;
 
                     int flipStrength = 5;
-                    if (this.flipCooldownCounter >= this.flipCooldown) {
+                    Vec3d backFlipDirection = new Vec3d(
+                            this.getX() - this.getTarget().getX(),
+                            2,
+                            this.getZ() - this.getTarget().getZ()).normalize();
+                    Vec3d frontFlipDirection = new Vec3d(
+                            this.getTarget().getX() - this.getX(),
+                            2, // Ignore Y component
+                            this.getTarget().getZ() - this.getZ()).normalize();
+                    canFrontFlip = isFlipAreaClear(frontFlipDirection) && !isVoidBehind(frontFlipDirection, 20);
+                    canBackFlip = isFlipAreaClear(backFlipDirection) && !isVoidBehind(backFlipDirection, 20);
+
+                    if (this.flipCooldownCounter >= this.flipCooldown && (canBackFlip || canFrontFlip)) {
                         this.flipCooldownCounter = 0;
                         if (rand1 <= 60) {
-                            Vec3d backFlipDirection = new Vec3d(
-                                    this.getX() - this.getTarget().getX(),
-                                    2,
-                                    this.getZ() - this.getTarget().getZ()).normalize();
-                            canBackFlip = isFlipAreaClear(backFlipDirection);
+
                             if (canBackFlip) {
                                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
                                 this.addVelocity(backFlipDirection.x * flipStrength, 0.8f,
@@ -457,11 +464,6 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                             }
                         } else {
-                            Vec3d frontFlipDirection = new Vec3d(
-                                    this.getTarget().getX() - this.getX(),
-                                    2, // Ignore Y component
-                                    this.getTarget().getZ() - this.getZ()).normalize();
-                            canFrontFlip = isFlipAreaClear(frontFlipDirection);
                             if (canFrontFlip) {
                                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
                                 this.addVelocity(frontFlipDirection.x * flipStrength, 0.8f,
@@ -533,6 +535,31 @@ public class Wanderer extends StrongTameableEntityDefault {
             }
         }
         return true; // No obstacles found
+    }
+
+    private boolean isVoidBehind(Vec3d direction, int distance) {
+        World world = this.getWorld();
+        Vec3d startPos = this.getPos();
+        Vec3d horizontalDir = new Vec3d(direction.x, 0, direction.z).normalize();
+
+        for (int i = 1; i <= distance; i++) {
+            Vec3d checkPos = startPos.add(horizontalDir.multiply(i));
+            BlockPos blockPos = new BlockPos(MathHelper.floor(checkPos.x), MathHelper.floor(checkPos.y),
+                    MathHelper.floor(checkPos.z));
+
+            boolean foundGround = false;
+            for (int y = 5; y > -20; y--) { // Check from 5 blocks above down to 20 blocks below
+                if (!world.getBlockState(blockPos.up(y)).isAir()) {
+                    foundGround = true;
+                    break;
+                }
+            }
+
+            if (!foundGround) {
+                return true; // Found void!
+            }
+        }
+        return false;
     }
 
     private void resetSkill(int timeout) {

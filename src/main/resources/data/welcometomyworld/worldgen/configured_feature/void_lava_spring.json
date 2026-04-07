@@ -1,0 +1,35 @@
+{
+    "type": "minecraft:disk",
+    "config": {
+        "state_provider": {
+            "type": "minecraft:rule",
+            "rules": [],
+            "fallback": {
+                "type": "minecraft:simple_state_provider",
+                "state": {
+                    "Name": "minecraft:lava",
+                    "Properties": {
+                        "level": "0"
+                    }
+                }
+            }
+        },
+        "target": {
+            "type": "minecraft:matching_blocks",
+            "blocks": [
+                "minecraft:crimson_nylium",
+                "minecraft:netherrack",
+                "minecraft:blackstone",
+                "minecraft:dirt"
+            ]
+        },
+        "radius": {
+            "type": "minecraft:uniform",
+            "value": {
+                "min_inclusive": 4,
+                "max_inclusive": 7
+            }
+        },
+        "half_height": 2
+    }
+}

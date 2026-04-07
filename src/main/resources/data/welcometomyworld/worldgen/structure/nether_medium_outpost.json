@@ -1,0 +1,7 @@
+{
+    "type": "welcometomyworld:nether_medium_outpost",
+    "biomes": "welcometomyworld:void_nether_biome",
+    "step": "surface_structures",
+    "spawn_overrides": {},
+    "terrain_adaptation": "beard_thin"
+}

@@ -65,6 +65,17 @@ public class ItemsManager {
         public static final Item UNKNOWN_SPAWN_EGG = registerSpawnEgg(EntitiesManager.UNKNOWN, "unknown", 0x000000,
                         0xFFFFFF);
 
+        public static final Item UNKNOWN_HOOD = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
+                        ArmorItem.Type.HELMET, new FabricItemSettings(), StatusEffects.NIGHT_VISION), "unknown_hood");
+        public static final Item UNKNOWN_CLOAK = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
+                        ArmorItem.Type.CHESTPLATE, new FabricItemSettings(), StatusEffects.FIRE_RESISTANCE),
+                        "unknown_cloak");
+        public static final Item UNKNOWN_LEGGINGS = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
+                        ArmorItem.Type.LEGGINGS, new FabricItemSettings(), StatusEffects.JUMP_BOOST),
+                        "unknown_leggings");
+        public static final Item UNKNOWN_BOOTS = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
+                        ArmorItem.Type.BOOTS, new FabricItemSettings(), StatusEffects.SPEED), "unknown_boots");
+
         public static Enchantment silenceEnchantment = new SilenceEnchantment();
 
         public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
@@ -142,6 +153,13 @@ public class ItemsManager {
                                         itemGroup.add(ItemsManager.WANDERER_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.BLOSSOM_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.UNKNOWN_SPAWN_EGG);
+
+                                        itemGroup.add(ItemsManager.UNKNOWN_HOOD);
+                                        itemGroup.add(ItemsManager.UNKNOWN_CLOAK);
+                                        itemGroup.add(ItemsManager.UNKNOWN_LEGGINGS);
+                                        itemGroup.add(ItemsManager.UNKNOWN_BOOTS);
+
+                                        itemGroup.add(FluidsManager.DEATH_WATER_BUCKET);
 
                                         itemGroup.add(BlocksManager.TOUGHER_IRON_BLOCK);
                                         itemGroup.add(BlocksManager.RUSTED_IRON_BLOCK);

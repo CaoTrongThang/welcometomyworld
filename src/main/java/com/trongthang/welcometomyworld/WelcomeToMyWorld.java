@@ -201,6 +201,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         EntitiesManager.register();
         BlocksEntitiesManager.initialize();
         BlocksManager.registerModBlocks();
+        FluidsManager.initialize();
         ModStructures.register();
 
         SoundsManager.registerSounds();

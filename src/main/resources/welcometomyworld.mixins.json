@@ -46,7 +46,8 @@
 		"entity.HungerManagerNerf",
 		"player.VoidDimensionTransitionMixin",
 		"entity.VoidDimensionDamageMixin",
-		"world.VoidSpawnerLightMixin"
+		"entity.VoidHostileSpawnMixin",
+		"world.VoidSpawnRestrictionMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

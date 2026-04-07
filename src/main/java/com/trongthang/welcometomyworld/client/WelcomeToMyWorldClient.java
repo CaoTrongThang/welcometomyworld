@@ -35,6 +35,12 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.client.world.ClientWorld;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
+import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler;
+import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.util.Identifier;
+import com.trongthang.welcometomyworld.managers.FluidsManager;
 
 import java.util.List;
 
@@ -179,6 +185,20 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
                 }
             });
         });
+
+        setupFluidRendering();
+    }
+
+    private void setupFluidRendering() {
+        FluidRenderHandlerRegistry.INSTANCE.register(FluidsManager.STILL_DEATH_WATER, FluidsManager.FLOWING_DEATH_WATER,
+                new SimpleFluidRenderHandler(
+                        new Identifier("welcometomyworld:block/death_water_still"),
+                        new Identifier("welcometomyworld:block/death_water_flow"),
+                        0xFFFFFF // White tint since we'll use placeholder white textures
+                ));
+
+        BlockRenderLayerMap.INSTANCE.putFluids(RenderLayer.getTranslucent(), FluidsManager.STILL_DEATH_WATER,
+                FluidsManager.FLOWING_DEATH_WATER);
     }
 
     private void onTicks(MinecraftClient client) {

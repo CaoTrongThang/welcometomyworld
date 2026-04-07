@@ -52,7 +52,7 @@
                                 "type": "minecraft:min",
                                 "argument1": {
                                     "type": "minecraft:y_clamped_gradient",
-                                    "from_y": -80,
+                                    "from_y": -110,
                                     "to_y": -30,
                                     "from_value": -5.0,
                                     "to_value": -0.5
@@ -139,6 +139,52 @@
                                     }
                                 ]
                             }
+                        }
+                    },
+                    {
+                        "type": "minecraft:condition",
+                        "if_true": {
+                            "type": "minecraft:biome",
+                            "biome_is": [
+                                "welcometomyworld:void_nether_biome"
+                            ]
+                        },
+                        "then_run": {
+                            "type": "minecraft:sequence",
+                            "sequence": [
+                                {
+                                    "type": "minecraft:condition",
+                                    "if_true": {
+                                        "type": "minecraft:stone_depth",
+                                        "offset": 0,
+                                        "surface_type": "floor",
+                                        "add_surface_depth": false,
+                                        "secondary_depth_range": 0
+                                    },
+                                    "then_run": {
+                                        "type": "minecraft:block",
+                                        "result_state": {
+                                            "Name": "minecraft:crimson_nylium"
+                                        }
+                                    }
+                                },
+                                {
+                                    "type": "minecraft:condition",
+                                    "if_true": {
+                                        "type": "minecraft:stone_depth",
+                                        "offset": 0,
+                                        "surface_type": "floor",
+                                        "add_surface_depth": true,
+                                        "secondary_depth_range": 8
+                                    },
+                                    "then_run": {
+                                        "type": "minecraft:block",
+                                        "result_state": {
+                                            "Name": "minecraft:netherrack"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     {
@@ -291,6 +337,18 @@
                         "depth": 0,
                         "weirdness": 0.5,
                         "offset": 0.4
+                    }
+                },
+                {
+                    "biome": "welcometomyworld:void_nether_biome",
+                    "parameters": {
+                        "temperature": 0.9,
+                        "humidity": -0.9,
+                        "continentalness": 0,
+                        "erosion": 0,
+                        "depth": 0,
+                        "weirdness": 0,
+                        "offset": 0.1
                     }
                 }
             ]
