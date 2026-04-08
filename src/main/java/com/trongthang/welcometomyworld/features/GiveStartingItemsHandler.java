@@ -78,23 +78,30 @@ public class GiveStartingItemsHandler {
             return;
 
         player.getServer().execute(() -> {
-            ServerPlayerEntity currentPlayer = player.getServer().getPlayerManager().getPlayer(player.getUuid());
+            ServerPlayerEntity currentPlayer = player.getServer()
+                    .getPlayerManager().getPlayer(player.getUuid());
             if (currentPlayer == null)
                 return;
 
-            ItemStack oldItem = currentPlayer.getInventory().getStack(slot);
+            var inv = currentPlayer.getInventory();
+            ItemStack oldItem = inv.getStack(slot);
 
             if (!oldItem.isEmpty()) {
-                // Try to move the old item to another inventory slot
-                if (!currentPlayer.getInventory().insertStack(oldItem)) {
-                    // If no space, drop the old item on the ground
-                    currentPlayer.dropItem(oldItem, false);
+                ItemStack copy = oldItem.copy(); // 🔥 QUAN TRỌNG
+                inv.setStack(slot, ItemStack.EMPTY); // clear slot trước
+
+                if (!inv.insertStack(copy)) {
+                    currentPlayer.dropItem(copy, false);
                 }
             }
 
-            // Put the new item in the designated slot
-            currentPlayer.getInventory().setStack(slot, item);
-            currentPlayer.playSound(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f,
+            // set item mới
+            inv.setStack(slot, item);
+
+            currentPlayer.playSound(
+                    SoundEvents.ENTITY_ITEM_PICKUP,
+                    SoundCategory.PLAYERS,
+                    0.2f,
                     ((currentPlayer.getRandom().nextFloat() - currentPlayer.getRandom().nextFloat()) * 0.7f + 1.0f)
                             * 2.0f);
         });

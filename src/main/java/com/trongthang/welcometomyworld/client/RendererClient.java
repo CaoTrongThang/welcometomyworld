@@ -47,6 +47,7 @@ public class RendererClient implements ClientModInitializer {
 
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.CUSTOM_VINE, RenderLayer.getCutout());
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GLOWING_WHITE_GRASS, RenderLayer.getCutout());
+                BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GLOWING_PURPLE_GRASS, RenderLayer.getCutout());
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.RUSTED_IRON_BARS, RenderLayer.getCutout());
                 BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.TOUGHER_IRON_BARS, RenderLayer.getCutout());
 
