@@ -65,11 +65,12 @@ public class BlocksManager {
         public static final Block GLOWING_WHITE_BLOCK = registerBlock("glowing_white_block",
                         new Block(FabricBlockSettings.copyOf(Blocks.WHITE_CONCRETE)
                                         .emissiveLighting((state, world, pos) -> true)
+                                        .strength(-1.0f, 3600000.0f)
                                         .requiresTool()));
 
         public static final Block PURE_BLACK_BLOCK = registerBlock("pure_black_block",
                         new Block(FabricBlockSettings.copyOf(Blocks.BLACK_CONCRETE)
-                                        .strength(3.0f, 6.0f)
+                                        .strength(-1.0f, 3600000.0f)
                                         .requiresTool()));
 
         public static final Block GLOWING_WHITE_GRASS = registerBlock("glowing_white_grass",

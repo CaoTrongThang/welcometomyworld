@@ -9,6 +9,7 @@ import com.trongthang.welcometomyworld.items.BuffTalisman;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.commands.ModCommands;
 import com.trongthang.welcometomyworld.managers.PortalManager;
+import com.trongthang.welcometomyworld.features.DimensionRestrictionsHandler;
 import com.trongthang.welcometomyworld.worldgen.structure.ModStructures;
 
 import net.fabricmc.api.ModInitializer;
@@ -210,6 +211,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         SpawnEvents.register();
         AwakeHandler.register();
         HostileMobsAwareness.registerEvents();
+        DimensionRestrictionsHandler.registerEvents();
         MinecellsDimensionSarcastic.registerEvents();
         AllowSleepAllTime.registerEvents();
         BalanceSpawnWeight.register();
