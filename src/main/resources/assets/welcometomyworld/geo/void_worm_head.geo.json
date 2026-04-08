@@ -1,0 +1,39 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.unknown",
+				"texture_width": 16,
+				"texture_height": 16,
+				"visible_bounds_width": 3,
+				"visible_bounds_height": 2.5,
+				"visible_bounds_offset": [0, 0.75, 0]
+			},
+			"bones": [
+				{
+					"name": "head",
+					"pivot": [0, 8, 0],
+					"cubes": [
+						{"origin": [-9, 0, -10], "size": [9, 15, 2], "uv": [-6, 0]},
+						{"origin": [0, 0, -10], "size": [9, 15, 2], "uv": [-6, 0], "mirror": true},
+						{"origin": [-10, 0, -8], "size": [2, 15, 16], "uv": [-7, -7]},
+						{"origin": [8, 0, -8], "size": [2, 15, 16], "uv": [-7, -7], "mirror": true},
+						{"origin": [0, 15, -10], "size": [10, 2, 18], "uv": [-15, -16]},
+						{"origin": [-10, 15, -10], "size": [10, 2, 18], "uv": [0, 0], "mirror": true},
+						{"origin": [0, 0, 6], "size": [8, 15, 2], "uv": [-6, 0]},
+						{"origin": [-8, 0, 6], "size": [8, 15, 2], "uv": [0, 0], "mirror": true}
+					]
+				},
+				{
+					"name": "neck",
+					"parent": "head",
+					"pivot": [0, 8, 8],
+					"cubes": [
+						{"origin": [-1, 8, 8], "size": [2, 2, 2], "uv": [0, 0]}
+					]
+				}
+			]
+		}
+	]
+}
