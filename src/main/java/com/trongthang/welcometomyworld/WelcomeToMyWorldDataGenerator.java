@@ -4,6 +4,7 @@ import com.trongthang.welcometomyworld.datagen.ModBlockTagProvider;
 import com.trongthang.welcometomyworld.datagen.ModItemTagProvider;
 import com.trongthang.welcometomyworld.datagen.ModWorldGenerator;
 import com.trongthang.welcometomyworld.world.dimension.VoidDimension;
+import com.trongthang.welcometomyworld.world.dimension.WhiteDimension;
 import com.trongthang.welcometomyworld.datagen.ModBlockLootTableProvider;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
@@ -28,5 +29,6 @@ public class WelcomeToMyWorldDataGenerator implements DataGeneratorEntrypoint {
         // TODO Auto-generated method stub
         DataGeneratorEntrypoint.super.buildRegistry(registryBuilder);
         registryBuilder.addRegistry(RegistryKeys.DIMENSION_TYPE, VoidDimension::bootstrapType);
+        registryBuilder.addRegistry(RegistryKeys.DIMENSION_TYPE, WhiteDimension::bootstrapType);
     }
 }

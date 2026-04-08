@@ -35,4 +35,43 @@ public abstract class InGameHudMixin {
             }
         }
     }
+
+    @Inject(method = "render", at = @At("TAIL"))
+    public void onRenderVoidSightGlitch(net.minecraft.client.gui.DrawContext context, float tickDelta,
+            CallbackInfo ci) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        PlayerEntity player = client.player;
+        if (player != null
+                && player.hasStatusEffect(com.trongthang.welcometomyworld.managers.EffectsManager.VOID_SIGHT)) {
+            if (client.world.getRegistryKey().getValue().toString().equals("welcometomyworld:void_dim")) {
+                net.minecraft.util.math.random.Random random = player.getRandom();
+
+                // Generate low glitch bands procedurally
+                if (random.nextFloat() > 0.90f) { // 10% chance per frame for glitch
+                    int width = context.getScaledWindowWidth();
+                    int height = context.getScaledWindowHeight();
+
+                    int bands = random.nextInt(3) + 1; // 1 to 3 bands
+                    for (int i = 0; i < bands; i++) {
+                        int y = random.nextInt(height);
+                        int h = random.nextInt(8) + 2;
+                        int x = random.nextInt(width);
+                        int w = random.nextInt(width / 3) + 20;
+
+                        // Procedural distinct glitch colors: Cyan, Magenta, White with low opacity
+                        int color;
+                        int choice = random.nextInt(3);
+                        if (choice == 0)
+                            color = 0x1A00FFFF; // Cyan
+                        else if (choice == 1)
+                            color = 0x1AFF00FF; // Magenta
+                        else
+                            color = 0x1AFFFFFF; // White
+
+                        context.fill(x, y, x + w, y + h, color);
+                    }
+                }
+            }
+        }
+    }
 }

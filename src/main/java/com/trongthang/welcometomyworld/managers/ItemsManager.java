@@ -66,7 +66,7 @@ public class ItemsManager {
                         0x000000);
 
         public static final Item UNKNOWN_HOOD = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
-                        ArmorItem.Type.HELMET, new FabricItemSettings(), StatusEffects.NIGHT_VISION), "unknown_hood");
+                        ArmorItem.Type.HELMET, new FabricItemSettings(), EffectsManager.VOID_SIGHT), "unknown_hood");
         public static final Item UNKNOWN_CLOAK = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
                         ArmorItem.Type.CHESTPLATE, new FabricItemSettings(), StatusEffects.FIRE_RESISTANCE),
                         "unknown_cloak");

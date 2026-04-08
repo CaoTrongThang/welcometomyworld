@@ -121,6 +121,7 @@ public class ConfigLoader {
                         dimensions.put("minecraft:overworld", 7.0f);
                         dimensions.put("minecraft:the_nether", 1.0f);
                         dimensions.put("minecraft:the_end", 1.0f);
+                        dimensions.put("welcometomyworld:void_dim", 7.0f);
                 }
         }
 

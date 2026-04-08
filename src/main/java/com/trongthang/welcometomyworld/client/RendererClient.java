@@ -28,6 +28,8 @@ import com.trongthang.welcometomyworld.managers.BlocksManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.world.dimension.VoidDimension;
 import com.trongthang.welcometomyworld.world.dimension.VoidDimensionEffect;
+import com.trongthang.welcometomyworld.world.dimension.WhiteDimension;
+import com.trongthang.welcometomyworld.world.dimension.WhiteDimensionEffect;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
@@ -56,10 +58,19 @@ public class RendererClient implements ClientModInitializer {
                 DimensionRenderingRegistry.registerDimensionEffects(VoidDimension.VOID_DIM_EFFECTS_ID,
                                 new VoidDimensionEffect());
 
+                DimensionRenderingRegistry.registerDimensionEffects(WhiteDimension.WHITE_DIM_EFFECTS_ID,
+                                new WhiteDimensionEffect());
+
                 DimensionRenderingRegistry.registerSkyRenderer(VoidDimension.VOID_DIM_LEVEL_KEY, context -> {
                 });
 
+                DimensionRenderingRegistry.registerSkyRenderer(WhiteDimension.WHITE_DIM_LEVEL_KEY, context -> {
+                });
+
                 DimensionRenderingRegistry.registerCloudRenderer(VoidDimension.VOID_DIM_LEVEL_KEY, context -> {
+                });
+
+                DimensionRenderingRegistry.registerCloudRenderer(WhiteDimension.WHITE_DIM_LEVEL_KEY, context -> {
                 });
 
                 // BlockRenderLayerMap.INSTANCE.putBlock(BlocksManager.GAME_DISC_TROPHY,

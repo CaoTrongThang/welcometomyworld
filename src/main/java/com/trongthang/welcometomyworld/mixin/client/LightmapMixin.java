@@ -90,6 +90,17 @@ public class LightmapMixin {
                     blue = table[blue];
                 }
 
+                // Fix blue tint in Void dimension by desaturating dark colors
+                if (currentDim.toString().equals("welcometomyworld:void_dim") && !(b == 15 && s == 15)) {
+                    // If it's dark (low block light), force it to be more grayscale
+                    // This prevents the "blue" ambient light from vanilla/dimension effects
+                    if (b < 8) {
+                        int min = Math.min(red, Math.min(green, blue));
+                        // Shift towards the minimum value to kill the tint and darken it further
+                        red = green = blue = min;
+                    }
+                }
+
                 int newColor = (alpha << 24) | (blue << 16) | (green << 8) | red;
 
                 // Blood moon red tint: shift channels toward red proportional to overlayAlpha

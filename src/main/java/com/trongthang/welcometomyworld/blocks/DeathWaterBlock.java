@@ -1,5 +1,7 @@
 package com.trongthang.welcometomyworld.blocks;
 
+import com.trongthang.welcometomyworld.managers.EffectsManager;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FluidBlock;
 import net.minecraft.entity.Entity;
@@ -27,7 +29,7 @@ public class DeathWaterBlock extends FluidBlock {
                     StatusEffects.WITHER, EFFECT_DURATION, 1, false, true, true));
             // Night Vision 255 (amplifier 254 = level 255)
             player.addStatusEffect(new StatusEffectInstance(
-                    StatusEffects.NIGHT_VISION, EFFECT_DURATION, 254, false, false, true));
+                    EffectsManager.VOID_SIGHT, EFFECT_DURATION, 1, false, false, true));
         }
     }
 }

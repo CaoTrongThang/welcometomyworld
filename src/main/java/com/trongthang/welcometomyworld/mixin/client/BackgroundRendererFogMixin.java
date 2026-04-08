@@ -11,6 +11,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import net.minecraft.client.MinecraftClient;
+
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.client.BloodMoonClient;
 
 @Mixin(BackgroundRenderer.class)
@@ -33,6 +36,18 @@ public class BackgroundRendererFogMixin {
             blue = MathHelper.lerp(alpha, blue, 0.00f);
 
             RenderSystem.clearColor(red, green, blue, 0.0f);
+        } else {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player != null && client.player
+                    .hasStatusEffect(com.trongthang.welcometomyworld.managers.EffectsManager.VOID_SIGHT)) {
+                if (client.world.getRegistryKey().getValue().toString()
+                        .equals(WelcomeToMyWorld.MOD_ID + ":void_dim")) {
+                    red = 0.02f;
+                    green = 0.0f;
+                    blue = 0.02f; // Pitch dark purple fog
+                    RenderSystem.clearColor(red, green, blue, 0.0f);
+                }
+            }
         }
     }
 
@@ -52,6 +67,16 @@ public class BackgroundRendererFogMixin {
             RenderSystem.setShaderFogStart(MathHelper.lerp(alpha, defaultStart, targetStart));
             RenderSystem.setShaderFogEnd(MathHelper.lerp(alpha, defaultEnd, targetEnd));
             RenderSystem.setShaderFogShape(net.minecraft.client.render.FogShape.CYLINDER);
+        } else {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player != null && client.player
+                    .hasStatusEffect(com.trongthang.welcometomyworld.managers.EffectsManager.VOID_SIGHT)) {
+                if (client.world.getRegistryKey().getValue().toString().equals("welcometomyworld:void_dim")) {
+                    RenderSystem.setShaderFogStart(0.0f);
+                    RenderSystem.setShaderFogEnd(128.0f);
+                    RenderSystem.setShaderFogShape(net.minecraft.client.render.FogShape.CYLINDER);
+                }
+            }
         }
     }
 }

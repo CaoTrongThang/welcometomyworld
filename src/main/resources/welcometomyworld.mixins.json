@@ -47,7 +47,8 @@
 		"player.VoidDimensionTransitionMixin",
 		"entity.VoidDimensionDamageMixin",
 		"entity.VoidHostileSpawnMixin",
-		"world.VoidSpawnRestrictionMixin"
+		"world.VoidSpawnRestrictionMixin",
+		"entity.LivingEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

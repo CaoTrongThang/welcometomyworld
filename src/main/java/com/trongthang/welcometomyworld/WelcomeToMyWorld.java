@@ -197,6 +197,7 @@ public class WelcomeToMyWorld implements ModInitializer {
             fallingToWaterDamage.handleFallingToWaterDamage();
         }
 
+        EffectsManager.initialize();
         ItemsManager.initialize();
         EntitiesManager.register();
         BlocksEntitiesManager.initialize();
