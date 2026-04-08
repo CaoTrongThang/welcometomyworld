@@ -13,7 +13,6 @@
 		"misc.OneShotErrorDebug",
 		"entity.TameableEntityMixin",
 		"combat.TameableEntityKillMobMixin",
-		"entity.HostileEntityBuffMixin",
 		"ai.PhantomAIMixin",
 		"ai.HostileFollowPlayersMixin",
 		"ai.EndermanAIMixin",

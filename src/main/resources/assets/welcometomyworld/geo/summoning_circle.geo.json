@@ -4,23 +4,23 @@
 		{
 			"description": {
 				"identifier": "geometry.unknown",
-				"texture_width": 64,
-				"texture_height": 64,
-				"visible_bounds_width": 5,
+				"texture_width": 128,
+				"texture_height": 128,
+				"visible_bounds_width": 6,
 				"visible_bounds_height": 5.5,
 				"visible_bounds_offset": [0, 2.25, 0]
 			},
 			"bones": [
 				{
 					"name": "body",
-					"pivot": [-1, 5, 0.5]
+					"pivot": [-0.75, 24.75, -1.5]
 				},
 				{
 					"name": "head",
 					"parent": "body",
-					"pivot": [0, 21, 0.5],
+					"pivot": [-3, 25, -1.5],
 					"cubes": [
-						{"origin": [-32, -1, 0.5], "size": [64, 63, 0], "uv": [0, 0]}
+						{"origin": [-28, 1, -1.5], "size": [57, 49.75, 4], "uv": [-4, -4]}
 					]
 				}
 			]

@@ -32,6 +32,8 @@ import net.minecraft.world.World;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.util.math.Vec3d;
 import com.trongthang.welcometomyworld.entities.UnknownBeamEntity;
+import com.trongthang.welcometomyworld.entities.GroundSlashAttackEntity;
+import com.trongthang.welcometomyworld.managers.EffectsManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.CustomTameableEntity;
@@ -67,6 +69,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private static final TrackedData<Integer> SKILL_ID = DataTracker.registerData(Unknown.class,
             TrackedDataHandlerRegistry.INTEGER);
 
+    private static final TrackedData<Integer> SKILL_TRIGGER = DataTracker.registerData(Unknown.class,
+            TrackedDataHandlerRegistry.INTEGER);
+
     private static final TrackedData<Boolean> IS_TAUNTING = DataTracker.registerData(Unknown.class,
             TrackedDataHandlerRegistry.BOOLEAN);
 
@@ -84,19 +89,21 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     public static final Skill PUNCH = new Skill(1, 40, 120);
     public static final Skill GROUND_SLAM_KICK = new Skill(15, 40, 120);
-    public static final Skill DASH_FORWARD = new Skill(3, 15, 150);
-    public static final Skill LEG_TRIP = new Skill(4, 25, 80);
+    public static final Skill DASH_FORWARD = new Skill(3, 12, 150);
+    public static final Skill LEG_TRIP = new Skill(4, 15, 80);
     public static final Skill JUMP_HIGH = new Skill(6, 20, 150);
     public static final Skill SLAM_GROUND_AFTER_JUMP = new Skill(7, 30, 100);
-    public static final Skill STEAL_ITEM = new Skill(8, 60, 100);
+    public static final Skill STEAL_ITEM = new Skill(8, 60, 200);
     public static final Skill USE_ITEM = new Skill(9, 70, 100);
     public static final Skill DESTROY_ITEM = new Skill(10, 80, 100);
-    public static final Skill PREPARE_STEAL = new Skill(11, 100, 100);
-    public static final Skill POINT_FINGER = new Skill(12, 20, 200);
+    public static final Skill PREPARE_STEAL = new Skill(11, 100, 600);
+    public static final Skill POINT_FINGER = new Skill(12, 20, 400);
     public static final Skill GRAB_JUMP_SLAM = new Skill(13, 80, 200);
     public static final Skill KAMEHAMEHA = new Skill(20, 80, 200);
     public static final Skill UNKNOWN_JUMP_BACK = new Skill(5, 20, 150);
     public static final Skill UNKNOWN_SUMMONING_CIRCLE = new Skill(22, 240, 400);
+    public static final Skill UNKNOWN_SPEAR_STAB = new Skill(23, 35, 120);
+    public static final Skill UNKNOWN_SPEAR_3_HITS = new Skill(24, 70, 160);
 
     private static final int PUNCH_HIT_TICK = 20;
     private static final int LEG_TRIP_HIT_TICK = 8;
@@ -107,12 +114,18 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private static final int POINT_FINGER_HIT_TICK = 5;
     private static final int GRAB_SLAM_HIT_TICK = 41;
     private static final int[] DESTROY_HIT_TICKS = { 15, 38, 58 };
+    private static final int SPEAR_STAB_HIT_TICK = 20;
+    private static final int SPEAR_3_HIT_TICK_1 = 21;
+    private static final int SPEAR_3_HIT_TICK_2 = 38;
+    private static final int SPEAR_3_HIT_TICK_3 = 54;
 
     private static final float GROUND_SLAM_KICK_DAMAGE_MULTIPLIER = 2.5f;
     private static final float LEG_TRIP_DAMAGE_MULTIPLIER = 1.5f;
     private static final float SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER = 2.5f;;
     private static final float GRAB_SLAM_DAMAGE_MULTIPLIER = 2.5f;
-    private static final float KAMEHAMEHA_DAMAGE_MULTIPLIER = 2f;
+    private static final float KAMEHAMEHA_DAMAGE_MULTIPLIER = 1.5f;
+    private static final float SPEAR_STAB_DAMAGE_MULTIPLIER = 1.5f;
+    private static final float SPEAR_3_HIT_DAMAGE_MULTIPLIER = 1.5f;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private int dashTimer = 0;
@@ -126,6 +139,44 @@ public class Unknown extends HostileEntity implements GeoEntity {
         return skillCooldowns[skill.id] <= 0;
     }
 
+    /** Returns health as a fraction [0,1]. Use for phase-gating skills. */
+    private float healthFraction() {
+        return this.getHealth() / this.getMaxHealth();
+    }
+
+    /**
+     * Picks one skill by weighted random from a candidate list.
+     * Each entry: { skill, weight, condition }.
+     * Skills whose cooldown is active OR whose condition is false are skipped.
+     * Returns null if nothing is eligible.
+     */
+    private Skill pickWeightedSkill(Object[]... candidates) {
+        float totalWeight = 0;
+        for (Object[] c : candidates) {
+            Skill skill = (Skill) c[0];
+            float weight = ((Number) c[1]).floatValue();
+            boolean condition = (Boolean) c[2];
+            if (condition && canUseSkill(skill))
+                totalWeight += weight;
+        }
+        if (totalWeight <= 0)
+            return null;
+
+        float roll = (float) (Math.random() * totalWeight);
+        float acc = 0;
+        for (Object[] c : candidates) {
+            Skill skill = (Skill) c[0];
+            float weight = ((Number) c[1]).floatValue();
+            boolean condition = (Boolean) c[2];
+            if (!condition || !canUseSkill(skill))
+                continue;
+            acc += weight;
+            if (roll < acc)
+                return skill;
+        }
+        return null;
+    }
+
     private int tauntCooldown = 0;
     private int dodgeCooldown = 0;
     private ItemStack stolenItemCandidate = ItemStack.EMPTY;
@@ -136,12 +187,13 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 666666.0D)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 99999.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1D)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D) // 0 for testing
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 50f)
-                .add(EntityAttributes.GENERIC_ARMOR, 30f);
+                .add(EntityAttributes.GENERIC_ARMOR, 20f)
+                .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10f);
     }
 
     @Override
@@ -150,6 +202,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         this.dataTracker.startTracking(DASH_DIR, 0);
         this.dataTracker.startTracking(IS_USING_SKILL, false);
         this.dataTracker.startTracking(SKILL_ID, 0);
+        this.dataTracker.startTracking(SKILL_TRIGGER, 0);
         this.dataTracker.startTracking(IS_TAUNTING, false);
     }
 
@@ -184,6 +237,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         // Edge-detection flag
         int[] prevSkillId = { 0 };
+        int[] prevSkillTrigger = { 0 };
         int[] prevDir = { 0 };
 
         // --- All animations in one controller for smooth cross-fading ---
@@ -195,12 +249,14 @@ public class Unknown extends HostileEntity implements GeoEntity {
             state.getController().setAnimationSpeed(1.0D);
 
             if (isUsingSkill) {
-                state.getController().transitionLength(0);
-                if (prevSkillId[0] != skillId) {
-                    state.getController().forceAnimationReset();
+                int skillTrigger = this.dataTracker.get(SKILL_TRIGGER);
 
+                state.getController().transitionLength(0);
+                if (prevSkillId[0] != skillId || prevSkillTrigger[0] != skillTrigger) {
+                    state.getController().forceAnimationReset();
                 }
                 prevSkillId[0] = skillId;
+                prevSkillTrigger[0] = skillTrigger;
 
                 switch (skillId) {
                     case 1: // PUNCH
@@ -236,7 +292,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_jump_back"));
                     case 22: // UNKNOWN_SUMMONING_CIRCLE
                         // Use taunt or idle if unknown_summoning_circle is missing in json
-                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_taunt"));
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_summoning_circle"));
+                    case 23: // UNKNOWN_SPEAR_STAB
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_spear_stab"));
+                    case 24: // UNKNOWN_SPEAR_3_HITS
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_spear_3_hits"));
                 }
             }
             prevSkillId[0] = 0;
@@ -308,124 +368,74 @@ public class Unknown extends HostileEntity implements GeoEntity {
             return;
         }
 
-        double random = Math.random();
-
         // --- Trigger logic ---
         if (globalSkillCooldown <= 0 && !isUsingSkill()) {
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive()) {
-                double distSq = this.distanceTo(target);
+                double dist = this.distanceTo(target);
 
-                // Case 1: Close range (Slam or Steal)
-                if (distSq <= 10.0) {
+                // Case 1: Melee — player is actively blocking/using an item
+                if (dist <= 10.0 && target instanceof PlayerEntity player && target.isUsingItem()
+                        && canUseSkill(POINT_FINGER)) {
+                    stolenItemCandidate = player.getActiveItem().copy();
+                    triggerSkill(POINT_FINGER);
 
-                    if (target instanceof PlayerEntity player && target.isUsingItem() && canUseSkill(POINT_FINGER)) {
-                        stolenItemCandidate = player.getMainHandStack().copy();
-                        triggerSkill(POINT_FINGER);
-                    } else if (distSq <= 8.0) {
-                        // this can use many skills
-                        boolean canPunch = canUseSkill(PUNCH);
-                        boolean canKick = canUseSkill(GROUND_SLAM_KICK);
-                        boolean canTrip = canUseSkill(LEG_TRIP);
+                    // Case 2: Close range
+                } else if (dist <= 8.0) {
+                    // To add a phase-2 skill: new Object[]{MY_SKILL, 30f, healthFraction() <= 0.5f}
+                    Skill picked = pickWeightedSkill(
+                            new Object[] { PUNCH, 50, true },
+                            new Object[] { GROUND_SLAM_KICK, 50, true },
+                            new Object[] { LEG_TRIP, 50, true },
+                            new Object[] { UNKNOWN_SPEAR_3_HITS, 10000, true },
+                            new Object[] { UNKNOWN_JUMP_BACK, 50, true });
+                    if (picked != null)
+                        triggerSkill(picked);
 
-                        if (canPunch && canKick && canTrip) {
-                            if (random < 0.25)
-                                triggerSkill(PUNCH);
-                            else if (random < 0.5)
-                                triggerSkill(GROUND_SLAM_KICK);
-                            else if (random < 0.75)
-                                triggerSkill(LEG_TRIP);
-                            else if (canUseSkill(UNKNOWN_JUMP_BACK))
-                                triggerSkill(UNKNOWN_JUMP_BACK);
-                        } else if (canPunch && canKick) {
-                            if (random < 0.45)
-                                triggerSkill(PUNCH);
-                            else if (random < 0.9)
-                                triggerSkill(GROUND_SLAM_KICK);
-                            else if (canUseSkill(UNKNOWN_JUMP_BACK))
-                                triggerSkill(UNKNOWN_JUMP_BACK);
-                        } else if (canPunch) {
-                            if (random < 0.8)
-                                triggerSkill(PUNCH);
-                            else if (canUseSkill(UNKNOWN_JUMP_BACK))
-                                triggerSkill(UNKNOWN_JUMP_BACK);
-                        } else if (canKick) {
-                            if (random < 0.8)
-                                triggerSkill(GROUND_SLAM_KICK);
-                            else if (canUseSkill(UNKNOWN_JUMP_BACK))
-                                triggerSkill(UNKNOWN_JUMP_BACK);
-                        } else if (canTrip) {
-                            if (random < 0.8)
-                                triggerSkill(LEG_TRIP);
-                            else if (canUseSkill(UNKNOWN_JUMP_BACK))
-                                triggerSkill(UNKNOWN_JUMP_BACK);
-                        } else if (canUseSkill(UNKNOWN_JUMP_BACK)) {
-                            triggerSkill(UNKNOWN_JUMP_BACK);
-                        }
-                    }
-                }
-                // Case 2: Mid range (Chain Skill)
-                else if (distSq <= 15.0) {
-                    if (canUseSkill(DASH_FORWARD)) {
-                        triggerSkill(DASH_FORWARD);
-                    }
-                }
-                // Case 3: Far range (Punch or Jump)
-                else {
-                    if (distSq <= 30.0) {
-                        boolean canJump = canUseSkill(JUMP_HIGH);
-                        boolean canPunch = canUseSkill(PUNCH);
-                        boolean canKame = canUseSkill(KAMEHAMEHA);
+                    // Case 3: Mid range
+                } else if (dist <= 20.0) {
+                    Skill picked = pickWeightedSkill(
+                            new Object[] { DASH_FORWARD, 40f, true },
+                            new Object[] { UNKNOWN_SPEAR_STAB, 10000, true });
+                    if (picked != null)
+                        triggerSkill(picked);
 
-                        if (canJump && canPunch && canKame) {
-                            if (random < 0.5)
-                                triggerSkill(JUMP_HIGH);
-                            else if (random < 0.7)
-                                triggerSkill(PUNCH);
-                            else
-                                triggerSkill(KAMEHAMEHA);
-                        } else if (canJump && canPunch) {
-                            if (random < 0.3)
-                                triggerSkill(JUMP_HIGH);
-                            else
-                                triggerSkill(PUNCH);
-                        } else if (canJump) {
-                            triggerSkill(JUMP_HIGH);
-                        } else if (canPunch) {
-                            triggerSkill(PUNCH);
-                        } else if (canKame) {
-                            triggerSkill(KAMEHAMEHA);
-                        }
-                    } else {
-                        boolean canJump = canUseSkill(JUMP_HIGH);
-                        boolean canCircle = canUseSkill(UNKNOWN_SUMMONING_CIRCLE);
+                    // Case 4: Far range (≤30)
+                } else if (dist <= 40.0) {
+                    Skill picked = pickWeightedSkill(
+                            new Object[] { JUMP_HIGH, 30f, true },
+                            new Object[] { PUNCH, 20f, true },
+                            new Object[] { KAMEHAMEHA, 20f, healthFraction() <= 0.7f });
+                    if (picked != null)
+                        triggerSkill(picked);
 
-                        if (canCircle && random < 0.9) {
-                            triggerSkill(UNKNOWN_SUMMONING_CIRCLE);
-                        } else if (canJump) {
-                            triggerSkill(JUMP_HIGH);
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- Taunt logic ---
-        if (globalSkillCooldown > 0 && tauntCooldown <= 0 && !isUsingSkill()) {
-            tauntCooldown = 200;
-            LivingEntity tauntTarget = this.getTarget();
-            if (tauntTarget != null && tauntTarget.isAlive()) {
-                double distSq = this.squaredDistanceTo(tauntTarget);
-                if (distSq > 10.0 * 10.0) {
-                    this.dataTracker.set(IS_TAUNTING, true);
-                    this.getLookControl().lookAt(tauntTarget, 30.0F, 30.0F);
+                    // Case 5: Very far range (>30)
                 } else {
-                    this.dataTracker.set(IS_TAUNTING, false);
+                    Skill picked = pickWeightedSkill(
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 10000f, true },
+                            new Object[] { JUMP_HIGH, 40f, true });
+                    if (picked != null)
+                        triggerSkill(picked);
                 }
-            } else {
-                this.dataTracker.set(IS_TAUNTING, false);
             }
         }
+
+        // // --- Taunt logic ---
+        // if (globalSkillCooldown > 0 && tauntCooldown <= 0 && !isUsingSkill()) {
+        // tauntCooldown = 200;
+        // LivingEntity tauntTarget = this.getTarget();
+        // if (tauntTarget != null && tauntTarget.isAlive()) {
+        // double distSq = this.squaredDistanceTo(tauntTarget);
+        // if (distSq > 10.0 * 10.0) {
+        // this.dataTracker.set(IS_TAUNTING, true);
+        // this.getLookControl().lookAt(tauntTarget, 30.0F, 30.0F);
+        // } else {
+        // this.dataTracker.set(IS_TAUNTING, false);
+        // }
+        // } else {
+        // this.dataTracker.set(IS_TAUNTING, false);
+        // }
+        // }
     }
 
     /** Called by UnknownDodgeGoal on the server. */
@@ -444,6 +454,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
             return;
         this.dataTracker.set(IS_USING_SKILL, true);
         this.dataTracker.set(SKILL_ID, skill.id);
+        this.dataTracker.set(SKILL_TRIGGER, this.dataTracker.get(SKILL_TRIGGER) + 1);
         this.skillTick = 0;
         this.skillTotalTicks = skill.length;
         this.skillCooldowns[skill.id] = skill.cooldown;
@@ -465,6 +476,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
     }
 
     private void handleSkillEffects(int skillId) {
+        LivingEntity target = this.getTarget();
+
         switch (skillId) {
             case 15: // GROUND_SLAM_KICK
                 if (skillTick == GROUND_SLAM_KICK_HIT_TICK - 5) { // Play slightly before impact for better sync
@@ -475,7 +488,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
                     skillHitFired = true;
                     this.removeAllPassengers(); // Release the player when the slam hits
-                    dealAoeGroundDamage(6.0,
+                    dealAoeGroundDamage(10.0,
                             (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
                                     * GROUND_SLAM_KICK_DAMAGE_MULTIPLIER,
                             true);
@@ -491,7 +504,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 break;
             case 3: // DASH_FORWARD
                 if (skillTick == 5) {
-                    LivingEntity target = this.getTarget();
                     if (target != null) {
                         // Teleport to target with offset in front
                         Vec3d look = target.getRotationVec(1.0F);
@@ -525,7 +537,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
             case 6: // JUMP
                 if (skillTick == 1) {
                     double vx = 0, vz = 0;
-                    LivingEntity target = this.getTarget();
                     if (target != null) {
                         double dx = target.getX() - this.getX();
                         double dz = target.getZ() - this.getZ();
@@ -540,7 +551,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 } else if (skillTick > 5) {
                     double vx = this.getVelocity().x;
                     double vz = this.getVelocity().z;
-                    LivingEntity target = this.getTarget();
                     if (target != null) {
                         double dx = target.getX() - this.getX();
                         double dz = target.getZ() - this.getZ();
@@ -557,7 +567,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 break;
             case 13: // GRAB_JUMP_SLAM
                 if (skillTick == 5) {
-                    LivingEntity target = this.getTarget();
                     if (target != null) {
                         target.startRiding(this, true);
                     }
@@ -622,16 +631,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 break;
             case 22: // UNKNOWN_SUMMONING_CIRCLE
                 if (!skillHitFired && skillTick >= 22 && skillTick <= 180) {
-                    if (skillTick % 12 == 0) { // Summon one every 12 ticks
+                    if (skillTick % 6 == 0 && skillTick <= 180) { // Summon one every 12 ticks
                         if (this.getWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
-                            com.trongthang.welcometomyworld.entities.Unknown.SummoningCircleEntity circle = new com.trongthang.welcometomyworld.entities.Unknown.SummoningCircleEntity(
-                                    com.trongthang.welcometomyworld.managers.EntitiesManager.SUMMONING_CIRCLE,
+                            SummoningCircleEntity circle = new SummoningCircleEntity(
+                                    EntitiesManager.SUMMONING_CIRCLE,
                                     serverWorld);
                             circle.setOwner(this);
                             circle.setMaxAge(100 + this.random.nextInt(60));
 
                             // Calculate position around the target (pivot)
-                            LivingEntity target = this.getTarget();
                             if (target != null) {
                                 double dist = 12.0 + Math.random() * 12.0; // Increased distance
                                 double yaw = Math.random() * 360;
@@ -643,6 +651,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                                 circle.setPosition(target.getX() + offsetX, target.getY() + offsetY,
                                         target.getZ() + offsetZ);
                                 serverWorld.spawnEntity(circle);
+                                this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                                        SoundsManager.SUMMON_CIRCLE, this.getSoundCategory(), 0.5F,
+                                        (float) (0.8 + Math.random() * 0.4));
                             }
                         }
                     }
@@ -685,6 +696,17 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     this.getNavigation().startMovingTo(stealTarget, 2);
                     double distSq = this.squaredDistanceTo(stealTarget);
 
+                    // i think if in this phase, keep checking if that "stolenItemCandidate" is
+                    // still in the user's inventory, else skip
+                    if (stealTarget instanceof PlayerEntity player) {
+                        if (!player.getInventory().contains(stolenItemCandidate)) {
+                            this.dataTracker.set(IS_USING_SKILL, false);
+                            this.dataTracker.set(SKILL_ID, 0);
+                            this.getNavigation().stop();
+                            return;
+                        }
+                    }
+
                     if (distSq <= 2.0 * 2.0) {
                         this.getNavigation().stop();
                         triggerSkill(STEAL_ITEM);
@@ -701,16 +723,36 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 }
                 if (!skillHitFired && skillTick >= STEAL_HIT_TICK) {
                     skillHitFired = true;
-                    LivingEntity target = this.getTarget();
                     if (target instanceof PlayerEntity player) {
                         if (!stolenItemCandidate.isEmpty()) {
-                            for (int i = 0; i < player.getInventory().size(); i++) {
-                                ItemStack stack = player.getInventory().getStack(i);
-                                if (ItemStack.canCombine(stack, stolenItemCandidate)) {
-                                    this.setStackInHand(Hand.MAIN_HAND, stack.copy());
-                                    player.getInventory().removeStack(i);
-                                    break;
+                            ItemStack foundStack = ItemStack.EMPTY;
+                            int foundSlot = -1;
+
+                            // 1. Check Main Hand
+                            if (ItemStack.canCombine(player.getMainHandStack(), stolenItemCandidate)) {
+                                foundStack = player.getMainHandStack();
+                                foundSlot = player.getInventory().selectedSlot;
+                            }
+                            // 2. Check Offhand
+                            else if (ItemStack.canCombine(player.getOffHandStack(), stolenItemCandidate)) {
+                                foundStack = player.getOffHandStack();
+                                foundSlot = 40; // Offhand slot index is 40 in 1.20.1
+                            }
+                            // 3. Fallback: Search the rest of inventory
+                            else {
+                                for (int i = 0; i < player.getInventory().size(); i++) {
+                                    ItemStack stack = player.getInventory().getStack(i);
+                                    if (ItemStack.canCombine(stack, stolenItemCandidate)) {
+                                        foundStack = stack;
+                                        foundSlot = i;
+                                        break;
+                                    }
                                 }
+                            }
+
+                            if (!foundStack.isEmpty()) {
+                                this.setStackInHand(Hand.MAIN_HAND, foundStack.copy());
+                                player.getInventory().removeStack(foundSlot);
                             }
                         }
                     }
@@ -840,7 +882,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
             {
                 if (!skillHitFired && skillTick >= POINT_FINGER_HIT_TICK) {
                     skillHitFired = true;
-                    LivingEntity target = this.getTarget();
                     if (target instanceof PlayerEntity player) {
                         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 254));
                         player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 200, 1));
@@ -862,7 +903,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             this.getPitch());
                     this.getWorld().spawnEntity(beam);
 
-                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
                             net.minecraft.sound.SoundEvents.BLOCK_BEACON_ACTIVATE, this.getSoundCategory(), 2.0F, 1.0F);
                 }
                 break;
@@ -870,23 +911,101 @@ public class Unknown extends HostileEntity implements GeoEntity {
             case 21: // UNKNOWN_JUMP_BACK
                 if (skillTick == 5) {
                     Vec3d look = this.getRotationVec(1.0F);
-                    // Force 1.5 blocks high (~0.6 VY) and 5 blocks back (~1.5 horizontal impulse)
-                    double jumpHeightForce = 0.6;
-                    double jumpBackForce = 1.5;
+                    // Force 1.5 blocks high (~0.6 VY) and 20 blocks back (~1.5 horizontal impulse)
+                    double jumpHeightForce = 1;
+                    double jumpBackForce = 20;
 
                     this.setVelocity(-look.x * jumpBackForce, jumpHeightForce, -look.z * jumpBackForce);
                     this.velocityModified = true;
 
-                    System.out.println("[Unknown] Jump back! VY: " + jumpHeightForce + ", Back: " + jumpBackForce);
                 }
 
                 // Chance to PUNCH during jump back (tick 12 approx mid-air/descending)
                 if (skillTick == 12 && this.random.nextDouble() < 0.4) {
-                    LivingEntity target = getTarget();
                     if (target != null && this.squaredDistanceTo(target) <= 10.0 * 10.0) {
-                        System.out.println("[Unknown] Jump back -> Counter PUNCH!");
                         triggerSkill(PUNCH);
                     }
+                }
+                break;
+
+            case 23: // UNKNOWN_SPEAR_STAB
+                if (skillTick == 19) {
+                    if (target != null) {
+                        this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                                SoundsManager.DASH_CAPE, this.getSoundCategory(), 1.0F, 1.0F);
+                        this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                                SoundsManager.SPEAR_ATTACK_4, this.getSoundCategory(), 1.0F, 1.0F);
+                        // Teleport slightly behind or near the target
+                        Vec3d dirToBoss = this.getPos().subtract(target.getPos()).normalize();
+                        Vec3d tpPos = target.getPos().add(dirToBoss.multiply(3.0));
+                        this.requestTeleport(tpPos.x, tpPos.y, tpPos.z);
+
+                        // Look at target
+                        double dx = target.getX() - this.getX();
+                        double dz = target.getZ() - this.getZ();
+                        float yaw = (float) (Math.atan2(dz, dx) * 180.0 / Math.PI) - 90.0f;
+                        this.setYaw(yaw);
+                        this.setHeadYaw(yaw);
+
+                        if (this.getWorld() instanceof ServerWorld sw) {
+                            sw.spawnParticles(ParticleTypes.FLASH, this.getX(), this.getY() + 1, this.getZ(), 10, 0.5,
+                                    0.5, 0.5, 0.1);
+                        }
+                    }
+                }
+                if (!skillHitFired && skillTick >= SPEAR_STAB_HIT_TICK) {
+                    skillHitFired = true;
+
+                    dealLinearShockwaveDamage(3.0, 15.0,
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * SPEAR_STAB_DAMAGE_MULTIPLIER);
+
+                    spawnGroundSlash(this.getYaw(), 1, SPEAR_STAB_DAMAGE_MULTIPLIER);
+                    if (target != null) {
+                        Vec3d dashDir = target.getPos().subtract(this.getPos()).normalize();
+                        this.setVelocity(dashDir.multiply(5));
+                        this.velocityModified = true;
+                    }
+
+                    // it has 50 chance to trigger the second spear stab
+                    if (this.random.nextDouble() < 0.5) {
+                        triggerSkill(UNKNOWN_SPEAR_STAB);
+                    }
+                }
+                break;
+
+            case 24: // UNKNOWN_SPEAR_3_HITS
+                if (skillTick == SPEAR_3_HIT_TICK_1) {
+                    // Phase 1: clockwise arc — hit in a ±45° cone in front
+                    dealLinearShockwaveDamage(5.0, 12.0,
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * SPEAR_3_HIT_DAMAGE_MULTIPLIER);
+
+                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                            SoundsManager.SPEAR_ATTACK_1, this.getSoundCategory(), 1.0F, 1.0F);
+                } else if (skillTick == SPEAR_3_HIT_TICK_2) {
+                    // Phase 2: second arc sweep
+                    dealLinearShockwaveDamage(5.0, 12.0,
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * SPEAR_3_HIT_DAMAGE_MULTIPLIER);
+                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                            SoundsManager.SPEAR_ATTACK_2, this.getSoundCategory(), 1.0F, 1.0F);
+                } else if (!skillHitFired && skillTick >= SPEAR_3_HIT_TICK_3) {
+                    skillHitFired = true;
+                    // Phase 3: slam AOE + 8-direction radial slash burst
+                    dealAoeGroundDamage(8.0,
+                            (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                    * SPEAR_3_HIT_DAMAGE_MULTIPLIER,
+                            true);
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, this.getSoundCategory(), 1.2F, 1.0F);
+                    // Spawn slashes in 8 cardinal + diagonal directions
+                    spawnGroundSlash(this.getYaw(), 8, SPEAR_3_HIT_DAMAGE_MULTIPLIER);
+                }
+
+                if (!skillHitFired && skillTick >= SPEAR_3_HIT_TICK_3 - 5) {
+                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                            SoundsManager.SPEAR_ATTACK_3, this.getSoundCategory(), 0.5F, 1.0F);
                 }
                 break;
         }
@@ -913,12 +1032,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 }
                 break;
             case 4: // LEG_TRIP
-                if (canUseSkill(GROUND_SLAM_KICK)) {
-                    triggerSkill(GROUND_SLAM_KICK);
-                } else {
-                    this.dataTracker.set(IS_USING_SKILL, false);
-                    this.dataTracker.set(SKILL_ID, 0);
-                }
+
+                triggerSkill(GROUND_SLAM_KICK);
+
                 break;
             case 6: // JUMP
                 LivingEntity target = this.getTarget();
@@ -1123,6 +1239,35 @@ public class Unknown extends HostileEntity implements GeoEntity {
     }
 
     /**
+     * Spawns ground slash projectiles.
+     * 
+     * @param baseYaw The central direction (usually this.getYaw())
+     * @param count   Number of slashes. 1 = forward, 8 = radial burst.
+     */
+    private void spawnGroundSlash(float baseYaw, int count, float multiplier) {
+        if (this.getWorld().isClient())
+            return;
+
+        float angleStep = 360f / count;
+        for (int i = 0; i < count; i++) {
+            float yaw = baseYaw + (i * angleStep);
+            GroundSlashAttackEntity slash = new GroundSlashAttackEntity(EntitiesManager.GROUND_SLASH_ATTACK,
+                    this.getWorld());
+            slash.setOwner(this);
+            slash.setDamage((float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * multiplier);
+
+            // Spawn slightly in front of boss
+            double rad = Math.toRadians(yaw);
+            double ox = -Math.sin(rad) * 1.5;
+            double oz = Math.cos(rad) * 1.5;
+
+            slash.setPosition(this.getX() + ox, this.getY(), this.getZ() + oz);
+            slash.setDirection(yaw);
+            this.getWorld().spawnEntity(slash);
+        }
+    }
+
+    /**
      * Deals damage to all LivingEntities (except self) within a radius.
      * Reusable for any ground-slam or AoE attack.
      */
@@ -1182,7 +1327,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     public static void dealUnknownDamage(LivingEntity attacker, LivingEntity target, float amount) {
         if (target.isBlocking() && target.getActiveItem().getItem() instanceof ShieldItem) {
-            int shieldDamage = (int) (amount * 0.8f);
+            int shieldDamage = (int) (amount * 0.5f);
             if (shieldDamage > 0) {
                 target.getActiveItem().damage(shieldDamage, target,
                         (e) -> e.sendToolBreakStatus(target.getActiveHand()));
@@ -1314,6 +1459,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
         this.velocityModified = true;
 
         this.triggerDash(dodgeLeft, 10);
+        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
         this.dodgeCooldown = 40;
     }
 

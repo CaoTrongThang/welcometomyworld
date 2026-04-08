@@ -33,7 +33,8 @@ public class SoundsManager {
     public static final SoundEvent FALLEN_KNIGHT_SWING = registerSoundEvent("fallen_knight_swing");
     public static final SoundEvent FALLEN_KNIGHT_SWING_UP = registerSoundEvent("fallen_knight_swing_up");
     public static final SoundEvent FALLEN_KNIGHT_GROUND_IMPACT = registerSoundEvent("fallen_knight_ground_impact");
-    public static final SoundEvent FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY = registerSoundEvent("fallen_knight_ground_impact_no_delay");
+    public static final SoundEvent FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY = registerSoundEvent(
+            "fallen_knight_ground_impact_no_delay");
     public static final SoundEvent FALLEN_KNIGHT_STEP = registerSoundEvent("fallen_knight_step");
     public static final SoundEvent FALLEN_KNIGHT_PORTAL_AMBIENT = registerSoundEvent("fallen_knight_portal_ambient");
     public static final SoundEvent FALLEN_KNIGHT_PORTAL_OPEN = registerSoundEvent("fallen_knight_portal_open");
@@ -49,19 +50,28 @@ public class SoundsManager {
     public static final SoundEvent HOSTILE_MOB_BUFF = registerSoundEvent("hostile_mob_buff");
 
     public static final SoundEvent BLOSSOM_BUFF = registerSoundEvent("blossom_buff");
-    public static final SoundEvent BLOSSOM_LAUGH= registerSoundEvent("blossom_laugh");
+    public static final SoundEvent BLOSSOM_LAUGH = registerSoundEvent("blossom_laugh");
     public static final SoundEvent BLOSSOM_ULTIMATE = registerSoundEvent("blossom_ultimate");
     public static final SoundEvent BLOSSOM_WALK = registerSoundEvent("blossom_walk");
-    public static final SoundEvent BLOSSOM_RISE= registerSoundEvent("blossom_rise");
+    public static final SoundEvent BLOSSOM_RISE = registerSoundEvent("blossom_rise");
     public static final SoundEvent BLOSSOM_AMBIENT = registerSoundEvent("blossom_ambient");
     public static final SoundEvent BLOSSOM_HURT = registerSoundEvent("blossom_hurt");
 
-    private static SoundEvent registerSoundEvent(String name){
+    public static final SoundEvent DASH_CAPE = registerSoundEvent("dash_cape");
+    public static final SoundEvent SPEAR_ATTACK_1 = registerSoundEvent("spear_attack_1");
+    public static final SoundEvent SPEAR_ATTACK_2 = registerSoundEvent("spear_attack_2");
+    public static final SoundEvent SPEAR_ATTACK_3 = registerSoundEvent("spear_attack_3");
+    public static final SoundEvent SPEAR_ATTACK_4 = registerSoundEvent("spear_attack_4");
+    public static final SoundEvent SPEAR_ATTACK_5 = registerSoundEvent("spear_attack_5");
+    public static final SoundEvent SUMMON_CIRCLE = registerSoundEvent("summon_circle");
+    public static final SoundEvent WHOOSH_1 = registerSoundEvent("whoosh_1");
+
+    private static SoundEvent registerSoundEvent(String name) {
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);
         return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));
     }
 
-    public static void registerSounds(){
+    public static void registerSounds() {
         LOGGER.info("Registring sounds for " + WelcomeToMyWorld.MOD_ID);
     }
 

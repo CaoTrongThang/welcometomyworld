@@ -135,13 +135,13 @@
     ]
   },
   "wanderer_bow_attack": {
-  "sounds": [
-    {
-      "name": "welcometomyworld:wanderer/wanderer_bow_attack",
-      "attenuation_distance": 64
-    }
-  ]
-},
+    "sounds": [
+      {
+        "name": "welcometomyworld:wanderer/wanderer_bow_attack",
+        "attenuation_distance": 64
+      }
+    ]
+  },
   "wanderer_potion_drinking": {
     "sounds": [
       {
@@ -243,6 +243,70 @@
       {
         "name": "welcometomyworld:blossom/blossom_ambient",
         "attenuation_distance": 64
+      }
+    ]
+  },
+  "dash_cape": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/dash_cape",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "spear_attack_1": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/spear_attack_1",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "spear_attack_2": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/spear_attack_2",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "spear_attack_3": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/spear_attack_3",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "spear_attack_4": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/spear_attack_4",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "spear_attack_5": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/spear_attack_5",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "summon_circle": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/summon_circle",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "whoosh_1": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/whoosh_1",
+        "attenuation_distance": 128
       }
     ]
   }

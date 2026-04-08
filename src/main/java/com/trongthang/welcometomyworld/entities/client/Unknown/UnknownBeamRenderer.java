@@ -34,12 +34,9 @@ public class UnknownBeamRenderer extends EntityRenderer<UnknownBeamEntity> {
         // Face the beam correctly. Minecraft Yaw 0 is South.
         // If it shoots behind, we add 180 to flip it forward.
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180 - entity.getYaw()));
-        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(entity.getPitch()));
-
-        if (entity.age == 1) {
-            System.out.println(
-                    "[UnknownBeamRenderer] entityYaw: " + entity.getYaw() + ", entityPitch: " + entity.getPitch());
-        }
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-entity.getPitch())); // Match the model's pitch
+                                                                                        // inversion
+                                                                                        // positive down
 
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getBeaconBeam(TEXTURE, true));
 
@@ -81,6 +78,12 @@ public class UnknownBeamRenderer extends EntityRenderer<UnknownBeamEntity> {
                 .light(15728880) // Full bright
                 .normal(matrix3f, 0, 1, 0)
                 .next();
+    }
+
+    @Override
+    public boolean shouldRender(UnknownBeamEntity entity, net.minecraft.client.render.Frustum frustum, double x,
+            double y, double z) {
+        return true;
     }
 
     @Override

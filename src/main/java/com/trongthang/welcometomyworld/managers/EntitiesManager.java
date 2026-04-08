@@ -7,6 +7,7 @@ import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
 import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import com.trongthang.welcometomyworld.entities.Unknown.SummoningCircleEntity;
+import com.trongthang.welcometomyworld.entities.GroundSlashAttackEntity;
 import com.trongthang.welcometomyworld.entities.FallingSkeleton.FallingSkeleton;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -121,7 +122,16 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "summoning_circle"),
                         FabricEntityTypeBuilder
                                         .<SummoningCircleEntity>create(SpawnGroup.MISC, SummoningCircleEntity::new)
+                                        .dimensions(EntityDimensions.fixed(3.0f, 3.0f))
+                                        .build());
+
+        public static final EntityType<GroundSlashAttackEntity> GROUND_SLASH_ATTACK = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "ground_slash_attack"),
+                        FabricEntityTypeBuilder.<GroundSlashAttackEntity>create(SpawnGroup.MISC,
+                                        GroundSlashAttackEntity::new)
                                         .dimensions(EntityDimensions.fixed(1.0f, 1.0f))
+                                        .trackRangeBlocks(128)
                                         .build());
 
         public static final EntityType<FallingSkeleton> FALLING_SKELETON = Registry.register(

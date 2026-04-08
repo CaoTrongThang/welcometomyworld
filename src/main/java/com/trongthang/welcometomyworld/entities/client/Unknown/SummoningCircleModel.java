@@ -26,18 +26,12 @@ public class SummoningCircleModel extends GeoModel<SummoningCircleEntity> {
     @Override
     public void setCustomAnimations(SummoningCircleEntity animatable, long instanceId,
             AnimationState<SummoningCircleEntity> animationState) {
-        CoreGeoBone head = getAnimationProcessor().getBone("head");
-        if (head != null) {
-            // Rotate the head based on the entity's pitch and yaw
-            // Radian = Degree * PI / 180
-            head.setRotX(animatable.getPitch() * ((float) Math.PI / 180F));
-            head.setRotY(animatable.getYaw() * ((float) Math.PI / 180F));
-
-            if (animatable.age % 20 == 0) {
-                System.out
-                        .println("[Model] (pitch, " + animatable.getPitch() + "), (yaw, " + animatable.getYaw() + ")");
-                System.out.println("[Model] (headRotX, " + head.getRotX() + "), (headRotY, " + head.getRotY() + ")");
-            }
+        CoreGeoBone root = getAnimationProcessor().getBone("body");
+        if (root != null) {
+            float pitch = animatable.getPitch();
+            float yaw = animatable.getYaw();
+            root.setRotX(-pitch * ((float) Math.PI / 180F));
+            root.setRotY(-yaw * ((float) Math.PI / 180F));
         }
     }
 }
