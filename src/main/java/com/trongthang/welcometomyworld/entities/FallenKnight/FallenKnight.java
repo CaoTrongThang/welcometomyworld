@@ -544,7 +544,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
             BlockPos center = this.getBlockPos();
 
             Box checkArea = new Box(center).expand(attack3Range);
-            List<LivingEntity> damageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
+            List<LivingEntity> DamageTarget = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
                     entity -> true);
 
             for (int x = -attack3Range; x <= attack3Range; x++) {
@@ -569,7 +569,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 }
             }
 
-            for (LivingEntity target : damageTarget) {
+            for (LivingEntity target : DamageTarget) {
                 if (target == this)
                     continue;
                 if (this.getOwner() != null) {
@@ -613,7 +613,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     target.addVelocity(0, 0.8f, 0);
                 }
 
-                target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
+                DamageTarget(target, damage);
             }
         }
     }
@@ -660,7 +660,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
                         * this.attack2DamageMultiply;
                 damageBlockingShield(target, damage);
-                target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
+                DamageTarget(target, damage);
             }
         }
     }

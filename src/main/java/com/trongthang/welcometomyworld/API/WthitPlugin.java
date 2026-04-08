@@ -76,9 +76,9 @@ public class WthitPlugin implements IWailaPlugin {
         public void appendHead(ITooltip tooltip, IEntityAccessor accessor, IPluginConfig config) {
             if (accessor.getEntity() instanceof Unknown entity) {
 
-                String glitchStr = "§k" + generateRandomGlitchString(8);
-
-                tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, Text.literal(glitchStr));
+                if (entity.getHealth() >= entity.getMaxHealth() * 0.9f) {
+                    tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, Text.literal("§k" + generateRandomGlitchString(8)));
+                }
             }
         }
 

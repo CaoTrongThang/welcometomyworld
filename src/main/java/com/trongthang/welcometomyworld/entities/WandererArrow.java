@@ -7,6 +7,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
@@ -92,7 +93,11 @@ public class WandererArrow extends PersistentProjectileEntity {
 
         if (this.getOwner() instanceof LivingEntity owner) {
             float damage = (float) owner.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-            target.damage(this.getWorld().getDamageSources().mobAttack(owner), damage);
+            if (target instanceof HostileEntity) {
+                target.damage(this.getWorld().getDamageSources().mobAttack(owner), damage * 2);
+            } else {
+                target.damage(this.getWorld().getDamageSources().mobAttack(owner), damage);
+            }
         }
 
         if (target instanceof LivingEntity livingTarget) {
@@ -218,7 +223,11 @@ public class WandererArrow extends PersistentProjectileEntity {
 
                 if (this.getOwner() instanceof LivingEntity ownerEntity) {
                     float damage = (float) ownerEntity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
-                    target.damage(this.getWorld().getDamageSources().mobAttack(ownerEntity), damage);
+                    if (target instanceof HostileEntity) {
+                        target.damage(this.getWorld().getDamageSources().mobAttack(ownerEntity), damage * 2);
+                    } else {
+                        target.damage(this.getWorld().getDamageSources().mobAttack(ownerEntity), damage);
+                    }
                 }
             }
         }

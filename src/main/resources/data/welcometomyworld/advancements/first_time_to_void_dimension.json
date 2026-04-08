@@ -1,0 +1,23 @@
+{
+  "parent": "welcometomyworld:first_time_to_void_dimension",
+  "display": {
+    "title": {
+      "text": "You Shouldn't Be Here!"
+    },
+    "description": {
+      "text": "Get out as fast as you can!"
+    },
+    "icon": {
+      "item": "welcometomyworld:pure_black_block"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived_1000_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

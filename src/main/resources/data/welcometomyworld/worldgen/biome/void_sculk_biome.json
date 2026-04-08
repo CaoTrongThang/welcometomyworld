@@ -27,6 +27,30 @@
                 "weight": 1,
                 "minCount": 1,
                 "maxCount": 1
+            },
+            {
+                "type": "deeperdarker:sculk_centipede",
+                "weight": 5,
+                "minCount": 1,
+                "maxCount": 2
+            },
+            {
+                "type": "deeperdarker:sculk_leech",
+                "weight": 10,
+                "minCount": 3,
+                "maxCount": 10
+            },
+            {
+                "type": "deeperdarker:shattered",
+                "weight": 10,
+                "minCount": 1,
+                "maxCount": 2
+            },
+            {
+                "type": "deeperdarker:sludge",
+                "weight": 5,
+                "minCount": 1,
+                "maxCount": 2
             }
         ]
     },

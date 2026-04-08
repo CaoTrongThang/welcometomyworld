@@ -844,7 +844,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                         target.addVelocity(pushBackDirection.x * 0.2f, 0.1f, pushBackDirection.z * 0.2f);
                     }
                     target.disablesShield();
-                    target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
+                    DamageTarget(target, damage);
                 }
             }
         }
