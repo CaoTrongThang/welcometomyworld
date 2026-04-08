@@ -24,6 +24,12 @@ import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.SummoningCircleRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.GroundSlashAttackRenderer;
 import com.trongthang.welcometomyworld.entities.client.VoidBlockRenderer;
+import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormModel;
+import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormRenderer;
+import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormBodyModel;
+import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormBodyRenderer;
+import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormTailModel;
+import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormTailRenderer;
 import com.trongthang.welcometomyworld.blockentities.VoidBlockEntity;
 import com.trongthang.welcometomyworld.managers.BlocksEntitiesManager;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
@@ -114,6 +120,10 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.SUMMONING_CIRCLE, SummoningCircleRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.GROUND_SLASH_ATTACK, GroundSlashAttackRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.FALLING_SKELETON, FallingSkeletonRenderer::new);
+
+                EntityRendererRegistry.register(EntitiesManager.VOID_WORM, VoidWormRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.VOID_WORM_BODY, VoidWormBodyRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.VOID_WORM_TAIL, VoidWormTailRenderer::new);
 
                 BlockEntityRendererFactories.register(BlocksEntitiesManager.VOID_BLOCK_ENTITY, VoidBlockRenderer::new);
         }

@@ -9,6 +9,8 @@ import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import com.trongthang.welcometomyworld.entities.Unknown.SummoningCircleEntity;
 import com.trongthang.welcometomyworld.entities.GroundSlashAttackEntity;
 import com.trongthang.welcometomyworld.entities.FallingSkeleton.FallingSkeleton;
+import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
+import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormPartEntity;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -141,6 +143,27 @@ public class EntitiesManager {
                                         .dimensions(EntityDimensions.fixed(0.6f, 1.99f))
                                         .build());
 
+        public static final EntityType<VoidWormEntity> VOID_WORM = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm"),
+                        FabricEntityTypeBuilder.<VoidWormEntity>create(SpawnGroup.MONSTER, VoidWormEntity::new)
+                                        .dimensions(EntityDimensions.fixed(1.5f, 1.5f))
+                                        .build());
+
+        public static final EntityType<VoidWormPartEntity> VOID_WORM_BODY = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_body"),
+                        FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
+                                        .dimensions(EntityDimensions.fixed(1.5f, 1.5f))
+                                        .build());
+
+        public static final EntityType<VoidWormPartEntity> VOID_WORM_TAIL = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_tail"),
+                        FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
+                                        .dimensions(EntityDimensions.fixed(1.5f, 1.5f))
+                                        .build());
+
         public static void register() {
                 // FabricDefaultAttributeRegistry.register(A_LIVING_LOG, setAttributes(8, 0.1));
 
@@ -161,6 +184,10 @@ public class EntitiesManager {
                 FabricDefaultAttributeRegistry.register(UNKNOWN, Unknown.setAttributes());
 
                 FabricDefaultAttributeRegistry.register(FALLING_SKELETON, FallingSkeleton.setAttributes());
+
+                FabricDefaultAttributeRegistry.register(VOID_WORM, VoidWormEntity.setAttributes());
+                FabricDefaultAttributeRegistry.register(VOID_WORM_BODY, VoidWormPartEntity.setAttributes());
+                FabricDefaultAttributeRegistry.register(VOID_WORM_TAIL, VoidWormPartEntity.setAttributes());
 
                 addSpawn();
 
