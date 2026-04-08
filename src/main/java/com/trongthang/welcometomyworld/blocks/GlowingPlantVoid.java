@@ -29,10 +29,10 @@ public class GlowingPlantVoid extends FernBlock {
         super.onEntityCollision(state, world, pos, entity);
 
         if (!world.isClient && entity instanceof LivingEntity livingEntity) {
-            LOGGER.info("Entity collided with glowing plant void");
-
             for (StatusEffect effect : effects) {
-                livingEntity.addStatusEffect(new StatusEffectInstance(effect, duration, 0));
+                if (effect != null) {
+                    livingEntity.addStatusEffect(new StatusEffectInstance(effect, duration, 0));
+                }
             }
         }
     }
