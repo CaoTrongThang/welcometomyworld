@@ -6,6 +6,7 @@ import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
 import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
 import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.entities.Unknown.SummoningCircleEntity;
 import com.trongthang.welcometomyworld.entities.FallingSkeleton.FallingSkeleton;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -81,7 +82,7 @@ public class EntitiesManager {
                                                         (EntityType<WandererArrow> type,
                                                                         World world) -> new WandererArrow(type, world))
                                         .dimensions(EntityDimensions.fixed(0.5f, 0.5f)) // Adjust size as needed
-                                        .trackRangeBlocks(4).trackedUpdateRate(20) // Tracking range and update rate
+                                        .trackRangeBlocks(128).trackedUpdateRate(20) // Tracking range and update rate
                                         .build());
 
         public static final EntityType<Blossom> BLOSSOM = Registry.register(
@@ -97,6 +98,7 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "unknown"),
                         FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, Unknown::new)
                                         .dimensions(EntityDimensions.changing(0.8f, 2f)) // Basic dimensions
+                                        .fireImmune()
                                         .build());
 
         public static final EntityType<BlockSlamGroundEntity> BLOCK_SLAM_GROUND = Registry.register(
@@ -111,6 +113,15 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "unknown_beam"),
                         FabricEntityTypeBuilder.<UnknownBeamEntity>create(SpawnGroup.MISC, UnknownBeamEntity::new)
                                         .dimensions(EntityDimensions.fixed(0.5f, 0.5f))
+                                        .trackRangeBlocks(256)
+                                        .build());
+
+        public static final EntityType<SummoningCircleEntity> SUMMONING_CIRCLE = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "summoning_circle"),
+                        FabricEntityTypeBuilder
+                                        .<SummoningCircleEntity>create(SpawnGroup.MISC, SummoningCircleEntity::new)
+                                        .dimensions(EntityDimensions.fixed(1.0f, 1.0f))
                                         .build());
 
         public static final EntityType<FallingSkeleton> FALLING_SKELETON = Registry.register(

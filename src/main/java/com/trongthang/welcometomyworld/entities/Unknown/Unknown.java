@@ -96,6 +96,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
     public static final Skill GRAB_JUMP_SLAM = new Skill(13, 80, 200);
     public static final Skill KAMEHAMEHA = new Skill(20, 80, 200);
     public static final Skill UNKNOWN_JUMP_BACK = new Skill(5, 20, 150);
+    public static final Skill UNKNOWN_SUMMONING_CIRCLE = new Skill(22, 240, 400);
 
     private static final int PUNCH_HIT_TICK = 20;
     private static final int LEG_TRIP_HIT_TICK = 8;
@@ -233,6 +234,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_kamehameha"));
                     case 21: // UNKNOWN_JUMP_BACK
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_jump_back"));
+                    case 22: // UNKNOWN_SUMMONING_CIRCLE
+                        // Use taunt or idle if unknown_summoning_circle is missing in json
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_taunt"));
                 }
             }
             prevSkillId[0] = 0;
@@ -394,8 +398,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         }
                     } else {
                         boolean canJump = canUseSkill(JUMP_HIGH);
+                        boolean canCircle = canUseSkill(UNKNOWN_SUMMONING_CIRCLE);
 
-                        if (canJump) {
+                        if (canCircle && random < 0.9) {
+                            triggerSkill(UNKNOWN_SUMMONING_CIRCLE);
+                        } else if (canJump) {
                             triggerSkill(JUMP_HIGH);
                         }
                     }
@@ -613,6 +620,34 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     this.removeAllPassengers();
                 }
                 break;
+            case 22: // UNKNOWN_SUMMONING_CIRCLE
+                if (!skillHitFired && skillTick >= 22 && skillTick <= 180) {
+                    if (skillTick % 12 == 0) { // Summon one every 12 ticks
+                        if (this.getWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+                            com.trongthang.welcometomyworld.entities.Unknown.SummoningCircleEntity circle = new com.trongthang.welcometomyworld.entities.Unknown.SummoningCircleEntity(
+                                    com.trongthang.welcometomyworld.managers.EntitiesManager.SUMMONING_CIRCLE,
+                                    serverWorld);
+                            circle.setOwner(this);
+                            circle.setMaxAge(100 + this.random.nextInt(60));
+
+                            // Calculate position around the target (pivot)
+                            LivingEntity target = this.getTarget();
+                            if (target != null) {
+                                double dist = 12.0 + Math.random() * 12.0; // Increased distance
+                                double yaw = Math.random() * 360;
+                                double rad = Math.toRadians(yaw);
+                                double offsetX = -Math.sin(rad) * dist;
+                                double offsetZ = Math.cos(rad) * dist;
+                                double offsetY = 1.0 + Math.random() * 6; // Slightly higher than player
+
+                                circle.setPosition(target.getX() + offsetX, target.getY() + offsetY,
+                                        target.getZ() + offsetZ);
+                                serverWorld.spawnEntity(circle);
+                            }
+                        }
+                    }
+                }
+                break;
             case 4: // LEG_TRIP
                 if (!skillHitFired && skillTick >= LEG_TRIP_HIT_TICK) {
                     skillHitFired = true;
@@ -817,7 +852,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
             {
                 if (skillTick == 21) {
                     UnknownBeamEntity beam = new UnknownBeamEntity(EntitiesManager.UNKNOWN_BEAM, this.getWorld());
-                    beam.setOwner(this);
+                    beam.setPosOwner(this);
+                    beam.setDamageOwner(this);
                     beam.setLength(50.0f); // Longer
                     beam.setRadius(3.5f); // Thicker
                     beam.setDamage((float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
@@ -1277,7 +1313,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         this.setVelocity(impulseX * dodgeSpeed, this.getVelocity().y, impulseZ * dodgeSpeed);
         this.velocityModified = true;
 
-        this.triggerDash(dodgeLeft, 15);
+        this.triggerDash(dodgeLeft, 10);
         this.dodgeCooldown = 40;
     }
 

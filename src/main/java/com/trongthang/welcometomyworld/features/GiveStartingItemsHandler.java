@@ -87,8 +87,8 @@ public class GiveStartingItemsHandler {
             ItemStack oldItem = inv.getStack(slot);
 
             if (!oldItem.isEmpty()) {
-                ItemStack copy = oldItem.copy(); // 🔥 QUAN TRỌNG
-                inv.setStack(slot, ItemStack.EMPTY); // clear slot trước
+                ItemStack copy = oldItem.copy();
+                inv.setStack(slot, ItemStack.EMPTY);
 
                 if (!inv.insertStack(copy)) {
                     currentPlayer.dropItem(copy, false);

@@ -12,7 +12,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.UUID;
 
 public class UnknownBeamEntity extends Entity {
     private static final TrackedData<Float> LENGTH = DataTracker.registerData(UnknownBeamEntity.class,
@@ -22,16 +21,21 @@ public class UnknownBeamEntity extends Entity {
     private static final TrackedData<Float> DAMAGE = DataTracker.registerData(UnknownBeamEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
 
-    private UUID ownerUuid;
-    private int maxAge = 40; // 60 - 21 + 1
+    private java.util.UUID posOwnerUuid;
+    private java.util.UUID damageOwnerUuid;
+    private int maxAge = 80; // 4 seconds
 
     public UnknownBeamEntity(EntityType<?> type, World world) {
         super(type, world);
         this.noClip = true;
     }
 
-    public void setOwner(LivingEntity owner) {
-        this.ownerUuid = owner.getUuid();
+    public void setPosOwner(Entity owner) {
+        this.posOwnerUuid = owner.getUuid();
+    }
+
+    public void setDamageOwner(LivingEntity owner) {
+        this.damageOwnerUuid = owner.getUuid();
     }
 
     public void setLength(float length) {
@@ -79,26 +83,33 @@ public class UnknownBeamEntity extends Entity {
             return;
         }
 
-        LivingEntity owner = null;
-        if (ownerUuid != null) {
-            owner = (LivingEntity) ((net.minecraft.server.world.ServerWorld) this.getWorld()).getEntity(ownerUuid);
+        Entity posOwner = null;
+        if (posOwnerUuid != null) {
+            posOwner = ((net.minecraft.server.world.ServerWorld) this.getWorld()).getEntity(posOwnerUuid);
         }
 
-        if (owner == null || !owner.isAlive()) {
+        if (posOwner == null || !posOwner.isAlive()) {
             this.discard();
             return;
         }
 
-        // Update position to owner's eyes
-        Vec3d eyePos = owner.getEyePos();
-        Vec3d lookVec = owner.getRotationVec(1.0f);
+        LivingEntity damageOwner = null;
+        if (damageOwnerUuid != null) {
+            Entity e = ((net.minecraft.server.world.ServerWorld) this.getWorld()).getEntity(damageOwnerUuid);
+            if (e instanceof LivingEntity)
+                damageOwner = (LivingEntity) e;
+        }
+
+        // Update position to posOwner's eyes
+        Vec3d eyePos = posOwner.getEyePos();
+        Vec3d lookVec = posOwner.getRotationVec(1.0f);
         this.setPosition(eyePos.add(lookVec.multiply(0.5))); // Offset slightly forward
-        this.setYaw(owner.getYaw());
-        this.setPitch(owner.getPitch());
+        this.setYaw(posOwner.getYaw());
+        this.setPitch(posOwner.getPitch());
 
         // Perform damage
         if (this.age % 2 == 0) {
-            damageInBeam(owner);
+            damageInBeam(damageOwner);
         }
     }
 
@@ -134,16 +145,22 @@ public class UnknownBeamEntity extends Entity {
 
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
-        if (nbt.contains("Owner")) {
-            this.ownerUuid = nbt.getUuid("Owner");
+        if (nbt.contains("PosOwner")) {
+            this.posOwnerUuid = nbt.getUuid("PosOwner");
+        }
+        if (nbt.contains("DamageOwner")) {
+            this.damageOwnerUuid = nbt.getUuid("DamageOwner");
         }
         this.maxAge = nbt.getInt("MaxAge");
     }
 
     @Override
     protected void writeCustomDataToNbt(NbtCompound nbt) {
-        if (this.ownerUuid != null) {
-            nbt.putUuid("Owner", this.ownerUuid);
+        if (this.posOwnerUuid != null) {
+            nbt.putUuid("PosOwner", this.posOwnerUuid);
+        }
+        if (this.damageOwnerUuid != null) {
+            nbt.putUuid("DamageOwner", this.damageOwnerUuid);
         }
         nbt.putInt("MaxAge", this.maxAge);
     }

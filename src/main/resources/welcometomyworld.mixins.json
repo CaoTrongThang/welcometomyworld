@@ -48,7 +48,8 @@
 		"entity.VoidDimensionDamageMixin",
 		"entity.VoidHostileSpawnMixin",
 		"world.VoidSpawnRestrictionMixin",
-		"entity.LivingEntityMixin"
+		"entity.LivingEntityMixin",
+		"entity.WitherSkullNoGriefMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
