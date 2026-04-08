@@ -1,0 +1,28 @@
+{
+  "parent": "welcometomyworld:root",
+  "display": {
+    "title": {
+      "text": "Defeat the Unknown"
+    },
+    "description": {
+      "text": "You wanted a new world, and now you want to destroy it?"
+    },
+    "icon": {
+      "item": "welcometomyworld:unknown_hood"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "kill_unknown": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": {
+          "type": "welcometomyworld:unknown"
+        }
+      }
+    }
+  }
+}

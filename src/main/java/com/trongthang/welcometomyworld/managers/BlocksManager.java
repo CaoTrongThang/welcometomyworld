@@ -7,6 +7,8 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FernBlock;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
@@ -71,12 +73,14 @@ public class BlocksManager {
                                         .requiresTool()));
 
         public static final Block GLOWING_WHITE_GRASS = registerBlock("glowing_white_grass",
-                        new CustomPlantBlock(FabricBlockSettings.copyOf(Blocks.GRASS)
-                                        .emissiveLighting((state, world, pos) -> true)));
+                        new GlowingPlantVoid(FabricBlockSettings.copyOf(Blocks.GRASS)
+                                        .emissiveLighting((state, world, pos) -> true), 300,
+                                        new StatusEffect[] { EffectsManager.VOID_SIGHT, StatusEffects.BLINDNESS }));
 
         public static final Block GLOWING_PURPLE_GRASS = registerBlock("glowing_purple_grass",
-                        new CustomPlantBlock(FabricBlockSettings.copyOf(Blocks.GRASS)
-                                        .emissiveLighting((state, world, pos) -> true)));
+                        new GlowingPlantVoid(FabricBlockSettings.copyOf(Blocks.GRASS)
+                                        .emissiveLighting((state, world, pos) -> true), 1200,
+                                        new StatusEffect[] { EffectsManager.VOID_SIGHT, StatusEffects.WITHER }));
 
         public static final Block GAMING_DISC_TROPHY = registerBlock("trophies/gaming_disc_trophy",
                         new TrophyBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)

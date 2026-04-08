@@ -28,7 +28,7 @@ public class EffectArmorItem extends ArmorItem {
                 // Check if the player is actually wearing this piece of armor
                 if (hasCorrectArmorOn(player)) {
                     // Apply effect for 6 seconds (120 ticks) so it doesn't flicker
-                    player.addStatusEffect(new StatusEffectInstance(this.statusEffect, 120, 0, false, false, true));
+                    player.addStatusEffect(new StatusEffectInstance(this.statusEffect, 400, 0, false, false, true));
                 }
             }
         }

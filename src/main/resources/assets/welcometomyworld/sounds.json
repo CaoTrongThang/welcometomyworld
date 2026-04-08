@@ -309,5 +309,13 @@
         "attenuation_distance": 128
       }
     ]
+  },
+  "explode_punch": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:unknown/explode_punch",
+        "attenuation_distance": 128
+      }
+    ]
   }
 }

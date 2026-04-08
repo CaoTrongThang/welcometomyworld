@@ -65,6 +65,7 @@ public class SoundsManager {
     public static final SoundEvent SPEAR_ATTACK_5 = registerSoundEvent("spear_attack_5");
     public static final SoundEvent SUMMON_CIRCLE = registerSoundEvent("summon_circle");
     public static final SoundEvent WHOOSH_1 = registerSoundEvent("whoosh_1");
+    public static final SoundEvent EXPLODE_PUNCH = registerSoundEvent("explode_punch");
 
     private static SoundEvent registerSoundEvent(String name) {
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);

@@ -250,20 +250,20 @@ public class EntitiesManager {
                 // 1,
                 // 1);
 
-                // BiomeModifications.addSpawn(
-                // context -> {
-                // Identifier biomeId = context.getBiomeKey().getValue();
-                // // Only allow spawns in biomes from the "twilightforest" namespace
-                // // and exclude the "stream" biome.
-                // return biomeId.getNamespace().equals("twilightforest")
-                // && !biomeId.getPath().equals("stream")
-                // && !biomeId.getPath().equals("swamp");
-                // },
-                // SpawnGroup.CREATURE,
-                // WANDERER,
-                // 3,
-                // 1,
-                // 1);
+                BiomeModifications.addSpawn(
+                                context -> {
+                                        Identifier biomeId = context.getBiomeKey().getValue();
+                                        // Only allow spawns in biomes from the "twilightforest" namespace
+                                        // and exclude the "stream" biome.
+                                        return biomeId.getNamespace().equals("void_dim")
+                                                        && !biomeId.getPath().equals("void_sculk_biome")
+                                                        && !biomeId.getPath().equals("void_nether_biome");
+                                },
+                                SpawnGroup.CREATURE,
+                                WANDERER,
+                                1,
+                                1,
+                                1);
 
                 BiomeModifications.addSpawn(
                                 context -> {

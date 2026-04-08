@@ -16,6 +16,7 @@ import software.bernie.geckolib.renderer.layer.BlockAndItemGeoLayer;
 public class UnknownRenderer extends GeoEntityRenderer<Unknown> {
     public UnknownRenderer(EntityRendererFactory.Context renderManager) {
         super(renderManager, new UnknownModel());
+        this.shadowRadius = 0.7f;
 
         this.addRenderLayer(new BlockAndItemGeoLayer<>(this) {
             @Nullable

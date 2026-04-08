@@ -25,11 +25,13 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.entity.ai.pathing.PathNodeType;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import com.trongthang.welcometomyworld.entities.UnknownBeamEntity;
 import com.trongthang.welcometomyworld.entities.GroundSlashAttackEntity;
@@ -192,8 +194,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D) // 0 for testing
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 50f)
-                .add(EntityAttributes.GENERIC_ARMOR, 20f)
-                .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10f);
+                .add(EntityAttributes.GENERIC_ARMOR, 30f)
+                .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 20f);
     }
 
     @Override
@@ -384,11 +386,12 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 } else if (dist <= 8.0) {
                     // To add a phase-2 skill: new Object[]{MY_SKILL, 30f, healthFraction() <= 0.5f}
                     Skill picked = pickWeightedSkill(
-                            new Object[] { PUNCH, 50, true },
+                            new Object[] { PUNCH, 10000, true },
                             new Object[] { GROUND_SLAM_KICK, 50, true },
                             new Object[] { LEG_TRIP, 50, true },
-                            new Object[] { UNKNOWN_SPEAR_3_HITS, 10000, true },
-                            new Object[] { UNKNOWN_JUMP_BACK, 50, true });
+                            new Object[] { UNKNOWN_SPEAR_3_HITS, 50, healthFraction() <= 0.8f },
+                            new Object[] { UNKNOWN_JUMP_BACK, 50, healthFraction() <= 0.8f },
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 10f, healthFraction() <= 0.3f });
                     if (picked != null)
                         triggerSkill(picked);
 
@@ -396,7 +399,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 } else if (dist <= 20.0) {
                     Skill picked = pickWeightedSkill(
                             new Object[] { DASH_FORWARD, 40f, true },
-                            new Object[] { UNKNOWN_SPEAR_STAB, 10000, true });
+                            new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f });
                     if (picked != null)
                         triggerSkill(picked);
 
@@ -405,14 +408,14 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     Skill picked = pickWeightedSkill(
                             new Object[] { JUMP_HIGH, 30f, true },
                             new Object[] { PUNCH, 20f, true },
-                            new Object[] { KAMEHAMEHA, 20f, healthFraction() <= 0.7f });
+                            new Object[] { KAMEHAMEHA, 30f, healthFraction() <= 0.6f });
                     if (picked != null)
                         triggerSkill(picked);
 
                     // Case 5: Very far range (>30)
                 } else {
                     Skill picked = pickWeightedSkill(
-                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 10000f, true },
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 15f, healthFraction() <= 0.3f },
                             new Object[] { JUMP_HIGH, 40f, true });
                     if (picked != null)
                         triggerSkill(picked);
@@ -496,6 +499,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
                 break;
             case 1: // PUNCH
+                if (skillTick == PUNCH_HIT_TICK - 10) {
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.EXPLODE_PUNCH, this.getSoundCategory(), 1.0F,
+                            MathHelper.nextBetween(this.random, 0.8F, 1.2F));
+                }
                 if (!skillHitFired && skillTick >= PUNCH_HIT_TICK) {
                     skillHitFired = true;
                     dealLinearShockwaveDamage(3.0, 40.0,
@@ -531,6 +539,10 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, tx, ty + 1, tz, 15, 0.5, 1.0, 0.5,
                                     0.05);
                         }
+
+                        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                SoundsManager.WHOOSH_1, this.getSoundCategory(), 0.1F,
+                                (float) (0.8 + Math.random() * 0.4));
                     }
                 }
                 break;
@@ -652,7 +664,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                                         target.getZ() + offsetZ);
                                 serverWorld.spawnEntity(circle);
                                 this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
-                                        SoundsManager.SUMMON_CIRCLE, this.getSoundCategory(), 0.5F,
+                                        SoundsManager.SUMMON_CIRCLE, this.getSoundCategory(), 0.2F,
                                         (float) (0.8 + Math.random() * 0.4));
                             }
                         }
@@ -669,6 +681,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     for (LivingEntity entity : entities) {
                         entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 255));
                     }
+
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.DASH_CAPE, this.getSoundCategory(), 1.0F, 1.0F);
 
                 }
                 break;
@@ -918,6 +933,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     this.setVelocity(-look.x * jumpBackForce, jumpHeightForce, -look.z * jumpBackForce);
                     this.velocityModified = true;
 
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.DASH_CAPE, this.getSoundCategory(), 1.0F, 1.0F);
+
                 }
 
                 // Chance to PUNCH during jump back (tick 12 approx mid-air/descending)
@@ -1023,7 +1041,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     else
                         triggerSkill(LEG_TRIP);
                 } else if (canGrab) {
-                    triggerSkill(GRAB_JUMP_SLAM);
+                    // check if play is active shield
+                    LivingEntity target = this.getTarget();
+                    if (target instanceof PlayerEntity player) {
+                        if (player.isBlocking() && player.getActiveItem().getItem() instanceof ShieldItem) {
+                            triggerSkill(STEAL_ITEM);
+                        } else {
+                            triggerSkill(GRAB_JUMP_SLAM);
+                        }
+                    }
                 } else if (canTrip) {
                     triggerSkill(LEG_TRIP);
                 } else {
@@ -1460,7 +1486,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         this.triggerDash(dodgeLeft, 10);
         this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
-                SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
+                SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, MathHelper.nextBetween(this.random, 0.8F, 1.2F));
         this.dodgeCooldown = 40;
     }
 
@@ -1476,7 +1502,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean shouldDropXp() {
-        return false;
+        return true;
     }
 
     @Override
@@ -1486,7 +1512,12 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     @Override
     protected boolean shouldDropLoot() {
-        return false;
+        return true;
+    }
+
+    @Override
+    protected Identifier getLootTableId() {
+        return new Identifier("welcometomyworld", "entities/unknown");
     }
 
     @Override
