@@ -147,21 +147,21 @@ public class EntitiesManager {
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm"),
                         FabricEntityTypeBuilder.<VoidWormEntity>create(SpawnGroup.MONSTER, VoidWormEntity::new)
-                                        .dimensions(EntityDimensions.fixed(1.5f, 1.5f))
+                                        .dimensions(EntityDimensions.fixed(8.0f, 8.0f))
                                         .build());
 
         public static final EntityType<VoidWormPartEntity> VOID_WORM_BODY = Registry.register(
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_body"),
                         FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
-                                        .dimensions(EntityDimensions.fixed(1.5f, 1.5f))
+                                        .dimensions(EntityDimensions.fixed(6.0f, 6.0f))
                                         .build());
 
         public static final EntityType<VoidWormPartEntity> VOID_WORM_TAIL = Registry.register(
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_tail"),
                         FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
-                                        .dimensions(EntityDimensions.fixed(1.5f, 1.5f))
+                                        .dimensions(EntityDimensions.fixed(6.0f, 6.0f))
                                         .build());
 
         public static void register() {
