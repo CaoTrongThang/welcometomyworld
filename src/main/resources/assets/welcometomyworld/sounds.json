@@ -314,7 +314,23 @@
     "sounds": [
       {
         "name": "welcometomyworld:unknown/explode_punch",
-        "attenuation_distance": 128
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "void_worm_ambient_1": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/void_worm_ambient_1",
+        "attenuation_distance": 258
+      }
+    ]
+  },
+  "monster_roar": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/monster_roar",
+        "attenuation_distance": 258
       }
     ]
   }

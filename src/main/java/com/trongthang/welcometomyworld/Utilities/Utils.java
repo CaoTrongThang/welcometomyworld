@@ -28,6 +28,8 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Properties;
@@ -175,6 +177,34 @@ public class Utils {
                 SoundCategory.HOSTILE,
                 volume,
                 pitch);
+    }
+
+    /**
+     * Plays a sound at an entity's position with far reach.
+     * Sends the packet directly to all players within maxRange blocks,
+     * scaling volume from maxVolume (at 0 distance) down to 0 (at maxRange).
+     */
+    public static void playFarSound(ServerWorld world, Entity source, SoundEvent sound,
+            SoundCategory category, float maxVolume, float pitch, double maxRange) {
+        RegistryEntry<SoundEvent> soundEntry = RegistryEntry.of(sound);
+
+        double maxRangeSq = maxRange * maxRange;
+        long seed = world.getRandom().nextLong();
+        double x = source.getX(), y = source.getY(), z = source.getZ();
+
+        for (ServerPlayerEntity player : world.getPlayers()) {
+            double distSq = player.squaredDistanceTo(x, y, z);
+            if (distSq > maxRangeSq)
+                continue;
+
+            float dist = (float) Math.sqrt(distSq);
+            // Linear fade: full volume at 0, silent at maxRange
+            float scaledVolume = maxVolume * (1.0f - dist / (float) maxRange);
+            scaledVolume = Math.max(scaledVolume, 0.01f);
+
+            player.networkHandler.sendPacket(new PlaySoundS2CPacket(
+                    soundEntry, category, x, y, z, scaledVolume, pitch, seed));
+        }
     }
 
     public static void playSound(World world, BlockPos pos, SoundEvent soundEvent) {

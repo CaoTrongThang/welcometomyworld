@@ -84,9 +84,10 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "controller", 5, state -> {
-            // we can check if it's body or tail based on its type if needed, or both use
-            // same anim name
-            return state.setAndContinue(RawAnimation.begin().thenLoop("void_worm_body_idle"));
+            String animName = this.getType() == com.trongthang.welcometomyworld.managers.EntitiesManager.VOID_WORM_TAIL
+                    ? "void_worm_tail_idle"
+                    : "void_worm_body_idle";
+            return state.setAndContinue(RawAnimation.begin().thenLoop(animName));
         }));
     }
 

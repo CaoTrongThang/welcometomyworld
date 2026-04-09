@@ -28,19 +28,20 @@ import static com.trongthang.welcometomyworld.client.WelcomeToMyWorldClient.skul
 public class PacketHandlerClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        ClientPlayNetworking.registerGlobalReceiver(A_LIVING_CHEST_EAT_ANIMATION, (client, handler, buf, responseSender) -> {
-            // Read data on the network thread while the buffer is valid
-            int entityId = buf.readInt();
+        ClientPlayNetworking.registerGlobalReceiver(A_LIVING_CHEST_EAT_ANIMATION,
+                (client, handler, buf, responseSender) -> {
+                    // Read data on the network thread while the buffer is valid
+                    int entityId = buf.readInt();
 
-            client.execute(() -> {
-                // Use the extracted data on the main thread
-                assert client.world != null;
-                Entity entity = client.world.getEntityById(entityId);
-                if (entity instanceof Enderchester) {
-                    ((Enderchester) entity).startAnimation(AnimationName.EAT_ITEMS, 30);
-                }
-            });
-        });
+                    client.execute(() -> {
+                        // Use the extracted data on the main thread
+                        assert client.world != null;
+                        Entity entity = client.world.getEntityById(entityId);
+                        if (entity instanceof Enderchester) {
+                            ((Enderchester) entity).startAnimation(AnimationName.EAT_ITEMS, 30);
+                        }
+                    });
+                });
 
         ClientPlayNetworking.registerGlobalReceiver(SOUND_PACKET_ID, (client, handler, buf, responseSender) -> {
             double x = buf.readDouble();
@@ -48,22 +49,24 @@ public class PacketHandlerClient implements ClientModInitializer {
             double z = buf.readDouble();
             Identifier soundId = buf.readIdentifier();
 
-            Utils.playClientSound(new BlockPos((int)x,(int)y,(int)z), Registries.SOUND_EVENT.get(soundId), 16, 0.5f, 1f);
+            Utils.playClientSound(new BlockPos((int) x, (int) y, (int) z), Registries.SOUND_EVENT.get(soundId), 16,
+                    0.5f, 1f);
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(A_LIVING_CHEST_MOUTH_OPEN, (client, handler, buf, responseSender) -> {
-            // Read data on the network thread while the buffer is valid
-            int entityId = buf.readInt();
+        ClientPlayNetworking.registerGlobalReceiver(A_LIVING_CHEST_MOUTH_OPEN,
+                (client, handler, buf, responseSender) -> {
+                    // Read data on the network thread while the buffer is valid
+                    int entityId = buf.readInt();
 
-            client.execute(() -> {
-                // Use the extracted data on the main thread
-                assert client.world != null;
-                Entity entity = client.world.getEntityById(entityId);
-                if (entity instanceof Enderchester) {
-                    ((Enderchester) entity).setIsOpeningChestData(true);
-                }
-            });
-        });
+                    client.execute(() -> {
+                        // Use the extracted data on the main thread
+                        assert client.world != null;
+                        Entity entity = client.world.getEntityById(entityId);
+                        if (entity instanceof Enderchester) {
+                            ((Enderchester) entity).setIsOpeningChestData(true);
+                        }
+                    });
+                });
 
         ClientPlayNetworking.registerGlobalReceiver(A_LIVING_CHEST_JUMP, (client, handler, buf, responseSender) -> {
             // Read data on the network thread while the buffer is valid
@@ -105,7 +108,7 @@ public class PacketHandlerClient implements ClientModInitializer {
                 assert client.world != null;
                 Entity entity = client.world.getEntityById(entityId);
                 if (entity instanceof StartAnimation) {
-                    ((StartAnimation)entity).startAnimation(anm, timeOut);
+                    ((StartAnimation) entity).startAnimation(anm, timeOut);
                 }
             });
         });
@@ -119,7 +122,8 @@ public class PacketHandlerClient implements ClientModInitializer {
                     TameableEntityInterface entityInterface = (TameableEntityInterface) tameableEntity;
 
                     // Refresh the screen if it's currently open
-                    if (client.currentScreen instanceof MobUpgradeScreen screen && screen.tameableEntity == tameableEntity) {
+                    if (client.currentScreen instanceof MobUpgradeScreen screen
+                            && screen.tameableEntity == tameableEntity) {
                         screen.init(client, client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
                     }
 
@@ -133,13 +137,15 @@ public class PacketHandlerClient implements ClientModInitializer {
                     entityInterface.setCurrentLevelExp(packet.currentLevelExp);
                     entityInterface.setPointAvailalble(packet.pointAvailable);
 
-                    tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(packet.damageStat);
+                    tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                            .setBaseValue(packet.damageStat);
                     tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).setBaseValue(packet.armorStat);
-                    tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(packet.healthStat);
-                    tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(packet.speedStat);
+                    tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
+                            .setBaseValue(packet.healthStat);
+                    tameableEntity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+                            .setBaseValue(packet.speedStat);
                 }
             });
         });
     }
 }
-

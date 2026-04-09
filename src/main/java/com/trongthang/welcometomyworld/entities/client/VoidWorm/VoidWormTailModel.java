@@ -21,7 +21,7 @@ public class VoidWormTailModel extends GeoModel<VoidWormPartEntity> {
 
     @Override
     public Identifier getAnimationResource(VoidWormPartEntity animatable) {
-        return new Identifier(WelcomeToMyWorld.MOD_ID, "animations/void_worm_head_anim.json");
+        return new Identifier(WelcomeToMyWorld.MOD_ID, "animations/void_worm_tail_anim.json");
     }
 
     @Override

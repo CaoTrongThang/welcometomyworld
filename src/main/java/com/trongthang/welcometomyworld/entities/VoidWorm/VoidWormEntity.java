@@ -23,7 +23,9 @@ import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
+import com.trongthang.welcometomyworld.managers.SoundsManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +41,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     public void registerPart(VoidWormPartEntity part) {
         if (!parts.contains(part)) {
             parts.add(part);
-            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("head_reg_part", "added part to head list",
-                    "part", part.getUuid());
         }
     }
 
@@ -59,6 +59,65 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private static final TrackedData<Float> TARGET_PITCH = DataTracker.registerData(VoidWormEntity.class,
             TrackedDataHandlerRegistry.FLOAT);
 
+    private static final TrackedData<Boolean> IS_USING_SKILL = DataTracker.registerData(VoidWormEntity.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Boolean> SKILL_PREPARING = DataTracker.registerData(VoidWormEntity.class,
+            TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Integer> SKILL_ID = DataTracker.registerData(VoidWormEntity.class,
+            TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> SKILL_TRIGGER = DataTracker.registerData(VoidWormEntity.class,
+            TrackedDataHandlerRegistry.INTEGER);
+
+    public static class Skill {
+        public int id;
+        public int length;
+        public int cooldown;
+
+        public Skill(int id, int length, int cooldown) {
+            this.id = id;
+            this.length = length;
+            this.cooldown = cooldown;
+        }
+    }
+
+    public static final Skill ROAR = new Skill(1, 120, 200);
+
+    private static final int ROAR_HIT_TICK = 25;
+
+    private boolean skillHitFired = false;
+    private int skillTotalTicks = 0;
+    private int skillTick = 0;
+    private int globalSkillCooldown = 0;
+    public int combatTicks = 0;
+
+    private final int[] skillCooldowns = new int[10];
+
+    public boolean canUseSkill(Skill skill) {
+        return skillCooldowns[skill.id] <= 0;
+    }
+
+    public boolean isUsingSkill() {
+        return this.dataTracker.get(IS_USING_SKILL);
+    }
+
+    public int getSkillId() {
+        return this.dataTracker.get(SKILL_ID);
+    }
+
+    public void triggerSkill(Skill skill) {
+        if (this.getWorld().isClient())
+            return;
+        this.dataTracker.set(IS_USING_SKILL, true);
+        this.dataTracker.set(SKILL_PREPARING, true);
+        this.dataTracker.set(SKILL_ID, skill.id);
+        this.dataTracker.set(SKILL_TRIGGER, this.dataTracker.get(SKILL_TRIGGER) + 1);
+        this.skillTick = 0;
+        this.skillTotalTicks = skill.length;
+        this.skillCooldowns[skill.id] = skill.cooldown;
+        this.globalSkillCooldown = 40;
+        this.skillHitFired = false;
+    }
+
     public VoidWormEntity(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
         this.noClip = true; // allow passing through blocks
@@ -69,15 +128,19 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     protected void initDataTracker() {
         super.initDataTracker();
         this.dataTracker.startTracking(TARGET_PITCH, 0.0f);
+        this.dataTracker.startTracking(IS_USING_SKILL, false);
+        this.dataTracker.startTracking(SKILL_PREPARING, false);
+        this.dataTracker.startTracking(SKILL_ID, 0);
+        this.dataTracker.startTracking(SKILL_TRIGGER, 0);
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 500.0D)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 1.0D)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 1.5D)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0f)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 100f);
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 150.0D);
     }
 
     @Override
@@ -88,8 +151,34 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        int[] prevSkillId = { 0 };
+        int[] prevSkillTrigger = { 0 };
+
         controllers.add(new AnimationController<>(this, "controller", 5, state -> {
-            return state.setAndContinue(RawAnimation.begin().thenLoop("void_worm_head_idle"));
+            boolean isUsingSkill = this.dataTracker.get(IS_USING_SKILL);
+            int skillId = this.dataTracker.get(SKILL_ID);
+
+            state.getController().setAnimationSpeed(1.0D);
+
+            if (isUsingSkill) {
+                int skillTrigger = this.dataTracker.get(SKILL_TRIGGER);
+
+                state.getController().transitionLength(5);
+                if (prevSkillId[0] != skillId || prevSkillTrigger[0] != skillTrigger) {
+                    state.getController().forceAnimationReset();
+                }
+                prevSkillId[0] = skillId;
+                prevSkillTrigger[0] = skillTrigger;
+
+                if (skillId == 1) { // ROAR
+                    return state.setAndContinue(RawAnimation.begin().thenPlay("void_worm_head_roar"));
+                }
+            }
+            prevSkillId[0] = 0;
+
+            state.getController().transitionLength(5);
+            // Fallback to 'moving' if 'void_worm_head_idle' is missing in the latest JSON
+            return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
         }));
     }
 
@@ -155,11 +244,162 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 partsSpawned = true;
             }
             updateParts();
+            skillsHandler();
+
+            if (this.getTarget() != null) {
+                combatTicks = 400; // 20 seconds of combat state retention when target is lost
+            } else if (combatTicks > 0) {
+                combatTicks--;
+            }
         } else {
             // Client side visual interpolation
             float targetP = this.dataTracker.get(TARGET_PITCH);
             this.visualPitch += MathHelper.wrapDegrees(targetP - this.visualPitch) * 0.3f;
             this.visualYaw += MathHelper.wrapDegrees(this.getYaw() - this.visualYaw) * 0.3f;
+        }
+    }
+
+    private void dealAoeDamage(double radius, float amount) {
+        net.minecraft.util.math.Box box = this.getBoundingBox().expand(radius);
+        List<LivingEntity> entities = this.getWorld().getEntitiesByClass(LivingEntity.class, box, entity -> {
+            return entity.isAlive() && !(entity instanceof VoidWormEntity) && !(entity instanceof VoidWormPartEntity);
+        });
+        for (LivingEntity entity : entities) {
+            double distSq = this.squaredDistanceTo(entity);
+            if (distSq <= radius * radius) {
+                entity.damage(this.getDamageSources().mobAttack(this), amount);
+            }
+        }
+    }
+
+    private float smoothAngle(float current, float target, float maxStep) {
+        float delta = MathHelper.wrapDegrees(target - current);
+        if (delta > maxStep)
+            delta = maxStep;
+        if (delta < -maxStep)
+            delta = -maxStep;
+        return current + delta;
+    }
+
+    private void skillsHandler() {
+        if (!isUsingSkill() && globalSkillCooldown > 0) {
+            globalSkillCooldown--;
+        }
+        for (int i = 0; i < skillCooldowns.length; i++) {
+            if (skillCooldowns[i] > 0) {
+                skillCooldowns[i]--;
+            }
+        }
+
+        if (isUsingSkill()) {
+            boolean isPreparing = this.dataTracker.get(SKILL_PREPARING);
+            int skillId = this.dataTracker.get(SKILL_ID);
+            LivingEntity target = getTarget();
+
+            if (skillId == 1) { // ROAR
+                if (target != null && target.isAlive()) {
+                    double targetX = target.getX();
+                    double targetY = target.getY() + 30.0D;
+                    double targetZ = target.getZ();
+
+                    if (isPreparing) {
+                        // Phase 1: Move to destination (40 blocks above target)
+                        Vec3d dir = new Vec3d(targetX - this.getX(), targetY - this.getY(), targetZ - this.getZ());
+                        double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
+                        if (dir.lengthSquared() > 0.1) {
+                            dir = dir.normalize();
+                        }
+
+                        double speed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 2.0;
+                        this.setVelocity(dir.multiply(speed));
+                        this.velocityModified = true;
+
+                        // Visual Look towards target while flying up
+                        double dx = targetX - this.getX();
+                        double dy = targetY - this.getY();
+                        double dz = targetZ - this.getZ();
+                        double horizontalDist = Math.sqrt(dx * dx + dz * dz);
+
+                        float targetYaw = (float) (MathHelper.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                        float targetPitch = (float) -(MathHelper.atan2(dy, horizontalDist) * (180.0 / Math.PI));
+
+                        this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
+                        this.setYaw(this.serverSideYaw);
+                        this.bodyYaw = this.getYaw();
+                        this.headYaw = this.getYaw();
+                        this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
+                        this.setPitch(this.serverSidePitch);
+                        this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
+
+                        // Check if reached destination (Y >= targetY - 4 and horizontal dist <= 8)
+                        if (this.getY() >= targetY - 4.0D && distXZ <= 8.0D) {
+                            // Reached destination! Stop preparing
+                            this.dataTracker.set(SKILL_PREPARING, false);
+                            this.setVelocity(0, 0, 0); // Stop
+                        }
+                    } else {
+                        skillTick++;
+
+                        // Hover
+                        double currentY = this.getY();
+                        double upVel = 0;
+                        if (currentY < targetY) {
+                            upVel = Math.min(2.0, targetY - currentY) * 0.2; // glide up smoothly
+                        } else if (currentY > targetY + 2.0D) {
+                            upVel = -0.1; // slowly drift down if overshooting
+                        }
+
+                        // Decelerate horizontal velocity gracefully so it stops
+                        this.setVelocity(this.getVelocity().x * 0.8, upVel, this.getVelocity().z * 0.8);
+                        this.velocityModified = true;
+
+                        // Look straight down, do NOT adjust yaw to avoid breaking neck
+                        this.serverSidePitch = -60.0F; // -90.0F looks straight down natively in many cases
+                        this.setPitch(this.serverSidePitch);
+                        this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
+
+                        if (skillTick == 1) {
+                            Utils.playFarSound((ServerWorld) this.getWorld(), this, SoundsManager.MONSTER_ROAR,
+                                    net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F, 84.0);
+                        }
+
+                        if (skillTick >= ROAR_HIT_TICK && skillTick <= 95) {
+                            if (skillTick % 10 == 0) { // Deal damage every 5 ticks
+                                dealAoeDamage(64.0,
+                                        (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.0f);
+                            }
+                        }
+                    }
+                } else {
+                    this.setVelocity(this.getVelocity().multiply(0.9D));
+                    this.velocityModified = true;
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_PREPARING, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
+            }
+
+            if (!this.dataTracker.get(SKILL_PREPARING) && skillTick >= skillTotalTicks) {
+                this.dataTracker.set(IS_USING_SKILL, false);
+                this.dataTracker.set(SKILL_ID, 0);
+            }
+            return;
+        }
+
+        // Trigger logic
+        if (globalSkillCooldown <= 0 && !isUsingSkill()) {
+            LivingEntity target = this.getTarget();
+            if (target != null && target.isAlive()) {
+                double distX = Math.abs(target.getX() - this.getX());
+                double distZ = Math.abs(target.getZ() - this.getZ());
+                double distY = Math.abs(target.getY() - this.getY());
+
+                // Only trigger if reasonably close horizontally and not astronomically far
+                // vertically
+                if (canUseSkill(ROAR) && distX < 64.0 && distZ < 64.0 && distY < 60.0) {
+                    triggerSkill(ROAR);
+                }
+            }
         }
     }
 
@@ -246,7 +486,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
         @Override
         public boolean canStart() {
-            return true;
+            return !worm.isUsingSkill();
+        }
+
+        @Override
+        public boolean shouldContinue() {
+            return !worm.isUsingSkill();
         }
 
         @Override
@@ -287,7 +532,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     float radPitch = randomPitch * ((float) Math.PI / 180F);
 
                     // Pick a far distant point
-                    double distance = 100.0 + worm.getRandom().nextDouble() * 100.0;
+                    double distance;
+                    if (worm.combatTicks > 0) {
+                        distance = 20.0 + worm.getRandom().nextDouble() * 40.0; // Reduced distance while in combat
+                    } else {
+                        distance = 100.0 + worm.getRandom().nextDouble() * 100.0;
+                    }
                     double x = worm.getX() - MathHelper.sin(radYaw) * MathHelper.cos(radPitch) * distance;
                     double y = worm.getY() - MathHelper.sin(radPitch) * distance;
                     double z = worm.getZ() + MathHelper.cos(radYaw) * MathHelper.cos(radPitch) * distance;

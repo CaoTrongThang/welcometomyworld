@@ -67,6 +67,9 @@ public class SoundsManager {
     public static final SoundEvent WHOOSH_1 = registerSoundEvent("whoosh_1");
     public static final SoundEvent EXPLODE_PUNCH = registerSoundEvent("explode_punch");
 
+    public static final SoundEvent VOID_WORM_AMBIENT_1 = registerSoundEvent("void_worm_ambient_1");
+    public static final SoundEvent MONSTER_ROAR = registerSoundEvent("monster_roar");
+
     private static SoundEvent registerSoundEvent(String name) {
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);
         return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));
