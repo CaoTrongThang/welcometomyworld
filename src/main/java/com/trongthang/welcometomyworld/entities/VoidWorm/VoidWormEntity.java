@@ -31,7 +31,9 @@ import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 public class VoidWormEntity extends HostileEntity implements GeoEntity {
@@ -42,13 +44,28 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private final List<VoidWormPartEntity> parts = new ArrayList<>();
     private boolean partsSpawned = false;
 
+    // Rolling position history for body-segment trail following
+    private static final int MAX_HISTORY = 400;
+    private final Deque<Vec3d> posHistoryDeque = new ArrayDeque<>(MAX_HISTORY + 1);
+    // Cached list view — rebuilt only when the deque changes, used by segments
+    private List<Vec3d> posHistorySnapshot = new ArrayList<>(MAX_HISTORY);
+    private boolean historyDirty = false;
+
+    public List<Vec3d> getPosHistory() {
+        if (historyDirty) {
+            posHistorySnapshot = new ArrayList<>(posHistoryDeque);
+            historyDirty = false;
+        }
+        return posHistorySnapshot;
+    }
+
     public void registerPart(VoidWormPartEntity part) {
         if (!parts.contains(part)) {
             parts.add(part);
         }
     }
 
-    private static final float PART_DISTANCE = 8f;
+    private static final float PART_DISTANCE = 10f;
 
     // Custom visual pitch to bypass vanilla LookControl pitch resetting
     public float visualPitch = 0.0f;
@@ -56,12 +73,13 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     public float visualYaw = 0.0f;
     public float prevVisualYaw = 0.0f;
 
+    // Client-side low-pass filtered velocity — eliminates per-tick noise before
+    // pitch is derived
+    private Vec3d smoothedVelocity = Vec3d.ZERO;
+
     // Server-side persistent rotation to avoid vanilla resetting pitch/yaw to 0
     private float serverSidePitch = 0.0f;
     private float serverSideYaw = 0.0f;
-
-    private static final TrackedData<Float> TARGET_PITCH = DataTracker.registerData(VoidWormEntity.class,
-            TrackedDataHandlerRegistry.FLOAT);
 
     private static final TrackedData<Boolean> IS_USING_SKILL = DataTracker.registerData(VoidWormEntity.class,
             TrackedDataHandlerRegistry.BOOLEAN);
@@ -133,7 +151,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     @Override
     protected void initDataTracker() {
         super.initDataTracker();
-        this.dataTracker.startTracking(TARGET_PITCH, 0.0f);
+
         this.dataTracker.startTracking(IS_USING_SKILL, false);
         this.dataTracker.startTracking(SKILL_PREPARING, false);
         this.dataTracker.startTracking(SKILL_ID, 0);
@@ -252,6 +270,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             serverWorld.getChunkManager().addTicket(net.minecraft.server.world.ChunkTicketType.PORTAL,
                     new net.minecraft.util.math.ChunkPos(this.getBlockPos()), 3, this.getBlockPos());
 
+            // Record head position for body-trail history (newest first)
+            posHistoryDeque.addFirst(this.getPos());
+            if (posHistoryDeque.size() > MAX_HISTORY)
+                posHistoryDeque.removeLast();
+            historyDirty = true;
+
             if (!partsSpawned) {
                 spawnParts(serverWorld);
                 partsSpawned = true;
@@ -266,10 +290,23 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             }
         } else {
             // Client side visual interpolation
-            // 0.15f is intentionally slower than the server's 5°/tick cap to avoid
-            // ping-pong shimmer when packets arrive slightly out of phase.
-            float targetP = this.dataTracker.get(TARGET_PITCH);
-            this.visualPitch += MathHelper.wrapDegrees(targetP - this.visualPitch) * 0.15f;
+            // Low-pass filter raw velocity to kill per-tick micro-variance before
+            // deriving pitch — 0.1 blend keeps it responsive but jitter-free.
+            boolean isRoaring = this.isUsingSkill() && this.getSkillId() == 1 && !this.dataTracker.get(SKILL_PREPARING);
+
+            if (isRoaring) {
+                this.visualPitch += MathHelper.wrapDegrees(-60.0f - this.visualPitch) * 0.15f;
+            } else {
+                Vec3d vel = this.getVelocity();
+                this.smoothedVelocity = this.smoothedVelocity.add(vel.subtract(this.smoothedVelocity).multiply(0.1));
+                if (this.smoothedVelocity.lengthSquared() > 0.001) {
+                    double horizLen = Math.sqrt(this.smoothedVelocity.x * this.smoothedVelocity.x
+                            + this.smoothedVelocity.z * this.smoothedVelocity.z);
+                    float derivedPitch = (float) (Math.atan2(this.smoothedVelocity.y, horizLen) * (180.0 / Math.PI));
+                    this.visualPitch += MathHelper.wrapDegrees(derivedPitch - this.visualPitch) * 0.3f;
+                }
+            }
+            // else: hold last visualPitch while stationary (e.g. during ROAR)
             this.visualYaw += MathHelper.wrapDegrees(this.getYaw() - this.visualYaw) * 0.15f;
         }
     }
@@ -334,7 +371,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             if (distSq <= radius * radius) {
                 entity.damage(this.getDamageSources().mobAttack(this), amount);
                 // give blind effect
-                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 20 * 5, 1));
+                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 20 * 10, 1));
             }
         }
     }
@@ -391,7 +428,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         this.headYaw = this.getYaw();
                         this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
                         this.setPitch(this.serverSidePitch);
-                        this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
 
                         if (this.getY() >= targetYHover - 4.0D && distXZ <= 8.0D) {
                             this.dataTracker.set(SKILL_PREPARING, false);
@@ -418,14 +454,11 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             // Fix pitch inversion here as well
                             this.serverSidePitch = (float) (MathHelper.atan2(dy, distXZ) * (180.0 / Math.PI));
 
-                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("charge_head_point",
-                                    "Charge targeting", "dy", dy, "distXZ", distXZ, "pitch", this.serverSidePitch);
-
                             this.setYaw(this.serverSideYaw);
                             this.setPitch(this.serverSidePitch);
                             this.bodyYaw = this.getYaw();
                             this.headYaw = this.getYaw();
-                            this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
+
                         } else if (!skillHitFired) {
                             double dx = this.chargeDestX - this.getX();
                             double dy = this.chargeDestY - this.getY();
@@ -493,7 +526,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         this.headYaw = this.getYaw();
                         this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
                         this.setPitch(this.serverSidePitch);
-                        this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
 
                         if (this.getY() >= targetY - 4.0D && distXZ <= 8.0D) {
                             // Reached position: start animation AND sound at the same tick.
@@ -519,7 +551,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         // Look straight down
                         this.serverSidePitch = -60.0F;
                         this.setPitch(this.serverSidePitch);
-                        this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
 
                         if (skillTick >= ROAR_HIT_TICK && skillTick <= 95) {
                             if (skillTick % 11 == 0) {
@@ -576,18 +607,15 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     }
 
     private void spawnParts(ServerWorld world) {
-        LivingEntity previous = this;
-
         for (int i = 0; i < BODY_SEGMENTS; i++) {
-            VoidWormPartEntity body = new VoidWormPartEntity(EntitiesManager.VOID_WORM_BODY, world, this, previous,
+            VoidWormPartEntity body = new VoidWormPartEntity(EntitiesManager.VOID_WORM_BODY, world, this, i + 1,
                     PART_DISTANCE);
             body.refreshPositionAndAngles(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch());
             world.spawnEntity(body);
             parts.add(body);
-            previous = body;
         }
 
-        VoidWormPartEntity tail = new VoidWormPartEntity(EntitiesManager.VOID_WORM_TAIL, world, this, previous,
+        VoidWormPartEntity tail = new VoidWormPartEntity(EntitiesManager.VOID_WORM_TAIL, world, this, BODY_SEGMENTS + 1,
                 PART_DISTANCE);
         tail.refreshPositionAndAngles(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch());
         world.spawnEntity(tail);
@@ -835,7 +863,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 // 5°/tick for pitch: keep this slower so vertical lurches don't snap the head
                 worm.serverSidePitch = wrapDegrees(worm.serverSidePitch, targetPitch, 5.0f);
                 worm.setPitch(worm.serverSidePitch);
-                worm.dataTracker.set(TARGET_PITCH, worm.serverSidePitch);
             }
 
             worm.velocityModified = true;
@@ -849,5 +876,15 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 delta = -maxStep;
             return current + delta;
         }
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    protected void pushAway(net.minecraft.entity.Entity entity) {
+        // Disabling collisions between parts significantly improves performance
     }
 }
