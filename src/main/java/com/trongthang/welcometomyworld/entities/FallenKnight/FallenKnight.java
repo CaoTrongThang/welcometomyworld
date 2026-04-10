@@ -607,11 +607,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
                         * this.attack3DamageMultiply;
                 damageBlockingShield(target, damage);
-                if (target instanceof PlayerEntity) {
-                    target.addVelocity(0, 1.4f, 0);
-                } else {
-                    target.addVelocity(0, 0.8f, 0);
-                }
 
                 DamageTarget(target, damage);
             }

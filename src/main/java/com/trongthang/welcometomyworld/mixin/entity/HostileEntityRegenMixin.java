@@ -4,8 +4,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -55,30 +53,13 @@ public class HostileEntityRegenMixin {
 
     @Inject(method = "applyDamage", at = @At("HEAD"))
     private void applyDamage(DamageSource source, float amount, CallbackInfo ci) {
-
-        if (source.getAttacker() == null)
+        if (!((Object) this instanceof HostileEntity))
             return;
 
-        Entity entity = source.getAttacker();
-
-        if (!((LivingEntity) (Object) this instanceof HostileEntity))
-            return;
-
-        if (source.getAttacker() != entity)
-            return;
-
-        if (entity.getWorld().isClient)
-            return;
-        if (!enemies.contains(entity)) {
-            if (entity instanceof PlayerEntity) {
-                enemies.add((LivingEntity) entity);
-                this.outCombatCounter = outCombatTime;
-            } else if (entity instanceof TameableEntity tameable) {
-                if (tameable.isTamed() && tameable.getOwner() != null) {
-                    enemies.add((LivingEntity) entity);
-                    this.outCombatCounter = outCombatTime;
-                }
-            }
+        Entity attacker = source.getAttacker();
+        if (attacker instanceof LivingEntity livingAttacker && !attacker.getWorld().isClient) {
+            enemies.add(livingAttacker);
+            this.outCombatCounter = outCombatTime;
         }
     }
 

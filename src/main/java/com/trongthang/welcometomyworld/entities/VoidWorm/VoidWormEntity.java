@@ -6,6 +6,7 @@ import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -46,6 +47,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     // Rolling position history for body-segment trail following
     private static final int MAX_HISTORY = 400;
+    public int ticksSinceDeath = 0; // The timer for the death animation
     private final Deque<Vec3d> posHistoryDeque = new ArrayDeque<>(MAX_HISTORY + 1);
     // Cached list view — rebuilt only when the deque changes, used by segments
     private List<Vec3d> posHistorySnapshot = new ArrayList<>(MAX_HISTORY);
@@ -65,7 +67,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    private static final float PART_DISTANCE = 10f;
+    private static final float PART_DISTANCE = 8f;
 
     // Custom visual pitch to bypass vanilla LookControl pitch resetting
     public float visualPitch = 0.0f;
@@ -88,6 +90,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private static final TrackedData<Integer> SKILL_ID = DataTracker.registerData(VoidWormEntity.class,
             TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> SKILL_TRIGGER = DataTracker.registerData(VoidWormEntity.class,
+            TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> TICKS_SINCE_DEATH = DataTracker.registerData(VoidWormEntity.class,
             TrackedDataHandlerRegistry.INTEGER);
 
     public static class Skill {
@@ -156,6 +160,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         this.dataTracker.startTracking(SKILL_PREPARING, false);
         this.dataTracker.startTracking(SKILL_ID, 0);
         this.dataTracker.startTracking(SKILL_TRIGGER, 0);
+        this.dataTracker.startTracking(TICKS_SINCE_DEATH, 0);
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
@@ -243,6 +248,17 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putBoolean("PartsSpawned", this.partsSpawned);
+        nbt.putInt("TicksSinceDeath", this.ticksSinceDeath);
+
+        net.minecraft.nbt.NbtList historyList = new net.minecraft.nbt.NbtList();
+        for (Vec3d pos : posHistoryDeque) {
+            NbtCompound posTag = new NbtCompound();
+            posTag.putDouble("x", pos.x);
+            posTag.putDouble("y", pos.y);
+            posTag.putDouble("z", pos.z);
+            historyList.add(posTag);
+        }
+        nbt.put("PosHistory", historyList);
     }
 
     @Override
@@ -250,6 +266,20 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         super.readCustomDataFromNbt(nbt);
         if (nbt.contains("PartsSpawned")) {
             this.partsSpawned = nbt.getBoolean("PartsSpawned");
+        }
+        if (nbt.contains("TicksSinceDeath")) {
+            this.ticksSinceDeath = nbt.getInt("TicksSinceDeath");
+            this.dataTracker.set(TICKS_SINCE_DEATH, this.ticksSinceDeath);
+        }
+
+        if (nbt.contains("PosHistory", 9)) {
+            net.minecraft.nbt.NbtList historyList = nbt.getList("PosHistory", 10);
+            posHistoryDeque.clear();
+            for (int i = 0; i < historyList.size(); i++) {
+                NbtCompound posTag = historyList.getCompound(i);
+                posHistoryDeque.add(new Vec3d(posTag.getDouble("x"), posTag.getDouble("y"), posTag.getDouble("z")));
+            }
+            historyDirty = true;
         }
     }
 
@@ -320,6 +350,11 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
         for (LivingEntity target : nearby) {
             target.damage(this.getDamageSources().mobAttack(this), damage);
+            // give effects
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 200, 1));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 200, 1));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 200, 1));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 1));
         }
 
         if (createBlock && this.getWorld() instanceof ServerWorld serverWorld) {
@@ -622,11 +657,35 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         parts.add(tail);
     }
 
+    @Override
+    protected void updatePostDeath() {
+        this.ticksSinceDeath++;
+        if (!this.getWorld().isClient()) {
+            this.dataTracker.set(TICKS_SINCE_DEATH, this.ticksSinceDeath);
+        }
+
+        if (this.getWorld() instanceof ServerWorld) {
+            // Continue recording position history so segments follow the head up
+            posHistoryDeque.addFirst(this.getPos());
+            if (posHistoryDeque.size() > MAX_HISTORY)
+                posHistoryDeque.removeLast();
+            historyDirty = true;
+
+            updateParts();
+        }
+
+        // After 200 ticks (10 seconds), actually remove the entity
+        if (this.ticksSinceDeath >= 200 && !this.getWorld().isClient()) {
+            this.getWorld().sendEntityStatus(this, (byte) 60); // Death smoke particles
+            this.remove(RemovalReason.KILLED);
+        }
+    }
+
     private void updateParts() {
-        // We only want to discard parts if the head is actually dead/killed, not just
-        // unloaded.
-        if (this.getHealth() <= 0.0f
-                || (this.isRemoved() && this.getRemovalReason() != null && this.getRemovalReason().shouldDestroy())) {
+        // Only discard parts if the head is actually removed OR if the death animation
+        // is finished
+        if (this.isRemoved() && (this.getRemovalReason() == null || this.getRemovalReason().shouldDestroy()
+                || this.ticksSinceDeath >= 200)) {
             for (VoidWormPartEntity part : parts) {
                 if (part != null)
                     part.discard();

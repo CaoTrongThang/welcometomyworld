@@ -2,8 +2,6 @@ package com.trongthang.welcometomyworld.entities.Unknown;
 
 import net.minecraft.entity.ai.goal.Goal;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
-
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +33,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import com.trongthang.welcometomyworld.entities.UnknownBeamEntity;
 import com.trongthang.welcometomyworld.entities.GroundSlashAttackEntity;
-import com.trongthang.welcometomyworld.managers.EffectsManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.CustomTameableEntity;
@@ -386,12 +383,14 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 } else if (dist <= 8.0) {
                     // To add a phase-2 skill: new Object[]{MY_SKILL, 30f, healthFraction() <= 0.5f}
                     Skill picked = pickWeightedSkill(
-                            new Object[] { PUNCH, 10000, true },
+                            new Object[] { PUNCH, 30, true },
                             new Object[] { GROUND_SLAM_KICK, 50, true },
                             new Object[] { LEG_TRIP, 50, true },
                             new Object[] { UNKNOWN_SPEAR_3_HITS, 50, healthFraction() <= 0.8f },
                             new Object[] { UNKNOWN_JUMP_BACK, 50, healthFraction() <= 0.8f },
-                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 10f, healthFraction() <= 0.3f });
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 50f, healthFraction() <= 0.4f },
+                            new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f },
+                            new Object[] { KAMEHAMEHA, 30f, healthFraction() <= 0.6f });
                     if (picked != null)
                         triggerSkill(picked);
 
@@ -399,11 +398,13 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 } else if (dist <= 20.0) {
                     Skill picked = pickWeightedSkill(
                             new Object[] { DASH_FORWARD, 40f, true },
-                            new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f });
+                            new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f },
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 50f, healthFraction() <= 0.4f },
+                            new Object[] { KAMEHAMEHA, 30f, healthFraction() <= 0.6f });
                     if (picked != null)
                         triggerSkill(picked);
 
-                    // Case 4: Far range (≤30)
+                    // Case 4: Far range (≤40)
                 } else if (dist <= 40.0) {
                     Skill picked = pickWeightedSkill(
                             new Object[] { JUMP_HIGH, 30f, true },
@@ -412,11 +413,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     if (picked != null)
                         triggerSkill(picked);
 
-                    // Case 5: Very far range (>30)
+                    // Case 5: Very far range (>40)
                 } else {
                     Skill picked = pickWeightedSkill(
-                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 15f, healthFraction() <= 0.3f },
-                            new Object[] { JUMP_HIGH, 40f, true });
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 50f, healthFraction() <= 0.4f },
+                            new Object[] { JUMP_HIGH, 50f, true });
                     if (picked != null)
                         triggerSkill(picked);
                 }
@@ -476,6 +477,11 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     public int getSkillId() {
         return this.dataTracker.get(SKILL_ID);
+    }
+
+    // 0 = NONE, 1 = LEFT, 2 = RIGHT — used by renderer for side-dash afterimage
+    public int getDashDir() {
+        return this.dataTracker.get(DASH_DIR);
     }
 
     private void handleSkillEffects(int skillId) {
@@ -1455,7 +1461,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
                     BlockState groundState = serverWorld.getBlockState(spawnPos.down());
                     if (groundState.isAir() || !groundState.isOpaqueFullCube(serverWorld, spawnPos.down())) {
-                        groundState = Blocks.DIRT.getDefaultState();
+                        continue;
                     }
                     Utils.CreateBlockSlamGround(serverWorld, groundState, spawnPos.down());
 
@@ -1487,6 +1493,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         this.triggerDash(dodgeLeft, 10);
         this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                 SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, MathHelper.nextBetween(this.random, 0.8F, 1.2F));
+
         this.dodgeCooldown = 40;
     }
 

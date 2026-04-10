@@ -45,6 +45,13 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
     // Previous position used to derive movement direction for rotation
     private Vec3d prevPos = null;
 
+    private static final net.minecraft.entity.data.TrackedData<Integer> HEAD_ID = net.minecraft.entity.data.DataTracker
+            .registerData(VoidWormPartEntity.class, net.minecraft.entity.data.TrackedDataHandlerRegistry.INTEGER);
+
+    public VoidWormEntity getHead() {
+        return this.head;
+    }
+
     public VoidWormPartEntity(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
         this.noClip = true;
@@ -54,6 +61,7 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
     @Override
     protected void initDataTracker() {
         super.initDataTracker();
+        this.dataTracker.startTracking(HEAD_ID, -1);
     }
 
     public VoidWormPartEntity(EntityType<? extends HostileEntity> entityType, World world, VoidWormEntity head,
@@ -136,7 +144,6 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    @Override
     public void tick() {
         this.noClip = true;
         this.setNoGravity(true);
@@ -144,6 +151,16 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
         if (this.getWorld().isClient) {
             this.prevVisualPitch = this.visualPitch;
             this.prevVisualYaw = this.visualYaw;
+
+            if (this.head == null) {
+                int id = this.dataTracker.get(HEAD_ID);
+                if (id != -1) {
+                    Entity ent = this.getWorld().getEntityById(id);
+                    if (ent instanceof VoidWormEntity) {
+                        this.head = (VoidWormEntity) ent;
+                    }
+                }
+            }
         }
 
         super.tick();
@@ -161,6 +178,10 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
                     this.head.registerPart(this);
                 }
             }
+            if (this.head != null) {
+                this.dataTracker.set(HEAD_ID, this.head.getId());
+            }
+
             if (this.head != null && this.head.isRemoved()) {
                 if (this.head.getRemovalReason() != null && this.head.getRemovalReason().shouldDestroy()) {
                     this.discard();
@@ -169,7 +190,7 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
                 this.head = null;
             }
 
-            if (this.head != null && this.head.getHealth() <= 0.0f) {
+            if (this.head != null && this.head.getHealth() <= 0.0f && this.head.ticksSinceDeath >= 200) {
                 this.discard();
                 return;
             }
