@@ -467,6 +467,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 entity.damage(this.getDamageSources().mobAttack(this), amount);
                 // give blind effect
                 entity.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 20 * 10, 1));
+                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20 * 3, 1));
             }
         }
     }
