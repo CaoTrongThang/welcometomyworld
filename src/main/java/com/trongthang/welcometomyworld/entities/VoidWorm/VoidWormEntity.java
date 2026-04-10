@@ -6,7 +6,7 @@ import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -18,7 +18,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -49,7 +49,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private boolean partsSpawned = false;
 
     private static final double MAX_DISTANCE_XZ = 300.0;
-    private static final double MAX_DISTANCE_Y = 100.0;
+    private static final double MAX_DISTANCE_Y = 200.0;
 
     // Rolling position history for body-segment trail following
     private static final int MAX_HISTORY = 400;
@@ -114,6 +114,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     public static final Skill ROAR = new Skill(1, 80, 500);
     public static final Skill CHARGE_ATTACK = new Skill(2, 60, 300);
+    public static final Skill CRYSTAL_BARRAGE = new Skill(3, 300, 1000);
 
     private static final int ROAR_HIT_TICK = 22;
     private double chargeDestX, chargeDestY, chargeDestZ;
@@ -123,6 +124,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private int skillTick = 0;
     private int globalSkillCooldown = 0;
     public int combatTicks = 0;
+    private int skillRemainingCharges = 0;
 
     private final int[] skillCooldowns = new int[10];
 
@@ -139,6 +141,10 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     }
 
     public void triggerSkill(Skill skill) {
+        triggerSkill(skill, 1);
+    }
+
+    public void triggerSkill(Skill skill, int charges) {
         if (this.getWorld().isClient())
             return;
         this.dataTracker.set(IS_USING_SKILL, true);
@@ -150,6 +156,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         this.skillCooldowns[skill.id] = skill.cooldown;
         this.globalSkillCooldown = 40;
         this.skillHitFired = false;
+        this.skillRemainingCharges = charges - 1;
     }
 
     public VoidWormEntity(EntityType<? extends HostileEntity> entityType, World world) {
@@ -214,6 +221,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     } else {
                         return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
                     }
+                } else if (skillId == 3) { // CRYSTAL_BARRAGE
+                    return state.setAndContinue(RawAnimation.begin().thenLoop("attack_openning_mouth"));
                 }
             }
             prevSkillId[0] = 0;
@@ -532,9 +541,18 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                                         SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY,
                                         net.minecraft.sound.SoundCategory.HOSTILE, 2.0F, 1.0F);
 
-                                this.dataTracker.set(IS_USING_SKILL, false);
-                                this.dataTracker.set(SKILL_PREPARING, false);
-                                this.dataTracker.set(SKILL_ID, 0);
+                                if (skillRemainingCharges > 0) {
+                                    skillRemainingCharges--;
+                                    this.dataTracker.set(SKILL_PREPARING, true);
+                                    this.dataTracker.set(SKILL_TRIGGER, this.dataTracker.get(SKILL_TRIGGER) + 1);
+                                    this.skillTick = 0;
+                                    this.skillHitFired = false;
+                                } else {
+                                    this.dataTracker.set(IS_USING_SKILL, false);
+                                    this.dataTracker.set(SKILL_PREPARING, false);
+                                    this.dataTracker.set(SKILL_ID, 0);
+                                }
+
                             }
                         }
                     }
@@ -617,17 +635,114 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     this.dataTracker.set(SKILL_PREPARING, false);
                     this.dataTracker.set(SKILL_ID, 0);
                 }
+            } else if (skillId == 3) { // CRYSTAL_BARRAGE
+
+                if (target != null && target.isAlive()) {
+                    skillTick++;
+
+                    double targetX = target.getX();
+                    double targetY = target.getY() + 40.0D; // Pick destination higher than target
+                    double targetZ = target.getZ();
+
+                    if (isPreparing) {
+                        // Fly to the high point
+                        Vec3d dir = new Vec3d(targetX - this.getX(), targetY - this.getY(), targetZ - this.getZ());
+                        double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
+                        if (dir.lengthSquared() > 0.1)
+                            dir = dir.normalize();
+
+                        double speed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 2.0;
+                        this.setVelocity(dir.multiply(speed));
+                        this.velocityModified = true;
+
+                        // Rotations
+                        double dx = targetX - this.getX();
+                        double dy = targetY - this.getY();
+                        double dz = targetZ - this.getZ();
+                        float targetYaw = (float) (MathHelper.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                        float targetPitch = (float) (MathHelper.atan2(dy, Math.sqrt(dx * dx + dz * dz))
+                                * (180.0 / Math.PI));
+
+                        this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
+                        this.setYaw(this.serverSideYaw);
+                        this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
+                        this.setPitch(this.serverSidePitch);
+
+                        if (this.getY() >= targetY - 4.0D && distXZ <= 8.0D) {
+                            this.dataTracker.set(SKILL_PREPARING, false);
+                        }
+                    } else {
+                        // Fly in circle around 30 radius
+                        double radius = 60.0;
+                        double angle = (this.age * 0.1); // Continuous rotation
+                        double circleX = targetX + Math.cos(angle) * radius;
+                        double circleZ = targetZ + Math.sin(angle) * radius;
+
+                        Vec3d desiredPos = new Vec3d(circleX, targetY, circleZ);
+                        Vec3d dir = desiredPos.subtract(this.getPos());
+                        if (dir.lengthSquared() > 0.1)
+                            dir = dir.normalize();
+
+                        double orbitSpeed = 1.0;
+                        this.setVelocity(dir.multiply(orbitSpeed));
+                        this.velocityModified = true;
+
+                        // Face the movement direction
+                        Vec3d vel = this.getVelocity();
+                        if (vel.lengthSquared() > 0.001) {
+                            float targetYaw = (float) (MathHelper.atan2(vel.z, vel.x) * (180.0 / Math.PI)) - 90.0F;
+                            this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
+                            this.setYaw(this.serverSideYaw);
+
+                            double horizDist = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+                            float targetPitch = (float) (MathHelper.atan2(vel.y, horizDist) * (180.0 / Math.PI));
+                            this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
+                            this.setPitch(this.serverSidePitch);
+                        }
+
+                        // Every 5s (100 ticks), create 5 Purple Crystals
+                        if (skillTick % 10 == 0) {
+                            PurpleCrystalEntity crystal = new PurpleCrystalEntity(EntitiesManager.PURPLE_CRYSTAL,
+                                    this.getWorld());
+
+                            // Random position within 10 block radius
+                            double spawnX = this.getX() + (this.random.nextDouble() - 0.5) * 20.0;
+                            double spawnY = this.getY() + (this.random.nextDouble() - 0.5) * 20.0;
+                            double spawnZ = this.getZ() + (this.random.nextDouble() - 0.5) * 20.0;
+
+                            crystal.refreshPositionAndAngles(spawnX, spawnY, spawnZ, 0, 0);
+                            crystal.setOwner(this);
+                            crystal.setDamage(
+                                    (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 0.8f);
+                            this.getWorld().spawnEntity(crystal);
+                        }
+                    }
+                } else {
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_PREPARING, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
             }
 
             if (!this.dataTracker.get(SKILL_PREPARING) && skillTick >= skillTotalTicks) {
-                this.dataTracker.set(IS_USING_SKILL, false);
-                this.dataTracker.set(SKILL_ID, 0);
+                if (skillRemainingCharges > 0) {
+                    skillRemainingCharges--;
+                    this.dataTracker.set(SKILL_PREPARING, true);
+                    this.dataTracker.set(SKILL_TRIGGER, this.dataTracker.get(SKILL_TRIGGER) + 1);
+                    this.skillTick = 0;
+                    this.skillHitFired = false;
+                } else {
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
             }
+
             return;
         }
 
         // Trigger logic
         if (globalSkillCooldown <= 0 && !isUsingSkill()) {
+
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive()) {
                 // Ignore target if too far from center (0, 50, 0)
@@ -646,13 +761,16 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 boolean canCharge = canUseSkill(CHARGE_ATTACK) && target.getY() - this.getY() >= 15.0 && distX < 64.0
                         && distZ < 64.0;
                 if (canCharge) {
-                    triggerSkill(CHARGE_ATTACK);
+                    triggerSkill(CHARGE_ATTACK, 3);
+
                     // Open mouth sound maybe handled inside or automatically by the animation if
                     // registered in GeckoLib
                 } else if (canUseSkill(ROAR) && distX < 64.0 && distZ < 64.0 && distY < 60.0) {
                     triggerSkill(ROAR);
                     Utils.playFarSound((ServerWorld) this.getWorld(), this, SoundsManager.MONSTER_ROAR,
                             net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F, 84.0);
+                } else if (canUseSkill(CRYSTAL_BARRAGE) && distX < 100 && distZ < 100) {
+                    triggerSkill(CRYSTAL_BARRAGE);
                 }
             }
         }

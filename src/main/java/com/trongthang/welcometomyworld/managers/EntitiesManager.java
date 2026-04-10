@@ -11,6 +11,7 @@ import com.trongthang.welcometomyworld.entities.GroundSlashAttackEntity;
 import com.trongthang.welcometomyworld.entities.FallingSkeleton.FallingSkeleton;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormPartEntity;
+import com.trongthang.welcometomyworld.entities.VoidWorm.PurpleCrystalEntity;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -162,6 +163,13 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_tail"),
                         FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
                                         .dimensions(EntityDimensions.fixed(6.0f, 6.0f))
+                                        .build());
+
+        public static final EntityType<PurpleCrystalEntity> PURPLE_CRYSTAL = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "purple_crystal"),
+                        FabricEntityTypeBuilder.<PurpleCrystalEntity>create(SpawnGroup.MISC, PurpleCrystalEntity::new)
+                                        .dimensions(EntityDimensions.fixed(1.0f, 1.0f))
                                         .build());
 
         public static void register() {
