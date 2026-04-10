@@ -25,7 +25,7 @@ public class PurpleCrystalEntity extends Entity implements GeoEntity {
             TrackedDataHandlerRegistry.FLOAT);
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private UUID ownerUuid;
-    private static final int MAX_AGE = 300;
+    private static final int MAX_AGE = 100;
 
     public PurpleCrystalEntity(EntityType<?> type, World world) {
         super(type, world);
@@ -84,7 +84,7 @@ public class PurpleCrystalEntity extends Entity implements GeoEntity {
                 this.velocityModified = true;
             }
 
-            if (dist < 5.0) {
+            if (dist < 3.0) {
                 explode(owner);
                 this.discard();
                 return;

@@ -1,6 +1,8 @@
 package com.trongthang.welcometomyworld.mixin.client;
 
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.Entity;
@@ -29,7 +31,9 @@ public abstract class InGameHudMixin {
         if (message != null && message.getContent() instanceof TranslatableTextContent tc) {
             if (tc.getKey().equals("mount.onboard")) {
                 PlayerEntity player = MinecraftClient.getInstance().player;
-                if (player != null && player.getVehicle() instanceof Unknown) {
+                if (player != null && (player.getVehicle() instanceof Unknown
+                        || player.getVehicle() instanceof PhantomEntity
+                        || player.getVehicle() instanceof VoidWormEntity)) {
                     ci.cancel(); // Hide 'Press SHIFT to dismount' text
                 }
             }

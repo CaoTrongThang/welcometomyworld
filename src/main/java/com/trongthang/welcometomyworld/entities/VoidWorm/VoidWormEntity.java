@@ -33,8 +33,6 @@ import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import com.trongthang.welcometomyworld.VoidBossState;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -115,9 +113,11 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     public static final Skill ROAR = new Skill(1, 80, 500);
     public static final Skill CHARGE_ATTACK = new Skill(2, 60, 300);
     public static final Skill CRYSTAL_BARRAGE = new Skill(3, 300, 1000);
+    public static final Skill GRAB_ATTACK = new Skill(4, 200, 1000);
 
     private static final int ROAR_HIT_TICK = 22;
     private double chargeDestX, chargeDestY, chargeDestZ;
+    private double grabY;
 
     private boolean skillHitFired = false;
     private int skillTotalTicks = 0;
@@ -215,6 +215,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
                 if (skillId == 1) { // ROAR
                     return state.setAndContinue(RawAnimation.begin().thenPlay("void_worm_head_roar"));
+                } else if (skillId == 4) { // GRAB_ATTACK
+                    if (!this.dataTracker.get(SKILL_PREPARING)) {
+                        return state.setAndContinue(RawAnimation.begin().thenLoop("attack_openning_mouth"));
+                    } else {
+                        return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
+                    }
                 } else if (skillId == 2) { // CHARGE_ATTACK
                     if (!this.dataTracker.get(SKILL_PREPARING)) {
                         return state.setAndContinue(RawAnimation.begin().thenPlay("attack_openning_mouth"));
@@ -222,7 +228,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
                     }
                 } else if (skillId == 3) { // CRYSTAL_BARRAGE
-                    return state.setAndContinue(RawAnimation.begin().thenLoop("attack_openning_mouth"));
+                    return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
                 }
             }
             prevSkillId[0] = 0;
@@ -309,8 +315,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
 
         super.tick();
-
-        LOGGER.info("VoidWormEntity tick");
 
         if (this.getWorld() instanceof ServerWorld serverWorld) {
             // Keep the chunk loaded while the head is alive and ticking
@@ -722,6 +726,120 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     this.dataTracker.set(SKILL_PREPARING, false);
                     this.dataTracker.set(SKILL_ID, 0);
                 }
+            } else if (skillId == 4) { // GRAB_ATTACK
+                if (target != null && target.isAlive()) {
+                    skillTick++;
+
+                    if (isPreparing) {
+                        double targetYHover = target.getY() + 40.0D;
+                        Vec3d dir = new Vec3d(target.getX() - this.getX(), targetYHover - this.getY(),
+                                target.getZ() - this.getZ());
+                        double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
+                        if (dir.lengthSquared() > 0.1)
+                            dir = dir.normalize();
+
+                        double speed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 2.5;
+                        this.setVelocity(dir.multiply(speed));
+                        this.velocityModified = true;
+
+                        // Face destination
+                        float targetYaw = (float) (MathHelper.atan2(dir.z, dir.x) * (180.0 / Math.PI)) - 90.0F;
+                        float targetPitch = (float) (MathHelper.atan2(dir.y, distXZ) * (180.0 / Math.PI));
+
+                        this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
+                        this.setYaw(this.serverSideYaw);
+                        this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
+                        this.setPitch(this.serverSidePitch);
+
+                        if (this.getY() >= targetYHover - 4.0D && distXZ <= 8.0D) {
+                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_prepare_done",
+                                    "Reached high point, diving...");
+                            this.dataTracker.set(SKILL_PREPARING, false);
+                            this.chargeDestX = target.getX();
+                            this.chargeDestY = target.getY();
+                            this.chargeDestZ = target.getZ();
+                            this.skillHitFired = false;
+                            this.setVelocity(0, 0, 0);
+                        }
+                    } else if (!skillHitFired) {
+                        // Phase 2: Dive to grab
+                        double dx = this.chargeDestX - this.getX();
+                        double dy = this.chargeDestY - this.getY();
+                        double dz = this.chargeDestZ - this.getZ();
+                        Vec3d dir = new Vec3d(dx, dy, dz);
+                        double distSq = dir.lengthSquared();
+                        if (dir.lengthSquared() > 0.01)
+                            dir = dir.normalize();
+
+                        double diveSpeed = 3.5;
+                        this.setVelocity(dir.multiply(diveSpeed));
+                        this.velocityModified = true;
+
+                        // Face destination
+                        double distXZ = Math.sqrt(dx * dx + dz * dz);
+                        this.serverSideYaw = (float) (MathHelper.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                        this.serverSidePitch = (float) (MathHelper.atan2(dy, distXZ) * (180.0 / Math.PI));
+                        this.setYaw(this.serverSideYaw);
+                        this.setPitch(this.serverSidePitch);
+
+                        // Grab detection
+                        if (this.squaredDistanceTo(target) <= 6.0 * 6.0) {
+                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_success",
+                                    "Grabbed target!");
+                            target.startRiding(this, true);
+                            this.skillHitFired = true;
+                            this.grabY = this.getY();
+                            this.setVelocity(0, 0, 0);
+                            this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                    SoundsManager.MONSTER_ROAR,
+                                    net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.5F);
+                        } else if (distSq < 4.0 || this.horizontalCollision || this.verticalCollision
+                                || skillTick > 150) {
+                            // Missed
+                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_miss",
+                                    "Missed grab destination");
+                            this.dataTracker.set(IS_USING_SKILL, false);
+                            this.dataTracker.set(SKILL_ID, 0);
+                        }
+                    } else {
+                        // Phase 3: Go up around 30 blocks
+                        double hoverY = grabY + 30.0D;
+                        if (this.getY() < hoverY) {
+                            this.setVelocity(0, 0.5, 0);
+                        } else {
+                            this.setVelocity(0, 0, 0);
+                        }
+                        this.velocityModified = true;
+
+                        // Attack every 30 ticks
+                        if (skillTick % 30 == 0) {
+                            if (this.hasPassengers()) {
+                                for (net.minecraft.entity.Entity passenger : this.getPassengerList()) {
+                                    if (passenger instanceof LivingEntity le) {
+                                        le.damage(this.getDamageSources().mobAttack(this),
+                                                (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                                                        * 1.5f);
+                                        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                                net.minecraft.sound.SoundEvents.ENTITY_PLAYER_BURP,
+                                                net.minecraft.sound.SoundCategory.HOSTILE, 1.5F, 0.5F);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Stop if player somehow gets off or died
+                        if (!this.hasPassengers()) {
+                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_end",
+                                    "Passenger lost, ending skill");
+                            this.dataTracker.set(IS_USING_SKILL, false);
+                            this.dataTracker.set(SKILL_ID, 0);
+                        }
+                    }
+                } else {
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_PREPARING, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
             }
 
             if (!this.dataTracker.get(SKILL_PREPARING) && skillTick >= skillTotalTicks) {
@@ -734,6 +852,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 } else {
                     this.dataTracker.set(IS_USING_SKILL, false);
                     this.dataTracker.set(SKILL_ID, 0);
+                    this.removeAllPassengers();
                 }
             }
 
@@ -771,6 +890,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F, 84.0);
                 } else if (canUseSkill(CRYSTAL_BARRAGE) && distX < 100 && distZ < 100) {
                     triggerSkill(CRYSTAL_BARRAGE);
+                } else if (canUseSkill(GRAB_ATTACK) && distX < 64.0 && distZ < 64.0) {
+                    triggerSkill(GRAB_ATTACK);
                 }
             }
         }
@@ -838,6 +959,32 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
         // Each part handles its own position following its leader
         // But we can also force updates if needed
+    }
+
+    @Override
+    protected void updatePassengerPosition(net.minecraft.entity.Entity passenger,
+            net.minecraft.entity.Entity.PositionUpdater positionUpdater) {
+        if (!this.hasPassenger(passenger))
+            return;
+
+        if (this.isUsingSkill() && this.getSkillId() == 4) {
+            // Position passenger in "mouth" area
+            // Worm head is at getPos()
+            // We want it slightly in front and down?
+            float yaw = this.getYaw() * ((float) Math.PI / 180F);
+            float pitch = this.getPitch() * ((float) Math.PI / 180F);
+
+            double forward = 0.0;
+            double up = 1;
+
+            double ox = -Math.sin(yaw) * Math.cos(pitch) * forward;
+            double oy = -Math.sin(pitch) * forward + up;
+            double oz = Math.cos(yaw) * Math.cos(pitch) * forward;
+
+            positionUpdater.accept(passenger, this.getX() + ox, this.getY() + oy, this.getZ() + oz);
+        } else {
+            super.updatePassengerPosition(passenger, positionUpdater);
+        }
     }
 
     @Override

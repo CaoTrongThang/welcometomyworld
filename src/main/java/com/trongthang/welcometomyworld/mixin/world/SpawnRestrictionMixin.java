@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
+import com.trongthang.welcometomyworld.Utilities.Utils;
+
 @Mixin(ServerWorld.class)
 public abstract class SpawnRestrictionMixin {
 
@@ -17,8 +20,8 @@ public abstract class SpawnRestrictionMixin {
     private void removeDisabledEntitiesOnSpawn(Entity entity, CallbackInfoReturnable<Boolean> ci) {
         if (entity instanceof LivingEntity) {
             String entityId = Registries.ENTITY_TYPE.getId(entity.getType()).toString();
-            if (com.trongthang.welcometomyworld.Utilities.Utils.matchesPattern(entityId,
-                    com.trongthang.welcometomyworld.ConfigLoader.getInstance().disabledMobs)) {
+            if (Utils.matchesPattern(entityId,
+                    ConfigLoader.getInstance().disabledMobs)) {
                 entity.discard();
                 ci.setReturnValue(false);
             }

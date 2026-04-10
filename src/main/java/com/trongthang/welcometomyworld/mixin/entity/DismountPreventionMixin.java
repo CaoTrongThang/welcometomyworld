@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.mixin.entity;
 
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
 import com.trongthang.welcometomyworld.interfaces.PhantomGrabber;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.PhantomEntity;
@@ -34,6 +35,14 @@ public abstract class DismountPreventionMixin {
             boolean usingSkill = unknown.isUsingSkill();
             int skillId = unknown.getSkillId();
             if (usingSkill && skillId == Unknown.GRAB_JUMP_SLAM.id) {
+                ci.cancel();
+            }
+        }
+
+        if (vehicle instanceof VoidWormEntity voidWorm) {
+            boolean usingSkill = voidWorm.isUsingSkill();
+            int skillId = voidWorm.getSkillId();
+            if (usingSkill && skillId == VoidWormEntity.GRAB_ATTACK.id) {
                 ci.cancel();
             }
         }
