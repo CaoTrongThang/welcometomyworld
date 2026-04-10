@@ -1,0 +1,56 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.unknown",
+				"texture_width": 128,
+				"texture_height": 128,
+				"visible_bounds_width": 3,
+				"visible_bounds_height": 2.5,
+				"visible_bounds_offset": [0, 0.75, 0]
+			},
+			"bones": [
+				{
+					"name": "head",
+					"pivot": [0, 4, 0]
+				},
+				{
+					"name": "ball",
+					"parent": "head",
+					"pivot": [0, 7, 0],
+					"cubes": [
+						{"origin": [-4, 4, -4], "size": [8, 8, 8], "uv": [32, 0]}
+					]
+				},
+				{
+					"name": "ring",
+					"parent": "head",
+					"pivot": [0, 7, 0]
+				},
+				{
+					"name": "ring_top",
+					"parent": "ring",
+					"pivot": [0, 8, 0],
+					"cubes": [
+						{"origin": [-7, 0, -1], "size": [0, 16, 2], "uv": [32, 24]},
+						{"origin": [7, 0, -1], "size": [0, 16, 2], "uv": [0, 36]},
+						{"origin": [-7, 0, -1], "size": [14, 0, 2], "uv": [32, 20]},
+						{"origin": [-7, 16, -1], "size": [14, 0, 2], "uv": [32, 22]}
+					]
+				},
+				{
+					"name": "right_side",
+					"parent": "ring",
+					"pivot": [0, 8, 0],
+					"cubes": [
+						{"origin": [-9, 7, 8], "size": [18, 2, 0], "uv": [32, 18]},
+						{"origin": [-9, 7, -8], "size": [0, 2, 16], "uv": [0, 0]},
+						{"origin": [9, 7, -8], "size": [0, 2, 16], "uv": [0, 18]},
+						{"origin": [-9, 7, -8], "size": [18, 2, 0], "uv": [32, 16]}
+					]
+				}
+			]
+		}
+	]
+}

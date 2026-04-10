@@ -32,7 +32,8 @@ import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import com.trongthang.welcometomyworld.VoidBossState;
-import net.minecraft.util.math.BlockPos;
+
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -46,6 +47,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private static final int BODY_SEGMENTS = 10;
     private final List<VoidWormPartEntity> parts = new ArrayList<>();
     private boolean partsSpawned = false;
+
+    private static final double MAX_DISTANCE_XZ = 300.0;
+    private static final double MAX_DISTANCE_Y = 100.0;
 
     // Rolling position history for body-segment trail following
     private static final int MAX_HISTORY = 400;
@@ -296,6 +300,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
 
         super.tick();
+
+        LOGGER.info("VoidWormEntity tick");
 
         if (this.getWorld() instanceof ServerWorld serverWorld) {
             // Keep the chunk loaded while the head is alive and ticking
@@ -625,8 +631,10 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive()) {
                 // Ignore target if too far from center (0, 50, 0)
-                Vec3d center = new Vec3d(0, 50, 0);
-                if (target.getPos().distanceTo(center) > 500.0) {
+                double dx = target.getX() - 0;
+                double dz = target.getZ() - 0;
+                double dy = target.getY() - 50;
+                if (Math.sqrt(dx * dx + dz * dz) > MAX_DISTANCE_XZ || Math.abs(dy) > MAX_DISTANCE_Y) {
                     this.setTarget(null);
                     return;
                 }
@@ -805,9 +813,11 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 // Clear any wander target immediately when entering combat
                 wanderTarget = null;
 
-                // Stay within 500 blocks of (0, 50, 0)
-                Vec3d center = new Vec3d(0, 50, 0);
-                if (target.getPos().distanceTo(center) > 500.0) {
+                // Stay within movement limits of (0, 50, 0)
+                double dx = target.getX() - 0;
+                double dz = target.getZ() - 0;
+                double dy = target.getY() - 50;
+                if (Math.sqrt(dx * dx + dz * dz) > MAX_DISTANCE_XZ || Math.abs(dy) > MAX_DISTANCE_Y) {
                     worm.setTarget(null);
                     return;
                 }
@@ -903,15 +913,21 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     if (y > maxY)
                         y = maxY - worm.getRandom().nextDouble() * 40.0;
 
-                    // Clamp wander target within 500 blocks of (0, 50, 0)
-                    Vec3d home = new Vec3d(0, 50, 0);
-                    Vec3d targetPos = new Vec3d(x, y, z);
-                    if (targetPos.distanceTo(home) > 450.0) { // Aim for slightly inside the 500 limit
-                        Vec3d dirToHome = home.subtract(targetPos).normalize();
-                        targetPos = home.add(dirToHome.multiply(-450.0));
-                        x = targetPos.x;
-                        y = targetPos.y;
-                        z = targetPos.z;
+                    // Clamp wander target within limits of (0, 50, 0)
+                    double dx_h = x - 0;
+                    double dz_h = z - 0;
+                    double dy_h = y - 50;
+                    double distXZ = Math.sqrt(dx_h * dx_h + dz_h * dz_h);
+
+                    if (distXZ > MAX_DISTANCE_XZ - 50 || Math.abs(dy_h) > MAX_DISTANCE_Y - 20) {
+                        if (distXZ > MAX_DISTANCE_XZ - 50) {
+                            double scale = (MAX_DISTANCE_XZ - 50) / distXZ;
+                            x = dx_h * scale;
+                            z = dz_h * scale;
+                        }
+                        if (Math.abs(dy_h) > MAX_DISTANCE_Y - 20) {
+                            y = 50 + Math.signum(dy_h) * (MAX_DISTANCE_Y - 20);
+                        }
                     }
 
                     wanderTarget = new Vec3d(x, y, z);
