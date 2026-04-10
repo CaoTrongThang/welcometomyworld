@@ -22,6 +22,11 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
@@ -114,6 +119,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     public static final Skill CHARGE_ATTACK = new Skill(2, 60, 300);
     public static final Skill CRYSTAL_BARRAGE = new Skill(3, 300, 1000);
     public static final Skill GRAB_ATTACK = new Skill(4, 200, 1000);
+    public static final Skill SUMMON_MINIONS = new Skill(5, 300, 1200);
 
     private static final int ROAR_HIT_TICK = 22;
     private double chargeDestX, chargeDestY, chargeDestZ;
@@ -227,7 +233,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     } else {
                         return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
                     }
-                } else if (skillId == 3) { // CRYSTAL_BARRAGE
+                } else if (skillId == 3 || skillId == 5) { // CRYSTAL_BARRAGE or SUMMON_MINIONS
                     return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
                 }
             }
@@ -355,6 +361,15 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
             if (isRoaring) {
                 this.visualPitch += MathHelper.wrapDegrees(-60.0f - this.visualPitch) * 0.15f;
+
+                MinecraftClient client = MinecraftClient.getInstance();
+                if (client.player != null) {
+                    double distSq = client.player.squaredDistanceTo(this);
+                    if (distSq < 64.0 * 64.0) {
+                        float distFactor = (float) (1.0 - Math.sqrt(distSq) / 64.0);
+                        com.trongthang.welcometomyworld.client.CameraShakeManager.addShake(2.5f * distFactor, 20);
+                    }
+                }
             } else {
                 Vec3d vel = this.getVelocity();
                 this.smoothedVelocity = this.smoothedVelocity.add(vel.subtract(this.smoothedVelocity).multiply(0.1));
@@ -544,6 +559,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                                 this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                                         SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY,
                                         net.minecraft.sound.SoundCategory.HOSTILE, 2.0F, 1.0F);
+
+                                this.getWorld().sendEntityStatus(this, (byte) 62);
 
                                 if (skillRemainingCharges > 0) {
                                     skillRemainingCharges--;
@@ -835,6 +852,108 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             this.dataTracker.set(SKILL_ID, 0);
                         }
                     }
+                }
+            } else if (skillId == 5) { // SUMMON_MINIONS
+                if (target != null && target.isAlive()) {
+                    skillTick++;
+
+                    // Disable Elytra flight for nearby players
+                    for (PlayerEntity player : this.getWorld().getPlayers()) {
+                        if (player.isAlive() && !player.isCreative() && !player.isSpectator()) {
+                            if (this.squaredDistanceTo(player) <= 60.0 * 60.0) {
+                                if (player.isFallFlying()) {
+                                    player.stopFallFlying();
+                                }
+                            }
+                        }
+                    }
+
+                    double targetX = target.getX();
+                    // Altitude oscillating between -5 and 5 blocks relative to target
+                    double altitudeOffset = MathHelper.sin(this.age * 0.05f) * 10.0;
+                    double targetY = target.getY() + altitudeOffset;
+                    double targetZ = target.getZ();
+
+                    if (isPreparing) {
+                        // Phase 1: Fly to position
+                        Vec3d dir = new Vec3d(targetX - this.getX(), targetY - this.getY(), targetZ - this.getZ());
+                        double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
+                        if (dir.lengthSquared() > 0.1)
+                            dir = dir.normalize();
+
+                        double speed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 2.0;
+                        this.setVelocity(dir.multiply(speed));
+                        this.velocityModified = true;
+
+                        float targetYaw = (float) (MathHelper.atan2(dir.z, dir.x) * (180.0 / Math.PI)) - 90.0F;
+                        float targetPitch = (float) (MathHelper.atan2(dir.y, distXZ) * (180.0 / Math.PI));
+
+                        this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
+                        this.setYaw(this.serverSideYaw);
+                        this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
+                        this.setPitch(this.serverSidePitch);
+
+                        if (this.getPos().distanceTo(new Vec3d(targetX, targetY, targetZ)) <= 12.0D) {
+                            this.dataTracker.set(SKILL_PREPARING, false);
+                        }
+                    } else {
+                        // Phase 2: Circle and Summon
+                        double radius = 100.0;
+                        double angle = (this.age * 0.1);
+                        double circleX = targetX + Math.cos(angle) * radius;
+                        double circleZ = targetZ + Math.sin(angle) * radius;
+
+                        Vec3d desiredPos = new Vec3d(circleX, targetY, circleZ);
+                        Vec3d dir = desiredPos.subtract(this.getPos());
+                        if (dir.lengthSquared() > 0.1)
+                            dir = dir.normalize();
+
+                        double orbitSpeed = 1.2;
+                        this.setVelocity(dir.multiply(orbitSpeed));
+                        this.velocityModified = true;
+
+                        // Face movement direction
+                        Vec3d vel = this.getVelocity();
+                        if (vel.lengthSquared() > 0.001) {
+                            float targetYaw = (float) (MathHelper.atan2(vel.z, vel.x) * (180.0 / Math.PI)) - 90.0F;
+                            this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
+                            this.setYaw(this.serverSideYaw);
+
+                            double horizDist = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+                            float targetPitch = (float) (MathHelper.atan2(vel.y, horizDist) * (180.0 / Math.PI));
+                            this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
+                            this.setPitch(this.serverSidePitch);
+                        }
+
+                        // Summon every 20 ticks
+                        if (skillTick % 20 == 0) {
+                            EntityType<?> typeToSummon = this.random.nextBoolean() ? EntityType.SKELETON
+                                    : EntityType.WITHER_SKELETON;
+
+                            BlockPos spawnPos = com.trongthang.welcometomyworld.features.SpawnMonstersPackEveryMins
+                                    .findSafeSpawnPositionByPack(
+                                            (ServerWorld) this.getWorld(), this.getBlockPos(), typeToSummon, 3, 10);
+
+                            if (spawnPos != null) {
+                                Entity summoned = typeToSummon.create(this.getWorld());
+                                if (summoned instanceof MobEntity mob) {
+                                    mob.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(),
+                                            spawnPos.getZ() + 0.5, this.random.nextFloat() * 360f, 0);
+                                    mob.initialize((ServerWorld) this.getWorld(),
+                                            this.getWorld().getLocalDifficulty(spawnPos), SpawnReason.MOB_SUMMONED,
+                                            null, null);
+                                    mob.setTarget(target);
+                                    this.getWorld().spawnEntity(mob);
+
+                                    // Visual effect
+                                    ((ServerWorld) this.getWorld()).spawnParticles(
+                                            net.minecraft.particle.ParticleTypes.LARGE_SMOKE,
+                                            spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, 20,
+                                            0.5, 0.5, 0.5, 0.1);
+                                }
+                            }
+                        }
+                    }
                 } else {
                     this.dataTracker.set(IS_USING_SKILL, false);
                     this.dataTracker.set(SKILL_PREPARING, false);
@@ -892,6 +1011,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     triggerSkill(CRYSTAL_BARRAGE);
                 } else if (canUseSkill(GRAB_ATTACK) && distX < 64.0 && distZ < 64.0) {
                     triggerSkill(GRAB_ATTACK);
+                } else if (canUseSkill(SUMMON_MINIONS) && distX < 100 && distZ < 100) {
+                    triggerSkill(SUMMON_MINIONS);
                 }
             }
         }
@@ -1250,6 +1371,24 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             if (delta < -maxStep)
                 delta = -maxStep;
             return current + delta;
+        }
+    }
+
+    @Override
+    public void handleStatus(byte status) {
+        if (status == 62) { // Custom impact status
+            if (this.getWorld().isClient()) {
+                net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+                if (client.player != null) {
+                    double distSq = client.player.squaredDistanceTo(this);
+                    if (distSq < 64.0 * 64.0) {
+                        float distFactor = (float) (1.0 - Math.sqrt(distSq) / 64.0);
+                        com.trongthang.welcometomyworld.client.CameraShakeManager.addShake(5.0f * distFactor, 30);
+                    }
+                }
+            }
+        } else {
+            super.handleStatus(status);
         }
     }
 

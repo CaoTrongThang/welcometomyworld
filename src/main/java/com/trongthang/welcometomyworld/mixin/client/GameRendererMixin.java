@@ -23,4 +23,10 @@ public abstract class GameRendererMixin {
             ci.cancel();
         }
     }
+
+    @Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobView(Lnet/minecraft/client/util/math/MatrixStack;F)V", shift = At.Shift.AFTER))
+    private void welcometomyworld_applyCameraShake(float tickDelta, long limitTime, MatrixStack matrices,
+            CallbackInfo ci) {
+        com.trongthang.welcometomyworld.client.CameraShakeManager.applyShake(matrices, tickDelta);
+    }
 }

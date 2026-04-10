@@ -79,6 +79,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         SoundsClientHandler.register();
         ScreenClientHandler.register();
         ClientScheduler.init();
+        CameraShakeManager.init();
 
         ClientPlayConnectionEvents.JOIN.register((handler, client, c) -> {
             preRenderChunks(c);

@@ -21,7 +21,8 @@ public abstract class InGameHudMixin {
 
     @Inject(method = "getRiddenEntity", at = @At("RETURN"), cancellable = true)
     private void onGetRiddenEntity(CallbackInfoReturnable<net.minecraft.entity.LivingEntity> cir) {
-        if (cir.getReturnValue() instanceof Unknown || cir.getReturnValue() instanceof PhantomEntity) {
+        if (cir.getReturnValue() instanceof Unknown || cir.getReturnValue() instanceof PhantomEntity
+                || cir.getReturnValue() instanceof VoidWormEntity) {
             cir.setReturnValue(null); // Trick the HUD into drawing normal health/food bars instead of the mount bar
         }
     }
@@ -34,7 +35,7 @@ public abstract class InGameHudMixin {
                 if (player != null && (player.getVehicle() instanceof Unknown
                         || player.getVehicle() instanceof PhantomEntity
                         || player.getVehicle() instanceof VoidWormEntity)) {
-                    ci.cancel(); // Hide 'Press SHIFT to dismount' text
+                    ci.cancel();
                 }
             }
         }
