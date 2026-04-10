@@ -499,7 +499,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
                 break;
             case 1: // PUNCH
-                if (skillTick == PUNCH_HIT_TICK - 10) {
+                if (skillTick == PUNCH_HIT_TICK - 18) {
                     this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundsManager.EXPLODE_PUNCH, this.getSoundCategory(), 1.0F,
                             MathHelper.nextBetween(this.random, 0.8F, 1.2F));

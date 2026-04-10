@@ -7,11 +7,14 @@ import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
+import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 
 public class VoidWormBodyRenderer extends GeoEntityRenderer<VoidWormPartEntity> {
     public VoidWormBodyRenderer(EntityRendererFactory.Context renderManager) {
         super(renderManager, new VoidWormBodyModel());
         this.withScale(2.0f, 2.0f);
+
+        this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
     }
 
     @Override

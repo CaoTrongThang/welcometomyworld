@@ -29,7 +29,7 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
 
     private LivingEntity leader;
     private VoidWormEntity head;
-    private float followDistance = 1f; // distance to stay behind leader
+    private float followDistance = 2f; // distance to stay behind leader
 
     private UUID headUUID;
     private UUID leaderUUID;

@@ -10,10 +10,14 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -34,7 +38,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     // Configurable size
-    private static final int BODY_SEGMENTS = 12;
+    private static final int BODY_SEGMENTS = 10;
     private final List<VoidWormPartEntity> parts = new ArrayList<>();
     private boolean partsSpawned = false;
 
@@ -44,7 +48,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    private static final float PART_DISTANCE = 5f;
+    private static final float PART_DISTANCE = 8f;
 
     // Custom visual pitch to bypass vanilla LookControl pitch resetting
     public float visualPitch = 0.0f;
@@ -80,9 +84,11 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    public static final Skill ROAR = new Skill(1, 120, 200);
+    public static final Skill ROAR = new Skill(1, 80, 500);
+    public static final Skill CHARGE_ATTACK = new Skill(2, 60, 300);
 
-    private static final int ROAR_HIT_TICK = 25;
+    private static final int ROAR_HIT_TICK = 22;
+    private double chargeDestX, chargeDestY, chargeDestZ;
 
     private boolean skillHitFired = false;
     private int skillTotalTicks = 0;
@@ -146,7 +152,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     @Override
     protected void initGoals() {
         this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
-        this.goalSelector.add(2, new FlyTowardsTargetGoal(this));
+        this.goalSelector.add(2, new BossFlightGoal(this));
     }
 
     @Override
@@ -163,7 +169,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             if (isUsingSkill) {
                 int skillTrigger = this.dataTracker.get(SKILL_TRIGGER);
 
-                state.getController().transitionLength(5);
+                // Roar must start immediately so animation and sound stay in sync
+                state.getController().transitionLength(skillId == 1 ? 0 : 5);
                 if (prevSkillId[0] != skillId || prevSkillTrigger[0] != skillTrigger) {
                     state.getController().forceAnimationReset();
                 }
@@ -172,6 +179,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
                 if (skillId == 1) { // ROAR
                     return state.setAndContinue(RawAnimation.begin().thenPlay("void_worm_head_roar"));
+                } else if (skillId == 2) { // CHARGE_ATTACK
+                    if (!this.dataTracker.get(SKILL_PREPARING)) {
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("attack_openning_mouth"));
+                    } else {
+                        return state.setAndContinue(RawAnimation.begin().thenLoop("moving"));
+                    }
                 }
             }
             prevSkillId[0] = 0;
@@ -253,9 +266,61 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             }
         } else {
             // Client side visual interpolation
+            // 0.15f is intentionally slower than the server's 5°/tick cap to avoid
+            // ping-pong shimmer when packets arrive slightly out of phase.
             float targetP = this.dataTracker.get(TARGET_PITCH);
-            this.visualPitch += MathHelper.wrapDegrees(targetP - this.visualPitch) * 0.3f;
-            this.visualYaw += MathHelper.wrapDegrees(this.getYaw() - this.visualYaw) * 0.3f;
+            this.visualPitch += MathHelper.wrapDegrees(targetP - this.visualPitch) * 0.15f;
+            this.visualYaw += MathHelper.wrapDegrees(this.getYaw() - this.visualYaw) * 0.15f;
+        }
+    }
+
+    public void dealDiveAoeDamage(double radius, float damage, boolean createBlock) {
+        if (this.getWorld().isClient())
+            return;
+        net.minecraft.util.math.Box area = this.getBoundingBox().expand(radius);
+        List<LivingEntity> nearby = this.getWorld().getEntitiesByClass(
+                LivingEntity.class, area, e -> e.isAlive() && e != this && !(e instanceof VoidWormPartEntity));
+
+        for (LivingEntity target : nearby) {
+            target.damage(this.getDamageSources().mobAttack(this), damage);
+        }
+
+        if (createBlock && this.getWorld() instanceof ServerWorld serverWorld) {
+            final double originX = this.getX();
+            final double originY = this.getY();
+            final double originZ = this.getZ();
+            int ringIndex = 0;
+            java.util.Set<net.minecraft.util.math.BlockPos> spawnedPositions = new java.util.HashSet<>();
+
+            for (double r = 1.5; r <= radius + 0.5; r += 1.5) {
+                final double currentRadius = r;
+                final int finalDelay = ringIndex / 2; // 2 rings per tick (0.5 tick per ring-step)
+
+                Utils.addRunAfter(() -> {
+                    int blockCount = (int) (currentRadius * 8); // denser rings
+                    for (int i = 0; i < blockCount; i++) {
+                        double angle = 2 * Math.PI * i / blockCount;
+                        double x = originX + currentRadius * Math.cos(angle);
+                        double z = originZ + currentRadius * Math.sin(angle);
+                        net.minecraft.util.math.BlockPos spawnPos = net.minecraft.util.math.BlockPos.ofFloored(x,
+                                originY, z);
+
+                        if (spawnedPositions.contains(spawnPos)) {
+                            continue;
+                        }
+                        spawnedPositions.add(spawnPos);
+
+                        net.minecraft.block.BlockState groundState = serverWorld.getBlockState(spawnPos.down());
+                        if (groundState.isAir() || !groundState.isOpaqueFullCube(serverWorld, spawnPos.down())) {
+                            continue;
+                        }
+
+                        Utils.CreateBlockSlamGround(serverWorld, groundState, spawnPos.down());
+                    }
+                }, finalDelay);
+
+                ringIndex++;
+            }
         }
     }
 
@@ -268,6 +333,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             double distSq = this.squaredDistanceTo(entity);
             if (distSq <= radius * radius) {
                 entity.damage(this.getDamageSources().mobAttack(this), amount);
+                // give blind effect
+                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 20 * 5, 1));
             }
         }
     }
@@ -296,14 +363,112 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             int skillId = this.dataTracker.get(SKILL_ID);
             LivingEntity target = getTarget();
 
-            if (skillId == 1) { // ROAR
+            if (skillId == 2) { // CHARGE_ATTACK
+                if (target != null && target.isAlive()) {
+                    if (isPreparing) {
+                        double targetYHover = target.getY() + 40.0D;
+                        Vec3d dir = new Vec3d(target.getX() - this.getX(), targetYHover - this.getY(),
+                                target.getZ() - this.getZ());
+                        double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
+                        if (dir.lengthSquared() > 0.1)
+                            dir = dir.normalize();
+
+                        double speed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 2.0;
+                        this.setVelocity(dir.multiply(speed));
+                        this.velocityModified = true;
+
+                        double dx = target.getX() - this.getX();
+                        double dy = targetYHover - this.getY();
+                        double dz = target.getZ() - this.getZ();
+
+                        float targetYaw = (float) (MathHelper.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                        // Removed negative sign, positive pitch is UP, negative is DOWN
+                        float targetPitch = (float) (MathHelper.atan2(dy, distXZ) * (180.0 / Math.PI));
+
+                        this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
+                        this.setYaw(this.serverSideYaw);
+                        this.bodyYaw = this.getYaw();
+                        this.headYaw = this.getYaw();
+                        this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
+                        this.setPitch(this.serverSidePitch);
+                        this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
+
+                        if (this.getY() >= targetYHover - 4.0D && distXZ <= 8.0D) {
+                            this.dataTracker.set(SKILL_PREPARING, false);
+                            this.dataTracker.set(SKILL_TRIGGER, this.dataTracker.get(SKILL_TRIGGER) + 1); // trigger
+                                                                                                          // animation
+                                                                                                          // reset
+                            this.chargeDestX = target.getX();
+                            this.chargeDestY = target.getY();
+                            this.chargeDestZ = target.getZ();
+                            this.setVelocity(0, 0, 0);
+                        }
+                    } else {
+                        skillTick++;
+
+                        if (skillTick < 5) {
+                            this.setVelocity(0, 0, 0);
+                            this.velocityModified = true;
+                            // Face destination
+                            double dx = this.chargeDestX - this.getX();
+                            double dy = this.chargeDestY - this.getY();
+                            double dz = this.chargeDestZ - this.getZ();
+                            double distXZ = Math.sqrt(dx * dx + dz * dz);
+                            this.serverSideYaw = (float) (MathHelper.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                            // Fix pitch inversion here as well
+                            this.serverSidePitch = (float) (MathHelper.atan2(dy, distXZ) * (180.0 / Math.PI));
+
+                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("charge_head_point",
+                                    "Charge targeting", "dy", dy, "distXZ", distXZ, "pitch", this.serverSidePitch);
+
+                            this.setYaw(this.serverSideYaw);
+                            this.setPitch(this.serverSidePitch);
+                            this.bodyYaw = this.getYaw();
+                            this.headYaw = this.getYaw();
+                            this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
+                        } else if (!skillHitFired) {
+                            double dx = this.chargeDestX - this.getX();
+                            double dy = this.chargeDestY - this.getY();
+                            double dz = this.chargeDestZ - this.getZ();
+                            Vec3d dir = new Vec3d(dx, dy, dz);
+                            double distSq = dir.lengthSquared();
+                            if (dir.lengthSquared() > 0.01)
+                                dir = dir.normalize();
+
+                            double chargeSpeed = 4.0; // very fast dive
+                            this.setVelocity(dir.multiply(chargeSpeed));
+                            this.velocityModified = true;
+
+                            boolean hitGround = this.horizontalCollision || this.verticalCollision;
+                            if (distSq < 16.0 || hitGround || this.getY() <= this.chargeDestY + 2.0) {
+                                dealDiveAoeDamage(20.0,
+                                        (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 3.0f,
+                                        true);
+                                this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                        SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY,
+                                        net.minecraft.sound.SoundCategory.HOSTILE, 2.0F, 1.0F);
+
+                                this.dataTracker.set(IS_USING_SKILL, false);
+                                this.dataTracker.set(SKILL_PREPARING, false);
+                                this.dataTracker.set(SKILL_ID, 0);
+                            }
+                        }
+                    }
+                } else {
+                    this.setVelocity(this.getVelocity().multiply(0.9D));
+                    this.velocityModified = true;
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_PREPARING, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
+            } else if (skillId == 1) { // ROAR
                 if (target != null && target.isAlive()) {
                     double targetX = target.getX();
-                    double targetY = target.getY() + 30.0D;
+                    double targetY = target.getY() + 20.0D;
                     double targetZ = target.getZ();
 
                     if (isPreparing) {
-                        // Phase 1: Move to destination (40 blocks above target)
+                        // Fly to position (30 blocks above target)
                         Vec3d dir = new Vec3d(targetX - this.getX(), targetY - this.getY(), targetZ - this.getZ());
                         double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
                         if (dir.lengthSquared() > 0.1) {
@@ -314,7 +479,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         this.setVelocity(dir.multiply(speed));
                         this.velocityModified = true;
 
-                        // Visual Look towards target while flying up
                         double dx = targetX - this.getX();
                         double dy = targetY - this.getY();
                         double dz = targetZ - this.getZ();
@@ -331,40 +495,34 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         this.setPitch(this.serverSidePitch);
                         this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
 
-                        // Check if reached destination (Y >= targetY - 4 and horizontal dist <= 8)
                         if (this.getY() >= targetY - 4.0D && distXZ <= 8.0D) {
-                            // Reached destination! Stop preparing
+                            // Reached position: start animation AND sound at the same tick.
+                            // Both have identical 0→1s buildups, so they sync perfectly.
+
                             this.dataTracker.set(SKILL_PREPARING, false);
-                            this.setVelocity(0, 0, 0); // Stop
+                            this.setVelocity(0, 0, 0);
                         }
                     } else {
                         skillTick++;
 
-                        // Hover
+                        // Hold position while roaring
                         double currentY = this.getY();
                         double upVel = 0;
-                        if (currentY < targetY) {
-                            upVel = Math.min(2.0, targetY - currentY) * 0.2; // glide up smoothly
-                        } else if (currentY > targetY + 2.0D) {
-                            upVel = -0.1; // slowly drift down if overshooting
+                        if (currentY < targetY - 0.5) {
+                            upVel = Math.min(1.0, targetY - currentY) * 0.15;
+                        } else if (currentY > targetY + 1.5) {
+                            upVel = -0.05;
                         }
-
-                        // Decelerate horizontal velocity gracefully so it stops
-                        this.setVelocity(this.getVelocity().x * 0.8, upVel, this.getVelocity().z * 0.8);
+                        this.setVelocity(this.getVelocity().x * 0.5, upVel, this.getVelocity().z * 0.5);
                         this.velocityModified = true;
 
-                        // Look straight down, do NOT adjust yaw to avoid breaking neck
-                        this.serverSidePitch = -60.0F; // -90.0F looks straight down natively in many cases
+                        // Look straight down
+                        this.serverSidePitch = -60.0F;
                         this.setPitch(this.serverSidePitch);
                         this.dataTracker.set(TARGET_PITCH, this.serverSidePitch);
 
-                        if (skillTick == 1) {
-                            Utils.playFarSound((ServerWorld) this.getWorld(), this, SoundsManager.MONSTER_ROAR,
-                                    net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F, 84.0);
-                        }
-
                         if (skillTick >= ROAR_HIT_TICK && skillTick <= 95) {
-                            if (skillTick % 10 == 0) { // Deal damage every 5 ticks
+                            if (skillTick % 11 == 0) {
                                 dealAoeDamage(64.0,
                                         (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.0f);
                             }
@@ -394,10 +552,16 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 double distZ = Math.abs(target.getZ() - this.getZ());
                 double distY = Math.abs(target.getY() - this.getY());
 
-                // Only trigger if reasonably close horizontally and not astronomically far
-                // vertically
-                if (canUseSkill(ROAR) && distX < 64.0 && distZ < 64.0 && distY < 60.0) {
+                boolean canCharge = canUseSkill(CHARGE_ATTACK) && target.getY() - this.getY() >= 15.0 && distX < 64.0
+                        && distZ < 64.0;
+                if (canCharge) {
+                    triggerSkill(CHARGE_ATTACK);
+                    // Open mouth sound maybe handled inside or automatically by the animation if
+                    // registered in GeckoLib
+                } else if (canUseSkill(ROAR) && distX < 64.0 && distZ < 64.0 && distY < 60.0) {
                     triggerSkill(ROAR);
+                    Utils.playFarSound((ServerWorld) this.getWorld(), this, SoundsManager.MONSTER_ROAR,
+                            net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F, 84.0);
                 }
             }
         }
@@ -457,9 +621,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     }
 
     @Override
+    protected SoundEvent getAmbientSound() {
+        return SoundsManager.VOID_WORM_AMBIENT_1;
+    }
+
+    @Override
     public void onRemoved() {
-        com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("head_on_removed", "onRemoved called", "uuid",
-                this.getUuid());
         super.onRemoved();
         // Just discard locally, actual removal of parts handled separately if they were
         // killed
@@ -475,12 +642,15 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         return super.damage(source, amount);
     }
 
-    // A flight AI goal to chase targets or roam organically
-    static class FlyTowardsTargetGoal extends Goal {
+    // Default flight AI: orbits the target at a safe radius, wanders when no
+    // target.
+    // Skills are the only way the worm closes in on the player.
+    static class BossFlightGoal extends Goal {
+        private static final double ORBIT_RADIUS = 50;
         private final VoidWormEntity worm;
-        private Vec3d wanderTarget = null;
+        Vec3d wanderTarget = null;
 
-        public FlyTowardsTargetGoal(VoidWormEntity worm) {
+        public BossFlightGoal(VoidWormEntity worm) {
             this.worm = worm;
         }
 
@@ -495,34 +665,92 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
 
         @Override
+        public void start() {
+            // After a skill, the worm may be directly above the target (distH ≈ 0).
+            // Kick it in the true tangential direction (perpendicular to worm→target)
+            // so it immediately starts circling instead of possibly bolting outward.
+            LivingEntity target = worm.getTarget();
+            if (target != null && target.isAlive()) {
+                double toTargetX = target.getX() - worm.getX();
+                double toTargetZ = target.getZ() - worm.getZ();
+                double distH = Math.sqrt(toTargetX * toTargetX + toTargetZ * toTargetZ);
+                if (distH < ORBIT_RADIUS * 0.6) {
+                    double speed = worm.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+                    // Perpendicular to worm→target (true tangential = start circling)
+                    double normX = distH > 0.01 ? toTargetX / distH : 1.0;
+                    double normZ = distH > 0.01 ? toTargetZ / distH : 0.0;
+                    worm.setVelocity(-normZ * speed, 0, normX * speed);
+                    worm.velocityModified = true;
+                }
+            }
+        }
+
+        @Override
+        public void stop() {
+            // Force a fresh wander target after any skill finishes.
+            wanderTarget = null;
+        }
+
+        @Override
         public void tick() {
             LivingEntity target = worm.getTarget();
             double speed = worm.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             Vec3d currentVel = worm.getVelocity();
 
             if (target != null && target.isAlive()) {
-                Vec3d targetPos = target.getPos().add(0, target.getHeight() / 2, 0);
-                Vec3d dir = targetPos.subtract(worm.getPos()).normalize();
+                // Clear any wander target immediately when entering combat
+                wanderTarget = null;
 
-                Vec3d newVel = currentVel.add(dir.multiply(0.06)).normalize().multiply(speed * 1.2D);
+                // Orbit the target at ORBIT_RADIUS. Skills are the only way to close in.
+                Vec3d wormPos = worm.getPos();
 
-                // Add weaving even when chasing so it looks like a snake
-                double lenTarget = Math.sqrt(newVel.x * newVel.x + newVel.z * newVel.z);
-                Vec3d rightVec = lenTarget > 0.01 ? new Vec3d(-newVel.z, 0, newVel.x).normalize() : Vec3d.ZERO;
-                double horizontalWave = MathHelper.sin(worm.age * 0.15f) * 0.15;
-                double verticalWave = MathHelper.cos(worm.age * 0.08f) * 0.08;
+                // Vertical Roaming: Oscillate height between -16 and 16 blocks relative to
+                // target
+                double heightOffset = MathHelper.sin(worm.age * 0.04f) * 16.0;
+                double orbitY = target.getY() + heightOffset;
 
-                newVel = newVel.add(rightVec.multiply(horizontalWave))
-                        .add(0, verticalWave, 0)
-                        .normalize()
-                        .multiply(speed * 1.2D);
+                double toTargetX = target.getX() - wormPos.x;
+                double toTargetZ = target.getZ() - wormPos.z;
+                double distH = Math.sqrt(toTargetX * toTargetX + toTargetZ * toTargetZ);
+
+                // Radial unit vector (worm → target, horizontal)
+                Vec3d radial = distH > 0.01
+                        ? new Vec3d(toTargetX / distH, 0, toTargetZ / distH)
+                        : Vec3d.ZERO;
+                // Tangential (clockwise orbit)
+                Vec3d tangential = new Vec3d(-radial.z, 0, radial.x);
+
+                // Positive radialError → too far, steer in; negative → too close, steer out
+                double radialError = distH - ORBIT_RADIUS;
+                double verticalError = orbitY - wormPos.y;
+
+                // Build desired velocity: tangential orbit + radial correction + vertical
+                double targetSpeed = speed * 1.5D;
+                Vec3d desiredDir = tangential.multiply(1.0)
+                        .add(radial.multiply(MathHelper.clamp(radialError * 0.05, -1.0, 1.0)))
+                        .add(new Vec3d(0, MathHelper.clamp(verticalError * 0.08, -0.5, 0.5), 0));
+
+                // Small weave baked into the desired direction (before normalizing)
+                double lenH = Math.sqrt(desiredDir.x * desiredDir.x + desiredDir.z * desiredDir.z);
+                Vec3d rightVec = lenH > 0.01 ? new Vec3d(-desiredDir.z, 0, desiredDir.x).normalize() : Vec3d.ZERO;
+                desiredDir = desiredDir
+                        .add(rightVec.multiply(MathHelper.sin(worm.age * 0.15f) * 0.12))
+                        .add(0, MathHelper.cos(worm.age * 0.08f) * 0.06, 0);
+
+                Vec3d desiredVel = desiredDir.lengthSquared() > 0.0001
+                        ? desiredDir.normalize().multiply(targetSpeed)
+                        : currentVel;
+
+                // Blend current velocity toward desired. 0.25 reaches full speed in ~5 ticks
+                // while still smoothing sharp direction changes.
+                Vec3d newVel = currentVel.add(desiredVel.subtract(currentVel).multiply(0.50));
 
                 worm.setVelocity(newVel);
             } else {
                 // Organic Wandering AI
-                // Increase acceptance radius (400 sq dist) and interval (200 ticks) to avoid
-                // tight looping
-                if (wanderTarget == null || worm.squaredDistanceTo(wanderTarget) < 400.0 || worm.age % 200 == 0) {
+                // Accept radius = 40 blocks (1600 sq), interval = 400 ticks to ensure it
+                // reaches far destinations.
+                if (wanderTarget == null || worm.squaredDistanceTo(wanderTarget) < 1600.0 || worm.age % 400 == 0) {
                     // Forward-weighted U-turns (-75 to +75 degrees): prevents circling back
                     float randomYaw = worm.getYaw() + (worm.getRandom().nextFloat() * 150f - 75f);
                     // Gentle swoops (-40 to +40 degrees)
@@ -568,41 +796,47 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 }
 
                 // Smoothly steer towards wanderTarget
-                Vec3d dir = wanderTarget.subtract(worm.getPos()).normalize();
+                // Build desired velocity toward wanderTarget with weave baked in
+                Vec3d toTarget = wanderTarget.subtract(worm.getPos());
+                Vec3d dir = toTarget.lengthSquared() > 0.0001 ? toTarget.normalize() : Vec3d.ZERO;
 
-                // Keep wide curve radius by taking small amounts of direction
-                Vec3d newVel = currentVel.add(dir.multiply(0.04)).normalize().multiply(speed * 0.8D);
+                double targetSpeed = speed * 0.8D;
+                double lenTarget = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
+                Vec3d rightVec = lenTarget > 0.01 ? new Vec3d(-dir.z, 0, dir.x).normalize() : Vec3d.ZERO;
+                Vec3d desiredDir = dir
+                        .add(rightVec.multiply(MathHelper.sin(worm.age * 0.1f) * 0.1))
+                        .add(0, MathHelper.cos(worm.age * 0.05f) * 0.05, 0);
 
-                // Add horizontal and vertical weaving for organic snake-like slithering
-                double lenTarget = Math.sqrt(newVel.x * newVel.x + newVel.z * newVel.z);
-                Vec3d rightVec = lenTarget > 0.01 ? new Vec3d(-newVel.z, 0, newVel.x).normalize() : Vec3d.ZERO;
+                Vec3d desiredVel = desiredDir.lengthSquared() > 0.0001
+                        ? desiredDir.normalize().multiply(targetSpeed)
+                        : currentVel;
 
-                double horizontalWave = MathHelper.sin(worm.age * 0.1f) * 0.12;
-                double verticalWave = MathHelper.cos(worm.age * 0.05f) * 0.06;
-
-                newVel = newVel.add(rightVec.multiply(horizontalWave))
-                        .add(0, verticalWave, 0)
-                        .normalize()
-                        .multiply(speed * 0.8D);
+                // Blend toward desired: 0.2 reaches full speed quickly, wide turns still feel
+                // natural
+                Vec3d newVel = currentVel.add(desiredVel.subtract(currentVel).multiply(0.2));
 
                 worm.setVelocity(newVel);
             }
 
-            // Visual Angle Integration
+            // Visual Angle Integration - derive head rotation from actual velocity
             Vec3d vel = worm.getVelocity();
-            float targetYaw = (float) (MathHelper.atan2(vel.z, vel.x) * (180 / Math.PI)) - 90.0F;
-            worm.serverSideYaw = wrapDegrees(worm.serverSideYaw, targetYaw, 5.0f);
-            worm.setYaw(worm.serverSideYaw);
-            worm.bodyYaw = worm.getYaw();
-            worm.headYaw = worm.getYaw();
+            double velLenSq = vel.lengthSquared();
+            if (velLenSq > 0.0001) {
+                float targetYaw = (float) (MathHelper.atan2(vel.z, vel.x) * (180 / Math.PI)) - 90.0F;
+                // 8°/tick for yaw: head turns faster so it tracks the body's arc well
+                worm.serverSideYaw = wrapDegrees(worm.serverSideYaw, targetYaw, 8.0f);
+                worm.setYaw(worm.serverSideYaw);
+                worm.bodyYaw = worm.getYaw();
+                worm.headYaw = worm.getYaw();
 
-            double horizontalDist = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
-            float targetPitch = (float) (MathHelper.atan2(vel.y, horizontalDist) * (180 / Math.PI));
-            targetPitch = MathHelper.clamp(targetPitch, -65.0f, 65.0f); // Limit so it never looks perfectly straight
-                                                                        // up/down
-            worm.serverSidePitch = wrapDegrees(worm.serverSidePitch, targetPitch, 15.0f);
-            worm.setPitch(worm.serverSidePitch);
-            worm.dataTracker.set(TARGET_PITCH, worm.serverSidePitch);
+                double horizontalDist = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+                float targetPitch = (float) (MathHelper.atan2(vel.y, horizontalDist) * (180 / Math.PI));
+                targetPitch = MathHelper.clamp(targetPitch, -65.0f, 65.0f);
+                // 5°/tick for pitch: keep this slower so vertical lurches don't snap the head
+                worm.serverSidePitch = wrapDegrees(worm.serverSidePitch, targetPitch, 5.0f);
+                worm.setPitch(worm.serverSidePitch);
+                worm.dataTracker.set(TARGET_PITCH, worm.serverSidePitch);
+            }
 
             worm.velocityModified = true;
         }
