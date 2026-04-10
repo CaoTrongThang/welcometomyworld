@@ -13,6 +13,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import com.trongthang.welcometomyworld.world.dimension.VoidDimension;
+import com.trongthang.welcometomyworld.VoidBossState;
+import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
+import com.trongthang.welcometomyworld.managers.EntitiesManager;
+import net.minecraft.util.math.BlockPos;
 
 import static com.trongthang.welcometomyworld.features.MinecellsDimensionSarcastic.*;
 
@@ -69,6 +74,46 @@ public class ServerPlayerEntityMixin implements IServerPlayerEntity {
         if (isRestrictedDimension(destination) && !isRestrictedDimension(player.getWorld())) {
             this.lastPosMinecells = player.getPos();
             this.lastDimensionMinecells = player.getWorld().getRegistryKey().toString();
+        }
+
+        // Void Worm Boss Spawn Check
+        if (destination.getRegistryKey().equals(VoidDimension.VOID_DIM_LEVEL_KEY)) {
+            checkAndSpawnVoidBoss(destination);
+        }
+    }
+
+    @Unique
+    private void checkAndSpawnVoidBoss(ServerWorld voidWorld) {
+        VoidBossState state = VoidBossState.getServerState(voidWorld);
+        boolean bossExists = false;
+
+        if (state.bossUuid != null) {
+            // Check loaded entities first
+            if (voidWorld.getEntity(state.bossUuid) instanceof VoidWormEntity existingBoss && existingBoss.isAlive()) {
+                bossExists = true;
+            } else {
+                // To be 100% sure we don't spawn duplicates, check all entities in the world
+                // Note: iterateEntities() only returns LOADED entities.
+                // However, since VoidWormEntity adds a ticket to stay loaded, it should be here
+                // if it's anywhere in the world.
+                for (Entity entity : voidWorld.iterateEntities()) {
+                    if (entity instanceof VoidWormEntity && entity.getUuid().equals(state.bossUuid)
+                            && entity.isAlive()) {
+                        bossExists = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!bossExists) {
+            VoidWormEntity newBoss = new VoidWormEntity(EntitiesManager.VOID_WORM, voidWorld);
+            newBoss.refreshPositionAndAngles(0, 100, 0, 0, 0);
+            voidWorld.spawnEntity(newBoss);
+
+            state.bossUuid = newBoss.getUuid();
+            state.lastBossPos = new BlockPos(0, 100, 0);
+            state.markDirty();
         }
     }
 

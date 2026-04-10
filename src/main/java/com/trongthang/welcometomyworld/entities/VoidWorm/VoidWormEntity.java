@@ -31,6 +31,8 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
+import com.trongthang.welcometomyworld.VoidBossState;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -312,6 +314,14 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             }
             updateParts();
             skillsHandler();
+
+            // Persistently track this boss
+            if (this.age % 20 == 0) {
+                VoidBossState state = VoidBossState.getServerState(serverWorld);
+                state.bossUuid = this.getUuid();
+                state.lastBossPos = this.getBlockPos();
+                state.markDirty();
+            }
 
             if (this.getTarget() != null) {
                 combatTicks = 400; // 20 seconds of combat state retention when target is lost
@@ -614,6 +624,13 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         if (globalSkillCooldown <= 0 && !isUsingSkill()) {
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive()) {
+                // Ignore target if too far from center (0, 50, 0)
+                Vec3d center = new Vec3d(0, 50, 0);
+                if (target.getPos().distanceTo(center) > 500.0) {
+                    this.setTarget(null);
+                    return;
+                }
+
                 double distX = Math.abs(target.getX() - this.getX());
                 double distZ = Math.abs(target.getZ() - this.getZ());
                 double distY = Math.abs(target.getY() - this.getY());
@@ -788,6 +805,13 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 // Clear any wander target immediately when entering combat
                 wanderTarget = null;
 
+                // Stay within 500 blocks of (0, 50, 0)
+                Vec3d center = new Vec3d(0, 50, 0);
+                if (target.getPos().distanceTo(center) > 500.0) {
+                    worm.setTarget(null);
+                    return;
+                }
+
                 // Orbit the target at ORBIT_RADIUS. Skills are the only way to close in.
                 Vec3d wormPos = worm.getPos();
 
@@ -878,6 +902,17 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         y = minY + worm.getRandom().nextDouble() * 40.0;
                     if (y > maxY)
                         y = maxY - worm.getRandom().nextDouble() * 40.0;
+
+                    // Clamp wander target within 500 blocks of (0, 50, 0)
+                    Vec3d home = new Vec3d(0, 50, 0);
+                    Vec3d targetPos = new Vec3d(x, y, z);
+                    if (targetPos.distanceTo(home) > 450.0) { // Aim for slightly inside the 500 limit
+                        Vec3d dirToHome = home.subtract(targetPos).normalize();
+                        targetPos = home.add(dirToHome.multiply(-450.0));
+                        x = targetPos.x;
+                        y = targetPos.y;
+                        z = targetPos.z;
+                    }
 
                     wanderTarget = new Vec3d(x, y, z);
                 }
