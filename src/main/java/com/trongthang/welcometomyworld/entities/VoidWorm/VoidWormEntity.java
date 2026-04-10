@@ -693,19 +693,33 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             this.dataTracker.set(SKILL_PREPARING, false);
                         }
                     } else {
-                        // Fly in circle around 30 radius
-                        double radius = 60.0;
-                        double angle = (this.age * 0.1); // Continuous rotation
-                        double circleX = targetX + Math.cos(angle) * radius;
-                        double circleZ = targetZ + Math.sin(angle) * radius;
+                        // Phase 2: Circle and Shoot
+                        double radius = 20.0;
+                        Vec3d wormPos = this.getPos();
+                        double toTargetX = target.getX() - wormPos.x;
+                        double toTargetZ = target.getZ() - wormPos.z;
+                        double distH = Math.sqrt(toTargetX * toTargetX + toTargetZ * toTargetZ);
 
-                        Vec3d desiredPos = new Vec3d(circleX, targetY, circleZ);
-                        Vec3d dir = desiredPos.subtract(this.getPos());
-                        if (dir.lengthSquared() > 0.1)
-                            dir = dir.normalize();
+                        // Radial unit vector (worm → target, horizontal)
+                        Vec3d radial = distH > 0.01
+                                ? new Vec3d(toTargetX / distH, 0, toTargetZ / distH)
+                                : Vec3d.ZERO;
+                        // Tangential (clockwise orbit)
+                        Vec3d tangential = new Vec3d(-radial.z, 0, radial.x);
+
+                        // Positive radialError → too far, steer in; negative → too close, steer out
+                        double radialError = distH - radius;
+                        double verticalError = targetY - wormPos.y;
 
                         double orbitSpeed = 1.0;
-                        this.setVelocity(dir.multiply(orbitSpeed));
+                        Vec3d desiredDir = tangential.multiply(1.0)
+                                .add(radial.multiply(MathHelper.clamp(radialError * 0.05, -1.0, 1.0)))
+                                .add(new Vec3d(0, MathHelper.clamp(verticalError * 0.1, -0.6, 0.6), 0));
+
+                        if (desiredDir.lengthSquared() > 0.001)
+                            desiredDir = desiredDir.normalize();
+
+                        this.setVelocity(desiredDir.multiply(orbitSpeed));
                         this.velocityModified = true;
 
                         // Face the movement direction
@@ -861,47 +875,78 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     }
 
                     double targetX = target.getX();
-                    // Altitude oscillating between -5 and 5 blocks relative to target
+                    // Altitude oscillating between -10 and 10 blocks relative to target
                     double altitudeOffset = MathHelper.sin(this.age * 0.05f) * 10.0;
                     double targetY = target.getY() + altitudeOffset;
                     double targetZ = target.getZ();
 
+                    double radius = 10.0;
+
                     if (isPreparing) {
-                        // Phase 1: Fly to position
-                        Vec3d dir = new Vec3d(targetX - this.getX(), targetY - this.getY(), targetZ - this.getZ());
-                        double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
+                        // Phase 1: Fly to a point on the orbit circle
+                        // Calculate a point that is 'radius' away from the target
+                        double dx = this.getX() - targetX;
+                        double dz = this.getZ() - targetZ;
+                        double distH = Math.sqrt(dx * dx + dz * dz);
+
+                        double orbitTargetX, orbitTargetZ;
+                        if (distH > 0.1) {
+                            orbitTargetX = targetX + (dx / distH) * radius;
+                            orbitTargetZ = targetZ + (dz / distH) * radius;
+                        } else {
+                            orbitTargetX = targetX + radius;
+                            orbitTargetZ = targetZ;
+                        }
+
+                        Vec3d targetPos = new Vec3d(orbitTargetX, targetY, orbitTargetZ);
+                        Vec3d dir = targetPos.subtract(this.getPos());
+
                         if (dir.lengthSquared() > 0.1)
                             dir = dir.normalize();
 
-                        double speed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 2.0;
+                        double speed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 3.0;
                         this.setVelocity(dir.multiply(speed));
                         this.velocityModified = true;
 
                         float targetYaw = (float) (MathHelper.atan2(dir.z, dir.x) * (180.0 / Math.PI)) - 90.0F;
-                        float targetPitch = (float) (MathHelper.atan2(dir.y, distXZ) * (180.0 / Math.PI));
+                        float targetPitch = (float) (MathHelper.atan2(dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z))
+                                * (180.0 / Math.PI));
 
                         this.serverSideYaw = smoothAngle(this.serverSideYaw, targetYaw, 15.0f);
                         this.setYaw(this.serverSideYaw);
                         this.serverSidePitch = smoothAngle(this.serverSidePitch, targetPitch, 15.0f);
                         this.setPitch(this.serverSidePitch);
 
-                        if (this.getPos().distanceTo(new Vec3d(targetX, targetY, targetZ)) <= 12.0D) {
+                        if (this.getPos().distanceTo(targetPos) <= 16.0D) {
                             this.dataTracker.set(SKILL_PREPARING, false);
                         }
                     } else {
                         // Phase 2: Circle and Summon
-                        double radius = 100.0;
-                        double angle = (this.age * 0.1);
-                        double circleX = targetX + Math.cos(angle) * radius;
-                        double circleZ = targetZ + Math.sin(angle) * radius;
+                        Vec3d wormPos = this.getPos();
+                        double toTargetX = target.getX() - wormPos.x;
+                        double toTargetZ = target.getZ() - wormPos.z;
+                        double distH = Math.sqrt(toTargetX * toTargetX + toTargetZ * toTargetZ);
 
-                        Vec3d desiredPos = new Vec3d(circleX, targetY, circleZ);
-                        Vec3d dir = desiredPos.subtract(this.getPos());
-                        if (dir.lengthSquared() > 0.1)
-                            dir = dir.normalize();
+                        // Radial unit vector (worm → target, horizontal)
+                        Vec3d radial = distH > 0.01
+                                ? new Vec3d(toTargetX / distH, 0, toTargetZ / distH)
+                                : Vec3d.ZERO;
+                        // Tangential (clockwise orbit)
+                        Vec3d tangential = new Vec3d(-radial.z, 0, radial.x);
 
-                        double orbitSpeed = 1.2;
-                        this.setVelocity(dir.multiply(orbitSpeed));
+                        // Positive radialError → too far, steer in; negative → too close, steer out
+                        double radialError = distH - radius;
+                        double verticalError = targetY - wormPos.y;
+
+                        double orbitSpeed = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 1.2;
+                        Vec3d desiredDir = tangential.multiply(1.0)
+                                .add(radial.multiply(MathHelper.clamp(radialError * 0.05, -1.0, 1.0)))
+                                .add(new Vec3d(0, MathHelper.clamp(verticalError * 0.1, -0.6, 0.6), 0));
+
+                        if (desiredDir.lengthSquared() > 0.001)
+                            desiredDir = desiredDir.normalize();
+
+                        this.setVelocity(desiredDir.multiply(orbitSpeed));
                         this.velocityModified = true;
 
                         // Face movement direction
@@ -1010,7 +1055,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     triggerSkill(CRYSTAL_BARRAGE);
                 } else if (canUseSkill(GRAB_ATTACK) && distX < 64.0 && distZ < 64.0) {
                     triggerSkill(GRAB_ATTACK);
-                } else if (canUseSkill(SUMMON_MINIONS) && distX < 100 && distZ < 100) {
+                } else if (canUseSkill(SUMMON_MINIONS) && distX < 200 && distZ < 200) {
                     triggerSkill(SUMMON_MINIONS);
                 }
             }

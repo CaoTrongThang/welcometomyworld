@@ -225,9 +225,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             handleOpenMobStats(client);
         }
 
-        // TEMPORARY TEST: Press K to test camera shake
-        if (net.minecraft.client.util.InputUtil.isKeyPressed(client.getWindow().getHandle(), 75)) {
-            CameraShakeManager.addShake(8.0f, 40);
+        if (ModKeybindings.testCameraShake.wasPressed()) {
+            CameraShakeManager.addShake(15.0f, 60);
         }
     }
 
