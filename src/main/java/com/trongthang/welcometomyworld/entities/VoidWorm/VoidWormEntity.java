@@ -361,15 +361,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
             if (isRoaring) {
                 this.visualPitch += MathHelper.wrapDegrees(-60.0f - this.visualPitch) * 0.15f;
-
-                MinecraftClient client = MinecraftClient.getInstance();
-                if (client.player != null) {
-                    double distSq = client.player.squaredDistanceTo(this);
-                    if (distSq < 64.0 * 64.0) {
-                        float distFactor = (float) (1.0 - Math.sqrt(distSq) / 64.0);
-                        com.trongthang.welcometomyworld.client.CameraShakeManager.addShake(2.5f * distFactor, 20);
-                    }
-                }
             } else {
                 Vec3d vel = this.getVelocity();
                 this.smoothedVelocity = this.smoothedVelocity.add(vel.subtract(this.smoothedVelocity).multiply(0.1));
@@ -1413,24 +1404,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             if (delta < -maxStep)
                 delta = -maxStep;
             return current + delta;
-        }
-    }
-
-    @Override
-    public void handleStatus(byte status) {
-        if (status == 62) { // Custom impact status
-            if (this.getWorld().isClient()) {
-                net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
-                if (client.player != null) {
-                    double distSq = client.player.squaredDistanceTo(this);
-                    if (distSq < 64.0 * 64.0) {
-                        float distFactor = (float) (1.0 - Math.sqrt(distSq) / 64.0);
-                        com.trongthang.welcometomyworld.client.CameraShakeManager.addShake(5.0f * distFactor, 30);
-                    }
-                }
-            }
-        } else {
-            super.handleStatus(status);
         }
     }
 

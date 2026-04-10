@@ -7,7 +7,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class ModKeybindings {
     public static KeyBinding openMobStats;
-    public static KeyBinding testCameraShake;
 
     public static void registerKeybindings() {
         openMobStats = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -16,11 +15,5 @@ public class ModKeybindings {
                 GLFW.GLFW_KEY_M, // Default key (M)
                 "category.welcometomyworld.keys" // Category in controls menu
         ));
-
-        testCameraShake = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.welcometomyworld.test_camera_shake",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_K,
-                "category.welcometomyworld.keys"));
     }
 }

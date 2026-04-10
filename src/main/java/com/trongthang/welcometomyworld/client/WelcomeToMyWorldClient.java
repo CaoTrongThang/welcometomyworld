@@ -79,7 +79,6 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         SoundsClientHandler.register();
         ScreenClientHandler.register();
         ClientScheduler.init();
-        CameraShakeManager.init();
 
         ClientPlayConnectionEvents.JOIN.register((handler, client, c) -> {
             preRenderChunks(c);
@@ -223,10 +222,6 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
         if (ModKeybindings.openMobStats.wasPressed()) {
             handleOpenMobStats(client);
-        }
-
-        if (ModKeybindings.testCameraShake.wasPressed()) {
-            CameraShakeManager.addShake(15.0f, 60);
         }
     }
 
