@@ -10,7 +10,8 @@
     "client.GameRendererMixin",
     "client.BipedEntityModelMixin",
     "client.InGameHudMixin",
-    "client.CancelLoadingScreenMixin"
+    "client.CancelLoadingScreenMixin",
+    "client.CameraMixin"
   ],
   "injectors": {
     "defaultRequire": 1

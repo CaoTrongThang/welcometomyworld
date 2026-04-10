@@ -76,6 +76,22 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
+    private void sendCameraShakeToNearbyPlayers(double radius, float intensity, int ticks) {
+        if (this.getWorld().isClient())
+            return;
+        net.minecraft.util.math.Box area = this.getBoundingBox().expand(radius);
+        List<net.minecraft.server.network.ServerPlayerEntity> playersInRadius = this.getWorld()
+                .getEntitiesByClass(net.minecraft.server.network.ServerPlayerEntity.class, area, p -> true);
+
+        for (net.minecraft.server.network.ServerPlayerEntity p : playersInRadius) {
+            net.minecraft.network.PacketByteBuf buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+            buf.writeFloat(intensity);
+            buf.writeInt(ticks);
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                    com.trongthang.welcometomyworld.WelcomeToMyWorld.CAMERA_SHAKE_PACKET_ID, buf);
+        }
+    }
+
     private static final float PART_DISTANCE = 8f;
 
     // Custom visual pitch to bypass vanilla LookControl pitch resetting
@@ -339,6 +355,15 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             }
             updateParts();
             skillsHandler();
+
+            // Trigger rumble when diving underground and moving fast
+            if (this.age % 10 == 0) {
+                int surfaceY = serverWorld.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                        (int) this.getX(), (int) this.getZ());
+                if (this.getY() < surfaceY && this.getVelocity().lengthSquared() > 0.05) {
+                    sendCameraShakeToNearbyPlayers(40.0, 0.5f, 20);
+                }
+            }
 
             // Persistently track this boss
             if (this.age % 20 == 0) {
@@ -634,6 +659,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         this.setPitch(this.serverSidePitch);
 
                         if (skillTick >= ROAR_HIT_TICK && skillTick <= 95) {
+                            if (skillTick == ROAR_HIT_TICK) {
+                                sendCameraShakeToNearbyPlayers(64.0, 4.0f, 60);
+                            }
                             if (skillTick % 11 == 0) {
                                 dealAoeDamage(64.0,
                                         (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.0f);
@@ -685,7 +713,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         }
                     } else {
                         // Phase 2: Circle and Shoot
-                        double radius = 20.0;
+                        double radius = 10.0;
                         Vec3d wormPos = this.getPos();
                         double toTargetX = target.getX() - wormPos.x;
                         double toTargetZ = target.getZ() - wormPos.z;
@@ -866,12 +894,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     }
 
                     double targetX = target.getX();
-                    // Altitude oscillating between -10 and 10 blocks relative to target
-                    double altitudeOffset = MathHelper.sin(this.age * 0.05f) * 10.0;
+                    // Altitude oscillating between -5 and 5 blocks relative to target
+                    double altitudeOffset = MathHelper.sin(this.age * 0.05f) * 5.0;
                     double targetY = target.getY() + altitudeOffset;
                     double targetZ = target.getZ();
 
-                    double radius = 10.0;
+                    double radius = 13.0;
 
                     if (isPreparing) {
                         // Phase 1: Fly to a point on the orbit circle
@@ -910,6 +938,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
                         if (this.getPos().distanceTo(targetPos) <= 16.0D) {
                             this.dataTracker.set(SKILL_PREPARING, false);
+                            sendCameraShakeToNearbyPlayers(80.0, 0.5f, 300); // Trigger low shake for 300 ticks
                         }
                     } else {
                         // Phase 2: Circle and Summon
@@ -1131,7 +1160,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             float pitch = this.getPitch() * ((float) Math.PI / 180F);
 
             double forward = 0.0;
-            double up = 1;
+            double up = 2;
 
             double ox = -Math.sin(yaw) * Math.cos(pitch) * forward;
             double oy = -Math.sin(pitch) * forward + up;

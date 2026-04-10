@@ -186,6 +186,14 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             });
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(CAMERA_SHAKE_PACKET_ID, (client, handler, buf, responseSender) -> {
+            float intensity = buf.readFloat();
+            int ticks = buf.readInt();
+            client.execute(() -> {
+                com.trongthang.welcometomyworld.client.CameraShakeManager.addShake(intensity, ticks);
+            });
+        });
+
         setupFluidRendering();
     }
 
@@ -223,6 +231,8 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         if (ModKeybindings.openMobStats.wasPressed()) {
             handleOpenMobStats(client);
         }
+
+        com.trongthang.welcometomyworld.client.CameraShakeManager.tick();
     }
 
     private boolean lastScreenTerain = false;
