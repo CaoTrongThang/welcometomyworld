@@ -769,8 +769,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         this.setPitch(this.serverSidePitch);
 
                         if (this.getY() >= targetYHover - 4.0D && distXZ <= 8.0D) {
-                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_prepare_done",
-                                    "Reached high point, diving...");
                             this.dataTracker.set(SKILL_PREPARING, false);
                             this.chargeDestX = target.getX();
                             this.chargeDestY = target.getY();
@@ -801,8 +799,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
                         // Grab detection
                         if (this.squaredDistanceTo(target) <= 6.0 * 6.0) {
-                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_success",
-                                    "Grabbed target!");
                             target.startRiding(this, true);
                             this.skillHitFired = true;
                             this.grabY = this.getY();
@@ -813,8 +809,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         } else if (distSq < 4.0 || this.horizontalCollision || this.verticalCollision
                                 || skillTick > 150) {
                             // Missed
-                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_miss",
-                                    "Missed grab destination");
                             this.dataTracker.set(IS_USING_SKILL, false);
                             this.dataTracker.set(SKILL_ID, 0);
                         }
@@ -846,8 +840,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
                         // Stop if player somehow gets off or died
                         if (!this.hasPassengers()) {
-                            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("grab_end",
-                                    "Passenger lost, ending skill");
                             this.dataTracker.set(IS_USING_SKILL, false);
                             this.dataTracker.set(SKILL_ID, 0);
                         }
@@ -999,7 +991,14 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 boolean canCharge = canUseSkill(CHARGE_ATTACK) && target.getY() - this.getY() >= 15.0 && distX < 64.0
                         && distZ < 64.0;
                 if (canCharge) {
-                    triggerSkill(CHARGE_ATTACK, 3);
+                    // if health < 50% use grab attack instead of charge attack
+                    if (this.getHealth() < this.getMaxHealth() * 0.8) {
+                        triggerSkill(CHARGE_ATTACK, 2);
+                    } else if (this.getHealth() < this.getMaxHealth() * 0.5) {
+                        triggerSkill(CHARGE_ATTACK, 3);
+                    } else {
+                        triggerSkill(GRAB_ATTACK);
+                    }
 
                     // Open mouth sound maybe handled inside or automatically by the animation if
                     // registered in GeckoLib
@@ -1110,8 +1109,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public void remove(RemovalReason reason) {
-        com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("head_remove", "removing head", "reason", reason,
-                "uuid", this.getUuid());
         super.remove(reason);
         for (VoidWormPartEntity part : parts) {
             part.remove(reason);

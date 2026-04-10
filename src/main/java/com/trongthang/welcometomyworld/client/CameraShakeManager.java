@@ -57,9 +57,9 @@ public class CameraShakeManager {
         float time = (client.world.getTime() + tickDelta);
 
         // Use multiple sine waves for more "natural" feeling shake
-        float yaw = (MathHelper.sin(time * 1.5f) * 0.5f + MathHelper.sin(time * 2.1f) * 0.3f) * intensity;
-        float pitch = (MathHelper.cos(time * 1.7f) * 0.5f + MathHelper.cos(time * 1.3f) * 0.3f) * intensity;
-        float roll = (MathHelper.sin(time * 0.9f) * 0.5f) * intensity * 0.5f;
+        float yaw = (MathHelper.sin(time * 2.5f) * 0.8f + MathHelper.sin(time * 3.1f) * 0.5f) * intensity;
+        float pitch = (MathHelper.cos(time * 2.7f) * 0.8f + MathHelper.cos(time * 2.3f) * 0.5f) * intensity;
+        float roll = (MathHelper.sin(time * 1.9f) * 0.5f) * intensity * 0.8f;
 
         matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotationDegrees(yaw));
         matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_X.rotationDegrees(pitch));

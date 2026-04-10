@@ -224,6 +224,11 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         if (ModKeybindings.openMobStats.wasPressed()) {
             handleOpenMobStats(client);
         }
+
+        // TEMPORARY TEST: Press K to test camera shake
+        if (net.minecraft.client.util.InputUtil.isKeyPressed(client.getWindow().getHandle(), 75)) {
+            CameraShakeManager.addShake(8.0f, 40);
+        }
     }
 
     private boolean lastScreenTerain = false;
