@@ -4,6 +4,10 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.LookAroundGoal;
+import net.minecraft.entity.ai.goal.RevengeGoal;
+import net.minecraft.entity.ai.goal.WanderAroundGoal;
+import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -34,6 +38,9 @@ import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.entities.Unknown.Unknown.ChaseTargetGoal;
+import com.trongthang.welcometomyworld.entities.Unknown.Unknown.StopMoveWhenUsingSkill;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import com.trongthang.welcometomyworld.VoidBossState;
@@ -200,17 +207,25 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 500.0D)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 165000.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 1.5D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15.0D)
-                .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0f)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 150.0D);
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D)
+                .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 10.0f)
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 150.0D)
+                .add(EntityAttributes.GENERIC_ARMOR, 30.0D)
+                .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 20.0D);
     }
 
     @Override
     protected void initGoals() {
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+        this.targetSelector.add(1, new ActiveTargetGoal<>(this, LivingEntity.class, true));
         this.goalSelector.add(2, new BossFlightGoal(this));
+
+        // --- Target goals ---
+        this.targetSelector.add(1, new RevengeGoal(this));
+
+        // equip offhand with an item called "mobs_of_mythology:kobold_spear"
+        // how to get the item from the mod
     }
 
     @Override
@@ -401,86 +416,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    public void dealDiveAoeDamage(double radius, float damage, boolean createBlock) {
-        if (this.getWorld().isClient())
-            return;
-        net.minecraft.util.math.Box area = this.getBoundingBox().expand(radius);
-        List<LivingEntity> nearby = this.getWorld().getEntitiesByClass(
-                LivingEntity.class, area, e -> e.isAlive() && e != this && !(e instanceof VoidWormPartEntity));
-
-        for (LivingEntity target : nearby) {
-            target.damage(this.getDamageSources().mobAttack(this), damage);
-            // give effects
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 200, 1));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 200, 1));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 200, 1));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 1));
-        }
-
-        if (createBlock && this.getWorld() instanceof ServerWorld serverWorld) {
-            final double originX = this.getX();
-            final double originY = this.getY();
-            final double originZ = this.getZ();
-            int ringIndex = 0;
-            java.util.Set<net.minecraft.util.math.BlockPos> spawnedPositions = new java.util.HashSet<>();
-
-            for (double r = 1.5; r <= radius + 0.5; r += 1.5) {
-                final double currentRadius = r;
-                final int finalDelay = ringIndex / 2; // 2 rings per tick (0.5 tick per ring-step)
-
-                Utils.addRunAfter(() -> {
-                    int blockCount = (int) (currentRadius * 8); // denser rings
-                    for (int i = 0; i < blockCount; i++) {
-                        double angle = 2 * Math.PI * i / blockCount;
-                        double x = originX + currentRadius * Math.cos(angle);
-                        double z = originZ + currentRadius * Math.sin(angle);
-                        net.minecraft.util.math.BlockPos spawnPos = net.minecraft.util.math.BlockPos.ofFloored(x,
-                                originY, z);
-
-                        if (spawnedPositions.contains(spawnPos)) {
-                            continue;
-                        }
-                        spawnedPositions.add(spawnPos);
-
-                        net.minecraft.block.BlockState groundState = serverWorld.getBlockState(spawnPos.down());
-                        if (groundState.isAir() || !groundState.isOpaqueFullCube(serverWorld, spawnPos.down())) {
-                            continue;
-                        }
-
-                        Utils.CreateBlockSlamGround(serverWorld, groundState, spawnPos.down());
-                    }
-                }, finalDelay);
-
-                ringIndex++;
-            }
-        }
-    }
-
-    private void dealAoeDamage(double radius, float amount) {
-        net.minecraft.util.math.Box box = this.getBoundingBox().expand(radius);
-        List<LivingEntity> entities = this.getWorld().getEntitiesByClass(LivingEntity.class, box, entity -> {
-            return entity.isAlive() && !(entity instanceof VoidWormEntity) && !(entity instanceof VoidWormPartEntity);
-        });
-        for (LivingEntity entity : entities) {
-            double distSq = this.squaredDistanceTo(entity);
-            if (distSq <= radius * radius) {
-                entity.damage(this.getDamageSources().mobAttack(this), amount);
-                // give blind effect
-                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 20 * 10, 1));
-                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20 * 3, 1));
-            }
-        }
-    }
-
-    private float smoothAngle(float current, float target, float maxStep) {
-        float delta = MathHelper.wrapDegrees(target - current);
-        if (delta > maxStep)
-            delta = maxStep;
-        if (delta < -maxStep)
-            delta = -maxStep;
-        return current + delta;
-    }
-
     private void skillsHandler() {
         if (!isUsingSkill() && globalSkillCooldown > 0) {
             globalSkillCooldown--;
@@ -571,7 +506,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             boolean hitGround = this.horizontalCollision || this.verticalCollision;
                             if (distSq < 16.0 || hitGround || this.getY() <= this.chargeDestY + 2.0) {
                                 dealDiveAoeDamage(20.0,
-                                        (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 3.0f,
+                                        (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 2.0f,
                                         true);
                                 this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                                         SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY,
@@ -1081,6 +1016,86 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 }
             }
         }
+    }
+
+    public void dealDiveAoeDamage(double radius, float damage, boolean createBlock) {
+        if (this.getWorld().isClient())
+            return;
+        net.minecraft.util.math.Box area = this.getBoundingBox().expand(radius);
+        List<LivingEntity> nearby = this.getWorld().getEntitiesByClass(
+                LivingEntity.class, area, e -> e.isAlive() && e != this && !(e instanceof VoidWormPartEntity));
+
+        for (LivingEntity target : nearby) {
+            Unknown.dealUnknownDamage(this, target, damage);
+            // give effects
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 200, 1));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 200, 1));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 200, 1));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 1));
+        }
+
+        if (createBlock && this.getWorld() instanceof ServerWorld serverWorld) {
+            final double originX = this.getX();
+            final double originY = this.getY();
+            final double originZ = this.getZ();
+            int ringIndex = 0;
+            java.util.Set<net.minecraft.util.math.BlockPos> spawnedPositions = new java.util.HashSet<>();
+
+            for (double r = 1.5; r <= radius + 0.5; r += 1.5) {
+                final double currentRadius = r;
+                final int finalDelay = ringIndex / 2; // 2 rings per tick (0.5 tick per ring-step)
+
+                Utils.addRunAfter(() -> {
+                    int blockCount = (int) (currentRadius * 8); // denser rings
+                    for (int i = 0; i < blockCount; i++) {
+                        double angle = 2 * Math.PI * i / blockCount;
+                        double x = originX + currentRadius * Math.cos(angle);
+                        double z = originZ + currentRadius * Math.sin(angle);
+                        net.minecraft.util.math.BlockPos spawnPos = net.minecraft.util.math.BlockPos.ofFloored(x,
+                                originY, z);
+
+                        if (spawnedPositions.contains(spawnPos)) {
+                            continue;
+                        }
+                        spawnedPositions.add(spawnPos);
+
+                        net.minecraft.block.BlockState groundState = serverWorld.getBlockState(spawnPos.down());
+                        if (groundState.isAir() || !groundState.isOpaqueFullCube(serverWorld, spawnPos.down())) {
+                            continue;
+                        }
+
+                        Utils.CreateBlockSlamGround(serverWorld, groundState, spawnPos.down());
+                    }
+                }, finalDelay);
+
+                ringIndex++;
+            }
+        }
+    }
+
+    private void dealAoeDamage(double radius, float amount) {
+        net.minecraft.util.math.Box box = this.getBoundingBox().expand(radius);
+        List<LivingEntity> entities = this.getWorld().getEntitiesByClass(LivingEntity.class, box, entity -> {
+            return entity.isAlive() && !(entity instanceof VoidWormEntity) && !(entity instanceof VoidWormPartEntity);
+        });
+        for (LivingEntity entity : entities) {
+            double distSq = this.squaredDistanceTo(entity);
+            if (distSq <= radius * radius) {
+                Unknown.dealUnknownDamage(this, entity, amount);
+                // give blind effect
+                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 20 * 10, 1));
+                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20 * 3, 1));
+            }
+        }
+    }
+
+    private float smoothAngle(float current, float target, float maxStep) {
+        float delta = MathHelper.wrapDegrees(target - current);
+        if (delta > maxStep)
+            delta = maxStep;
+        if (delta < -maxStep)
+            delta = -maxStep;
+        return current + delta;
     }
 
     @Override

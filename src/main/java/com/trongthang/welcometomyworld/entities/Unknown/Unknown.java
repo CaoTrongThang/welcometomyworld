@@ -98,9 +98,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
     public static final Skill PREPARE_STEAL = new Skill(11, 100, 600);
     public static final Skill POINT_FINGER = new Skill(12, 20, 400);
     public static final Skill GRAB_JUMP_SLAM = new Skill(13, 80, 200);
-    public static final Skill KAMEHAMEHA = new Skill(20, 80, 200);
+    public static final Skill KAMEHAMEHA = new Skill(20, 80, 1200);
     public static final Skill UNKNOWN_JUMP_BACK = new Skill(5, 20, 150);
-    public static final Skill UNKNOWN_SUMMONING_CIRCLE = new Skill(22, 240, 400);
+    public static final Skill UNKNOWN_SUMMONING_CIRCLE = new Skill(22, 240, 1200);
     public static final Skill UNKNOWN_SPEAR_STAB = new Skill(23, 35, 120);
     public static final Skill UNKNOWN_SPEAR_3_HITS = new Skill(24, 70, 160);
 
@@ -388,9 +388,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             new Object[] { LEG_TRIP, 50, true },
                             new Object[] { UNKNOWN_SPEAR_3_HITS, 50, healthFraction() <= 0.8f },
                             new Object[] { UNKNOWN_JUMP_BACK, 50, healthFraction() <= 0.8f },
-                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 50f, healthFraction() <= 0.4f },
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 600f, healthFraction() <= 0.4f },
                             new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f },
-                            new Object[] { KAMEHAMEHA, 30f, healthFraction() <= 0.6f });
+                            new Object[] { KAMEHAMEHA, 600f, healthFraction() <= 0.6f });
                     if (picked != null)
                         triggerSkill(picked);
 
@@ -399,8 +399,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     Skill picked = pickWeightedSkill(
                             new Object[] { DASH_FORWARD, 40f, true },
                             new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f },
-                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 50f, healthFraction() <= 0.4f },
-                            new Object[] { KAMEHAMEHA, 30f, healthFraction() <= 0.6f });
+                            new Object[] { UNKNOWN_SUMMONING_CIRCLE, 600f, healthFraction() <= 0.4f },
+                            new Object[] { KAMEHAMEHA, 600f, healthFraction() <= 0.6f });
                     if (picked != null)
                         triggerSkill(picked);
 
@@ -1240,6 +1240,25 @@ public class Unknown extends HostileEntity implements GeoEntity {
         }
     }
 
+    public static void dealUnknownDamage(LivingEntity attacker, LivingEntity target, float amount) {
+        if (target.isBlocking() && target.getActiveItem().getItem() instanceof ShieldItem) {
+            int shieldDamage = (int) (amount * 0.5f);
+            if (shieldDamage > 0) {
+                target.getActiveItem().damage(shieldDamage, target,
+                        (e) -> e.sendToolBreakStatus(target.getActiveHand()));
+            }
+        }
+        // this also deal additional damage if the target health is more than 100, deal
+        // more than 1% of the target health
+        if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
+            target.damage(attacker.getDamageSources().mobAttack(attacker),
+                    amount + Math.min(target.getMaxHealth() * 0.1f, 1000));
+        } else {
+            target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
+        }
+
+    }
+
     @Override
     public boolean damage(DamageSource source, float amount) {
         LivingEntity currentTarget = this.getTarget();
@@ -1355,25 +1374,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
             }
         }
         return nearby;
-    }
-
-    public static void dealUnknownDamage(LivingEntity attacker, LivingEntity target, float amount) {
-        if (target.isBlocking() && target.getActiveItem().getItem() instanceof ShieldItem) {
-            int shieldDamage = (int) (amount * 0.5f);
-            if (shieldDamage > 0) {
-                target.getActiveItem().damage(shieldDamage, target,
-                        (e) -> e.sendToolBreakStatus(target.getActiveHand()));
-            }
-        }
-        // this also deal additional damage if the target health is more than 100, deal
-        // more than 1% of the target health
-        if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
-            target.damage(attacker.getDamageSources().mobAttack(attacker),
-                    amount + Math.min(target.getMaxHealth() * 0.1f, 1000));
-        } else {
-            target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
-        }
-
     }
 
     /**
