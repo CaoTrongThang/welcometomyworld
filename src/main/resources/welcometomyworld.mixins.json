@@ -44,6 +44,7 @@
 		"entity.DismountPreventionMixin",
 		"entity.HungerManagerNerf",
 		"player.VoidDimensionTransitionMixin",
+		"player.DeathWaterTransitionMixin",
 		"entity.VoidDimensionDamageMixin",
 		"entity.VoidHostileSpawnMixin",
 		"world.VoidSpawnRestrictionMixin",

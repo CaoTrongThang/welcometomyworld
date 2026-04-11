@@ -233,6 +233,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         }
 
         com.trongthang.welcometomyworld.client.CameraShakeManager.tick();
+        com.trongthang.welcometomyworld.client.HeavenTransitionManager.clientTick();
     }
 
     private boolean lastScreenTerain = false;

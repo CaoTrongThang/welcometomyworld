@@ -87,6 +87,7 @@ public class ServerPlayerEntityMixin implements IServerPlayerEntity {
 
         if (destination.getRegistryKey().equals(WhiteDimension.WHITE_DIM_LEVEL_KEY)) {
             Utils.grantAdvancement((ServerPlayerEntity) player, "first_time_to_white_dimension");
+            Utils.removeHarmfulEffects(player);
         }
     }
 

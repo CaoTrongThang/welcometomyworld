@@ -79,4 +79,16 @@ public abstract class InGameHudMixin {
             }
         }
     }
+
+    @Inject(method = "render", at = @At("TAIL"))
+    public void onRenderHeavenTransition(net.minecraft.client.gui.DrawContext context, float tickDelta,
+            CallbackInfo ci) {
+        float alpha = com.trongthang.welcometomyworld.client.HeavenTransitionManager.getAlpha();
+        if (alpha <= 0f)
+            return;
+
+        int a = (int) (alpha * 255);
+        int color = (a << 24) | 0xFFFFFF; // white with variable alpha
+        context.fill(0, 0, context.getScaledWindowWidth(), context.getScaledWindowHeight(), color);
+    }
 }

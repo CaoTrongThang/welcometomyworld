@@ -95,6 +95,7 @@ public class WelcomeToMyWorld implements ModInitializer {
 
     public static final Identifier BLOOD_MOON_SYNC = new Identifier(MOD_ID, "blood_moon_sync");
     public static final Identifier CAMERA_SHAKE_PACKET_ID = new Identifier(MOD_ID, "camera_shake_packet");
+    public static final Identifier HEAVEN_TRANSITION_PACKET = new Identifier(MOD_ID, "heaven_transition");
 
     public static DeathCounter deathCounter = new DeathCounter();
 

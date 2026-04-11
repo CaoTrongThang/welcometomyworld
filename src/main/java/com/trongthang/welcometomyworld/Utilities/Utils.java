@@ -18,6 +18,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
@@ -599,6 +600,17 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    public static void removeHarmfulEffects(LivingEntity entity) {
+        if (entity == null || entity.getWorld().isClient())
+            return;
+
+        entity.getStatusEffects().stream()
+                .filter(instance -> instance.getEffectType().getCategory() == StatusEffectCategory.HARMFUL)
+                .map(StatusEffectInstance::getEffectType)
+                .toList()
+                .forEach(entity::removeStatusEffect);
     }
 
 }

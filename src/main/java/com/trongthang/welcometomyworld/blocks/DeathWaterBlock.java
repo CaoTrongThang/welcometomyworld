@@ -26,7 +26,7 @@ public class DeathWaterBlock extends FluidBlock {
         if (!world.isClient && entity instanceof PlayerEntity player) {
             // Wither II (amplifier 1 = level 2)
             player.addStatusEffect(new StatusEffectInstance(
-                    StatusEffects.WITHER, EFFECT_DURATION, 1, false, true, true));
+                    StatusEffects.WITHER, EFFECT_DURATION, 2, false, true, true));
             // Night Vision 255 (amplifier 254 = level 255)
             player.addStatusEffect(new StatusEffectInstance(
                     EffectsManager.VOID_SIGHT, EFFECT_DURATION, 1, false, false, true));

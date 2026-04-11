@@ -46,7 +46,7 @@ public abstract class CancelLoadingScreenMixin {
                 // This catches 'DownloadingTerrainScreen' that fires AFTER the client world
                 // swaps!
                 String dimPath = client.world.getRegistryKey().getValue().getPath();
-                if ("void_dim".equals(dimPath)) {
+                if ("void_dim".equals(dimPath) || "white_dim".equals(dimPath)) {
                     return null;
                 }
             }

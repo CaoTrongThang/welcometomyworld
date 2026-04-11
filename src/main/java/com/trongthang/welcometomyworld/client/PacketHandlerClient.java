@@ -147,5 +147,10 @@ public class PacketHandlerClient implements ClientModInitializer {
                 }
             });
         });
+
+        ClientPlayNetworking.registerGlobalReceiver(HEAVEN_TRANSITION_PACKET,
+                (client, handler, buf, responseSender) -> {
+                    client.execute(HeavenTransitionManager::start);
+                });
     }
 }
