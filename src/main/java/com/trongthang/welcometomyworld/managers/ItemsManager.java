@@ -17,6 +17,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Rarity;
 
 public class ItemsManager {
 
@@ -67,30 +68,34 @@ public class ItemsManager {
                         0x6a008c);
 
         public static final Item UNKNOWN_HOOD = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
-                        ArmorItem.Type.HELMET, new FabricItemSettings(), EffectsManager.VOID_SIGHT), "unknown_hood");
+                        ArmorItem.Type.HELMET, new FabricItemSettings().rarity(Rarity.EPIC), EffectsManager.VOID_SIGHT),
+                        "unknown_hood");
         public static final Item UNKNOWN_CLOAK = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
-                        ArmorItem.Type.CHESTPLATE, new FabricItemSettings(), StatusEffects.FIRE_RESISTANCE),
+                        ArmorItem.Type.CHESTPLATE, new FabricItemSettings().rarity(Rarity.EPIC),
+                        StatusEffects.FIRE_RESISTANCE),
                         "unknown_cloak");
         public static final Item UNKNOWN_LEGGINGS = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
-                        ArmorItem.Type.LEGGINGS, new FabricItemSettings(), StatusEffects.JUMP_BOOST),
+                        ArmorItem.Type.LEGGINGS, new FabricItemSettings().rarity(Rarity.EPIC),
+                        StatusEffects.JUMP_BOOST),
                         "unknown_leggings");
         public static final Item UNKNOWN_BOOTS = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
-                        ArmorItem.Type.BOOTS, new FabricItemSettings(), StatusEffects.SPEED), "unknown_boots");
+                        ArmorItem.Type.BOOTS, new FabricItemSettings().rarity(Rarity.EPIC), StatusEffects.SPEED),
+                        "unknown_boots");
         public static final Item VOID_WORM_BONE_HELMET = registerItem(
                         new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.HELMET,
-                                        new FabricItemSettings()),
+                                        new FabricItemSettings().rarity(Rarity.EPIC)),
                         "void_worm_bone_helmet");
         public static final Item VOID_WORM_BONE_CHESTPLATE = registerItem(
                         new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.CHESTPLATE,
-                                        new FabricItemSettings()),
+                                        new FabricItemSettings().rarity(Rarity.EPIC)),
                         "void_worm_bone_chestplate");
         public static final Item VOID_WORM_BONE_LEGGINGS = registerItem(
                         new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.LEGGINGS,
-                                        new FabricItemSettings()),
+                                        new FabricItemSettings().rarity(Rarity.EPIC)),
                         "void_worm_bone_leggings");
         public static final Item VOID_WORM_BONE_BOOTS = registerItem(
                         new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.BOOTS,
-                                        new FabricItemSettings()),
+                                        new FabricItemSettings().rarity(Rarity.EPIC)),
                         "void_worm_bone_boots");
 
         public static Enchantment silenceEnchantment = new SilenceEnchantment();

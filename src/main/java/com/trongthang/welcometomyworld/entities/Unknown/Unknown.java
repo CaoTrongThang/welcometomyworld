@@ -1252,7 +1252,10 @@ public class Unknown extends HostileEntity implements GeoEntity {
         // more than 1% of the target health
         if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
             target.damage(attacker.getDamageSources().mobAttack(attacker),
-                    amount + Math.min(target.getMaxHealth() * 0.05f, 500));
+                    amount + Math.min(target.getMaxHealth() * 0.7f, 500));
+        } else if (target instanceof TameableEntity || target instanceof CustomTameableEntity) {
+            target.damage(attacker.getDamageSources().mobAttack(attacker),
+                    amount + Math.min(target.getMaxHealth() * 0.03f, 500));
         } else {
             target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
         }

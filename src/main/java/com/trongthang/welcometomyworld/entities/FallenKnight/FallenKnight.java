@@ -234,8 +234,9 @@ public class FallenKnight extends StrongTameableEntityDefault {
                         startAnimation(AnimationName.SIT);
                     }
                 } else {
-                    Vec3d velocity = this.getVelocity();
-                    boolean isMoving = velocity.x != 0 || velocity.z != 0;
+                    boolean isMoving = this.getVelocity().x != 0 || this.getVelocity().z != 0; // best moving check for
+                                                                                               // even
+                                                                                               // slow movement
                     if (animationTimeout <= 0 && !this.getIsUsingSkill()) {
                         if (isMoving) {
                             if (!walkAnimationState.isRunning()) {

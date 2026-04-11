@@ -27,6 +27,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.mob.WitherSkeletonEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -829,7 +830,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             this.setVelocity(0, 0, 0);
                             this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                                     SoundsManager.MONSTER_ROAR,
-                                    net.minecraft.sound.SoundCategory.HOSTILE, 0.7F, 1.5F);
+                                    net.minecraft.sound.SoundCategory.HOSTILE, 0.4F, 1.5F);
                         } else if (distSq < 4.0 || this.horizontalCollision || this.verticalCollision
                                 || skillTick > 150) {
                             // Missed
@@ -1085,7 +1086,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 } else if (canUseSkill(ROAR) && distX < 64.0 && distZ < 64.0 && distY < 60.0) {
                     triggerSkill(ROAR);
                     Utils.playFarSound((ServerWorld) this.getWorld(), this, SoundsManager.MONSTER_ROAR,
-                            net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F, 84.0);
+                            net.minecraft.sound.SoundCategory.HOSTILE, 0.8F, 1.0F, 84.0);
                 } else if (canUseSkill(CRYSTAL_BARRAGE) && distX < 100 && distZ < 100) {
                     triggerSkill(CRYSTAL_BARRAGE);
                 } else if (canUseSkill(GRAB_ATTACK) && distX < 64.0 && distZ < 64.0) {
@@ -1095,6 +1096,16 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 }
             }
         }
+    }
+
+    @Override
+    protected boolean shouldDropLoot() {
+        return true;
+    }
+
+    @Override
+    protected Identifier getLootTableId() {
+        return new Identifier("welcometomyworld", "entities/void_worm");
     }
 
     public void dealDiveAoeDamage(double radius, float damage, boolean createBlock) {

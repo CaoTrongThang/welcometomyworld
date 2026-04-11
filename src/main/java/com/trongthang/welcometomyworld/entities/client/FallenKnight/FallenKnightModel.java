@@ -19,6 +19,7 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
         private final ModelPart body;
         private final ModelPart middle_body;
         private final ModelPart dress_front;
+        private final ModelPart dress_left_right;
         private final ModelPart cape;
         private final ModelPart left_hand;
         private final ModelPart bone2;
@@ -42,6 +43,7 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                 this.body = fallen_knight.getChild("body");
                 this.middle_body = body.getChild("middle_body");
                 this.dress_front = middle_body.getChild("dress_front");
+                this.dress_left_right = middle_body.getChild("dress_left_right");
                 this.cape = middle_body.getChild("cape");
                 this.left_hand = middle_body.getChild("left_hand");
                 this.bone2 = left_hand.getChild("bone2");
@@ -67,6 +69,15 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                 ModelPartData fallen_knight = modelPartData.addChild("fallen_knight", ModelPartBuilder.create(),
                                 ModelTransform.pivot(0.0F, 23.0F, 0.0F));
 
+                ModelPartData portal = fallen_knight.addChild("portal", ModelPartBuilder.create(),
+                                ModelTransform.pivot(0.0F, -15.75F, 2.5F));
+
+                ModelPartData frames = portal
+                                .addChild("frames",
+                                                ModelPartBuilder.create().uv(77, 60).cuboid(-4.5F, -5.0F, -0.5F, 9.0F,
+                                                                10.0F, 1.0F, new Dilation(0.0F)),
+                                                ModelTransform.pivot(0.0F, 0.0F, -1.0F));
+
                 ModelPartData body = fallen_knight.addChild("body", ModelPartBuilder.create(),
                                 ModelTransform.pivot(0.0F, 1.0F, 0.0F));
 
@@ -91,21 +102,11 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                                 ModelTransform.of(-4.75F, 5.0F, 3.0F, 0.0F, 0.0F, 0.2618F));
 
                 ModelPartData cube_r4 = middle_body.addChild("cube_r4",
-                                ModelPartBuilder.create().uv(8, 45).cuboid(1.0F, -2.0F, -2.0F, 0.0F, 10.0F, 4.0F,
-                                                new Dilation(0.0F)),
-                                ModelTransform.of(-5.25F, 5.5F, 2.75F, 0.0F, 0.0F, 0.0873F));
-
-                ModelPartData cube_r5 = middle_body.addChild("cube_r5",
-                                ModelPartBuilder.create().uv(0, 45).cuboid(-1.0F, -2.0F, -2.0F, 0.0F, 10.0F, 4.0F,
-                                                new Dilation(0.0F)),
-                                ModelTransform.of(5.25F, 5.5F, 2.75F, 0.0F, 0.0F, -0.0873F));
-
-                ModelPartData cube_r6 = middle_body.addChild("cube_r6",
                                 ModelPartBuilder.create().uv(40, 60).cuboid(-1.0F, -1.0F, 0.0F, 2.0F, 2.0F, 1.0F,
                                                 new Dilation(0.0F)),
                                 ModelTransform.of(0.0F, 6.0F, -0.5F, 0.0F, 0.0F, 0.7854F));
 
-                ModelPartData cube_r7 = middle_body.addChild("cube_r7",
+                ModelPartData cube_r5 = middle_body.addChild("cube_r5",
                                 ModelPartBuilder.create().uv(25, 0).cuboid(-5.0F, -2.0F, -2.0F, 9.0F, 5.0F, 3.0F,
                                                 new Dilation(0.0F)),
                                 ModelTransform.of(0.5F, -1.0F, 0.75F, 0.3054F, 0.0F, 0.0F));
@@ -113,10 +114,23 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                 ModelPartData dress_front = middle_body.addChild("dress_front", ModelPartBuilder.create(),
                                 ModelTransform.pivot(0.0F, 5.0F, 0.75F));
 
-                ModelPartData cube_r8 = dress_front.addChild("cube_r8",
+                ModelPartData cube_r6 = dress_front.addChild("cube_r6",
                                 ModelPartBuilder.create().uv(16, 47).cuboid(-3.0F, -2.0F, 0.0F, 6.0F, 9.0F, 0.0F,
                                                 new Dilation(0.0F)),
                                 ModelTransform.of(0.0F, 2.0F, -1.0F, -0.1309F, 0.0F, 0.0F));
+
+                ModelPartData dress_left_right = middle_body.addChild("dress_left_right", ModelPartBuilder.create(),
+                                ModelTransform.pivot(5.25F, 5.5F, 2.75F));
+
+                ModelPartData cube_r7 = dress_left_right.addChild("cube_r7",
+                                ModelPartBuilder.create().uv(8, 45).cuboid(1.0F, -2.0F, -2.0F, 0.0F, 10.0F, 4.0F,
+                                                new Dilation(0.0F)),
+                                ModelTransform.of(-10.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0873F));
+
+                ModelPartData cube_r8 = dress_left_right.addChild("cube_r8",
+                                ModelPartBuilder.create().uv(0, 45).cuboid(-1.0F, -2.0F, -2.0F, 0.0F, 10.0F, 4.0F,
+                                                new Dilation(0.0F)),
+                                ModelTransform.of(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, -0.0873F));
 
                 ModelPartData cape = middle_body.addChild("cape", ModelPartBuilder.create(),
                                 ModelTransform.pivot(0.0F, -4.0F, 4.0F));
@@ -220,14 +234,6 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                                 "right_leg_foot", ModelPartBuilder.create().uv(52, 53).cuboid(-1.5F, 0.0F, 0.0F, 3.0F,
                                                 4.0F, 3.0F, new Dilation(0.0F)),
                                 ModelTransform.pivot(0.0F, 5.0F, 0.0F));
-
-                ModelPartData portal = fallen_knight.addChild("portal", ModelPartBuilder.create(),
-                                ModelTransform.pivot(-1.0F, -18.0F, -20.0F));
-
-                ModelPartData frames = portal.addChild("frames", ModelPartBuilder.create().uv(44, 52)
-                                .cuboid(0.0F, -22.0F, -19.0F, 21.0F, 39.0F, 21.0F, new Dilation(0.0F))
-                                .uv(44, 54).cuboid(-21.0F, -22.0F, -19.0F, 21.0F, 39.0F, 21.0F, new Dilation(0.0F)),
-                                ModelTransform.pivot(1.0F, 2.0F, 9.0F));
                 return TexturedModelData.of(modelData, 128, 128);
         }
 
@@ -241,17 +247,22 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                         float headPitch) {
                 this.getPart().traverse().forEach(ModelPart::resetTransform);
 
-                this.updateAnimation(entity.walkAnimationState, FallenKnightAnimations.WALK, animationProgress, 1f);
-                this.updateAnimation(entity.idleAnimationState, FallenKnightAnimations.IDLE, animationProgress, 1f);
-                this.updateAnimation(entity.attackAnimationState, FallenKnightAnimations.ATTACK, animationProgress, 1f);
-                this.updateAnimation(entity.attack2AnimationState, FallenKnightAnimations.ATTACK2, animationProgress,
+                this.updateAnimation(entity.walkAnimationState, FallenKnightModelAnimation.WALK, animationProgress, 1f);
+                this.updateAnimation(entity.idleAnimationState, FallenKnightModelAnimation.IDLE, animationProgress, 1f);
+                this.updateAnimation(entity.attackAnimationState, FallenKnightModelAnimation.ATTACK, animationProgress,
                                 1f);
-                this.updateAnimation(entity.attack3AnimationState, FallenKnightAnimations.ATTACK3, animationProgress,
+                this.updateAnimation(entity.attack2AnimationState, FallenKnightModelAnimation.ATTACK2,
+                                animationProgress,
                                 1f);
-                this.updateAnimation(entity.tameableAnimationState, FallenKnightAnimations.TAMEABLE, animationProgress,
+                this.updateAnimation(entity.attack3AnimationState, FallenKnightModelAnimation.ATTACK3,
+                                animationProgress,
                                 1f);
-                this.updateAnimation(entity.sitAnimationState, FallenKnightAnimations.SIT, animationProgress, 1f);
-                this.updateAnimation(entity.teleportAnimationState, FallenKnightAnimations.TELEPORT, animationProgress,
+                this.updateAnimation(entity.tameableAnimationState, FallenKnightModelAnimation.TAMEABLE,
+                                animationProgress,
+                                1f);
+                this.updateAnimation(entity.sitAnimationState, FallenKnightModelAnimation.SIT, animationProgress, 1f);
+                this.updateAnimation(entity.teleportAnimationState, FallenKnightModelAnimation.TELEPORT,
+                                animationProgress,
                                 1f);
 
                 this.setHeadAngles(headYaw, headPitch);

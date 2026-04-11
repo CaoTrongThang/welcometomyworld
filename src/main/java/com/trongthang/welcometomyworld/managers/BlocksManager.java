@@ -76,7 +76,7 @@ public class BlocksManager {
         public static final Block GLOWING_WHITE_GRASS = registerBlock("glowing_white_grass",
                         new GlowingPlantVoid(FabricBlockSettings.copyOf(Blocks.GRASS)
                                         .emissiveLighting((state, world, pos) -> true), 300,
-                                        new StatusEffect[] { EffectsManager.VOID_SIGHT, StatusEffects.BLINDNESS }));
+                                        new StatusEffect[] { StatusEffects.POISON, StatusEffects.BLINDNESS }));
 
         public static final Block GLOWING_PURPLE_GRASS = registerBlock("glowing_purple_grass",
                         new GlowingPlantVoid(FabricBlockSettings.copyOf(Blocks.GRASS)
