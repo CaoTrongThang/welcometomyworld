@@ -30,6 +30,21 @@ public class DeathWaterBlock extends FluidBlock {
             // Night Vision 255 (amplifier 254 = level 255)
             player.addStatusEffect(new StatusEffectInstance(
                     EffectsManager.VOID_SIGHT, EFFECT_DURATION, 1, false, false, true));
+
+            player.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.NAUSEA, EFFECT_DURATION, 1, false, false, true));
+
+            player.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.MINING_FATIGUE, EFFECT_DURATION, 1, false, false, true));
+
+            player.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.WEAKNESS, EFFECT_DURATION, 1, false, false, true));
+
+            player.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.SLOWNESS, EFFECT_DURATION, 1, false, false, true));
+
+            player.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.HUNGER, EFFECT_DURATION, 1, false, false, true));
         }
     }
 }

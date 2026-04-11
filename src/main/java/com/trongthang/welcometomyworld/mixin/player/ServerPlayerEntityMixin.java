@@ -3,6 +3,8 @@ package com.trongthang.welcometomyworld.mixin.player;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.IServerPlayerEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -14,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.trongthang.welcometomyworld.world.dimension.VoidDimension;
+import com.trongthang.welcometomyworld.world.dimension.WhiteDimension;
 import com.trongthang.welcometomyworld.VoidBossState;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
@@ -79,6 +82,11 @@ public class ServerPlayerEntityMixin implements IServerPlayerEntity {
         // Void Worm Boss Spawn Check
         if (destination.getRegistryKey().equals(VoidDimension.VOID_DIM_LEVEL_KEY)) {
             checkAndSpawnVoidBoss(destination);
+            Utils.grantAdvancement((ServerPlayerEntity) player, "first_time_to_void_dimension");
+        }
+
+        if (destination.getRegistryKey().equals(WhiteDimension.WHITE_DIM_LEVEL_KEY)) {
+            Utils.grantAdvancement((ServerPlayerEntity) player, "first_time_to_white_dimension");
         }
     }
 

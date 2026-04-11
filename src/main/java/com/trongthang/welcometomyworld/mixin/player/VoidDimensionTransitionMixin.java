@@ -40,7 +40,6 @@ public abstract class VoidDimensionTransitionMixin {
 
                     player.getServer().execute(() -> {
                         FabricDimensions.teleport(finalVehicle, voidWorld, target);
-                        Utils.grantAdvancement((ServerPlayerEntity) player, "first_time_to_void_dimension");
                         player.fallDistance = 0f;
                         if (wasElytraFlying) {
                             player.startFallFlying();
@@ -57,7 +56,6 @@ public abstract class VoidDimensionTransitionMixin {
 
                     player.getServer().execute(() -> {
                         FabricDimensions.teleport(finalVehicle, (ServerWorld) world, target);
-                        Utils.grantAdvancement((ServerPlayerEntity) player, "first_time_to_void_dimension");
                         player.fallDistance = 0f;
                         if (wasElytraFlying) {
                             player.startFallFlying();
