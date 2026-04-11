@@ -9,17 +9,30 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Environment(EnvType.CLIENT)
-@Mixin(MinecraftClient.class)
+@Mixin(value = MinecraftClient.class, priority = 10000)
 public abstract class CancelLoadingScreenMixin {
 
+    // cancle the "joining world" screen when going to the void
     @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
     private Screen modifyScreen(Screen screen) {
+        if (screen == null)
+            return null;
+
         MinecraftClient client = (MinecraftClient) (Object) this;
 
-        if (screen != null && client.world != null) {
-            String screenName = screen.getClass().getSimpleName();
-            boolean isTransitionScreen = screenName.contains("Downloading") || screenName.contains("Progress")
-                    || screenName.contains("Message");
+        if (client.world != null) {
+            // Robust check for transition screens using instanceof
+            boolean isTransitionScreen = screen instanceof net.minecraft.client.gui.screen.DownloadingTerrainScreen
+                    || screen instanceof net.minecraft.client.gui.screen.ProgressScreen
+                    || screen instanceof net.minecraft.client.gui.screen.LevelLoadingScreen
+                    || screen instanceof net.minecraft.client.gui.screen.MessageScreen;
+
+            // Fallback for wrapped or modded screens
+            if (!isTransitionScreen) {
+                String screenName = screen.getClass().getSimpleName();
+                isTransitionScreen = screenName.contains("Downloading") || screenName.contains("Progress")
+                        || screenName.contains("Message") || screenName.contains("Loading");
+            }
 
             if (isTransitionScreen) {
                 // Scenario 1: The player is in the current world (e.g. Overworld) and is

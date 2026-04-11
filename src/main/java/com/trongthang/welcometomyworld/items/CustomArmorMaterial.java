@@ -13,8 +13,10 @@ import java.util.function.Supplier;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 
 public enum CustomArmorMaterial implements ArmorMaterial {
-    UNKNOWN_GEAR(WelcomeToMyWorld.MOD_ID + ":unknown_gear", 25, new int[] { 15, 15, 15, 15 }, 15,
-            SoundEvents.ITEM_ARMOR_EQUIP_IRON, 10.0f, 0.0f, () -> Ingredient.ofItems(Items.NETHERITE_INGOT));
+    UNKNOWN_GEAR(WelcomeToMyWorld.MOD_ID + ":unknown_gear", 100, new int[] { 20, 20, 20, 20 }, 15,
+            SoundEvents.ITEM_ARMOR_EQUIP_IRON, 10.0f, 0.0f, () -> Ingredient.ofItems(Items.NETHERITE_INGOT)),
+    VOID_WORM_BONE_ARMOR(WelcomeToMyWorld.MOD_ID + ":void_worm_bone_armor", 120, new int[] { 40, 40, 40, 40 }, 25,
+            SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE, 15.0f, 0.2f, () -> Ingredient.ofItems(Items.NETHERITE_INGOT));
 
     private static final EnumMap<ArmorItem.Type, Integer> BASE_DURABILITY = new EnumMap<>(ArmorItem.Type.class);
 

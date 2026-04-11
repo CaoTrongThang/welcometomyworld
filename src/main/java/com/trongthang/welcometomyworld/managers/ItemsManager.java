@@ -18,8 +18,6 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
-
 public class ItemsManager {
 
         public static final Item THE_FALLEN_HAMMER = registerItem(
@@ -78,6 +76,22 @@ public class ItemsManager {
                         "unknown_leggings");
         public static final Item UNKNOWN_BOOTS = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
                         ArmorItem.Type.BOOTS, new FabricItemSettings(), StatusEffects.SPEED), "unknown_boots");
+        public static final Item VOID_WORM_BONE_HELMET = registerItem(
+                        new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.HELMET,
+                                        new FabricItemSettings()),
+                        "void_worm_bone_helmet");
+        public static final Item VOID_WORM_BONE_CHESTPLATE = registerItem(
+                        new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.CHESTPLATE,
+                                        new FabricItemSettings()),
+                        "void_worm_bone_chestplate");
+        public static final Item VOID_WORM_BONE_LEGGINGS = registerItem(
+                        new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.LEGGINGS,
+                                        new FabricItemSettings()),
+                        "void_worm_bone_leggings");
+        public static final Item VOID_WORM_BONE_BOOTS = registerItem(
+                        new VoidWormBoneArmorItem(CustomArmorMaterial.VOID_WORM_BONE_ARMOR, ArmorItem.Type.BOOTS,
+                                        new FabricItemSettings()),
+                        "void_worm_bone_boots");
 
         public static Enchantment silenceEnchantment = new SilenceEnchantment();
 
@@ -162,6 +176,11 @@ public class ItemsManager {
                                         itemGroup.add(ItemsManager.UNKNOWN_CLOAK);
                                         itemGroup.add(ItemsManager.UNKNOWN_LEGGINGS);
                                         itemGroup.add(ItemsManager.UNKNOWN_BOOTS);
+
+                                        itemGroup.add(ItemsManager.VOID_WORM_BONE_HELMET);
+                                        itemGroup.add(ItemsManager.VOID_WORM_BONE_CHESTPLATE);
+                                        itemGroup.add(ItemsManager.VOID_WORM_BONE_LEGGINGS);
+                                        itemGroup.add(ItemsManager.VOID_WORM_BONE_BOOTS);
 
                                         itemGroup.add(FluidsManager.DEATH_WATER_BUCKET);
 

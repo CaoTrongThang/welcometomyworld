@@ -57,16 +57,16 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private static final double MAX_DISTANCE_Y = 200.0;
 
     // Rolling position history for body-segment trail following
-    private static final int MAX_HISTORY = 400;
+    private static final int MAX_HISTORY = 1000;
     public int ticksSinceDeath = 0; // The timer for the death animation
-    private final Deque<Vec3d> posHistoryDeque = new ArrayDeque<>(MAX_HISTORY + 1);
+    private final Deque<Vec3d> posHistoryDeque = new ArrayDeque<>();
     // Cached list view — rebuilt only when the deque changes, used by segments
-    private List<Vec3d> posHistorySnapshot = new ArrayList<>(MAX_HISTORY);
+    private List<Vec3d> posHistorySnapshot = new ArrayList<>();
     private boolean historyDirty = false;
 
     public List<Vec3d> getPosHistory() {
-        if (historyDirty) {
-            posHistorySnapshot = new ArrayList<>(posHistoryDeque);
+        if (historyDirty || posHistorySnapshot == null) {
+            posHistorySnapshot = List.copyOf(posHistoryDeque);
             historyDirty = false;
         }
         return posHistorySnapshot;
@@ -76,6 +76,10 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         if (!parts.contains(part)) {
             parts.add(part);
         }
+    }
+
+    public List<VoidWormPartEntity> getParts() {
+        return this.parts;
     }
 
     private void sendCameraShakeToNearbyPlayers(double radius, float intensity, int ticks) {
@@ -367,21 +371,29 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         super.tick();
 
         if (this.getWorld() instanceof ServerWorld serverWorld) {
-            // Keep the chunk loaded while the head is alive and ticking
-            serverWorld.getChunkManager().addTicket(net.minecraft.server.world.ChunkTicketType.PORTAL,
-                    new net.minecraft.util.math.ChunkPos(this.getBlockPos()), 3, this.getBlockPos());
-
             // Record head position for body-trail history (newest first)
-            posHistoryDeque.addFirst(this.getPos());
-            if (posHistoryDeque.size() > MAX_HISTORY)
-                posHistoryDeque.removeLast();
-            historyDirty = true;
+            Vec3d currentPos = this.getPos();
+            if (posHistoryDeque.isEmpty() || posHistoryDeque.getFirst().squaredDistanceTo(currentPos) > 0.05) {
+                posHistoryDeque.addFirst(currentPos);
+                if (posHistoryDeque.size() > MAX_HISTORY)
+                    posHistoryDeque.removeLast();
+                historyDirty = true;
+            }
 
             if (!partsSpawned) {
                 spawnParts(serverWorld);
                 partsSpawned = true;
             }
             updateParts();
+
+            // Head dictates part positioning directly to avoid sync issues when chunks
+            // unload
+            for (VoidWormPartEntity part : this.parts) {
+                if (part != null && !part.isRemoved()) {
+                    part.followByHistory();
+                }
+            }
+
             if (this.getHealth() > 0) {
                 skillsHandler();
             }
@@ -403,11 +415,16 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 state.markDirty();
             }
 
-            if (this.hungerCooldownTicks > 0 && this.getTarget() == null) {
+            LivingEntity currentTarget = this.getTarget();
+
+            if (this.hungerCooldownTicks > 0 && currentTarget == null) {
                 this.hungerCooldownTicks--;
             }
 
-            LivingEntity currentTarget = this.getTarget();
+            if (currentTarget == null && this.hasPassengers()) {
+                this.removeAllPassengers();
+            }
+
             if (currentTarget != null) {
                 this.prevTarget = currentTarget;
                 combatTicks = 400; // 20 seconds of combat state retention when target is lost
@@ -1108,7 +1125,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 final int finalDelay = ringIndex / 2; // 2 rings per tick (0.5 tick per ring-step)
 
                 Utils.addRunAfter(() -> {
-                    int blockCount = (int) (currentRadius * 8); // denser rings
+                    int blockCount = (int) (currentRadius * 4); // optimized density
                     for (int i = 0; i < blockCount; i++) {
                         double angle = 2 * Math.PI * i / blockCount;
                         double x = originX + currentRadius * Math.cos(angle);
@@ -1230,12 +1247,23 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
         if (this.getWorld() instanceof ServerWorld) {
             // Continue recording position history so segments follow the head up
-            posHistoryDeque.addFirst(this.getPos());
-            if (posHistoryDeque.size() > MAX_HISTORY)
-                posHistoryDeque.removeLast();
-            historyDirty = true;
+            Vec3d currentPos = this.getPos();
+            if (posHistoryDeque.isEmpty() || posHistoryDeque.getFirst().squaredDistanceTo(currentPos) > 0.05) {
+                posHistoryDeque.addFirst(currentPos);
+                if (posHistoryDeque.size() > MAX_HISTORY)
+                    posHistoryDeque.removeLast();
+                historyDirty = true;
+            }
 
             updateParts();
+
+            // Head dictates part positioning directly to avoid sync issues when chunks
+            // unload
+            for (VoidWormPartEntity part : this.parts) {
+                if (part != null && !part.isRemoved()) {
+                    part.followByHistory();
+                }
+            }
         }
 
         // After 200 ticks (10 seconds), actually remove the entity
@@ -1624,5 +1652,10 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             return;
 
         handleSkillCollision(entity, this);
+    }
+
+    @Override
+    public boolean shouldRender(double distance) {
+        return true; // Always render if we are tracked by the client!
     }
 }

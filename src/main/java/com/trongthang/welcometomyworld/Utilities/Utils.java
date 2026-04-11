@@ -147,15 +147,15 @@ public class Utils {
     }
 
     public static void onServerTick(MinecraftServer server) {
-        for (UUID key : runnableList.keySet()) {
-            RunAfter runTask = runnableList.get(key);
-
+        runnableList.entrySet().removeIf(entry -> {
+            RunAfter runTask = entry.getValue();
             runTask.runAfterInTick--;
             if (runTask.runAfterInTick <= 0) {
                 runTask.functionToRun.run();
-                runnableList.remove(key);
+                return true;
             }
-        }
+            return false;
+        });
     }
 
     public static void playSound(ServerWorld serverWorld, BlockPos pos, SoundEvent soundEvent) {

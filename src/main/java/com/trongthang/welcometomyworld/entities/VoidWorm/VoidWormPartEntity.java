@@ -26,6 +26,7 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
 
     private VoidWormEntity head;
     private UUID headUUID;
+    private Entity entityInFront;
 
     // Which segment we are (1 = first body after head, 2 = next, etc.)
     private int segmentIndex;
@@ -156,12 +157,14 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
             this.prevVisualPitch = this.visualPitch;
             this.prevVisualYaw = this.visualYaw;
 
-            if (this.head == null) {
+            if (this.head == null || this.head.isRemoved()) {
                 int id = this.dataTracker.get(HEAD_ID);
                 if (id != -1) {
                     Entity ent = this.getWorld().getEntityById(id);
                     if (ent instanceof VoidWormEntity) {
                         this.head = (VoidWormEntity) ent;
+                    } else {
+                        this.head = null;
                     }
                 }
             }
@@ -170,10 +173,6 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
         super.tick();
 
         if (this.getWorld() instanceof ServerWorld serverWorld) {
-            // Keep the chunk loaded while the part is alive and ticking
-            serverWorld.getChunkManager().addTicket(net.minecraft.server.world.ChunkTicketType.PORTAL,
-                    new net.minecraft.util.math.ChunkPos(this.getBlockPos()), 3, this.getBlockPos());
-
             // Restore head reference after chunk reload
             if (this.head == null && this.headUUID != null) {
                 Entity h = serverWorld.getEntity(this.headUUID);
@@ -205,10 +204,6 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
                 this.discard();
                 return;
             }
-
-            if (this.head != null && this.head.isAlive()) {
-                followByHistory();
-            }
         } else {
             // Client side visual interpolation derived from actual position delta
             double dx = this.getX() - this.prevX;
@@ -234,12 +229,28 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
         }
     }
 
+    private Entity getEntityInFront() {
+        if (this.head == null)
+            return null;
+        if (this.segmentIndex == 1)
+            return this.head;
+        for (VoidWormPartEntity p : this.head.getParts()) {
+            if (p.getSegmentIndex() == this.segmentIndex - 1) {
+                return p;
+            }
+        }
+        return this.head; // Fallback to head if previous part is somehow missing
+    }
+
     /**
      * Walk the head's position history to find the exact point that is
      * {@code segmentIndex * followDistance} blocks along the trail, then snap
      * this segment there. No lerp = no gap at any speed.
      */
-    private void followByHistory() {
+    public void followByHistory() {
+        if (this.entityInFront == null || this.age % 40 == 0) {
+            this.entityInFront = getEntityInFront();
+        }
         List<Vec3d> history = this.head.getPosHistory();
         if (history.isEmpty())
             return;
@@ -261,6 +272,21 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
             this.velocityModified = true;
             prevPos = target;
             return;
+        }
+
+        // Direct proximity clamp: Ensure we never stray too far from the part directly
+        // in front of us
+        if (this.entityInFront != null && this.entityInFront.isAlive()) {
+            double actualDist = target.distanceTo(this.entityInFront.getPos());
+            double maxAllowedGap = followDistance * 1.5;
+            if (actualDist > maxAllowedGap) {
+                // We're too far from the entity in front! Teleport closer.
+                Vec3d dir = this.entityInFront.getPos().subtract(target).normalize();
+                if (dir.lengthSquared() < 0.01) {
+                    dir = new Vec3d(0, 1, 0);
+                }
+                target = this.entityInFront.getPos().subtract(dir.multiply(followDistance));
+            }
         }
 
         // Snap directly to the trail point — no lerp, no gap
@@ -362,5 +388,13 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
         if (this.head != null) {
             this.head.handleSkillCollision(entity, this);
         }
+    }
+
+    @Override
+    public boolean shouldRender(double distance) {
+        if (this.head == null || this.head.isRemoved()) {
+            return false;
+        }
+        return true; // Render from extremely far distances tracked by client
     }
 }

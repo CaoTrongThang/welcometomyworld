@@ -11,7 +11,8 @@
     "client.BipedEntityModelMixin",
     "client.InGameHudMixin",
     "client.CancelLoadingScreenMixin",
-    "client.CameraMixin"
+    "client.CameraMixin",
+    "client.OctoLibTrailNullGuardMixin"
   ],
   "injectors": {
     "defaultRequire": 1

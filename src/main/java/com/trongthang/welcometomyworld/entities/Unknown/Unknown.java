@@ -1493,8 +1493,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
         this.triggerDash(dodgeLeft, 10);
         this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                 SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, MathHelper.nextBetween(this.random, 0.8F, 1.2F));
-
-        this.dodgeCooldown = 40;
     }
 
     @Override
