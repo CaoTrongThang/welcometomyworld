@@ -2,9 +2,11 @@ package com.trongthang.welcometomyworld.API;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
+import com.trongthang.welcometomyworld.entities.PurplePortal;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import mcp.mobius.waila.api.*;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -24,6 +26,8 @@ public class WthitPlugin implements IWailaPlugin {
         registrar.addComponent(new EntityComponentProvider(), TooltipPosition.HEAD, StrongTameableEntityDefault.class);
         registrar.addComponent(new UnknownComponentProvider(), TooltipPosition.HEAD, Unknown.class);
         registrar.addComponent(new UnknownComponentProvider(), TooltipPosition.BODY, Unknown.class);
+
+        registrar.override(new PortalComponentProvider(), PurplePortal.class, 0);
     }
 
     public static class SpyglassRayCastProvider implements IRayCastVectorProvider {
@@ -89,6 +93,14 @@ public class WthitPlugin implements IWailaPlugin {
                 sb.append(chars.charAt((int) (Math.random() * chars.length())));
             }
             return sb.toString();
+        }
+    }
+
+    // Entity component provider for PurplePortal (Hides the tooltip)
+    public static class PortalComponentProvider implements IEntityComponentProvider {
+        @Override
+        public Entity getOverride(IEntityAccessor accessor, IPluginConfig config) {
+            return EMPTY_ENTITY;
         }
     }
 }

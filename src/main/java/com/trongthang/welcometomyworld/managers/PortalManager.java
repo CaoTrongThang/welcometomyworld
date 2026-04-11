@@ -9,12 +9,12 @@ import net.minecraft.util.Identifier;
 
 public class PortalManager {
     public static void initialize() {
-        // Test portal: Diamond Block frame, lit by Diamond item, leads to The Nether
-        CustomPortalBuilder.beginPortal()
-                .frameBlock(Blocks.DIAMOND_BLOCK)
-                .lightWithItem(Items.DIAMOND)
-                .destDimID(new Identifier(WelcomeToMyWorld.MOD_ID, "void_dim"))
-                .tintColor(45, 65, 101)
-                .registerPortal();
+        // // Test portal: Diamond Block frame, lit by Diamond item, leads to The Nether
+        // CustomPortalBuilder.beginPortal()
+        // .frameBlock(Blocks.DIAMOND_BLOCK)
+        // .lightWithItem(Items.DIAMOND)
+        // .destDimID(new Identifier(WelcomeToMyWorld.MOD_ID, "void_dim"))
+        // .tintColor(45, 65, 101)
+        // .registerPortal();
     }
 }

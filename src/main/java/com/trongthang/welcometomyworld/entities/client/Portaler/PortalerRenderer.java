@@ -66,10 +66,9 @@ public class PortalerRenderer extends MobEntityRenderer<Portaler, PortalerModel<
         return NETHER_PORTAL_PNGS[0];
     }
 
-
     @Override
     public void render(Portaler livingEntity, float f, float g, MatrixStack matrixStack,
-                       VertexConsumerProvider vertexConsumerProvider, int i) {
+            VertexConsumerProvider vertexConsumerProvider, int i) {
 
         matrixStack.scale(1.5f, 1.5f, 1.5f);
 

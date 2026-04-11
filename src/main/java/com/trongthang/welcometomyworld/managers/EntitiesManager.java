@@ -12,6 +12,7 @@ import com.trongthang.welcometomyworld.entities.FallingSkeleton.FallingSkeleton;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormPartEntity;
 import com.trongthang.welcometomyworld.entities.VoidWorm.PurpleCrystalEntity;
+import com.trongthang.welcometomyworld.entities.PurplePortal;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -178,6 +179,13 @@ public class EntitiesManager {
                                         .dimensions(EntityDimensions.fixed(1.0f, 1.0f))
                                         .build());
 
+        public static final EntityType<PurplePortal> PURPLE_PORTAL = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "purple_portal"),
+                        FabricEntityTypeBuilder.<PurplePortal>create(SpawnGroup.MISC, PurplePortal::new)
+                                        .dimensions(EntityDimensions.fixed(4.0f, 4.0f))
+                                        .build());
+
         public static void register() {
                 // FabricDefaultAttributeRegistry.register(A_LIVING_LOG, setAttributes(8, 0.1));
 
@@ -202,6 +210,7 @@ public class EntitiesManager {
                 FabricDefaultAttributeRegistry.register(VOID_WORM, VoidWormEntity.setAttributes());
                 FabricDefaultAttributeRegistry.register(VOID_WORM_BODY, VoidWormPartEntity.setAttributes());
                 FabricDefaultAttributeRegistry.register(VOID_WORM_TAIL, VoidWormPartEntity.setAttributes());
+                FabricDefaultAttributeRegistry.register(PURPLE_PORTAL, PurplePortal.setAttributes());
 
                 addSpawn();
 

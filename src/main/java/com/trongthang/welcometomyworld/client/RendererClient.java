@@ -31,6 +31,7 @@ import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormBodyRend
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormTailModel;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormTailRenderer;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.PurpleCrystalRenderer;
+import com.trongthang.welcometomyworld.entities.client.PurplePortal.PurplePortalRenderer;
 
 import com.trongthang.welcometomyworld.blockentities.VoidBlockEntity;
 import com.trongthang.welcometomyworld.managers.BlocksEntitiesManager;
@@ -127,6 +128,7 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.VOID_WORM_BODY, VoidWormBodyRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.VOID_WORM_TAIL, VoidWormTailRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.PURPLE_CRYSTAL, PurpleCrystalRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.PURPLE_PORTAL, PurplePortalRenderer::new);
 
                 BlockEntityRendererFactories.register(BlocksEntitiesManager.VOID_BLOCK_ENTITY, VoidBlockRenderer::new);
         }

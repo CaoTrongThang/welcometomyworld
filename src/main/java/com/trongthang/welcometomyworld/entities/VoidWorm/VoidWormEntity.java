@@ -138,7 +138,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    public static final Skill ROAR = new Skill(1, 80, 600);
+    public static final Skill ROAR = new Skill(1, 80, 800);
     public static final Skill CHARGE_ATTACK = new Skill(2, 60, 250);
     public static final Skill CRYSTAL_BARRAGE = new Skill(3, 300, 2000);
     public static final Skill GRAB_ATTACK = new Skill(4, 200, 3000);
