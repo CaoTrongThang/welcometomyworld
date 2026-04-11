@@ -2,13 +2,13 @@
   "parent": "welcometomyworld:root",
   "display": {
     "title": {
-      "text": "Defeat the Unknown"
+      "text": "Defeat the Void Worm"
     },
     "description": {
-      "text": "I've no idea why we've to fight, isn't we suppose to be friend?"
+      "text": "This thing isn't suppose to be killed..."
     },
     "icon": {
-      "item": "welcometomyworld:unknown_hood"
+      "item": "welcometomyworld:void_worm_spawn_egg"
     },
     "frame": "challenge",
     "show_toast": true,
@@ -20,7 +20,7 @@
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
         "entity": {
-          "type": "welcometomyworld:unknown"
+          "type": "welcometomyworld:void_worm"
         }
       }
     }

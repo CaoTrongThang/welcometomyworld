@@ -4,12 +4,8 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.WanderAroundGoal;
-import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
@@ -21,14 +17,15 @@ import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.mob.SkeletonEntity;
+import net.minecraft.entity.mob.WitherSkeletonEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -39,8 +36,6 @@ import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
-import com.trongthang.welcometomyworld.entities.Unknown.Unknown.ChaseTargetGoal;
-import com.trongthang.welcometomyworld.entities.Unknown.Unknown.StopMoveWhenUsingSkill;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
 import com.trongthang.welcometomyworld.VoidBossState;
@@ -138,10 +133,10 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    public static final Skill ROAR = new Skill(1, 80, 500);
-    public static final Skill CHARGE_ATTACK = new Skill(2, 60, 300);
-    public static final Skill CRYSTAL_BARRAGE = new Skill(3, 300, 1000);
-    public static final Skill GRAB_ATTACK = new Skill(4, 200, 1000);
+    public static final Skill ROAR = new Skill(1, 80, 600);
+    public static final Skill CHARGE_ATTACK = new Skill(2, 60, 250);
+    public static final Skill CRYSTAL_BARRAGE = new Skill(3, 300, 2000);
+    public static final Skill GRAB_ATTACK = new Skill(4, 200, 3000);
     public static final Skill SUMMON_MINIONS = new Skill(5, 300, 1200);
 
     private static final int ROAR_HIT_TICK = 22;
@@ -156,6 +151,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private int skillRemainingCharges = 0;
 
     private final int[] skillCooldowns = new int[10];
+
+    public int hungerCooldownTicks = 0;
+    private LivingEntity prevTarget = null;
 
     public boolean canUseSkill(Skill skill) {
         return skillCooldowns[skill.id] <= 0;
@@ -207,7 +205,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 165000.0D)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 142500.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 1.5D)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 10.0f)
@@ -218,14 +216,25 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     @Override
     protected void initGoals() {
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
-        this.goalSelector.add(2, new BossFlightGoal(this));
+        this.goalSelector.add(1, new BossFlightGoal(this));
 
         // --- Target goals ---
         this.targetSelector.add(1, new RevengeGoal(this));
 
-        // equip offhand with an item called "mobs_of_mythology:kobold_spear"
-        // how to get the item from the mod
+        this.targetSelector.add(2, new ActiveTargetGoal<>(this, SkeletonEntity.class, true) {
+            @Override
+            public boolean canStart() {
+                return VoidWormEntity.this.hungerCooldownTicks <= 0 && super.canStart();
+            }
+        });
+
+        this.targetSelector.add(2, new ActiveTargetGoal<>(this, WitherSkeletonEntity.class, true) {
+            @Override
+            public boolean canStart() {
+                return VoidWormEntity.this.hungerCooldownTicks <= 0 && super.canStart();
+            }
+        });
+
     }
 
     @Override
@@ -307,6 +316,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         super.writeCustomDataToNbt(nbt);
         nbt.putBoolean("PartsSpawned", this.partsSpawned);
         nbt.putInt("TicksSinceDeath", this.ticksSinceDeath);
+        nbt.putInt("HungerCooldownTicks", this.hungerCooldownTicks);
 
         net.minecraft.nbt.NbtList historyList = new net.minecraft.nbt.NbtList();
         for (Vec3d pos : posHistoryDeque) {
@@ -328,6 +338,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         if (nbt.contains("TicksSinceDeath")) {
             this.ticksSinceDeath = nbt.getInt("TicksSinceDeath");
             this.dataTracker.set(TICKS_SINCE_DEATH, this.ticksSinceDeath);
+        }
+        if (nbt.contains("HungerCooldownTicks")) {
+            this.hungerCooldownTicks = nbt.getInt("HungerCooldownTicks");
         }
 
         if (nbt.contains("PosHistory", 9)) {
@@ -369,7 +382,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 partsSpawned = true;
             }
             updateParts();
-            skillsHandler();
+            if (this.getHealth() > 0) {
+                skillsHandler();
+            }
 
             // Trigger rumble when diving underground and moving fast
             if (this.age % 10 == 0) {
@@ -388,10 +403,25 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 state.markDirty();
             }
 
-            if (this.getTarget() != null) {
+            if (this.hungerCooldownTicks > 0 && this.getTarget() == null) {
+                this.hungerCooldownTicks--;
+            }
+
+            LivingEntity currentTarget = this.getTarget();
+            if (currentTarget != null) {
+                this.prevTarget = currentTarget;
                 combatTicks = 400; // 20 seconds of combat state retention when target is lost
-            } else if (combatTicks > 0) {
-                combatTicks--;
+            } else {
+                if (this.prevTarget != null) {
+                    if (!this.prevTarget.isAlive() && (this.prevTarget instanceof SkeletonEntity
+                            || this.prevTarget instanceof WitherSkeletonEntity)) {
+                        this.hungerCooldownTicks = 10000;
+                    }
+                    this.prevTarget = null;
+                }
+                if (combatTicks > 0) {
+                    combatTicks--;
+                }
             }
         } else {
             // Client side visual interpolation
@@ -712,7 +742,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                                     : SoundsManager.CRYSTAL_SPAWNED_2;
 
                             Utils.playFarSound((ServerWorld) this.getWorld(), this, sound,
-                                    net.minecraft.sound.SoundCategory.HOSTILE, 2.0F, 1.0F, 128.0);
+                                    SoundCategory.HOSTILE, 3.0F, 1.0F, 64.0);
                         }
                     }
                 } else {
@@ -782,7 +812,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             this.setVelocity(0, 0, 0);
                             this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
                                     SoundsManager.MONSTER_ROAR,
-                                    net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.5F);
+                                    net.minecraft.sound.SoundCategory.HOSTILE, 0.7F, 1.5F);
                         } else if (distSq < 4.0 || this.horizontalCollision || this.verticalCollision
                                 || skillTick > 150) {
                             // Missed
@@ -906,7 +936,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             this.dataTracker.set(SKILL_PREPARING, false);
                             sendCameraShakeToNearbyPlayers(80.0, 0.5f, 300); // Trigger low shake for 300 ticks
                             Utils.playFarSound((ServerWorld) this.getWorld(), this, SoundsManager.EARTH_RUMBLE,
-                                    net.minecraft.sound.SoundCategory.HOSTILE, 4.0F, 1.0F, 64.0);
+                                    net.minecraft.sound.SoundCategory.HOSTILE, 5.0F, 1.0F, 64.0);
                         }
                     } else {
                         // Phase 2: Circle and Summon
@@ -1126,13 +1156,36 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
         super.collidesWith(other);
         // if in the grab skill, return false
-        if (this.isUsingSkill() && this.getSkillId() == 5) {
+        if (this.isUsingSkill() && this.getSkillId() == 4) { // Changed from 5 to 4 (GRAB_ATTACK)
             Unknown.dealUnknownDamage(this, (LivingEntity) other,
                     (float) (this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.25f));
             return false;
         }
 
         return true;
+    }
+
+    public void handleSkillCollision(Entity other, Entity source) {
+        if (this.getWorld().isClient)
+            return;
+
+        if (this.isUsingSkill() && this.getSkillId() == 5) { // SUMMON_MINIONS
+            if (other instanceof LivingEntity living && living != this && !this.parts.contains(living)
+                    && living.getType() != EntityType.SKELETON && living.getType() != EntityType.WITHER_SKELETON) {
+
+                // Deal damage
+                Unknown.dealUnknownDamage(this, living,
+                        (float) (this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.0f));
+
+                // Push back
+                Vec3d pushDir = living.getPos().subtract(source.getPos()).normalize();
+                if (pushDir.lengthSquared() < 0.01) {
+                    pushDir = new Vec3d(0, 0.5, 0);
+                }
+                living.addVelocity(pushDir.x * 1.2, 0.2, pushDir.z * 1.2);
+                living.velocityModified = true;
+            }
+        }
     }
 
     private float smoothAngle(float current, float target, float maxStep) {
@@ -1193,6 +1246,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     }
 
     private void updateParts() {
+        if (this.getWorld().isClient)
+            return;
+
         // Only discard parts if the head is actually removed OR if the death animation
         // is finished
         if (this.isRemoved() && (this.getRemovalReason() == null || this.getRemovalReason().shouldDestroy()
@@ -1204,8 +1260,42 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             return;
         }
 
-        // Each part handles its own position following its leader
-        // But we can also force updates if needed
+        // Clean up invalid parts from our list
+        parts.removeIf(p -> p == null || p.isRemoved());
+
+        // We only actively recreate missing parts if the head has been alive for a bit,
+        // giving existing parts time to load from NBT and register themselves.
+        if (partsSpawned && this.age % 40 == 0) {
+            java.util.Set<Integer> seenSegments = new java.util.HashSet<>();
+            java.util.List<VoidWormPartEntity> toRemove = new java.util.ArrayList<>();
+
+            for (VoidWormPartEntity part : parts) {
+                int idx = part.getSegmentIndex();
+                if (idx < 1 || idx > BODY_SEGMENTS + 1 || seenSegments.contains(idx)) {
+                    toRemove.add(part);
+                    part.discard();
+                } else {
+                    seenSegments.add(idx);
+                }
+            }
+            parts.removeAll(toRemove);
+
+            // Create missing parts
+            if (this.getWorld() instanceof ServerWorld serverWorld) {
+                for (int i = 1; i <= BODY_SEGMENTS + 1; i++) {
+                    if (!seenSegments.contains(i)) {
+                        EntityType<? extends HostileEntity> type = (i == BODY_SEGMENTS + 1)
+                                ? EntitiesManager.VOID_WORM_TAIL
+                                : EntitiesManager.VOID_WORM_BODY;
+                        VoidWormPartEntity newPart = new VoidWormPartEntity(type, serverWorld, this, i, PART_DISTANCE);
+                        newPart.refreshPositionAndAngles(this.getX(), this.getY(), this.getZ(), this.getYaw(),
+                                this.getPitch());
+                        serverWorld.spawnEntity(newPart);
+                        parts.add(newPart);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -1255,6 +1345,20 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     @Override
     protected SoundEvent getDeathSound() {
         return SoundsManager.VOID_WORM_DEATH_ROAR;
+    }
+
+    @Override
+    public void onDeath(DamageSource damageSource) {
+        super.onDeath(damageSource);
+
+        if (this.hasPassengers()) {
+            this.removeAllPassengers();
+        }
+
+        // Reset skill state upon death
+        this.dataTracker.set(IS_USING_SKILL, false);
+        this.dataTracker.set(SKILL_PREPARING, false);
+        this.dataTracker.set(SKILL_ID, 0);
     }
 
     @Override
@@ -1516,5 +1620,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     @Override
     protected void pushAway(net.minecraft.entity.Entity entity) {
         // Disabling collisions between parts significantly improves performance
+        if (entity instanceof VoidWormPartEntity || entity == this)
+            return;
+
+        handleSkillCollision(entity, this);
     }
 }

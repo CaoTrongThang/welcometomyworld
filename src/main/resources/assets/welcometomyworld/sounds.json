@@ -350,18 +350,18 @@
       }
     ]
   },
-  "crystal_spawn_1": {
+  "crystal_spawned_1": {
     "sounds": [
       {
-        "name": "welcometomyworld:void_worm/crystal_spawn_1",
+        "name": "welcometomyworld:void_worm/crystal_spawned_1",
         "attenuation_distance": 128
       }
     ]
   },
-  "crystal_spawn_2": {
+  "crystal_spawned_2": {
     "sounds": [
       {
-        "name": "welcometomyworld:void_worm/crystal_spawn_2",
+        "name": "welcometomyworld:void_worm/crystal_spawned_2",
         "attenuation_distance": 128
       }
     ]

@@ -77,6 +77,10 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
             this.headUUID = head.getUuid();
     }
 
+    public int getSegmentIndex() {
+        return this.segmentIndex;
+    }
+
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 500.0D)
@@ -176,8 +180,15 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
                 if (h instanceof VoidWormEntity) {
                     this.head = (VoidWormEntity) h;
                     this.head.registerPart(this);
+                } else if (this.age > 40) { // Gives it 2 seconds to find the head
+                    this.discard();
+                    return;
                 }
+            } else if (this.head == null && this.headUUID == null) {
+                this.discard();
+                return;
             }
+
             if (this.head != null) {
                 this.dataTracker.set(HEAD_ID, this.head.getId());
             }
@@ -236,8 +247,8 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
         float targetTrailDist = segmentIndex * followDistance;
         Vec3d target = findTrailPoint(history, targetTrailDist);
         if (target == null) {
-            // History not long enough yet (worm just spawned) — stay put
-            return;
+            // History not long enough yet
+            target = history.get(history.size() - 1);
         }
 
         Vec3d myPos = this.getPos();
@@ -345,5 +356,11 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
     @Override
     protected void pushAway(Entity entity) {
         // Disabling collisions between parts significantly improves performance
+        if (entity instanceof VoidWormPartEntity || entity == this.head || entity == this)
+            return;
+
+        if (this.head != null) {
+            this.head.handleSkillCollision(entity, this);
+        }
     }
 }

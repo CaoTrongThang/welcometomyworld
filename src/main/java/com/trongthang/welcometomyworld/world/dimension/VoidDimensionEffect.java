@@ -24,7 +24,7 @@ public class VoidDimensionEffect extends DimensionEffects {
 
         // Base colors
         Vec3d topColor = new Vec3d(0.0, 0.0, 0.0); // Black (matching Overworld Void)
-        Vec3d midColor = new Vec3d(1.0, 0.0, 0.0); // Pure Red
+        Vec3d midColor = new Vec3d(0.9, 0.0, 0.0); // Pure Red
         Vec3d bottomColor = new Vec3d(0.6, 0.0, 0.4); // Redder Purple
 
         double r, g, b;

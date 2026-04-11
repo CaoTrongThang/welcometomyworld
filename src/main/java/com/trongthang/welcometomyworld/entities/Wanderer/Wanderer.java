@@ -248,6 +248,13 @@ public class Wanderer extends StrongTameableEntityDefault {
                         }
                     }
                 }
+            } else {
+                if (this.getOwner() == null || !this.isTamed()) {
+                    if (this.getHealth() > this.getMaxHealth() * 0.3f) {
+                        this.setCanBeTamed(false);
+                        this.setCanBeTamedSet(false);
+                    }
+                }
             }
         }
 
