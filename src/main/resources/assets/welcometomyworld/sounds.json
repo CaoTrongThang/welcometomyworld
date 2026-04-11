@@ -322,7 +322,7 @@
     "sounds": [
       {
         "name": "welcometomyworld:void_worm/void_worm_ambient_1",
-        "attenuation_distance": 258
+        "attenuation_distance": 64
       }
     ]
   },
@@ -330,7 +330,63 @@
     "sounds": [
       {
         "name": "welcometomyworld:void_worm/monster_roar",
-        "attenuation_distance": 258
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "void_worm_ambient_2": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/void_worm_ambient_2",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "void_worm_ambient_3": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/void_worm_ambient_3",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "crystal_spawn_1": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/crystal_spawn_1",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "crystal_spawn_2": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/crystal_spawn_2",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "void_worm_death_roar": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/void_worm_death_roar",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "earth_rumble": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/earth_rumble",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "void_worm_charge_attack": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:void_worm/void_worm_charge_attack",
+        "attenuation_distance": 128
       }
     ]
   }

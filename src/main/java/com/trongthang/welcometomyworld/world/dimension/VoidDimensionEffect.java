@@ -24,8 +24,8 @@ public class VoidDimensionEffect extends DimensionEffects {
 
         // Base colors
         Vec3d topColor = new Vec3d(0.0, 0.0, 0.0); // Black (matching Overworld Void)
-        Vec3d midColor = new Vec3d(0.8, 0.0, 0.0); // Red
-        Vec3d bottomColor = new Vec3d(0.4, 0.0, 0.6); // Purple
+        Vec3d midColor = new Vec3d(1.0, 0.0, 0.0); // Pure Red
+        Vec3d bottomColor = new Vec3d(0.6, 0.0, 0.4); // Redder Purple
 
         double r, g, b;
 
@@ -43,9 +43,10 @@ public class VoidDimensionEffect extends DimensionEffects {
             b = MathHelper.lerp(percentage, bottomColor.z, midColor.z);
         }
 
-        // MULTIPLY BY 0.15 (15% intensity)
-        // This makes the color very dark and subtle, simulating a faint "opacity"
-        return new Vec3d(r, g, b).multiply(0.15);
+        // MULTIPLY BY 0.25 (25% intensity)
+        // This makes the color slightly more visible while remaining dark and
+        // atmospheric
+        return new Vec3d(r, g, b).multiply(0.25);
     }
 
     @Override

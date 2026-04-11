@@ -381,9 +381,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
                     // Case 2: Close range
                 } else if (dist <= 8.0) {
-                    // To add a phase-2 skill: new Object[]{MY_SKILL, 30f, healthFraction() <= 0.5f}
+
                     Skill picked = pickWeightedSkill(
-                            new Object[] { PUNCH, 30, true },
+                            new Object[] { PUNCH, 30, Math.abs(target.getY() - this.getY()) <= 5 },
                             new Object[] { GROUND_SLAM_KICK, 50, true },
                             new Object[] { LEG_TRIP, 50, true },
                             new Object[] { UNKNOWN_SPEAR_3_HITS, 50, healthFraction() <= 0.8f },
@@ -1252,7 +1252,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         // more than 1% of the target health
         if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
             target.damage(attacker.getDamageSources().mobAttack(attacker),
-                    amount + Math.min(target.getMaxHealth() * 0.1f, 1000));
+                    amount + Math.min(target.getMaxHealth() * 0.05f, 500));
         } else {
             target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
         }

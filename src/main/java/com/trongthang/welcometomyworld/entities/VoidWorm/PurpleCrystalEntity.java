@@ -25,7 +25,7 @@ public class PurpleCrystalEntity extends Entity implements GeoEntity {
             TrackedDataHandlerRegistry.FLOAT);
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private UUID ownerUuid;
-    private static final int MAX_AGE = 100;
+    private static final int MAX_AGE = 200;
 
     public PurpleCrystalEntity(EntityType<?> type, World world) {
         super(type, world);
@@ -56,38 +56,55 @@ public class PurpleCrystalEntity extends Entity implements GeoEntity {
 
         this.noClip = true;
 
-        if (this.getWorld().isClient)
+        if (this.getWorld().isClient) {
+            this.getWorld().addParticle(net.minecraft.particle.ParticleTypes.PORTAL,
+                    this.getX() + (this.random.nextDouble() - 0.5), this.getY() + (this.random.nextDouble() - 0.5),
+                    this.getZ() + (this.random.nextDouble() - 0.5), 0, 0, 0);
+            this.move(net.minecraft.entity.MovementType.SELF, this.getVelocity());
             return;
+        }
 
         if (this.age >= MAX_AGE) {
             this.discard();
             return;
         }
 
-        LivingEntity owner = resolveOwner();
-        LivingEntity target = null;
-        if (owner instanceof VoidWormEntity worm) {
-            target = worm.getTarget();
+        if (this.age == 1 && this.getWorld() instanceof ServerWorld sw) {
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.DRAGON_BREATH, this.getX(), this.getY() + 0.5,
+                    this.getZ(), 30, 0.4, 0.4, 0.4, 0.1);
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.END_ROD, this.getX(), this.getY() + 0.5, this.getZ(),
+                    30, 0.4, 0.4, 0.4, 0.1);
         }
 
-        if (target != null && target.isAlive()) {
-            Vec3d targetPos = target.getPos().add(0, target.getHeight() / 2.0, 0);
-            Vec3d dir = targetPos.subtract(this.getPos());
-            double dist = dir.length();
-
-            // Higher speed for more impact and "straight" feel
-            double currentSpeed = 2.0;
-
-            if (dir.lengthSquared() > 0.001) {
-                dir = dir.normalize();
-                this.setVelocity(dir.multiply(currentSpeed));
-                this.velocityModified = true;
+        if (this.age < 40) {
+            this.setVelocity(Vec3d.ZERO);
+            this.velocityModified = true;
+        } else {
+            LivingEntity owner = resolveOwner();
+            LivingEntity target = null;
+            if (owner instanceof VoidWormEntity worm) {
+                target = worm.getTarget();
             }
 
-            if (dist < 3.0) {
-                explode(owner);
-                this.discard();
-                return;
+            if (target != null && target.isAlive()) {
+                Vec3d targetPos = target.getPos().add(0, target.getHeight() / 2.0, 0);
+                Vec3d dir = targetPos.subtract(this.getPos());
+                double dist = dir.length();
+
+                // Higher speed for more impact and "straight" feel
+                double currentSpeed = 2.0;
+
+                if (dir.lengthSquared() > 0.001) {
+                    dir = dir.normalize();
+                    this.setVelocity(dir.multiply(currentSpeed));
+                    this.velocityModified = true;
+                }
+
+                if (dist < 3.0) {
+                    explode(owner);
+                    this.discard();
+                    return;
+                }
             }
         }
 

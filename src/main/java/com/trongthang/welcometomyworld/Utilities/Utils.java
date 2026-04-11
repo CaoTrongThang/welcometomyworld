@@ -198,12 +198,25 @@ public class Utils {
                 continue;
 
             float dist = (float) Math.sqrt(distSq);
-            // Linear fade: full volume at 0, silent at maxRange
-            float scaledVolume = maxVolume * (1.0f - dist / (float) maxRange);
-            scaledVolume = Math.max(scaledVolume, 0.01f);
+
+            // 15% of maxRange is full volume
+            float fullVolumeRadius = (float) maxRange * 0.15f;
+            float fadeProgress = 0.0f;
+
+            if (dist > fullVolumeRadius) {
+                fadeProgress = (dist - fullVolumeRadius) / (float) (maxRange - fullVolumeRadius);
+            }
+
+            // Target volume we want the player to hear (clamped to 0..maxVolume)
+            float targetVolume = maxVolume * (1.0f - fadeProgress);
+            targetVolume = Math.max(targetVolume, 0.01f);
+
+            // Compensation for Minecraft's client-side attenuation (dist/16 ratio)
+            // packetVolume = targetVolume + (dist / 16.0)
+            float packetVolume = targetVolume + (dist / 16.0f);
 
             player.networkHandler.sendPacket(new PlaySoundS2CPacket(
-                    soundEntry, category, x, y, z, scaledVolume, pitch, seed));
+                    soundEntry, category, x, y, z, packetVolume, pitch, seed));
         }
     }
 

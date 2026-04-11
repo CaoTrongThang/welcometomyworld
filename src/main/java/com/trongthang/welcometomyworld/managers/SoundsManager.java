@@ -69,6 +69,13 @@ public class SoundsManager {
 
     public static final SoundEvent VOID_WORM_AMBIENT_1 = registerSoundEvent("void_worm_ambient_1");
     public static final SoundEvent MONSTER_ROAR = registerSoundEvent("monster_roar");
+    public static final SoundEvent VOID_WORM_AMBIENT_2 = registerSoundEvent("void_worm_ambient_2");
+    public static final SoundEvent VOID_WORM_AMBIENT_3 = registerSoundEvent("void_worm_ambient_3");
+    public static final SoundEvent VOID_WORM_DEATH_ROAR = registerSoundEvent("void_worm_death_roar");
+    public static final SoundEvent CRYSTAL_SPAWNED_1 = registerSoundEvent("crystal_spawned_1");
+    public static final SoundEvent CRYSTAL_SPAWNED_2 = registerSoundEvent("crystal_spawned_2");
+    public static final SoundEvent EARTH_RUMBLE = registerSoundEvent("earth_rumble");
+    public static final SoundEvent VOID_WORM_CHARGE_ATTACK = registerSoundEvent("void_worm_charge_attack");
 
     private static SoundEvent registerSoundEvent(String name) {
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);
