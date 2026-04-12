@@ -77,6 +77,9 @@ public class SoundsManager {
     public static final SoundEvent EARTH_RUMBLE = registerSoundEvent("earth_rumble");
     public static final SoundEvent VOID_WORM_CHARGE_ATTACK = registerSoundEvent("void_worm_charge_attack");
 
+    public static final SoundEvent PURPLE_PORTAL_OPEN = registerSoundEvent("purple_portal_open");
+    public static final SoundEvent PURPLE_PORTAL_CLOSE = registerSoundEvent("purple_portal_close");
+
     private static SoundEvent registerSoundEvent(String name) {
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);
         return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));

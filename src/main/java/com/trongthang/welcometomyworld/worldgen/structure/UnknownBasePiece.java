@@ -46,7 +46,7 @@ public class UnknownBasePiece extends SimpleStructurePiece {
     @Override
     protected void handleMetadata(String metadata, BlockPos pos, ServerWorldAccess world, Random random,
             BlockBox boundingBox) {
-        if ("unknown".equals(metadata)) {
+        if ("unknown_spawn".equals(metadata)) {
             // Replace structure block and spawn entity
             world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
 

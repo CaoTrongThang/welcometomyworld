@@ -198,6 +198,11 @@ public class PurplePortalEntity extends PathAwareEntity implements GeoEntity {
     }
 
     @Override
+    public boolean canImmediatelyDespawn(double distanceSquared) {
+        return false;
+    }
+
+    @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
     }

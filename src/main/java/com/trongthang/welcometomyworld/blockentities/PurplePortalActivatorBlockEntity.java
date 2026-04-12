@@ -8,11 +8,14 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+
+import com.trongthang.welcometomyworld.managers.SoundsManager;
 
 import java.util.UUID;
 
@@ -43,6 +46,8 @@ public class PurplePortalActivatorBlockEntity extends BlockEntity implements Geo
                     portal.turnOff();
                     this.portalUuid = null;
                     this.markDirty();
+                    this.world.playSound(null, this.pos, SoundsManager.PURPLE_PORTAL_CLOSE, SoundCategory.BLOCKS, 1.0f,
+                            1.0f);
                 }
                 return;
             }
@@ -70,6 +75,8 @@ public class PurplePortalActivatorBlockEntity extends BlockEntity implements Geo
         this.portalUuid = portal.getUuid();
         this.markDirty();
         world.updateListeners(pos, state, state, 3);
+
+        this.world.playSound(null, this.pos, SoundsManager.PURPLE_PORTAL_OPEN, SoundCategory.BLOCKS, 0.8f, 1.2f);
     }
 
     public void removePortal() {

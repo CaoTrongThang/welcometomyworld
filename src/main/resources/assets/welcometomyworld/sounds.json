@@ -389,5 +389,21 @@
         "attenuation_distance": 128
       }
     ]
+  },
+  "purple_portal_open": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:purple_portal/purple_portal_open",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "purple_portal_close": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:purple_portal/purple_portal_close",
+        "attenuation_distance": 128
+      }
+    ]
   }
 }

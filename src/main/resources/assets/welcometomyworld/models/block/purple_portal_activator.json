@@ -1,0 +1,8 @@
+{
+    "parent": "minecraft:block/cube_column",
+    "textures": {
+        "particle": "welcometomyworld:block/purple_protal_activator",
+        "end": "welcometomyworld:block/purple_protal_activator",
+        "side": "welcometomyworld:block/purple_protal_activator"
+    }
+}
