@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "DID",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "welcometomyworld:ancient_fragment"
+    },
+    "D": {
+      "item": "minecraft:oak_log"
+    },
+    "I": {
+      "item": "minecraft:iron_block"
+    }
+  },
+  "result": {
+    "item": "welcometomyworld:capture_cage",
+    "count": 1
+  }
+}

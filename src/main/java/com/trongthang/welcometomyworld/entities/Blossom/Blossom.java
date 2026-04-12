@@ -384,7 +384,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
                         Utils.addRunAfter(() -> {
                             // Calculate buff parameters based on stats
-                            int regenAmplifier = Math.min((int) (this.getMaxHealth() / 250), 10);
+                            int regenAmplifier = Math.min((int) (this.getMaxHealth() / 350), 10);
                             int resistanceAmplifier = Math.min((int) (this.getArmor() / 5f), 3);
 
                             // Randomly choose between Regeneration or Resistance
@@ -416,10 +416,10 @@ public class Blossom extends StrongTameableEntityDefault {
                                     Utils.sendSoundPacketToClient(SoundsManager.BLOSSOM_BUFF, ally.getBlockPos());
                                 }
 
-                                this.healCooldownCounter = Math.min(totalBuff * 200, this.defaultHealCooldown);
-
                                 ally.setHealth(ally.getHealth() + (ally.getMaxHealth() * this.groupHealPercent));
                             }
+
+                            this.healCooldownCounter = Math.min(totalBuff * 200, this.defaultHealCooldown);
 
                             if (!allies.isEmpty()) {
                                 spawnBuffCircle(this.getWorld(), this.getBlockPos(),
@@ -1426,7 +1426,8 @@ public class Blossom extends StrongTameableEntityDefault {
                 } else {
                     this.attacker = livingEntity.getAttacker();
                     int i = livingEntity.getLastAttackedTime();
-                    return i != this.lastAttackedTime && this.canTrack(this.attacker, TargetPredicate.DEFAULT)
+                    return i != this.lastAttackedTime && this.attacker != this.mob
+                            && this.canTrack(this.attacker, TargetPredicate.DEFAULT)
                             && this.mob.canAttackWithOwner(this.attacker, livingEntity);
                 }
             } else {
@@ -1473,7 +1474,8 @@ public class Blossom extends StrongTameableEntityDefault {
                             }
                         }
                     }
-                    return i != this.lastAttackTime && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
+                    return i != this.lastAttackTime && this.attacking != this.tameable
+                            && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
                             && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
                 }
             } else {

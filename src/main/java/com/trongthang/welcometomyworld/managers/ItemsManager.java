@@ -98,6 +98,10 @@ public class ItemsManager {
                                         new FabricItemSettings().rarity(Rarity.EPIC)),
                         "void_worm_bone_boots");
 
+        public static final Item CAPTURE_CAGE = registerItem(
+                        new CaptureCageItem(new FabricItemSettings().rarity(Rarity.RARE)),
+                        "capture_cage");
+
         public static Enchantment silenceEnchantment = new SilenceEnchantment();
 
         public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
@@ -186,6 +190,8 @@ public class ItemsManager {
                                         itemGroup.add(ItemsManager.VOID_WORM_BONE_CHESTPLATE);
                                         itemGroup.add(ItemsManager.VOID_WORM_BONE_LEGGINGS);
                                         itemGroup.add(ItemsManager.VOID_WORM_BONE_BOOTS);
+
+                                        itemGroup.add(ItemsManager.CAPTURE_CAGE);
 
                                         itemGroup.add(FluidsManager.DEATH_WATER_BUCKET);
 

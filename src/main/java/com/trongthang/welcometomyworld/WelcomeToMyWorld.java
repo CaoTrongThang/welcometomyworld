@@ -341,6 +341,20 @@ public class WelcomeToMyWorld implements ModInitializer {
     public void registerEvents() {
         bossesSpawningHandler.bossDropsRegister();
         introOfTheWorldHandler.registerIntroEvents();
+
+        net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT
+                .register((player, world, hand, entity, hitResult) -> {
+                    net.minecraft.item.ItemStack stack = player.getStackInHand(hand);
+                    if (stack.isOf(ItemsManager.CAPTURE_CAGE)
+                            && entity instanceof net.minecraft.entity.LivingEntity living) {
+                        net.minecraft.util.ActionResult result = stack.getItem().useOnEntity(stack, player, living,
+                                hand);
+                        if (result.isAccepted()) {
+                            return result;
+                        }
+                    }
+                    return net.minecraft.util.ActionResult.PASS;
+                });
     }
 
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);

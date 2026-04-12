@@ -383,21 +383,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         super.tick();
 
         if (this.getWorld() instanceof ServerWorld serverWorld) {
-            if (this.age % 40 == 0) {
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("isUsingSkill: " + this.isUsingSkill());
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
-                        .info("isPreparing: " + this.dataTracker.get(SKILL_PREPARING));
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
-                        .info("skillId: " + this.dataTracker.get(SKILL_ID));
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("skillTick: " + this.skillTick);
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("prepareTicks: " + this.prepareTicks);
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("velocity: " + this.getVelocity());
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("wanderTarget: " + wanderTargetLog(this));
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info(
-                        "target: " + (this.getTarget() != null ? this.getTarget().getName().getString() : "null"));
-                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
-                        .info("hungerCooldown: " + this.hungerCooldownTicks);
-            }
             // Record head position for body-trail history (newest first)
             Vec3d currentPos = this.getPos();
             if (posHistoryDeque.isEmpty() || posHistoryDeque.getFirst().squaredDistanceTo(currentPos) > 0.05) {

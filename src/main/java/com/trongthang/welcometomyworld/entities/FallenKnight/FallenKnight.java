@@ -1215,7 +1215,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 } else {
                     this.attacker = livingEntity.getAttacker();
                     int i = livingEntity.getLastAttackedTime();
-                    return i != this.lastAttackedTime && this.canTrack(this.attacker, TargetPredicate.DEFAULT)
+                    return i != this.lastAttackedTime && this.attacker != this.mob
+                            && this.canTrack(this.attacker, TargetPredicate.DEFAULT)
                             && this.mob.canAttackWithOwner(this.attacker, livingEntity);
                 }
             } else {
@@ -1262,7 +1263,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                             }
                         }
                     }
-                    return i != this.lastAttackTime && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
+                    return i != this.lastAttackTime && this.attacking != this.tameable
+                            && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
                             && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
                 }
             } else {

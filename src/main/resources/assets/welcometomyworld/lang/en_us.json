@@ -35,6 +35,7 @@
   "entity.welcometomyworld.wanderer": "Wanderer",
   "entity.welcometomyworld.blossom": "Blossom",
   "entity.welcometomyworld.unknown": "Unknown",
+  "entity.welcometomyworld.void_worm": "Void Worm",
   "block.welcometomyworld.tougher_iron_bars": "Tougher Iron Bars",
   "block.welcometomyworld.rusted_iron_bars": "Weathered Iron Bars",
   "block.welcometomyworld.tougher_iron_block": "Tougher Iron Block",
@@ -66,5 +67,6 @@
   "fluid.welcometomyworld.death_water": "Death's Water",
   "category.welcometomyworld.keys": "Welcome To My World Keys",
   "key.welcometomyworld.open_mob_stats": "Open Mob Stats",
-  "effect.welcometomyworld.void_sight": "Void Sight"
+  "effect.welcometomyworld.void_sight": "Void Sight",
+  "item.welcometomyworld.capture_cage": "Capture Cage"
 }

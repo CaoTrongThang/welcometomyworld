@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld.API;
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
 import com.trongthang.welcometomyworld.entities.PurplePortal;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormPartEntity;
 
 import mcp.mobius.waila.api.*;
@@ -27,7 +28,7 @@ public class WthitPlugin implements IWailaPlugin {
         registrar.addComponent(new UnknownComponentProvider(), TooltipPosition.BODY, Unknown.class);
 
         registrar.override(new PortalComponentProvider(), PurplePortal.class, 0);
-        registrar.override(new PortalComponentProvider(), VoidWormPartEntity.class, 0);
+        registrar.override(new VoidWormPartComponentProvider(), VoidWormPartEntity.class, 0);
     }
 
     public static class SpyglassRayCastProvider implements IRayCastVectorProvider {
@@ -101,6 +102,20 @@ public class WthitPlugin implements IWailaPlugin {
         @Override
         public Entity getOverride(IEntityAccessor accessor, IPluginConfig config) {
             return EMPTY_ENTITY;
+        }
+    }
+
+    // Entity component provider for VoidWormPart (Shows head's health/name)
+    public static class VoidWormPartComponentProvider implements IEntityComponentProvider {
+        @Override
+        public Entity getOverride(IEntityAccessor accessor, IPluginConfig config) {
+            if (accessor.getEntity() instanceof VoidWormPartEntity part) {
+                VoidWormEntity head = part.getHead();
+                if (head != null) {
+                    return head;
+                }
+            }
+            return accessor.getEntity();
         }
     }
 }
