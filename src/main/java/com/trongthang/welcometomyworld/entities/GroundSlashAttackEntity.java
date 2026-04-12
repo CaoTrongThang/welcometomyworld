@@ -50,6 +50,7 @@ public class GroundSlashAttackEntity extends Entity implements GeoEntity {
     public GroundSlashAttackEntity(EntityType<?> type, World world) {
         super(type, world);
         this.noClip = true;
+        this.setNoGravity(true);
     }
 
     /**
@@ -60,6 +61,8 @@ public class GroundSlashAttackEntity extends Entity implements GeoEntity {
         double rad = Math.toRadians(yawDegrees);
         this.travelDir = new Vec3d(-Math.sin(rad), 0, Math.cos(rad)).normalize().multiply(SPEED);
         this.setYaw(yawDegrees);
+        this.setVelocity(this.travelDir);
+        this.velocityModified = true;
     }
 
     public void setDamage(float dmg) {
@@ -84,20 +87,25 @@ public class GroundSlashAttackEntity extends Entity implements GeoEntity {
     @Override
     public void tick() {
         super.tick();
+        this.noClip = true;
 
         if (this.age >= MAX_AGE) {
             this.discard();
             return;
         }
 
-        // Move forward
-        if (!travelDir.equals(Vec3d.ZERO)) {
-            this.setPosition(this.getX() + travelDir.x, this.getY(), this.getZ() + travelDir.z);
-        }
-
+        // Move forward normally
         if (this.getWorld().isClient) {
+            this.move(net.minecraft.entity.MovementType.SELF, this.getVelocity());
             return;
         }
+
+        if (!travelDir.equals(Vec3d.ZERO)) {
+            this.setVelocity(this.travelDir);
+            this.velocityModified = true;
+        }
+
+        this.move(net.minecraft.entity.MovementType.SELF, this.getVelocity());
 
         // Resolve owner for damage attribution
         LivingEntity owner = resolveOwner();

@@ -1,14 +1,13 @@
 package com.trongthang.welcometomyworld.API;
 
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
 import com.trongthang.welcometomyworld.entities.PurplePortal;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormPartEntity;
+
 import mcp.mobius.waila.api.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.SpyglassItem;
 import net.minecraft.scoreboard.Team;
@@ -28,6 +27,7 @@ public class WthitPlugin implements IWailaPlugin {
         registrar.addComponent(new UnknownComponentProvider(), TooltipPosition.BODY, Unknown.class);
 
         registrar.override(new PortalComponentProvider(), PurplePortal.class, 0);
+        registrar.override(new PortalComponentProvider(), VoidWormPartEntity.class, 0);
     }
 
     public static class SpyglassRayCastProvider implements IRayCastVectorProvider {

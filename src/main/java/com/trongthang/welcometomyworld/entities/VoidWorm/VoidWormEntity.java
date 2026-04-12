@@ -65,6 +65,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private List<Vec3d> posHistorySnapshot = new ArrayList<>();
     private boolean historyDirty = false;
 
+    private int autoRegenHealth = 50;
+    private int autoRegenCooldown = 100;
+
     public List<Vec3d> getPosHistory() {
         if (historyDirty || posHistorySnapshot == null) {
             posHistorySnapshot = List.copyOf(posHistoryDeque);
@@ -151,6 +154,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private boolean skillHitFired = false;
     private int skillTotalTicks = 0;
     private int skillTick = 0;
+    private int prepareTicks = 0;
     private int globalSkillCooldown = 0;
     public int combatTicks = 0;
     private int skillRemainingCharges = 0;
@@ -184,6 +188,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         this.dataTracker.set(SKILL_ID, skill.id);
         this.dataTracker.set(SKILL_TRIGGER, this.dataTracker.get(SKILL_TRIGGER) + 1);
         this.skillTick = 0;
+        this.prepareTicks = 0;
         this.skillTotalTicks = skill.length;
         this.skillCooldowns[skill.id] = skill.cooldown;
         this.globalSkillCooldown = 40;
@@ -364,6 +369,12 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         this.noClip = true; // Ensure it stays true
         this.setNoGravity(true); // Ensure it stays set
 
+        if (this.age % autoRegenCooldown == 0) {
+            if (this.getHealth() < this.getMaxHealth()) {
+                this.heal(autoRegenHealth);
+            }
+        }
+
         if (this.getWorld().isClient) {
             this.prevVisualPitch = this.visualPitch;
             this.prevVisualYaw = this.visualYaw;
@@ -372,6 +383,21 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         super.tick();
 
         if (this.getWorld() instanceof ServerWorld serverWorld) {
+            if (this.age % 40 == 0) {
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("isUsingSkill: " + this.isUsingSkill());
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                        .info("isPreparing: " + this.dataTracker.get(SKILL_PREPARING));
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                        .info("skillId: " + this.dataTracker.get(SKILL_ID));
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("skillTick: " + this.skillTick);
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("prepareTicks: " + this.prepareTicks);
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("velocity: " + this.getVelocity());
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("wanderTarget: " + wanderTargetLog(this));
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info(
+                        "target: " + (this.getTarget() != null ? this.getTarget().getName().getString() : "null"));
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                        .info("hungerCooldown: " + this.hungerCooldownTicks);
+            }
             // Record head position for body-trail history (newest first)
             Vec3d currentPos = this.getPos();
             if (posHistoryDeque.isEmpty() || posHistoryDeque.getFirst().squaredDistanceTo(currentPos) > 0.05) {
@@ -479,9 +505,25 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             int skillId = this.dataTracker.get(SKILL_ID);
             LivingEntity target = getTarget();
 
+            if (isPreparing) {
+                this.prepareTicks++;
+                if (this.prepareTicks > 120) {
+                    com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                            .debug("SKILL_PREPARING timed out standing still, canceling", skillId);
+                    this.setVelocity(this.getVelocity().multiply(0.5D));
+                    this.velocityModified = true;
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_PREPARING, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                    return;
+                }
+            }
+
             if (skillId == 2) { // CHARGE_ATTACK
                 if (target != null && target.isAlive()) {
                     if (isPreparing) {
+                        com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.debug("CHARGE_ATTACK PREPARING",
+                                isPreparing);
                         double targetYHover = target.getY() + 40.0D;
                         Vec3d dir = new Vec3d(target.getX() - this.getX(), targetYHover - this.getY(),
                                 target.getZ() - this.getZ());
@@ -581,6 +623,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         }
                     }
                 } else {
+                    com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                            .debug("CHARGE_ATTACK target null or dead, cancelling", skillId);
                     this.setVelocity(this.getVelocity().multiply(0.9D));
                     this.velocityModified = true;
                     this.dataTracker.set(IS_USING_SKILL, false);
@@ -594,6 +638,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     double targetZ = target.getZ();
 
                     if (isPreparing) {
+                        com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.debug("ROAR PREPARING", isPreparing);
                         // Fly to position (30 blocks above target)
                         Vec3d dir = new Vec3d(targetX - this.getX(), targetY - this.getY(), targetZ - this.getZ());
                         double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
@@ -656,6 +701,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         }
                     }
                 } else {
+                    com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                            .debug("ROAR target null or dead, cancelling", skillId);
                     this.setVelocity(this.getVelocity().multiply(0.9D));
                     this.velocityModified = true;
                     this.dataTracker.set(IS_USING_SKILL, false);
@@ -1473,17 +1520,22 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             Vec3d currentVel = worm.getVelocity();
 
             if (target != null && target.isAlive()) {
-                // Clear any wander target immediately when entering combat
-                wanderTarget = null;
-
                 // Stay within movement limits of (0, 50, 0)
                 double dx = target.getX() - 0;
                 double dz = target.getZ() - 0;
                 double dy = target.getY() - 50;
                 if (Math.sqrt(dx * dx + dz * dz) > MAX_DISTANCE_XZ || Math.abs(dy) > MAX_DISTANCE_Y) {
+                    com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                            .info("BossFlightGoal target out of bounds, resetting target. Target: "
+                                    + target.getName().getString());
                     worm.setTarget(null);
-                    return;
+                    target = null;
                 }
+            }
+
+            if (target != null && target.isAlive()) {
+                // Clear any wander target immediately when entering combat
+                wanderTarget = null;
 
                 // Orbit the target at ORBIT_RADIUS. Skills are the only way to close in.
                 Vec3d wormPos = worm.getPos();
@@ -1668,5 +1720,16 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     @Override
     public boolean shouldRender(double distance) {
         return true; // Always render if we are tracked by the client!
+    }
+
+    private static String wanderTargetLog(VoidWormEntity worm) {
+        BossFlightGoal goal = (BossFlightGoal) worm.goalSelector.getGoals().stream()
+                .filter(g -> g.getGoal() instanceof BossFlightGoal)
+                .map(net.minecraft.entity.ai.goal.PrioritizedGoal::getGoal)
+                .findFirst().orElse(null);
+        if (goal != null && goal.wanderTarget != null) {
+            return goal.wanderTarget.toString();
+        }
+        return "null";
     }
 }

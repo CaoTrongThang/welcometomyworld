@@ -70,8 +70,8 @@ public class HostileEntityRegenMixin {
         float maxHealth = entity.getMaxHealth();
         int additionalEnemies = enemyCount - 3;
 
-        float regenPercentage = Math.min(additionalEnemies * 0.0005f, 0.01f);
-        float regenAmount = Math.min(maxHealth * regenPercentage, 1000);
+        float regenPercentage = Math.min(additionalEnemies * 0.0001f, 0.01f);
+        float regenAmount = Math.min(maxHealth * regenPercentage, 150);
 
         entity.setHealth(Math.min(entity.getHealth() + regenAmount, maxHealth));
     }

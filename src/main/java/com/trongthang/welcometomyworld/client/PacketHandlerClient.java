@@ -23,7 +23,6 @@ import net.minecraft.world.World;
 import java.util.*;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
-import static com.trongthang.welcometomyworld.client.WelcomeToMyWorldClient.skullRevivePosition;
 
 public class PacketHandlerClient implements ClientModInitializer {
     @Override

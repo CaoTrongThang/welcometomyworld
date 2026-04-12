@@ -24,6 +24,7 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -103,6 +104,123 @@ public class Unknown extends HostileEntity implements GeoEntity {
     public static final Skill UNKNOWN_SUMMONING_CIRCLE = new Skill(22, 240, 1200);
     public static final Skill UNKNOWN_SPEAR_STAB = new Skill(23, 35, 120);
     public static final Skill UNKNOWN_SPEAR_3_HITS = new Skill(24, 70, 160);
+    public static final Skill TOSS_ITEM = new Skill(25, 25, 200);
+
+    private static final String[] CALM_DOWN_MESSAGES = {
+            "Hey, calm down!", "Whoa, chill out partner!", "I'm not looking for a fight.",
+            "Easy there!", "Let's talk this out, okay?", "Peace, my friend, peace!",
+            "Wait, I think there's a misunderstanding!", "Stop! I don't want to hurt you.",
+            "Can we just... not?", "Is this really necessary?", "I'm a friend, really!"
+    };
+
+    private static final String[] ASKED_FOR_THIS_MESSAGES = {
+            "You asked for this!", "So be it.", "Now I'm angry.", "No more Mr. Nice Guy.",
+            "I tried to be peaceful. You chose violence.", "Alright, let's dance.",
+            "You leave me no choice.", "Very well. Prepare yourself.", "I warned you.",
+            "Don't say I didn't try to be nice.", "Justice will be served!"
+    };
+
+    private static final String[] TOSS_ITEM_MESSAGES = {
+            "Take this and leave.", "Look, a gift! Now shoo.",
+            "Take this and let's call it even.", "Maybe this will calm your nerves.", "Have this, on the house.",
+            "A token of my goodwill. Please stop.", "Will this make you happy?",
+            "I found this earlier. It's yours.", "Souvenir from Japan? Not really, just take it.",
+            "Eat this and calm down, okay?", "Take this gift! Just stop attacking!", "Here, a golden peace offering."
+    };
+
+    private static final String[] PUNCH_MESSAGES = {
+            "Take this!", "One punch is all I need.", "Too slow!", "Haaah!", "Feel the impact!",
+            "Out of the way!", "Direct hit!", "Shatter!", "Impact!", "Break through!",
+            "Don't blink!", "Concentrated strike!"
+    };
+
+    private static final String[] KICK_MESSAGES = {
+            "Get down!", "Shatter!", "Ground break!", "Too heavy?", "Stay grounded!",
+            "Don't get back up!", "Quake!", "Earthshaker!", "Feel the weight!",
+            "Gravity's embrace!", "Crush!", "No standing room!"
+    };
+
+    private static final String[] DASH_MESSAGES = {
+            "Too slow!", "I'm over here.", "Catch me if you can.", "Whoosh!", "Behind you?",
+            "Where are you looking?", "Miss me?", "Phantom step!", "Blink of an eye!",
+            "Left? No, right!", "Speed of sound!", "Can't hit what you can't see!"
+    };
+
+    private static final String[] JUMP_MESSAGES = {
+            "Up we go!", "Try to reach me!", "Sky high!", "Looking up to me?", "Can't touch this!",
+            "Gravity? Never heard of her.", "The view is great from here!", "Descending!",
+            "From the heavens!", "Airborne!", "Cloud stepper!"
+    };
+
+    private static final String[] KAMEHAMEHA_MESSAGES = {
+            "Ka... me... ha... me... HA!", "Dodge this!", "Full power!", "This ends now!",
+            "You leave me no choice!", "Witness my true strength!", "Final FLASH!",
+            "Disintegrate!", "One more chance to run!", "The void consumes!"
+    };
+
+    private static final String[] SUMMON_MESSAGES = {
+            "Arise!", "Come forth!", "I summon thee!", "Aid me!",
+            "Let's see you handle more!", "Friends from the void!",
+            "You're outnumbered!", "Rise from the shadows!", "Behold my allies!",
+            "Safety in numbers!"
+    };
+
+    private static final String[] STEAL_MESSAGES = {
+            "I'll be taking that!", "Nice toy you have there.", "Yoink!", "Let's see how you fight without this.",
+            "Mine now!", "Thanks for the donation!", "Share the wealth!", "Borrowing this!",
+            "You weren't using this properly anyway.", "Gift received!"
+    };
+
+    private static final String[] DESTROY_MESSAGES = {
+            "Such fragile things.", "You won't be needing this anymore.", "Broken!", "Pathetic equipment.",
+            "I'll turn this to dust.", "Crumble!", "Industrial waste!", "Weak material.",
+            "Fixing your mistakes."
+    };
+
+    private static final String[] SPEAR_MESSAGES = {
+            "Pierce through!", "No escape!", "Swift strike!", "Thrust!", "Right through!",
+            "Spear of the untold!", "Zero distance!", "Stab!", "Impale!", "Gungnir strike!"
+    };
+
+    private static final String[] VICTORY_MESSAGES = {
+            "Was that all?", "You should have stayed away.", "Rest now.", "I didn't want this.",
+            "Your journey ends here.", "Maybe in the next world...", "Farewell, traveler.",
+            "Don't worry, the White Dimension is peaceful.", "I remember when I was like you.",
+            "Better luck next time.", "Skill issue? No, just fate."
+    };
+
+    private static final String[] LOW_HEALTH_MESSAGES = {
+            "Impressive...", "You're stronger than you look.", "Fine, I'll take this seriously.",
+            "Is that the best you can do?", "Ha! Not bad!", "You're starting to annoy me.",
+            "I haven't felt this alive in years!", "Player power... I remember now.",
+            "You fight just like him.", "The untold history... you're part of it now."
+    };
+
+    private int playerAttackCount = 0;
+    private boolean health80 = false;
+    private boolean health50 = false;
+    private boolean health20 = false;
+    private int immunityTimer = 0;
+    private boolean hasMetFriendly = false;
+
+    private void sayRandomMessage(String[] messages, double chance) {
+        if (!this.getWorld().isClient() && this.random.nextDouble() < chance && messages.length > 0) {
+            String msg = messages[this.random.nextInt(messages.length)];
+            LivingEntity target = this.getTarget();
+            if (target instanceof PlayerEntity playerTarget) {
+                ServerPlayerEntity currentPlayer = playerTarget.getServer().getPlayerManager()
+                        .getPlayer(playerTarget.getUuid());
+                Utils.UTILS.sendTextAfter(currentPlayer, msg, 0);
+            } else {
+                List<PlayerEntity> players = this.getWorld().getEntitiesByClass(PlayerEntity.class,
+                        this.getBoundingBox().expand(20), p -> true);
+                for (PlayerEntity p : players) {
+                    ServerPlayerEntity currentPlayer = p.getServer().getPlayerManager().getPlayer(p.getUuid());
+                    Utils.UTILS.sendTextAfter(currentPlayer, msg, 0);
+                }
+            }
+        }
+    }
 
     private static final int PUNCH_HIT_TICK = 20;
     private static final int LEG_TRIP_HIT_TICK = 8;
@@ -133,6 +251,9 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private int skillTick = 0;
     private int globalSkillCooldown = 0;
     private final int[] skillCooldowns = new int[100];
+
+    private int autoRegenHealth = 50;
+    private int autoRegenCooldown = 100;
 
     public boolean canUseSkill(Skill skill) {
         return skillCooldowns[skill.id] <= 0;
@@ -177,7 +298,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
     }
 
     private int tauntCooldown = 0;
-    private int dodgeCooldown = 0;
     private ItemStack stolenItemCandidate = ItemStack.EMPTY;
 
     public Unknown(EntityType<? extends HostileEntity> entityType, World world) {
@@ -188,7 +308,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         return HostileEntity.createHostileAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 99999.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D) // 0 for testing
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 60.0D) // 0 for testing
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 50f)
                 .add(EntityAttributes.GENERIC_ARMOR, 30f)
@@ -296,6 +416,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_spear_stab"));
                     case 24: // UNKNOWN_SPEAR_3_HITS
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_spear_3_hits"));
+                    case 25: // TOSS_ITEM
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_take_and_toss_item"));
                 }
             }
             prevSkillId[0] = 0;
@@ -386,7 +508,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             new Object[] { PUNCH, 30, Math.abs(target.getY() - this.getY()) <= 5 },
                             new Object[] { GROUND_SLAM_KICK, 50, true },
                             new Object[] { LEG_TRIP, 50, true },
-                            new Object[] { UNKNOWN_SPEAR_3_HITS, 50, healthFraction() <= 0.8f },
+                            new Object[] { UNKNOWN_SPEAR_3_HITS, 1000000, true },
                             new Object[] { UNKNOWN_JUMP_BACK, 50, healthFraction() <= 0.8f },
                             new Object[] { UNKNOWN_SUMMONING_CIRCLE, 600f, healthFraction() <= 0.4f },
                             new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f },
@@ -469,6 +591,55 @@ public class Unknown extends HostileEntity implements GeoEntity {
         if (skill.id != PREPARE_STEAL.id) {
             this.getNavigation().stop();
         }
+
+        if (playerAttackCount >= 3) {
+            float hp = healthFraction();
+            if (hp <= 0.8f && !health80) {
+                health80 = true;
+                sayRandomMessage(LOW_HEALTH_MESSAGES, 0.8);
+            } else if (hp <= 0.5f && !health50) {
+                health50 = true;
+                sayRandomMessage(LOW_HEALTH_MESSAGES, 0.8);
+            } else if (hp <= 0.2f && !health20) {
+                health20 = true;
+                sayRandomMessage(LOW_HEALTH_MESSAGES, 0.8);
+            }
+
+            switch (skill.id) {
+                case 1:
+                    sayRandomMessage(PUNCH_MESSAGES, 0.4);
+                    break;
+                case 15:
+                    sayRandomMessage(KICK_MESSAGES, 0.4);
+                    break;
+                case 3:
+                    sayRandomMessage(DASH_MESSAGES, 0.3);
+                    break;
+                case 6:
+                    sayRandomMessage(JUMP_MESSAGES, 0.4);
+                    break;
+                case 20:
+                    sayRandomMessage(KAMEHAMEHA_MESSAGES, 0.6);
+                    break;
+                case 22:
+                    sayRandomMessage(SUMMON_MESSAGES, 0.6);
+                    break;
+                case 8:
+                    sayRandomMessage(STEAL_MESSAGES, 0.5);
+                    break;
+                case 10:
+                    sayRandomMessage(DESTROY_MESSAGES, 0.5);
+                    break;
+                case 23:
+                case 24:
+                    sayRandomMessage(SPEAR_MESSAGES, 0.4);
+                    break;
+            }
+        }
+
+        if (skill.id == 25) {
+            sayRandomMessage(TOSS_ITEM_MESSAGES, 1.0);
+        }
     }
 
     public boolean isUsingSkill() {
@@ -486,6 +657,13 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     private void handleSkillEffects(int skillId) {
         LivingEntity target = this.getTarget();
+
+        // Relentless boss logic: if target lost, fallback to nearest player to avoid
+        // NPE and keep boss active
+        if (target == null && !this.getWorld().isClient()
+                && this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+            target = sw.getClosestPlayer(this.getX(), this.getY(), this.getZ(), 64.0, true);
+        }
 
         switch (skillId) {
             case 15: // GROUND_SLAM_KICK
@@ -924,8 +1102,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             this.getPitch());
                     this.getWorld().spawnEntity(beam);
 
-                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
-                            net.minecraft.sound.SoundEvents.BLOCK_BEACON_ACTIVATE, this.getSoundCategory(), 2.0F, 1.0F);
+                    if (target != null) {
+                        this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                                net.minecraft.sound.SoundEvents.BLOCK_BEACON_ACTIVATE, this.getSoundCategory(), 2.0F,
+                                1.0F);
+                    } else {
+                        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                net.minecraft.sound.SoundEvents.BLOCK_BEACON_ACTIVATE, this.getSoundCategory(), 2.0F,
+                                1.0F);
+                    }
                 }
                 break;
             }
@@ -1005,15 +1190,25 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
                                     * SPEAR_3_HIT_DAMAGE_MULTIPLIER);
 
-                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
-                            SoundsManager.SPEAR_ATTACK_1, this.getSoundCategory(), 1.0F, 1.0F);
+                    if (target != null) {
+                        this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                                SoundsManager.SPEAR_ATTACK_1, this.getSoundCategory(), 1.0F, 1.0F);
+                    } else {
+                        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                SoundsManager.SPEAR_ATTACK_1, this.getSoundCategory(), 1.0F, 1.0F);
+                    }
                 } else if (skillTick == SPEAR_3_HIT_TICK_2) {
                     // Phase 2: second arc sweep
                     dealLinearShockwaveDamage(5.0, 12.0,
                             (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
                                     * SPEAR_3_HIT_DAMAGE_MULTIPLIER);
-                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
-                            SoundsManager.SPEAR_ATTACK_2, this.getSoundCategory(), 1.0F, 1.0F);
+                    if (target != null) {
+                        this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                                SoundsManager.SPEAR_ATTACK_2, this.getSoundCategory(), 1.0F, 1.0F);
+                    } else {
+                        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                SoundsManager.SPEAR_ATTACK_2, this.getSoundCategory(), 1.0F, 1.0F);
+                    }
                 } else if (!skillHitFired && skillTick >= SPEAR_3_HIT_TICK_3) {
                     skillHitFired = true;
                     // Phase 3: slam AOE + 8-direction radial slash burst
@@ -1028,8 +1223,72 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 }
 
                 if (!skillHitFired && skillTick >= SPEAR_3_HIT_TICK_3 - 5) {
-                    this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
-                            SoundsManager.SPEAR_ATTACK_3, this.getSoundCategory(), 0.5F, 1.0F);
+                    if (target != null) {
+                        this.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
+                                SoundsManager.SPEAR_ATTACK_3, this.getSoundCategory(), 0.5F, 1.0F);
+                    } else {
+                        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                SoundsManager.SPEAR_ATTACK_3, this.getSoundCategory(), 0.5F, 1.0F);
+                    }
+                }
+                break;
+            case 25: // TOSS_ITEM
+                // Fallback to nearest player if target was cleared during the friendly phase
+                if (target == null && this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+                    target = sw.getClosestPlayer(this.getX(), this.getY(), this.getZ(), 30.0, true);
+                }
+
+                // Always look at the target during the whole toss animation
+                if (target != null && skillTick >= 10 && skillTick <= 22) {
+                    double tossLookDx = target.getX() - this.getX();
+                    double tossLookDz = target.getZ() - this.getZ();
+                    float tossYaw = (float) (Math.atan2(tossLookDz, tossLookDx) * 180.0 / Math.PI) - 90.0f;
+                    this.setYaw(tossYaw);
+                    this.bodyYaw = tossYaw;
+                    this.headYaw = tossYaw;
+                    this.getLookControl().lookAt(target, 30.0F, 30.0F);
+                }
+                if (skillTick == 10) {
+                    this.setStackInHand(Hand.MAIN_HAND, new ItemStack(net.minecraft.item.Items.GOLDEN_APPLE));
+                } else if (skillTick == 22) {
+                    ItemStack itemStack = this.getMainHandStack().copy();
+                    this.setStackInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
+                    if (target != null) {
+                        // Offset to the right side and slightly forward of the boss center
+                        net.minecraft.util.math.Vec3d lookDir = this.getRotationVec(1.0F);
+                        net.minecraft.util.math.Vec3d rightDir = lookDir
+                                .crossProduct(new net.minecraft.util.math.Vec3d(0, 1, 0)).normalize();
+
+                        double spawnX = this.getX() + rightDir.x * 1.1 + lookDir.x * 0.4;
+                        double spawnY = this.getY() + 1.5; // Slightly lower than previous 1.6 to match hand better
+                        double spawnZ = this.getZ() + rightDir.z * 1.1 + lookDir.z * 0.4;
+
+                        net.minecraft.entity.ItemEntity itemEntity = new net.minecraft.entity.ItemEntity(
+                                this.getWorld(), spawnX, spawnY, spawnZ, itemStack);
+
+                        // Calculate vector straight towards the target's chest/face
+                        double dx = target.getX() - spawnX;
+                        double dy = target.getEyeY() - 0.2 - spawnY;
+                        double dz = target.getZ() - spawnZ;
+
+                        net.minecraft.util.math.Vec3d dir = new net.minecraft.util.math.Vec3d(dx, dy, dz).normalize();
+
+                        // Throw speed
+                        double speed = 0.2;
+
+                        // We add a tiny bit of upward velocity based on distance to counteract
+                        // ItemEntity gravity a bit
+                        double distance = Math.sqrt(dx * dx + dz * dz);
+
+                        net.minecraft.util.math.Vec3d finalVel = new net.minecraft.util.math.Vec3d(dir.x * speed,
+                                (dir.y * speed) + (distance * 0.05), dir.z * speed);
+
+                        itemEntity.setVelocity(finalVel);
+                        itemEntity.setPickupDelay(10);
+                        this.getWorld().spawnEntity(itemEntity);
+                    } else if (!itemStack.isEmpty()) {
+                        this.dropStack(itemStack);
+                    }
                 }
                 break;
         }
@@ -1110,6 +1369,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
             case 7: // SLAM_GROUND_AFTER_JUMP
             case 9: // USE_ITEM
             case 10: // DESTROY_ITEM
+            case 25: // TOSS_ITEM
                 this.dataTracker.set(IS_USING_SKILL, false);
                 this.dataTracker.set(SKILL_ID, 0);
                 break;
@@ -1219,6 +1479,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
     public void tick() {
         super.tick();
 
+        if (immunityTimer > 0)
+            immunityTimer--;
+
+        if (this.age % autoRegenCooldown == 0) {
+            if (this.getHealth() < this.getMaxHealth()) {
+                this.heal(autoRegenHealth);
+            }
+        }
+
         if (dashTimer > 0) {
             dashTimer--;
             if (dashTimer == 0)
@@ -1235,8 +1504,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
         if (!this.getWorld().isClient()) {
             skillsHandler();
-            if (dodgeCooldown > 0)
-                dodgeCooldown--;
         }
     }
 
@@ -1264,9 +1531,56 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
+        if (immunityTimer > 0)
+            return false;
         LivingEntity currentTarget = this.getTarget();
 
-        if (!this.getWorld().isClient() && dodgeCooldown <= 0 && Math.random() < 0.45 && !isUsingSkill()) {
+        if (!this.getWorld().isClient() && source.getAttacker() instanceof PlayerEntity player) {
+            if (hasMetFriendly) {
+                // Skip directly to revenge if already met
+                if (playerAttackCount < 3) {
+                    playerAttackCount = 3;
+                    ServerPlayerEntity currentPlayer = player.getServer().getPlayerManager()
+                            .getPlayer(player.getUuid());
+                    Utils.UTILS.sendTextAfter(currentPlayer,
+                            ASKED_FOR_THIS_MESSAGES[this.random.nextInt(ASKED_FOR_THIS_MESSAGES.length)], 0);
+                }
+            } else if (playerAttackCount < 3) {
+                playerAttackCount++;
+                if (playerAttackCount == 1) {
+                    immunityTimer = 40; // 2 seconds
+                    ServerPlayerEntity currentPlayer = player.getServer().getPlayerManager()
+                            .getPlayer(player.getUuid());
+                    Utils.UTILS.sendTextAfter(currentPlayer,
+                            CALM_DOWN_MESSAGES[this.random.nextInt(CALM_DOWN_MESSAGES.length)], 0);
+                } else if (playerAttackCount == 2) {
+                    if (!isUsingSkill())
+                        triggerSkill(TOSS_ITEM);
+                } else if (playerAttackCount == 3) {
+                    hasMetFriendly = true;
+                    ServerPlayerEntity currentPlayer = player.getServer().getPlayerManager()
+                            .getPlayer(player.getUuid());
+                    Utils.UTILS.sendTextAfter(currentPlayer,
+                            ASKED_FOR_THIS_MESSAGES[this.random.nextInt(ASKED_FOR_THIS_MESSAGES.length)], 0);
+                }
+
+                if (playerAttackCount < 3) {
+                    // Guaranteed dodge during friendly phase (Strike 1 & 2)
+                    if (!isUsingSkill()) {
+                        tryDodge();
+                        return false;
+                    }
+                    boolean result = super.damage(source, amount);
+                    // Clear aggro — still friendly
+                    this.setTarget(null);
+                    this.setAttacker(null);
+                    return result;
+                }
+                // Attack 3: let the normal combat flow handle it from here
+            }
+        }
+
+        if (!this.getWorld().isClient() && playerAttackCount > 3 && Math.random() < 0.45 && !isUsingSkill()) {
             tryDodge();
             return false;
         }
@@ -1499,6 +1813,15 @@ public class Unknown extends HostileEntity implements GeoEntity {
     }
 
     @Override
+    public boolean onKilledOther(ServerWorld world, LivingEntity other) {
+        boolean result = super.onKilledOther(world, other);
+        if (other instanceof PlayerEntity) {
+            sayRandomMessage(VICTORY_MESSAGES, 1.0);
+        }
+        return result;
+    }
+
+    @Override
     public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
         return false;
     }
@@ -1600,5 +1923,19 @@ public class Unknown extends HostileEntity implements GeoEntity {
         public void stop() {
             mob.getNavigation().stop();
         }
+    }
+
+    @Override
+    public void writeCustomDataToNbt(net.minecraft.nbt.NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putBoolean("HasMetFriendly", this.hasMetFriendly);
+        nbt.putInt("PlayerAttackCount", this.playerAttackCount);
+    }
+
+    @Override
+    public void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.hasMetFriendly = nbt.getBoolean("HasMetFriendly");
+        this.playerAttackCount = nbt.getInt("PlayerAttackCount");
     }
 }

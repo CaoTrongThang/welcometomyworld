@@ -17,7 +17,7 @@ public class GroundSlashAttackRenderer extends GeoEntityRenderer<GroundSlashAtta
     public void render(GroundSlashAttackEntity entity, float entityYaw, float partialTick,
             MatrixStack poseStack, VertexConsumerProvider bufferSource, int packedLight) {
         poseStack.push();
-        poseStack.scale(6.0f, 6.0f, 6.0f);
+        poseStack.scale(3f, 3f, 3f);
         // Rotate model so it faces the direction of travel (yaw)
         poseStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-entity.getYaw()));
         super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);

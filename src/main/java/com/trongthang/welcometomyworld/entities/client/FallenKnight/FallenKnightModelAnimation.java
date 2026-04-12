@@ -1174,6 +1174,10 @@ public class FallenKnightModelAnimation {
                                         new Keyframe(0.0F, AnimationHelper.createScalingVector(1.0F, 1.0F, 1.0F),
                                                         Transformation.Interpolations.LINEAR),
                                         new Keyframe(0.1667F, AnimationHelper.createScalingVector(1.0F, 1.0F, 0.1F),
+                                                        Transformation.Interpolations.LINEAR),
+                                        new Keyframe(7.375F, AnimationHelper.createScalingVector(1.0F, 1.0F, 0.1F),
+                                                        Transformation.Interpolations.LINEAR),
+                                        new Keyframe(7.8333F, AnimationHelper.createScalingVector(0.0F, 0.0F, 0.0F),
                                                         Transformation.Interpolations.LINEAR)))
                         .addBoneAnimation("cape", new Transformation(Transformation.Targets.TRANSLATE,
                                         new Keyframe(1.5833F,

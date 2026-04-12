@@ -88,6 +88,11 @@ public class PurplePortal extends PathAwareEntity implements GeoEntity {
     }
 
     @Override
+    public boolean cannotDespawn() {
+        return true;
+    }
+
+    @Override
     public void tick() {
         super.tick();
         this.setVelocity(0, 0, 0);
