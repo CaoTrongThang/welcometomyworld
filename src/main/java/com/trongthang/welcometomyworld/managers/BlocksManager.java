@@ -112,6 +112,11 @@ public class BlocksManager {
                                         .strength(-1, 3600000.0f)
                                         .nonOpaque()));
 
+        public static final Block PURPLE_PORTAL_ACTIVATOR = registerBlock("purple_portal_activator",
+                        new PurplePortalActivatorBlock(FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
+                                        .strength(3.0f, 6.0f)
+                                        .requiresTool().nonOpaque()));
+
         private static Block registerBlock(String name, Block block) {
                 registerBlockItem(name, block);
                 return Registry.register(Registries.BLOCK, new Identifier(WelcomeToMyWorld.MOD_ID, name), block);

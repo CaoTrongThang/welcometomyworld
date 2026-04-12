@@ -1,0 +1,7 @@
+{
+    "type": "welcometomyworld:unknown_base",
+    "biomes": "welcometomyworld:white_biome",
+    "step": "surface_structures",
+    "spawn_overrides": {},
+    "terrain_adaptation": "beard_thin"
+}

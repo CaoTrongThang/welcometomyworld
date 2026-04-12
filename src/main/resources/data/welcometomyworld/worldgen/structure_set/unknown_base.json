@@ -1,0 +1,14 @@
+{
+    "structures": [
+        {
+            "structure": "welcometomyworld:unknown_base",
+            "weight": 1
+        }
+    ],
+    "placement": {
+        "type": "minecraft:random_spread",
+        "spacing": 80,
+        "separation": 40,
+        "salt": 81373591
+    }
+}

@@ -17,13 +17,14 @@ import com.trongthang.welcometomyworld.entities.client.EnderPest.EnderPestModel;
 import com.trongthang.welcometomyworld.entities.client.EnderPest.EnderPestRenderer;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererArrow.WandererArrowModel;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererArrow.WandererArrowRenderer;
+import com.trongthang.welcometomyworld.entities.client.blocks.PurplePortalActivatorRenderer;
+import com.trongthang.welcometomyworld.entities.client.blocks.VoidBlockRenderer;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererModel;
 import com.trongthang.welcometomyworld.entities.client.Wanderer.WandererRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownBeamRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.SummoningCircleRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.GroundSlashAttackRenderer;
-import com.trongthang.welcometomyworld.entities.client.VoidBlockRenderer;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormModel;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormRenderer;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormBodyModel;
@@ -34,6 +35,7 @@ import com.trongthang.welcometomyworld.entities.client.VoidWorm.PurpleCrystalRen
 import com.trongthang.welcometomyworld.entities.client.PurplePortal.PurplePortalRenderer;
 
 import com.trongthang.welcometomyworld.blockentities.VoidBlockEntity;
+import com.trongthang.welcometomyworld.blockentities.PurplePortalActivatorBlockEntity;
 import com.trongthang.welcometomyworld.managers.BlocksEntitiesManager;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
@@ -128,8 +130,10 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.VOID_WORM_BODY, VoidWormBodyRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.VOID_WORM_TAIL, VoidWormTailRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.PURPLE_CRYSTAL, PurpleCrystalRenderer::new);
-                EntityRendererRegistry.register(EntitiesManager.PURPLE_PORTAL, PurplePortalRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.PURPLE_PORTAL_ENTITY, PurplePortalRenderer::new);
 
                 BlockEntityRendererFactories.register(BlocksEntitiesManager.VOID_BLOCK_ENTITY, VoidBlockRenderer::new);
+                BlockEntityRendererFactories.register(BlocksEntitiesManager.PURPLE_PORTAL_ACTIVATOR_BLOCK_ENTITY,
+                                PurplePortalActivatorRenderer::new);
         }
 }

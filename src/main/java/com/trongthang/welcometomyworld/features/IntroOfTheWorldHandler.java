@@ -365,7 +365,9 @@ public class IntroOfTheWorldHandler {
                 }
             }, 32 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "Well, that's it for now. Enjoy Your New World!", 36 * 20);
+            Utils.UTILS.sendTextAfter(player,
+                    "Well, that's it for now, can't stay here for long, I've got to get back to my work. Enjoy Your New World!",
+                    36 * 20);
 
             Utils.addRunAfter(() -> {
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
@@ -442,7 +444,7 @@ public class IntroOfTheWorldHandler {
             }, 29 * 20);
 
             Utils.UTILS.sendTextAfter(player,
-                    "I don't really into cooking much, so that's all from me, but the most important is... Enjoy Your New World!",
+                    "I don't really into cooking much, so that's all from me, but the most important is... Enjoy Your New World!, now I'll get back to work...",
                     31 * 20);
 
             Utils.addRunAfter(() -> {

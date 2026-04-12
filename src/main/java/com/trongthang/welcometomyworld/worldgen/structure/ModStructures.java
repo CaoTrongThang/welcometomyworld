@@ -17,6 +17,10 @@ public class ModStructures {
         public static StructurePieceType NETHER_MEDIUM_OUTPOST_PIECE;
         public static StructureProcessorType<NetherMediumOutpostChestProcessor> NETHER_MEDIUM_OUTPOST_CHEST_PROCESSOR;
 
+        public static StructureType<UnknownBaseStructure> UNKNOWN_BASE;
+        public static StructurePieceType UNKNOWN_BASE_PIECE;
+        public static StructureProcessorType<UnknownBaseProcessor> UNKNOWN_BASE_PROCESSOR;
+
         public static void register() {
                 FALLEN_KNIGHT_CASTLE = Registry.register(Registries.STRUCTURE_TYPE,
                                 new Identifier(WelcomeToMyWorld.MOD_ID, "fallen_knight_castle"),
@@ -41,5 +45,17 @@ public class ModStructures {
                 NETHER_MEDIUM_OUTPOST_CHEST_PROCESSOR = Registry.register(Registries.STRUCTURE_PROCESSOR,
                                 new Identifier(WelcomeToMyWorld.MOD_ID, "nether_medium_outpost_chest_processor"),
                                 () -> NetherMediumOutpostChestProcessor.CODEC);
+
+                UNKNOWN_BASE = Registry.register(Registries.STRUCTURE_TYPE,
+                                new Identifier(WelcomeToMyWorld.MOD_ID, "unknown_base"),
+                                () -> UnknownBaseStructure.CODEC);
+
+                UNKNOWN_BASE_PIECE = Registry.register(Registries.STRUCTURE_PIECE,
+                                new Identifier(WelcomeToMyWorld.MOD_ID, "unknown_base_piece"),
+                                UnknownBasePiece::new);
+
+                UNKNOWN_BASE_PROCESSOR = Registry.register(Registries.STRUCTURE_PROCESSOR,
+                                new Identifier(WelcomeToMyWorld.MOD_ID, "unknown_base_processor"),
+                                () -> UnknownBaseProcessor.CODEC);
         }
 }

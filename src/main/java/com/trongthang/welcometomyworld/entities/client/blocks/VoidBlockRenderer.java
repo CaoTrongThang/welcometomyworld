@@ -1,4 +1,4 @@
-package com.trongthang.welcometomyworld.entities.client;
+package com.trongthang.welcometomyworld.entities.client.blocks;
 
 import com.trongthang.welcometomyworld.blockentities.VoidBlockEntity;
 import net.fabricmc.api.EnvType;
