@@ -2,6 +2,8 @@ package com.trongthang.welcometomyworld.entities.Unknown;
 
 import net.minecraft.entity.ai.goal.Goal;
 
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
+
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -105,6 +107,39 @@ public class Unknown extends HostileEntity implements GeoEntity {
     public static final Skill UNKNOWN_SPEAR_STAB = new Skill(23, 35, 120);
     public static final Skill UNKNOWN_SPEAR_3_HITS = new Skill(24, 70, 160);
     public static final Skill TOSS_ITEM = new Skill(25, 25, 200);
+
+    private static final int PUNCH_HIT_TICK = 20;
+    private static final int LEG_TRIP_HIT_TICK = 8;
+    private static final int GROUND_SLAM_KICK_HIT_TICK = 20;
+    private static final int SLAM_AFTER_JUMP_HIT_TICK = 3;
+    private static final int STEAL_HIT_TICK = 8;
+    private static final int USE_HIT_TICK = 43;
+    private static final int POINT_FINGER_HIT_TICK = 5;
+    private static final int GRAB_SLAM_HIT_TICK = 41;
+    private static final int[] DESTROY_HIT_TICKS = { 15, 38, 58 };
+    private static final int SPEAR_STAB_HIT_TICK = 20;
+    private static final int SPEAR_3_HIT_TICK_1 = 21;
+    private static final int SPEAR_3_HIT_TICK_2 = 38;
+    private static final int SPEAR_3_HIT_TICK_3 = 54;
+
+    private static final float GROUND_SLAM_KICK_DAMAGE_MULTIPLIER = 2.5f;
+    private static final float LEG_TRIP_DAMAGE_MULTIPLIER = 1.5f;
+    private static final float SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER = 2.5f;;
+    private static final float GRAB_SLAM_DAMAGE_MULTIPLIER = 2.5f;
+    private static final float KAMEHAMEHA_DAMAGE_MULTIPLIER = 1.5f;
+    private static final float SPEAR_STAB_DAMAGE_MULTIPLIER = 1.5f;
+    private static final float SPEAR_3_HIT_DAMAGE_MULTIPLIER = 1.5f;
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    private int dashTimer = 0;
+    private boolean skillHitFired = false;
+    private int skillTotalTicks = 0;
+    private int skillTick = 0;
+    private int globalSkillCooldown = 0;
+    private final int[] skillCooldowns = new int[100];
+
+    private int autoRegenHealth = 50;
+    private int autoRegenCooldown = 100;
 
     private static final String[] CALM_DOWN_MESSAGES = {
             "Hey, calm down!", "Whoa, chill out partner!", "I'm not looking for a fight.",
@@ -221,39 +256,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
             }
         }
     }
-
-    private static final int PUNCH_HIT_TICK = 20;
-    private static final int LEG_TRIP_HIT_TICK = 8;
-    private static final int GROUND_SLAM_KICK_HIT_TICK = 20;
-    private static final int SLAM_AFTER_JUMP_HIT_TICK = 3;
-    private static final int STEAL_HIT_TICK = 8;
-    private static final int USE_HIT_TICK = 43;
-    private static final int POINT_FINGER_HIT_TICK = 5;
-    private static final int GRAB_SLAM_HIT_TICK = 41;
-    private static final int[] DESTROY_HIT_TICKS = { 15, 38, 58 };
-    private static final int SPEAR_STAB_HIT_TICK = 20;
-    private static final int SPEAR_3_HIT_TICK_1 = 21;
-    private static final int SPEAR_3_HIT_TICK_2 = 38;
-    private static final int SPEAR_3_HIT_TICK_3 = 54;
-
-    private static final float GROUND_SLAM_KICK_DAMAGE_MULTIPLIER = 2.5f;
-    private static final float LEG_TRIP_DAMAGE_MULTIPLIER = 1.5f;
-    private static final float SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER = 2.5f;;
-    private static final float GRAB_SLAM_DAMAGE_MULTIPLIER = 2.5f;
-    private static final float KAMEHAMEHA_DAMAGE_MULTIPLIER = 1.5f;
-    private static final float SPEAR_STAB_DAMAGE_MULTIPLIER = 1.5f;
-    private static final float SPEAR_3_HIT_DAMAGE_MULTIPLIER = 1.5f;
-
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private int dashTimer = 0;
-    private boolean skillHitFired = false;
-    private int skillTotalTicks = 0;
-    private int skillTick = 0;
-    private int globalSkillCooldown = 0;
-    private final int[] skillCooldowns = new int[100];
-
-    private int autoRegenHealth = 50;
-    private int autoRegenCooldown = 100;
 
     public boolean canUseSkill(Skill skill) {
         return skillCooldowns[skill.id] <= 0;
@@ -508,7 +510,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                             new Object[] { PUNCH, 30, Math.abs(target.getY() - this.getY()) <= 5 },
                             new Object[] { GROUND_SLAM_KICK, 50, true },
                             new Object[] { LEG_TRIP, 50, true },
-                            new Object[] { UNKNOWN_SPEAR_3_HITS, 1000000, true },
+                            new Object[] { UNKNOWN_SPEAR_3_HITS, 50, healthFraction() <= 0.8f },
                             new Object[] { UNKNOWN_JUMP_BACK, 50, healthFraction() <= 0.8f },
                             new Object[] { UNKNOWN_SUMMONING_CIRCLE, 600f, healthFraction() <= 0.4f },
                             new Object[] { UNKNOWN_SPEAR_STAB, 50f, healthFraction() <= 0.8f },
@@ -1580,7 +1582,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
             }
         }
 
-        if (!this.getWorld().isClient() && playerAttackCount > 3 && Math.random() < 0.45 && !isUsingSkill()) {
+        if (!this.getWorld().isClient() && (playerAttackCount > 3 || !(source.getAttacker() instanceof PlayerEntity))
+                && this.random.nextFloat() < 0.6 && !isUsingSkill()) {
             tryDodge();
             return false;
         }
