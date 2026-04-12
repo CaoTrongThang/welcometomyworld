@@ -39,22 +39,23 @@ public class PurplePortalActivatorBlockEntity extends BlockEntity implements Geo
         }
         lastActivatedTime = time;
 
-        if (portalUuid != null) {
-            Entity existing = ((ServerWorld) world).getEntity(portalUuid);
-            if (existing instanceof PurplePortalEntity portal) {
-                if (!portal.isTurningOff()) {
-                    portal.turnOff();
-                    this.portalUuid = null;
-                    this.markDirty();
-                    this.world.playSound(null, this.pos, SoundsManager.PURPLE_PORTAL_CLOSE, SoundCategory.BLOCKS, 1.0f,
-                            1.0f);
-                }
-                return;
+        net.minecraft.util.math.Box box = new net.minecraft.util.math.Box(pos).expand(1.0);
+        java.util.List<PurplePortalEntity> portals = this.world.getEntitiesByClass(PurplePortalEntity.class, box,
+                p -> !p.isTurningOff());
+
+        if (!portals.isEmpty()) {
+            for (PurplePortalEntity portal : portals) {
+                portal.turnOff();
             }
+            this.portalUuid = null;
+            this.markDirty();
+            this.world.playSound(null, this.pos, SoundsManager.PURPLE_PORTAL_CLOSE, SoundCategory.BLOCKS, 1.0f, 1.0f);
+            return;
         }
 
         // Summon new portal
         PurplePortalEntity portal = new PurplePortalEntity(EntitiesManager.PURPLE_PORTAL_ENTITY, world);
+        portal.setActivatorPos(pos);
 
         // Position it on top of the block, centered.
         double x = pos.getX() + 0.5;

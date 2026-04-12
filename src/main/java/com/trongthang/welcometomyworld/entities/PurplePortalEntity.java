@@ -44,7 +44,34 @@ public class PurplePortalEntity extends PathAwareEntity implements GeoEntity {
     private int frameCounter = 0;
     private int turnOffTicks = 0;
 
+    private int lifeTicks = 0;
+    private BlockPos activatorPos = null;
+
     private final Map<UUID, Integer> playersInPortal = new HashMap<>();
+
+    public void setActivatorPos(BlockPos pos) {
+        this.activatorPos = pos;
+    }
+
+    @Override
+    public void writeCustomDataToNbt(net.minecraft.nbt.NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putInt("LifeTicks", this.lifeTicks);
+        if (this.activatorPos != null) {
+            nbt.putLong("ActivatorPos", this.activatorPos.asLong());
+        }
+    }
+
+    @Override
+    public void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        if (nbt.contains("LifeTicks")) {
+            this.lifeTicks = nbt.getInt("LifeTicks");
+        }
+        if (nbt.contains("ActivatorPos")) {
+            this.activatorPos = BlockPos.fromLong(nbt.getLong("ActivatorPos"));
+        }
+    }
 
     public PurplePortalEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
@@ -117,6 +144,18 @@ public class PurplePortalEntity extends PathAwareEntity implements GeoEntity {
         this.headYaw = this.getYaw();
 
         if (!this.getWorld().isClient) {
+            this.lifeTicks++;
+            if (this.lifeTicks >= 12000 && !isTurningOff()) {
+                this.turnOff();
+            }
+
+            if (this.activatorPos != null && this.age % 20 == 0 && !isTurningOff()) {
+                if (!(this.getWorld().getBlockState(this.activatorPos)
+                        .getBlock() instanceof com.trongthang.welcometomyworld.blocks.PurplePortalActivatorBlock)) {
+                    this.turnOff();
+                }
+            }
+
             if (isTurningOff()) {
                 turnOffTicks++;
                 if (turnOffTicks >= 5) {
