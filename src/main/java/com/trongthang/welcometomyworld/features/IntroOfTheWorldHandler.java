@@ -137,6 +137,13 @@ public class IntroOfTheWorldHandler {
         if (!playerData.firstTeleportedToSky && player.getY() >= 350) {
             playerData.firstTeleportedToSky = true;
             ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
+
+            com.trongthang.welcometomyworld.entities.RiftPortalEntity portal = EntitiesManager.RIFT_PORTAL_ENTITY
+                    .create(world);
+            if (portal != null) {
+                portal.setPosition(player.getX(), player.getY(), player.getZ());
+                world.spawnEntity(portal);
+            }
         }
 
         if (playerData.firstTouchGround || !playerData.firstTeleportedToSky)

@@ -25,17 +25,13 @@ import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownBeamRender
 import com.trongthang.welcometomyworld.entities.client.Unknown.UnknownRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.SummoningCircleRenderer;
 import com.trongthang.welcometomyworld.entities.client.Unknown.GroundSlashAttackRenderer;
-import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormModel;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormRenderer;
-import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormBodyModel;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormBodyRenderer;
-import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormTailModel;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.VoidWormTailRenderer;
 import com.trongthang.welcometomyworld.entities.client.VoidWorm.PurpleCrystalRenderer;
 import com.trongthang.welcometomyworld.entities.client.PurplePortal.PurplePortalRenderer;
+import com.trongthang.welcometomyworld.entities.client.RiftPortal.RiftPortalRenderer;
 
-import com.trongthang.welcometomyworld.blockentities.VoidBlockEntity;
-import com.trongthang.welcometomyworld.blockentities.PurplePortalActivatorBlockEntity;
 import com.trongthang.welcometomyworld.managers.BlocksEntitiesManager;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
@@ -131,6 +127,7 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.VOID_WORM_TAIL, VoidWormTailRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.PURPLE_CRYSTAL, PurpleCrystalRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.PURPLE_PORTAL_ENTITY, PurplePortalRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.RIFT_PORTAL_ENTITY, RiftPortalRenderer::new);
 
                 BlockEntityRendererFactories.register(BlocksEntitiesManager.VOID_BLOCK_ENTITY, VoidBlockRenderer::new);
                 BlockEntityRendererFactories.register(BlocksEntitiesManager.PURPLE_PORTAL_ACTIVATOR_BLOCK_ENTITY,
