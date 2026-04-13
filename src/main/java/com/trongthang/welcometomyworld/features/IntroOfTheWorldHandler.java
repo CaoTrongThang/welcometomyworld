@@ -69,7 +69,19 @@ public class IntroOfTheWorldHandler {
     public void handlePlayerFirstJoin(ServerPlayerEntity player) {
         if (player.getWorld().isClient)
             return;
+
         PlayerData playerData = dataHandler.playerDataMap.get(player.getUuid());
+
+        // Intro sequence only applies in the Overworld.
+        // If a player's intro isn't done and they're not in the Overworld, mark it
+        // complete so they never get the intro when they eventually return here.
+        if (!player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
+            if (playerData != null && !playerData.firstTouchGround) {
+                dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
+            }
+            return;
+        }
+
         ServerWorld world = player.getServerWorld();
 
         if (!firstTimeLoadChunkIntro) {

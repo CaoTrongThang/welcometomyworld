@@ -45,6 +45,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Random;
 
 public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -147,6 +148,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     public static final Skill GRAB_ATTACK = new Skill(4, 200, 3000);
     public static final Skill SUMMON_MINIONS = new Skill(5, 300, 1200);
 
+    Random rand = new Random();
+
     private static final int ROAR_HIT_TICK = 22;
     private double chargeDestX, chargeDestY, chargeDestZ;
     private double grabY;
@@ -216,7 +219,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 142500.0D)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 1.5D)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 2.0D)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 10.0f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 150.0D)
@@ -507,8 +510,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             if (skillId == 2) { // CHARGE_ATTACK
                 if (target != null && target.isAlive()) {
                     if (isPreparing) {
-                        com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.debug("CHARGE_ATTACK PREPARING",
-                                isPreparing);
                         double targetYHover = target.getY() + 40.0D;
                         Vec3d dir = new Vec3d(target.getX() - this.getX(), targetYHover - this.getY(),
                                 target.getZ() - this.getZ());
@@ -546,7 +547,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                             this.setVelocity(0, 0, 0);
                             Utils.playFarSound((ServerWorld) this.getWorld(), this,
                                     SoundsManager.VOID_WORM_CHARGE_ATTACK, net.minecraft.sound.SoundCategory.HOSTILE,
-                                    1.0F, 1.0F, 64.0);
+                                    0.6F, rand.nextFloat((0.8F - 1.2F) + 1) + 1.2F, 64.0);
                         }
                     } else {
                         skillTick++;
@@ -608,8 +609,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                         }
                     }
                 } else {
-                    com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
-                            .debug("CHARGE_ATTACK target null or dead, cancelling", skillId);
                     this.setVelocity(this.getVelocity().multiply(0.9D));
                     this.velocityModified = true;
                     this.dataTracker.set(IS_USING_SKILL, false);
@@ -1087,30 +1086,20 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         if (globalSkillCooldown <= 0 && !isUsingSkill()) {
 
             LivingEntity target = this.getTarget();
-            if (target != null && target.isAlive()) {
-                // Ignore target if too far from center (0, 50, 0)
-                double dx = target.getX() - 0;
-                double dz = target.getZ() - 0;
-                double dy = target.getY() - 50;
-                if (Math.sqrt(dx * dx + dz * dz) > MAX_DISTANCE_XZ || Math.abs(dy) > MAX_DISTANCE_Y) {
-                    this.setTarget(null);
-                    return;
-                }
 
+            if (target != null && target.isAlive()) {
                 double distX = Math.abs(target.getX() - this.getX());
                 double distZ = Math.abs(target.getZ() - this.getZ());
                 double distY = Math.abs(target.getY() - this.getY());
 
-                boolean canCharge = canUseSkill(CHARGE_ATTACK) && target.getY() - this.getY() >= 15.0 && distX < 64.0
-                        && distZ < 64.0;
+                boolean canCharge = canUseSkill(CHARGE_ATTACK) && distX < 64.0 && distZ < 64.0;
                 if (canCharge) {
-                    // if health < 50% use grab attack instead of charge attack
-                    if (this.getHealth() < this.getMaxHealth() * 0.8) {
-                        triggerSkill(CHARGE_ATTACK, 2);
-                    } else if (this.getHealth() < this.getMaxHealth() * 0.5) {
+                    if (this.getHealth() < this.getMaxHealth() * 0.5) {
                         triggerSkill(CHARGE_ATTACK, 3);
+                    } else if (this.getHealth() < this.getMaxHealth() * 0.8) {
+                        triggerSkill(CHARGE_ATTACK, 2);
                     } else {
-                        triggerSkill(GRAB_ATTACK);
+                        triggerSkill(CHARGE_ATTACK);
                     }
 
                     // Open mouth sound maybe handled inside or automatically by the animation if
@@ -1503,20 +1492,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             LivingEntity target = worm.getTarget();
             double speed = worm.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             Vec3d currentVel = worm.getVelocity();
-
-            if (target != null && target.isAlive()) {
-                // Stay within movement limits of (0, 50, 0)
-                double dx = target.getX() - 0;
-                double dz = target.getZ() - 0;
-                double dy = target.getY() - 50;
-                if (Math.sqrt(dx * dx + dz * dz) > MAX_DISTANCE_XZ || Math.abs(dy) > MAX_DISTANCE_Y) {
-                    com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
-                            .info("BossFlightGoal target out of bounds, resetting target. Target: "
-                                    + target.getName().getString());
-                    worm.setTarget(null);
-                    target = null;
-                }
-            }
 
             if (target != null && target.isAlive()) {
                 // Clear any wander target immediately when entering combat
