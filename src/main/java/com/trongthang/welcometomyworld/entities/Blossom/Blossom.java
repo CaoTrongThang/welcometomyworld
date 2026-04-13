@@ -272,7 +272,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
                 // Initialize timer if not set
                 if (this.greetingTimer <= 0) {
-                    this.greetingTimer = 80; // Total duration of greeting
+                    this.greetingTimer = 70; // Total duration of greeting
                 }
 
                 this.greetingTimer--;
