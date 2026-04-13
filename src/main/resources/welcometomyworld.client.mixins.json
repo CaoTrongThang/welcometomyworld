@@ -12,7 +12,8 @@
     "client.InGameHudMixin",
     "client.CancelLoadingScreenMixin",
     "client.CameraMixin",
-    "client.OctoLibTrailNullGuardMixin"
+    "client.OctoLibTrailNullGuardMixin",
+    "client.LivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

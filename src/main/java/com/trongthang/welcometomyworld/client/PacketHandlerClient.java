@@ -151,5 +151,18 @@ public class PacketHandlerClient implements ClientModInitializer {
                 (client, handler, buf, responseSender) -> {
                     client.execute(HeavenTransitionManager::start);
                 });
+        ClientPlayNetworking.registerGlobalReceiver(SYNC_SCALE_PACKET, (client, handler, buf, responseSender) -> {
+            int entityId = buf.readInt();
+            float scale = buf.readFloat();
+
+            client.execute(() -> {
+                if (client.world != null) {
+                    Entity entity = client.world.getEntityById(entityId);
+                    if (entity instanceof com.trongthang.welcometomyworld.interfaces.IScaleEntity scaleEntity) {
+                        scaleEntity.setScale(scale);
+                    }
+                }
+            });
+        });
     }
 }

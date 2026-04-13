@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.ConfigLoader;
+import com.trongthang.welcometomyworld.interfaces.IScaleEntity;
 import com.trongthang.welcometomyworld.Utilities.SpawnParticles;
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.entities.Blossom.Blossom;
@@ -47,8 +48,21 @@ public class IntroOfTheWorldHandler {
         player.teleport(skyPosition.x, skyPosition.y, skyPosition.z);
         // player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE,
         // 160, 128));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 80, 0));
+        // player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 80,
+        // 0));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 150, 4));
+
+        // Set player scale to small
+        if (player instanceof IScaleEntity scaleEntity) {
+            scaleEntity.setScale(0.01f);
+
+            // Sync to client
+            net.minecraft.network.PacketByteBuf buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+            buf.writeInt(player.getId());
+            buf.writeFloat(0.01f);
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+                    com.trongthang.welcometomyworld.WelcomeToMyWorld.SYNC_SCALE_PACKET, buf);
+        }
     }
 
     // THIS IS A FUCKING MESS, DON'T READ
@@ -141,7 +155,7 @@ public class IntroOfTheWorldHandler {
             com.trongthang.welcometomyworld.entities.RiftPortalEntity portal = EntitiesManager.RIFT_PORTAL_ENTITY
                     .create(world);
             if (portal != null) {
-                portal.setPosition(player.getX(), player.getY() - 1f, player.getZ());
+                portal.setPosition(player.getX(), player.getY() - 1.5f, player.getZ());
                 world.spawnEntity(portal);
             }
         }

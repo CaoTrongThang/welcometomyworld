@@ -2,8 +2,6 @@ package com.trongthang.welcometomyworld.entities.Unknown;
 
 import net.minecraft.entity.ai.goal.Goal;
 
-import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
-
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;

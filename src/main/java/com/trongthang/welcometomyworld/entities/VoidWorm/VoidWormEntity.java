@@ -55,7 +55,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private boolean partsSpawned = false;
 
     private static final double MAX_DISTANCE_XZ = 300.0;
-    private static final double MAX_DISTANCE_Y = 200.0;
+    private static final double MAX_DISTANCE_Y = 80.0;
 
     // Rolling position history for body-segment trail following
     private static final int MAX_HISTORY = 1000;
