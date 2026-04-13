@@ -48,13 +48,13 @@ public class IntroOfTheWorldHandler {
         player.teleport(skyPosition.x, skyPosition.y, skyPosition.z);
         // player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE,
         // 160, 128));
-        // player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 80,
+        // player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 40,
         // 0));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 150, 4));
 
         // Set player scale to small
         if (player instanceof IScaleEntity scaleEntity) {
-            scaleEntity.setScale(0.01f);
+            scaleEntity.setScale(0.00f);
 
             // Sync to client
             net.minecraft.network.PacketByteBuf buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
@@ -167,7 +167,7 @@ public class IntroOfTheWorldHandler {
             com.trongthang.welcometomyworld.entities.RiftPortalEntity portal = EntitiesManager.RIFT_PORTAL_ENTITY
                     .create(world);
             if (portal != null) {
-                portal.setPosition(player.getX(), player.getY() - 1.5f, player.getZ());
+                portal.setPosition(player.getX(), player.getY() - 2f, player.getZ());
                 world.spawnEntity(portal);
             }
         }

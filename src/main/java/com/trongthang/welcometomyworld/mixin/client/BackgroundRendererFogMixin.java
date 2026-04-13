@@ -15,6 +15,8 @@ import net.minecraft.client.MinecraftClient;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.client.BloodMoonClient;
+import com.trongthang.welcometomyworld.interfaces.IScaleEntity;
+import net.minecraft.world.World;
 
 @Mixin(BackgroundRenderer.class)
 public class BackgroundRendererFogMixin {
@@ -38,13 +40,23 @@ public class BackgroundRendererFogMixin {
             RenderSystem.clearColor(red, green, blue, 0.0f);
         } else {
             MinecraftClient client = MinecraftClient.getInstance();
-            if (client.player != null && client.player
-                    .hasStatusEffect(com.trongthang.welcometomyworld.managers.EffectsManager.VOID_SIGHT)) {
-                if (client.world.getRegistryKey().getValue().toString()
-                        .equals(WelcomeToMyWorld.MOD_ID + ":void_dim")) {
+            if (client.player != null) {
+                if (client.player.hasStatusEffect(com.trongthang.welcometomyworld.managers.EffectsManager.VOID_SIGHT) &&
+                        client.world.getRegistryKey().getValue().toString()
+                                .equals(WelcomeToMyWorld.MOD_ID + ":void_dim")) {
                     red = 0.02f;
                     green = 0.0f;
                     blue = 0.02f; // Pitch dark purple fog
+                    RenderSystem.clearColor(red, green, blue, 0.0f);
+                } else if (client.player instanceof IScaleEntity scaleEntity && scaleEntity.getScale() < 1.0f &&
+                        client.world.getRegistryKey().equals(World.OVERWORLD)) {
+                    float scale = scaleEntity.getScale();
+                    float introAlpha = MathHelper.clamp((1.0f - scale) / 0.99f, 0.0f, 1.0f);
+                    introAlpha = (float) Math.pow(introAlpha, 0.4f);
+
+                    red = MathHelper.lerp(introAlpha, red, 0.3f);
+                    green = MathHelper.lerp(introAlpha, green, 0.05f);
+                    blue = MathHelper.lerp(introAlpha, blue, 0.5f); // Mystical Purple
                     RenderSystem.clearColor(red, green, blue, 0.0f);
                 }
             }
@@ -69,11 +81,26 @@ public class BackgroundRendererFogMixin {
             RenderSystem.setShaderFogShape(net.minecraft.client.render.FogShape.CYLINDER);
         } else {
             MinecraftClient client = MinecraftClient.getInstance();
-            if (client.player != null && client.player
-                    .hasStatusEffect(com.trongthang.welcometomyworld.managers.EffectsManager.VOID_SIGHT)) {
-                if (client.world.getRegistryKey().getValue().toString().equals("welcometomyworld:void_dim")) {
+            if (client.player != null) {
+                if (client.player.hasStatusEffect(com.trongthang.welcometomyworld.managers.EffectsManager.VOID_SIGHT) &&
+                        client.world.getRegistryKey().getValue().toString().equals("welcometomyworld:void_dim")) {
                     RenderSystem.setShaderFogStart(0.0f);
                     RenderSystem.setShaderFogEnd(128.0f);
+                    RenderSystem.setShaderFogShape(net.minecraft.client.render.FogShape.CYLINDER);
+                } else if (client.player instanceof IScaleEntity scaleEntity && scaleEntity.getScale() < 1.0f &&
+                        client.world.getRegistryKey().equals(World.OVERWORLD)) {
+                    float scale = scaleEntity.getScale();
+                    float introAlpha = MathHelper.clamp((1.0f - scale) / 0.99f, 0.0f, 1.0f);
+                    introAlpha = (float) Math.pow(introAlpha, 0.4f);
+
+                    float defaultStart = RenderSystem.getShaderFogStart();
+                    float defaultEnd = RenderSystem.getShaderFogEnd();
+
+                    float targetStart = 0.0f;
+                    float targetEnd = 40.0f;
+
+                    RenderSystem.setShaderFogStart(MathHelper.lerp(introAlpha, defaultStart, targetStart));
+                    RenderSystem.setShaderFogEnd(MathHelper.lerp(introAlpha, defaultEnd, targetEnd));
                     RenderSystem.setShaderFogShape(net.minecraft.client.render.FogShape.CYLINDER);
                 }
             }

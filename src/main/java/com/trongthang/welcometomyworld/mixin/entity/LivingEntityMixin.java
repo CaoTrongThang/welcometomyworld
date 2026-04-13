@@ -98,10 +98,11 @@ public abstract class LivingEntityMixin extends Entity implements IScaleEntity {
         }
     }
 
+    // scale the players
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTick(CallbackInfo ci) {
         if (welcometomyworld$scale < 1.0f) {
-            welcometomyworld$scale += 0.03f;
+            welcometomyworld$scale += 0.01f;
             if (welcometomyworld$scale > 1.0f)
                 welcometomyworld$scale = 1.0f;
         }
