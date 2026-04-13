@@ -141,7 +141,7 @@ public class IntroOfTheWorldHandler {
             com.trongthang.welcometomyworld.entities.RiftPortalEntity portal = EntitiesManager.RIFT_PORTAL_ENTITY
                     .create(world);
             if (portal != null) {
-                portal.setPosition(player.getX(), player.getY(), player.getZ());
+                portal.setPosition(player.getX(), player.getY() - 1f, player.getZ());
                 world.spawnEntity(portal);
             }
         }

@@ -3,14 +3,13 @@ package com.trongthang.welcometomyworld;
 
 import com.trongthang.welcometomyworld.managers.ItemsManager;
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
-import net.minecraft.enchantment.DamageEnchantment;
 import net.minecraft.loot.LootPool;
 import net.minecraft.loot.condition.RandomChanceLootCondition;
 import net.minecraft.loot.entry.ItemEntry;
 import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
 
 public class AddLootTable {
-    public void register(){
+    public void register() {
         LootTableEvents.MODIFY.register((resourceManager, lootManager, id, supplier, setter) -> {
             // Check if the loot table is an entity
             if (id.getPath().startsWith("entities/")) {

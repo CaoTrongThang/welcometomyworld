@@ -41,7 +41,7 @@ public class RiftPortalRenderer extends GeoEntityRenderer<RiftPortalEntity> {
 
                 // Lowering the center of the cracks so it's more aligned with the portal
                 // visuals
-                poseStack.translate(0.0D, 0.5D, 0.0D);
+                poseStack.translate(0.0D, 0.55D, 0.0D);
 
                 int beamCount = 40; // Static number of cracks
 
