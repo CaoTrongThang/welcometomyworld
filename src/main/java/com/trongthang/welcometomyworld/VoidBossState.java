@@ -34,6 +34,14 @@ public class VoidBossState extends PersistentState {
         return state;
     }
 
+    public void clearBoss() {
+        com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                .info("Clearing Void Worm boss state (was: " + this.bossUuid + ")");
+        this.bossUuid = null;
+        this.lastBossPos = null;
+        this.markDirty();
+    }
+
     public static VoidBossState getServerState(ServerWorld world) {
         PersistentStateManager manager = world.getPersistentStateManager();
         return manager.getOrCreate(

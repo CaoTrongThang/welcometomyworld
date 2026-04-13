@@ -49,7 +49,8 @@
 		"entity.VoidHostileSpawnMixin",
 		"world.VoidSpawnRestrictionMixin",
 		"entity.LivingEntityMixin",
-		"entity.WitherSkullNoGriefMixin"
+		"entity.WitherSkullNoGriefMixin",
+		"misc.RocksMixinRemoveFromMyDimension"
 	],
 	"injectors": {
 		"defaultRequire": 1

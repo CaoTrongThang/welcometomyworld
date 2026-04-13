@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(targets = "it.hurts.octostudios.octolib.modules.particles.trail.TrailProvider", remap = false)
 public interface OctoLibTrailNullGuardMixin {
 
-    @Inject(method = "getRenderPosition", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "getRenderPosition", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     default void guardNullWorld(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
         if (this instanceof net.minecraft.entity.Entity entity) {
             if (entity.getEntityWorld() == null) {

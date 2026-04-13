@@ -94,36 +94,26 @@ public class ServerPlayerEntityMixin implements IServerPlayerEntity {
     @Unique
     private void checkAndSpawnVoidBoss(ServerWorld voidWorld) {
         VoidBossState state = VoidBossState.getServerState(voidWorld);
-        boolean bossExists = false;
 
+        // If a boss is already tracked in the state, assume it exists (could be
+        // unloaded)
         if (state.bossUuid != null) {
-            // Check loaded entities first
-            if (voidWorld.getEntity(state.bossUuid) instanceof VoidWormEntity existingBoss && existingBoss.isAlive()) {
-                bossExists = true;
-            } else {
-                // To be 100% sure we don't spawn duplicates, check all entities in the world
-                // Note: iterateEntities() only returns LOADED entities.
-                // However, since VoidWormEntity adds a ticket to stay loaded, it should be here
-                // if it's anywhere in the world.
-                for (Entity entity : voidWorld.iterateEntities()) {
-                    if (entity instanceof VoidWormEntity && entity.getUuid().equals(state.bossUuid)
-                            && entity.isAlive()) {
-                        bossExists = true;
-                        break;
-                    }
-                }
-            }
+            com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                    .info("Void Worm spawn skipped: already exists with UUID " + state.bossUuid);
+            return;
         }
 
-        if (!bossExists) {
-            VoidWormEntity newBoss = new VoidWormEntity(EntitiesManager.VOID_WORM, voidWorld);
-            newBoss.refreshPositionAndAngles(0, 100, 0, 0, 0);
-            voidWorld.spawnEntity(newBoss);
+        // Otherwise, spawn a new one
+        VoidWormEntity newBoss = new VoidWormEntity(EntitiesManager.VOID_WORM, voidWorld);
+        newBoss.refreshPositionAndAngles(0, 100, 0, 0, 0);
 
-            state.bossUuid = newBoss.getUuid();
-            state.lastBossPos = new BlockPos(0, 100, 0);
-            state.markDirty();
-        }
+        // Set the UUID in the state BEFORE spawning to avoid potential race conditions
+        state.bossUuid = newBoss.getUuid();
+        state.lastBossPos = new BlockPos(0, 100, 0);
+        state.markDirty();
+
+        com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("Spawning new Void Worm boss: " + state.bossUuid);
+        voidWorld.spawnEntity(newBoss);
     }
 
     @Override

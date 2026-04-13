@@ -422,14 +422,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 }
             }
 
-            // Persistently track this boss
-            if (this.age % 20 == 0) {
-                VoidBossState state = VoidBossState.getServerState(serverWorld);
-                state.bossUuid = this.getUuid();
-                state.lastBossPos = this.getBlockPos();
-                state.markDirty();
-            }
-
             LivingEntity currentTarget = this.getTarget();
 
             if (this.hungerCooldownTicks > 0 && currentTarget == null) {
@@ -1387,8 +1379,15 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     @Override
     public void remove(RemovalReason reason) {
         super.remove(reason);
-        for (VoidWormPartEntity part : parts) {
-            part.remove(reason);
+        if (reason.shouldDestroy()) {
+            if (this.getWorld() instanceof ServerWorld serverWorld) {
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER
+                        .info("Void Worm removed (reason: " + reason + "), clearing boss state");
+                VoidBossState.getServerState(serverWorld).clearBoss();
+            }
+            for (VoidWormPartEntity part : parts) {
+                part.remove(reason);
+            }
         }
     }
 
