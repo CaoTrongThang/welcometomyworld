@@ -130,6 +130,8 @@ public class Blossom extends StrongTameableEntityDefault {
     private int particleCounter = 0;
     private int particleCooldown = 10;
 
+    private int greetingTimer = 0;
+
     public ActiveTargetGoal<HostileEntity> hostileTargetGoal;
 
     public Blossom(EntityType<? extends TameableEntity> entityType, World world) {
@@ -254,20 +256,31 @@ public class Blossom extends StrongTameableEntityDefault {
 
         if (!this.getWorld().isClient) {
             if (this.getIsGreeting()) {
-                if (this.greetingTarget != null) {
-                    ServerPlayerEntity player = this.getWorld().getServer().getPlayerManager()
-                            .getPlayer(this.greetingTarget.getUuid());
-                    if (player != null) {
-                        this.getLookControl().lookAt(player, 30.0F, 30.0F);
-                    }
+                // Force stay still
+                this.setVelocity(Vec3d.ZERO);
+                this.setJumping(false);
+                this.sidewaysSpeed = 0.0f;
+                this.upwardSpeed = 0.0f;
+                this.forwardSpeed = 0.0f;
+                this.velocityDirty = true;
+                this.getNavigation().stop();
+
+                if (this.greetingTarget != null && this.greetingTarget.isAlive()) {
+                    this.getLookControl().lookAt(this.greetingTarget, 100.0F, 100.0F);
+                    this.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, this.greetingTarget.getEyePos());
                 }
 
-                Utils.addRunAfter(() -> {
-                    if (!this.getIsGreeting())
-                        return;
+                // Initialize timer if not set
+                if (this.greetingTimer <= 0) {
+                    this.greetingTimer = 80; // Total duration of greeting
+                }
+
+                this.greetingTimer--;
+
+                if (this.greetingTimer <= 0) {
                     this.setIsGreeting(false);
                     this.discard();
-                }, 70);
+                }
                 return;
             }
 

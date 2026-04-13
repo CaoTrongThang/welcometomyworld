@@ -136,6 +136,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private int globalSkillCooldown = 0;
     private final int[] skillCooldowns = new int[100];
 
+    private static final float DODGE_CHANCE = 0.45f;
+
     private int autoRegenHealth = 50;
     private int autoRegenCooldown = 100;
 
@@ -1581,7 +1583,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
         }
 
         if (!this.getWorld().isClient() && (playerAttackCount > 3 || !(source.getAttacker() instanceof PlayerEntity))
-                && this.random.nextFloat() < 0.6 && !isUsingSkill()) {
+                && this.random.nextFloat() < DODGE_CHANCE && !isUsingSkill()) {
             tryDodge();
             return false;
         }

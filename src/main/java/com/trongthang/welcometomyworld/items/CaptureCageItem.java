@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
@@ -37,6 +38,8 @@ public class CaptureCageItem extends Item implements GeoItem {
     private static final String ENTITY_DATA_KEY = "CapturedEntityData";
     private static final String ENTITY_TYPE_KEY = "CapturedEntityType";
     private static final String ENTITY_NAME_KEY = "CapturedEntityName";
+
+    private final int COOLDOWN = 100;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
@@ -107,7 +110,7 @@ public class CaptureCageItem extends Item implements GeoItem {
             if (tameable.isTamed() && user.getUuid().equals(tameable.getOwnerUuid())) {
                 if (!user.getWorld().isClient) {
                     captureEntity(stack, tameable, user);
-                    user.getItemCooldownManager().set(this, 40); // 2 seconds cooldown
+                    user.getItemCooldownManager().set(this, COOLDOWN);
                 }
                 return ActionResult.success(user.getWorld().isClient);
             }
@@ -117,7 +120,7 @@ public class CaptureCageItem extends Item implements GeoItem {
             if (customTameable.isTamed() && user.getUuid().equals(customTameable.getOwnerUuid())) {
                 if (!user.getWorld().isClient) {
                     captureEntity(stack, customTameable, user);
-                    user.getItemCooldownManager().set(this, 40); // 2 seconds cooldown
+                    user.getItemCooldownManager().set(this, COOLDOWN);
                 }
                 return ActionResult.success(user.getWorld().isClient);
             }
@@ -217,7 +220,13 @@ public class CaptureCageItem extends Item implements GeoItem {
                     .append(Text.literal(name).formatted(Formatting.YELLOW)));
         } else {
             tooltip.add(Text.literal("Empty").formatted(Formatting.DARK_GRAY));
-            tooltip.add(Text.literal("Use on your tamed companions to capture them.").formatted(Formatting.BLUE));
+            tooltip.add(Text
+                    .literal("Use on your tamed companions to capture them.")
+                    .formatted(Formatting.BLUE));
+            tooltip.add(Text
+                    .literal("Sometimes it won't work on specific mobs...")
+                    .setStyle(Style.EMPTY.withItalic(true))
+                    .formatted(Formatting.GRAY));
         }
     }
 }

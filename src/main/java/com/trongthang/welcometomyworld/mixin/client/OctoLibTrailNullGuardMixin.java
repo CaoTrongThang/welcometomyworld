@@ -17,11 +17,9 @@ public interface OctoLibTrailNullGuardMixin {
 
     @Inject(method = "getRenderPosition", at = @At("HEAD"), cancellable = true, remap = false)
     default void guardNullWorld(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
-        // Since TrailProvider is implemented by entities, 'this' is the entity
-        // instance.
         if (this instanceof net.minecraft.entity.Entity entity) {
             if (entity.getEntityWorld() == null) {
-                cir.setReturnValue(Vec3d.ZERO);
+                cir.setReturnValue(entity.getPos());
             }
         }
     }

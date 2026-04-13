@@ -13,6 +13,7 @@
     "client.CancelLoadingScreenMixin",
     "client.CameraMixin",
     "client.OctoLibTrailNullGuardMixin",
+    "client.OctolibTrailBufferNullMixin",
     "client.LivingEntityRendererMixin"
   ],
   "injectors": {

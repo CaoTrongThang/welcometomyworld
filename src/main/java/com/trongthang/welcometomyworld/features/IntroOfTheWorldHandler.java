@@ -413,15 +413,15 @@ public class IntroOfTheWorldHandler {
         } else {
             if (player.getWorld().getLevelProperties().isHardcore()) {
                 Utils.UTILS.sendTextAfter(player,
-                        "Oops, my protection spell came a bit late... Looks like it's time to create a new world!");
+                        "I'm late... again.");
                 Utils.grantAdvancement(player, "welcome_to_easycraft");
                 return;
             }
 
-            Utils.UTILS.sendTextAfter(player, "Well, that was a disaster. I'm getting too old for this...", 2 * 20);
+            Utils.UTILS.sendTextAfter(player, "I was too late. My spell didn’t hold. I’m sorry… truly.", 2 * 20);
             Utils.UTILS.sendTextAfter(player, "But let's not dwell on the past. Welcome to this new world!", 6 * 20);
             Utils.UTILS.sendTextAfter(player,
-                    "I can tell you're looking for adventure. That's why I summoned you here. Now, hold on a moment...",
+                    "I can tell you're looking for adventure. That's why you're summoned here by the rift. Now, hold on a moment...",
                     10 * 20);
 
             Utils.addRunAfter(() -> {
