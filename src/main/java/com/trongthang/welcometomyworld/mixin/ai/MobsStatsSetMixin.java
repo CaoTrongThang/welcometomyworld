@@ -13,15 +13,18 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.ServerWorldAccess;
+
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(MobEntity.class)
+@Mixin(value = MobEntity.class, priority = 10000)
 public class MobsStatsSetMixin {
 
-        @Inject(method = "initialize", at = @At("HEAD"))
+        @Inject(method = "initialize", at = @At("RETURN"))
         private void onInitialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason,
                         @Nullable EntityData entityData, @Nullable NbtCompound entityNbt,
                         CallbackInfoReturnable<EntityData> cir) {

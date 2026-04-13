@@ -140,7 +140,7 @@ public class IntroOfTheWorldHandler {
                     playerData.completeSpawningParticles = true;
                 }
 
-                Utils.UTILS.sendTextAfter(player, "Finally!", 20);
+                Utils.UTILS.sendTextAfter(player, "!!!", 20);
 
                 for (int x = 0; x < rand.nextInt(10, 20); x++) {
                     Utils.addRunAfter(() -> {
@@ -185,7 +185,7 @@ public class IntroOfTheWorldHandler {
 
             playerData.completeSpawningParticles = true;
 
-            Utils.UTILS.sendTextAfter(player, "Finally!");
+            Utils.UTILS.sendTextAfter(player, "!!!");
         }
 
         if ((player.getHealth() <= 0 || player.isDead()) && !playerData.introDeathByGod) {
