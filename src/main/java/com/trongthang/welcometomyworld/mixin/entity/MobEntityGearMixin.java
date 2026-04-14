@@ -1,6 +1,10 @@
 package com.trongthang.welcometomyworld.mixin.entity;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
+import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.features.MobsGearsUp;
+import com.trongthang.welcometomyworld.features.MobsGearsUp.MobSettings;
+
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.annotation.Nullable;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -9,6 +13,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.ServerWorldAccess;
@@ -19,20 +24,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
 
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 import static com.trongthang.welcometomyworld.features.MobsGearsUp.DEFAULT_EQUIP_CHANCE;
 
-@Mixin(MobEntity.class)
+@Mixin(ServerWorld.class)
 public abstract class MobEntityGearMixin {
 
-    @Inject(method = "initialize", at = @At("HEAD"))
-    private void onInitialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason,
-            @Nullable EntityData entityData, @Nullable NbtCompound entityNbt,
-            CallbackInfoReturnable<EntityData> cir) {
-        MobEntity mob = (MobEntity) (Object) this;
+    @Inject(method = "addEntity", at = @At("TAIL"), cancellable = true)
+    private void onAddedToWorld(Entity entity, CallbackInfoReturnable<Boolean> ci) {
+        if (!(entity instanceof MobEntity))
+            return;
+
+        MobEntity mob = (MobEntity) entity;
         Identifier mobId = EntityType.getId(mob.getType());
 
         MobsGearsUp.MobSettings settings = MobsGearsUp.getSettings(mobId);
+
         if (settings != null) {
             equipArmor(mob, settings);
             equipMainHand(mob, settings);
@@ -176,6 +184,7 @@ public abstract class MobEntityGearMixin {
     }
 
     private boolean checkChance(LivingEntity mob, float diffDiv, float dayDiv, float maxChance) {
+        LOGGER.info("Checking chance for mob: {}", getImprovedMobsDifficulty(mob));
         float difficulty = getImprovedMobsDifficulty(mob);
         float chance;
 

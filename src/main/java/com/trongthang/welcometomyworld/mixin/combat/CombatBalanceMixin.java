@@ -33,8 +33,8 @@ public class CombatBalanceMixin {
             }
             if (showMobDamageLogs) {
                 // only showed if attacker or target is player
-                if (!(attacker instanceof PlayerEntity) && !(mob instanceof PlayerEntity))
-                    return originalDamage;
+                // if (!(attacker instanceof PlayerEntity) && !(mob instanceof PlayerEntity))
+                // return originalDamage;
 
                 WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
                 WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());

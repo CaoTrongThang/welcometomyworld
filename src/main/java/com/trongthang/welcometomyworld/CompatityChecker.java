@@ -11,18 +11,8 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 public class CompatityChecker {
     public boolean originMod = false;
 
-    public boolean OriginCheck(){
-        if(containMod("origins", "Apace")){
-            LOGGER.info("Origins mod found, doing my best to work with it!");
-            originMod = true;
-
-            return true;
-        }
-        return false;
-    }
-
-    public boolean ImprovedMobsCheck(){
-        if(containMod("origins", "Apace")){
+    public boolean OriginCheck() {
+        if (containMod("origins", "Apace")) {
             LOGGER.info("Origins mod found, doing my best to work with it!");
             originMod = true;
 
@@ -41,17 +31,16 @@ public class CompatityChecker {
         });
     }
 
-    public boolean containMod(String modId, String authors){
+    public boolean containMod(String modId, String authors) {
         Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
-        for (ModContainer mod : mods){
+        for (ModContainer mod : mods) {
             ModMetadata metadata = mod.getMetadata();
-            if(metadata.getId().equals(modId)){
+            if (metadata.getId().equals(modId)) {
                 return true;
             }
         }
         return false;
     }
-
 
     public void ShowAllMods() {
         FabricLoader.getInstance().getAllMods().forEach(modContainer -> {
