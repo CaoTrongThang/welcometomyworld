@@ -6,6 +6,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,11 +25,17 @@ public class CombatBalanceMixin {
         boolean showMobDamageLogs = com.trongthang.welcometomyworld.ConfigLoader
                 .getInstance().damageBalancing.showMobDamageLogs;
 
+        LivingEntity mob = (LivingEntity) (Object) this;
+
         if (attacker != null) {
             if (source.getType().msgId().equals("thorns")) {
                 return originalDamage;
             }
             if (showMobDamageLogs) {
+                // only showed if attacker or target is player
+                if (!(attacker instanceof PlayerEntity) && !(mob instanceof PlayerEntity))
+                    return originalDamage;
+
                 WelcomeToMyWorld.LOGGER.info("DAMAGE: " + originalDamage);
                 WelcomeToMyWorld.LOGGER.info("ATTACKER: " + source.getAttacker());
                 WelcomeToMyWorld.LOGGER.info("TARGET: " + this);
