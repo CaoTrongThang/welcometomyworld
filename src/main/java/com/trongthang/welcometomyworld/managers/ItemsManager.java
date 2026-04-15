@@ -66,6 +66,8 @@ public class ItemsManager {
         public static final Item VOID_WORM_SPAWN_EGG = registerSpawnEgg(EntitiesManager.VOID_WORM, "void_worm",
                         0x140122,
                         0x6a008c);
+        public static final Item VOIDAN_SPAWN_EGG = registerSpawnEgg(EntitiesManager.VOIDAN, "voidan", 0x041820,
+                        0x61c3cb);
 
         public static final Item UNKNOWN_HOOD = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
                         ArmorItem.Type.HELMET, new FabricItemSettings().rarity(Rarity.EPIC), EffectsManager.VOID_SIGHT),
@@ -180,6 +182,7 @@ public class ItemsManager {
                                         itemGroup.add(ItemsManager.BLOSSOM_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.UNKNOWN_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.VOID_WORM_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.VOIDAN_SPAWN_EGG);
 
                                         itemGroup.add(ItemsManager.UNKNOWN_HOOD);
                                         itemGroup.add(ItemsManager.UNKNOWN_CLOAK);

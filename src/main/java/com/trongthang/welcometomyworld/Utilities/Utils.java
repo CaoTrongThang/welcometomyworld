@@ -570,6 +570,21 @@ public class Utils {
         return null;
     }
 
+    public static void CreateBlockSlamGround(ServerWorld world, BlockState state, BlockPos pos, double velocity) {
+        BlockSlamGroundEntity effectEntity = EntitiesManager.BLOCK_SLAM_GROUND.create(world);
+        if (effectEntity != null) {
+            effectEntity.setBlockState(state);
+            effectEntity.setPosition(
+                    pos.getX() + 0.5, // Center in block
+                    pos.getY() + 0.2, // Slightly above ground
+                    pos.getZ() + 0.5 // Center in block
+            );
+
+            effectEntity.setVelocity(0, velocity + world.getRandom().nextFloat() * 0.10, 0);
+            world.spawnEntity(effectEntity);
+        }
+    }
+
     public static void CreateBlockSlamGround(ServerWorld world, BlockState state, BlockPos pos) {
         BlockSlamGroundEntity effectEntity = EntitiesManager.BLOCK_SLAM_GROUND.create(world);
         if (effectEntity != null) {

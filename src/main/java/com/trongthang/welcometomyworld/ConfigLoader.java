@@ -37,7 +37,7 @@ public class ConfigLoader {
         // the falling intro and stuff to the world
         @Expose
         @SerializedName("enableIntroOfTheWorld")
-        public boolean enableIntroOfTheWorld = false;
+        public boolean enableIntroOfTheWorld = true;
 
         @Expose
         @SerializedName("clearItemsBeforeGivingStartingItems")

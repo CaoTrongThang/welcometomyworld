@@ -14,6 +14,8 @@ import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormPartEntity;
 import com.trongthang.welcometomyworld.entities.VoidWorm.PurpleCrystalEntity;
 import com.trongthang.welcometomyworld.entities.PurplePortalEntity;
 import com.trongthang.welcometomyworld.entities.RiftPortalEntity;
+import net.minecraft.entity.EntityDimensions;
+import com.trongthang.welcometomyworld.entities.Voidan.Voidan;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -54,7 +56,7 @@ public class EntitiesManager {
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "portaler"),
                         FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, Portaler::new)
-                                        .dimensions(EntityDimensions.changing(0.8f, 4f))
+                                        .dimensions(EntityDimensions.changing(1.5f, 4f))
                                         .build());
 
         public static final EntityType<EnderPest> ENDER_PEST = Registry.register(
@@ -104,6 +106,15 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "unknown"),
                         FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, Unknown::new)
                                         .dimensions(EntityDimensions.changing(0.8f, 2f)) // Basic dimensions
+                                        .fireImmune()
+                                        .build());
+
+        public static final EntityType<Voidan> VOIDAN = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "voidan"),
+                        FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, Voidan::new)
+                                        .dimensions(EntityDimensions.changing(5f, 5f)) // Smaller base for
+                                                                                       // navigation
                                         .fireImmune()
                                         .build());
 
@@ -212,6 +223,7 @@ public class EntitiesManager {
                 FabricDefaultAttributeRegistry.register(BLOSSOM, Blossom.setAttributes());
 
                 FabricDefaultAttributeRegistry.register(UNKNOWN, Unknown.setAttributes());
+                FabricDefaultAttributeRegistry.register(VOIDAN, Voidan.setAttributes());
 
                 FabricDefaultAttributeRegistry.register(FALLING_SKELETON, FallingSkeleton.setAttributes());
 
