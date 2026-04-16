@@ -15,9 +15,12 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -40,6 +43,7 @@ import net.minecraft.entity.ai.pathing.EntityNavigation;
 
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
+import com.trongthang.welcometomyworld.managers.SoundsManager;
 import com.trongthang.welcometomyworld.entities.ai.CustomPathNavigateGround;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 
@@ -91,7 +95,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
     public static final Skill HAND_SWING_180_FRONT_THEN_SLAM_GROUND = new Skill(4, 40, 300);
     public static final Skill SONIC_BOOM = new Skill(5, 20, 200);
     public static final Skill EMERGE = new Skill(6, 68, 0);
-    public static final Skill ROAR = new Skill(7, 70, 200);
+    public static final Skill ROAR = new Skill(7, 70, 3000);
 
     private boolean hasEmerged = false;
 
@@ -259,16 +263,19 @@ public class Voidan extends HostileEntity implements GeoEntity {
                     picked = pickWeightedSkill(
                             new Object[] { HAND_SWING_LEFT_FRONT, 35f, true },
                             new Object[] { HAND_SWING_RIGHT_FRONT, 35f, true },
-                            new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 30f, true });
+                            new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 1000f, true },
+                            new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 8.0) {
                     // Mid range
                     picked = pickWeightedSkill(
                             new Object[] { SLAM_GROUND, 100f, true },
-                            new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 100f, true });
+                            new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 1000f, true },
+                            new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 15.0) {
                     // Far range
                     picked = pickWeightedSkill(
-                            new Object[] { SONIC_BOOM, 100f, true });
+                            new Object[] { SONIC_BOOM, 100f, true },
+                            new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 30.0) {
                     // Very Far range
                     picked = pickWeightedSkill(
@@ -363,13 +370,23 @@ public class Voidan extends HostileEntity implements GeoEntity {
 
         switch (skillId) {
             case 1: // SLAM_GROUND — radius-10 AoE at tick 15
+                if (skillTick == 0) {
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
+                }
                 if (!skillHitFired && skillTick >= SLAM_GROUND_HIT_TICK) {
                     skillHitFired = true;
                     dealAoeGroundDamage(10.0, atk * SLAM_GROUND_DAMAGE_MULTIPLIER);
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, this.getSoundCategory(), 1.0F, 1.0F);
                 }
                 break;
 
             case 2: // HAND_SWING_LEFT_FRONT — small radius-3 front cone at tick 10
+                if (skillTick == 0) {
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
+                }
                 if (!skillHitFired && skillTick >= HAND_SWING_LEFT_FRONT_HIT_TICK) {
                     skillHitFired = true;
                     dealFrontConeDamage(6.0, atk * HAND_SWING_LEFT_FRONT_DAMAGE_MULTIPLIER);
@@ -377,6 +394,10 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 break;
 
             case 3: // HAND_SWING_RIGHT_FRONT — same as left
+                if (skillTick == 0) {
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
+                }
                 if (!skillHitFired && skillTick >= HAND_SWING_RIGHT_FRONT_HIT_TICK) {
                     skillHitFired = true;
                     dealFrontConeDamage(6.0, atk * HAND_SWING_RIGHT_FRONT_DAMAGE_MULTIPLIER);
@@ -384,6 +405,10 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 break;
 
             case 4: // HAND_SWING_180_FRONT_THEN_SLAM_GROUND
+                if (skillTick == 0) {
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
+                }
                 // Hit 1 (tick 12): 180-degree paper fan sweep at the front
                 if (skillTick == HAND_SWING_180_FRONT_THEN_SLAM_GROUND_HIT_TICK[0]) {
                     dealPaperFanDamage(8.0, atk * HAND_SWING_180_FRONT_THEN_SLAM_GROUND_DAMAGE_MULTIPLIER);
@@ -391,6 +416,8 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 // Hit 2 (tick 25): ground slam AoE radius 10
                 if (skillTick == HAND_SWING_180_FRONT_THEN_SLAM_GROUND_HIT_TICK[1]) {
                     dealAoeGroundDamage(10.0, atk * HAND_SWING_180_FRONT_THEN_SLAM_GROUND_DAMAGE_MULTIPLIER);
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, this.getSoundCategory(), 1.0F, 1.0F);
                 }
                 break;
             case 5: // SONIC_BOOM
@@ -406,11 +433,11 @@ public class Voidan extends HostileEntity implements GeoEntity {
                     this.playSound(SoundEvents.ENTITY_WARDEN_HEARTBEAT, 3.0F, 1.0F);
 
                     if (this.getWorld() instanceof ServerWorld sw) {
-                        List<net.minecraft.server.network.ServerPlayerEntity> players = sw
+                        List<ServerPlayerEntity> players = sw
                                 .getPlayers(p -> p.distanceTo(this) < 30.0);
-                        for (net.minecraft.server.network.ServerPlayerEntity p : players) {
-                            p.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                                    net.minecraft.entity.effect.StatusEffects.DARKNESS, 200, 0, false, false));
+                        for (ServerPlayerEntity p : players) {
+                            p.addStatusEffect(new StatusEffectInstance(
+                                    StatusEffects.DARKNESS, 200, 0, false, false));
                         }
 
                         // Particle effects
@@ -678,7 +705,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
         if (this.getWorld().isClient())
             return;
         net.minecraft.util.math.Box area = this.getBoundingBox().expand(radius);
-        List<net.minecraft.server.network.ServerPlayerEntity> playersInRadius = this.getWorld()
+        List<ServerPlayerEntity> playersInRadius = this.getWorld()
                 .getEntitiesByClass(net.minecraft.server.network.ServerPlayerEntity.class, area, p -> true);
 
         for (net.minecraft.server.network.ServerPlayerEntity p : playersInRadius) {

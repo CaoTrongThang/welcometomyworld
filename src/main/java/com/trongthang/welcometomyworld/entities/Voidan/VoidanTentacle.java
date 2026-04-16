@@ -86,7 +86,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 1000.0D) // Quite tanky
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 3000.0D) // Quite tanky
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.0D) // No movement
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 30.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0D)
@@ -116,6 +116,14 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
             return true;
         if (summonerUuid != null && other.getUuid().equals(summonerUuid))
             return true;
+
+        if (other instanceof VoidanTentacle otherTentacle) {
+            if (summonerUuid != null && summonerUuid.equals(otherTentacle.summonerUuid))
+                return true;
+            if (ownerUuid != null && ownerUuid.equals(otherTentacle.ownerUuid))
+                return true;
+        }
+
         if (ownerUuid != null) {
             if (other.getUuid().equals(ownerUuid))
                 return true;
@@ -343,7 +351,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
         this.skillTick = 0;
         this.skillTotalTicks = skill.length;
         this.skillCooldowns[skill.id] = skill.cooldown;
-        this.globalSkillCooldown = 20;
+        this.globalSkillCooldown = (skill.id == EMERGE.id) ? 40 : 20;
         this.skillHitFired = false;
     }
 
@@ -359,14 +367,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
             @org.jetbrains.annotations.Nullable net.minecraft.nbt.NbtCompound entityNbt) {
         if (!this.hasEmerged) {
             this.hasEmerged = true;
-            this.dataTracker.set(IS_USING_SKILL, true);
-            this.dataTracker.set(SKILL_ID, EMERGE.id);
-            this.dataTracker.set(SKILL_TRIGGER, this.dataTracker.get(SKILL_TRIGGER) + 1);
-            this.skillTick = 0;
-            this.skillTotalTicks = EMERGE.length;
-            this.skillCooldowns[EMERGE.id] = EMERGE.cooldown;
-            this.globalSkillCooldown = 20;
-            this.skillHitFired = false;
+            this.triggerSkill(EMERGE);
         }
         return super.initialize(world, difficulty, spawnReason, entityData, entityNbt);
     }
@@ -464,7 +465,8 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
                                 0.5, 0.1);
                     }
                 }
-                if (skillTick >= 49) {
+                // Teleport after the 'back_to_ground' animation finishes (~10 ticks)
+                if (skillTick == 10) {
                     LivingEntity target = getTarget();
                     if (target != null && target.isAlive() && this.getWorld() instanceof ServerWorld sw) {
                         double angle = this.random.nextDouble() * 2 * Math.PI;
@@ -477,8 +479,11 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
 
                         this.refreshPositionAndAngles(surfacePos.getX() + 0.5, surfacePos.getY(),
                                 surfacePos.getZ() + 0.5, this.getYaw(), 0.0f);
-                        this.hasEmerged = false; // Reset to trigger emerge skill in tick()
                     }
+                }
+                // Finally emerge after the 2s delay (total 50 ticks)
+                if (skillTick >= 50) {
+                    this.triggerSkill(EMERGE);
                 }
                 break;
         }
