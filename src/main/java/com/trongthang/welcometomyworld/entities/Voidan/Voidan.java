@@ -37,6 +37,8 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 import java.util.ArrayList;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
+
+import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import com.trongthang.welcometomyworld.entities.ai.CustomPathNavigateGround;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 
@@ -112,7 +114,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 75666.0D) // Stronger basic stats
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.20D)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25D)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8D)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0D)
@@ -240,14 +242,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
 
             // Complete skill
             if (skillTick >= skillTotalTicks) {
-                if (skillId == 6) { // Chain EMERGE into ROAR
-                    this.dataTracker.set(IS_USING_SKILL, false);
-                    this.dataTracker.set(SKILL_ID, 0);
-                    triggerSkill(ROAR);
-                    return;
-                }
-                this.dataTracker.set(IS_USING_SKILL, false);
-                this.dataTracker.set(SKILL_ID, 0);
+                handleSkillCompletionChain(skillId);
             }
             return;
         }
@@ -258,7 +253,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 double dist = this.distanceTo(target);
                 Skill picked = null;
 
-                if (dist <= 5.0) {
+                if (dist <= 4.0) {
                     // Close range
                     picked = pickWeightedSkill(
                             new Object[] { HAND_SWING_LEFT_FRONT, 35f, true },
@@ -267,12 +262,12 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 } else if (dist <= 8.0) {
                     // Mid range
                     picked = pickWeightedSkill(
-                            new Object[] { SLAM_GROUND, 40f, true });
+                            new Object[] { SLAM_GROUND, 100f, true },
+                            new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 100f, true });
                 } else if (dist <= 15.0) {
                     // Far range
                     picked = pickWeightedSkill(
-                            new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 100f, true },
-                            new Object[] { SONIC_BOOM, 50f, true });
+                            new Object[] { SONIC_BOOM, 100f, true });
                 } else if (dist <= 30.0) {
                     // Very Far range
                     picked = pickWeightedSkill(
@@ -453,6 +448,36 @@ public class Voidan extends HostileEntity implements GeoEntity {
         }
     }
 
+    private void handleSkillCompletionChain(int skillId) {
+        switch (skillId) {
+            case 2: // HAND_SWING_LEFT_FRONT
+                if (this.random.nextDouble() < 0.6 && canUseSkill(HAND_SWING_RIGHT_FRONT)) {
+                    triggerSkill(HAND_SWING_RIGHT_FRONT);
+                } else {
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
+                break;
+            case 3: // HAND_SWING_RIGHT_FRONT
+                if (this.random.nextDouble() < 0.6 && canUseSkill(HAND_SWING_LEFT_FRONT)) {
+                    triggerSkill(HAND_SWING_LEFT_FRONT);
+                } else {
+                    this.dataTracker.set(IS_USING_SKILL, false);
+                    this.dataTracker.set(SKILL_ID, 0);
+                }
+                break;
+            case 6: // EMERGE
+                this.dataTracker.set(IS_USING_SKILL, false);
+                this.dataTracker.set(SKILL_ID, 0);
+                triggerSkill(ROAR);
+                break;
+            default:
+                this.dataTracker.set(IS_USING_SKILL, false);
+                this.dataTracker.set(SKILL_ID, 0);
+                break;
+        }
+    }
+
     public boolean canUseSkill(Skill skill) {
         return skillCooldowns[skill.id] <= 0;
     }
@@ -472,7 +497,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
         Box area = this.getBoundingBox().expand(radius);
         List<LivingEntity> nearby = this.getWorld().getEntitiesByClass(LivingEntity.class, area, e -> e != this);
         for (LivingEntity t : nearby) {
-            t.damage(this.getDamageSources().mobAttack(this), damage);
+            Unknown.dealUnknownDamage(this, t, damage);
         }
 
         if (!(this.getWorld() instanceof ServerWorld sw))
@@ -518,7 +543,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
             Vec3d toTarget = t.getPos().subtract(this.getPos()).normalize();
             // dot > 0.5 ≈ within ±60°
             if (forward.dotProduct(toTarget) > 0.5) {
-                t.damage(this.getDamageSources().mobAttack(this), damage);
+                Unknown.dealUnknownDamage(this, t, damage);
             }
         }
     }
@@ -538,7 +563,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
             Vec3d toTarget = t.getPos().subtract(this.getPos()).normalize();
             // dot > 0 ≈ within ±90° (full 180° fan)
             if (forward.dotProduct(toTarget) > 0.0) {
-                t.damage(this.getDamageSources().mobAttack(this), damage);
+                Unknown.dealUnknownDamage(this, t, damage);
             }
         }
     }
@@ -566,7 +591,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
         }
 
         this.playSound(SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 4.0F, 0.8F); // Slightly deeper and louder
-        target.damage(serverWorld.getDamageSources().sonicBoom(this), damage);
+        Unknown.dealUnknownDamage(this, target, damage);
 
         // Massive knockback
         double d = 1.0 * (1.0 - target.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE));
@@ -584,7 +609,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
         Box area = this.getBoundingBox().expand(radius);
         List<LivingEntity> nearby = this.getWorld().getEntitiesByClass(LivingEntity.class, area, e -> e != this);
         for (LivingEntity t : nearby) {
-            t.damage(this.getDamageSources().mobAttack(this), damage);
+            Unknown.dealUnknownDamage(this, t, damage);
         }
     }
 
