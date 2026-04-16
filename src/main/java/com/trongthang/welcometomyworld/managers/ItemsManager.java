@@ -68,6 +68,9 @@ public class ItemsManager {
                         0x6a008c);
         public static final Item VOIDAN_SPAWN_EGG = registerSpawnEgg(EntitiesManager.VOIDAN, "voidan", 0x041820,
                         0x61c3cb);
+        public static final Item VOIDAN_TENTACLE_SPAWN_EGG = registerSpawnEgg(EntitiesManager.VOIDAN_TENTACLE,
+                        "voidan_tentacle", 0x041820,
+                        0x2f114c);
 
         public static final Item UNKNOWN_HOOD = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
                         ArmorItem.Type.HELMET, new FabricItemSettings().rarity(Rarity.EPIC), EffectsManager.VOID_SIGHT),
@@ -183,6 +186,7 @@ public class ItemsManager {
                                         itemGroup.add(ItemsManager.UNKNOWN_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.VOID_WORM_SPAWN_EGG);
                                         itemGroup.add(ItemsManager.VOIDAN_SPAWN_EGG);
+                                        itemGroup.add(ItemsManager.VOIDAN_TENTACLE_SPAWN_EGG);
 
                                         itemGroup.add(ItemsManager.UNKNOWN_HOOD);
                                         itemGroup.add(ItemsManager.UNKNOWN_CLOAK);

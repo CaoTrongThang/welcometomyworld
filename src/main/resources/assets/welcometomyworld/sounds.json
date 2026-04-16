@@ -405,5 +405,13 @@
         "attenuation_distance": 128
       }
     ]
+  },
+  "emerge_voidan_tentacle": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:voidan/emerge_voidan_tentacle",
+        "attenuation_distance": 128
+      }
+    ]
   }
 }

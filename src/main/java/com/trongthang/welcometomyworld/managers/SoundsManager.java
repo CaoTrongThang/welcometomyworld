@@ -80,6 +80,8 @@ public class SoundsManager {
     public static final SoundEvent PURPLE_PORTAL_OPEN = registerSoundEvent("purple_portal_open");
     public static final SoundEvent PURPLE_PORTAL_CLOSE = registerSoundEvent("purple_portal_close");
 
+    public static final SoundEvent EMERGE_VOIDAN_TENTACLE = registerSoundEvent("emerge_voidan_tentacle");
+
     private static SoundEvent registerSoundEvent(String name) {
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);
         return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));

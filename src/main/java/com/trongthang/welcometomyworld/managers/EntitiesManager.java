@@ -16,6 +16,7 @@ import com.trongthang.welcometomyworld.entities.PurplePortalEntity;
 import com.trongthang.welcometomyworld.entities.RiftPortalEntity;
 import net.minecraft.entity.EntityDimensions;
 import com.trongthang.welcometomyworld.entities.Voidan.Voidan;
+import com.trongthang.welcometomyworld.entities.Voidan.VoidanTentacle;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -115,6 +116,14 @@ public class EntitiesManager {
                         FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, Voidan::new)
                                         .dimensions(EntityDimensions.changing(5f, 5f)) // Smaller base for
                                                                                        // navigation
+                                        .fireImmune()
+                                        .build());
+
+        public static final EntityType<VoidanTentacle> VOIDAN_TENTACLE = Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier(WelcomeToMyWorld.MOD_ID, "voidan_tentacle"),
+                        FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, VoidanTentacle::new)
+                                        .dimensions(EntityDimensions.fixed(1.0f, 3.0f))
                                         .fireImmune()
                                         .build());
 
@@ -224,6 +233,7 @@ public class EntitiesManager {
 
                 FabricDefaultAttributeRegistry.register(UNKNOWN, Unknown.setAttributes());
                 FabricDefaultAttributeRegistry.register(VOIDAN, Voidan.setAttributes());
+                FabricDefaultAttributeRegistry.register(VOIDAN_TENTACLE, VoidanTentacle.setAttributes());
 
                 FabricDefaultAttributeRegistry.register(FALLING_SKELETON, FallingSkeleton.setAttributes());
 

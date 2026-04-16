@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
+import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.entities.ai.CustomPathNavigateGround;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 
@@ -443,6 +444,66 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 }
                 if (skillTick >= 17 && skillTick <= 52 && skillTick % 10 == 7) {
                     dealAoeDamage(15.0, atk * 1.5f);
+
+                    if (this.getWorld() instanceof ServerWorld sw) {
+                        LivingEntity target = this.getTarget();
+
+                        // Calculate progression 't' from 0.0 to 1.0 (between ticks 17 and 47)
+                        double t = Math.min(1.0, (skillTick - 17.0) / 30.0);
+
+                        // Start a bit mostly in front of Voidan
+                        net.minecraft.util.math.Vec3d startPos = this.getPos()
+                                .add(this.getRotationVector().multiply(2.5));
+                        net.minecraft.util.math.Vec3d endPos;
+
+                        if (target != null && target.isAlive()) {
+                            endPos = target.getPos();
+                        } else {
+                            // If no target, spawn in a circle/spread around the boss itself
+                            double angle = (skillTick - 17.0) * 0.5; // Rotate spawn points
+                            endPos = this.getPos().add(Math.sin(angle) * 10, 0, Math.cos(angle) * 10);
+                        }
+
+                        // Interpolate slowly towards the target/destination
+                        net.minecraft.util.math.Vec3d waveCenter = startPos.lerp(endPos, t);
+
+                        // Determine left and right offsets (perpendicular direction)
+                        double dx = endPos.x - startPos.x;
+                        double dz = endPos.z - startPos.z;
+                        double dist = Math.sqrt(dx * dx + dz * dz);
+
+                        double perpX = 0, perpZ = 0;
+                        if (dist > 0.01) {
+                            perpX = -dz / dist;
+                            perpZ = dx / dist;
+                        }
+
+                        // Random spread between 2 and 4 blocks apart
+                        double spread = 2.0 + (this.random.nextDouble() * 2.0);
+
+                        for (int i = -1; i <= 1; i += 2) {
+                            double randX = (this.random.nextDouble() - 0.5) * 1.5;
+                            double randZ = (this.random.nextDouble() - 0.5) * 1.5;
+
+                            BlockPos spawnPos = BlockPos.ofFloored(
+                                    waveCenter.x + (perpX * spread * i) + randX,
+                                    waveCenter.y,
+                                    waveCenter.z + (perpZ * spread * i) + randZ);
+
+                            // Drop them safely on the surface
+                            BlockPos surfacePos = sw.getTopPosition(
+                                    net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, spawnPos);
+
+                            VoidanTentacle tentacle = new VoidanTentacle(EntitiesManager.VOIDAN_TENTACLE, sw);
+                            tentacle.refreshPositionAndAngles(surfacePos,
+                                    target != null ? target.getYaw() : this.getYaw(), 0.0f);
+                            tentacle.setSummoner(this);
+                            if (target != null) {
+                                tentacle.setTarget(target);
+                            }
+                            sw.spawnEntity(tentacle);
+                        }
+                    }
                 }
                 break;
         }

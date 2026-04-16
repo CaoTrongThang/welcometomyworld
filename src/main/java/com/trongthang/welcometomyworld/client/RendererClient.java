@@ -32,6 +32,7 @@ import com.trongthang.welcometomyworld.entities.client.VoidWorm.PurpleCrystalRen
 import com.trongthang.welcometomyworld.entities.client.PurplePortal.PurplePortalRenderer;
 import com.trongthang.welcometomyworld.entities.client.RiftPortal.RiftPortalRenderer;
 import com.trongthang.welcometomyworld.entities.client.Voidan.VoidanRenderer;
+import com.trongthang.welcometomyworld.entities.client.Voidan.VoidanTentacleRenderer;
 
 import com.trongthang.welcometomyworld.managers.BlocksEntitiesManager;
 import com.trongthang.welcometomyworld.managers.BlocksManager;
@@ -119,6 +120,7 @@ public class RendererClient implements ClientModInitializer {
 
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN, UnknownRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.VOIDAN, VoidanRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.VOIDAN_TENTACLE, VoidanTentacleRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN_BEAM, UnknownBeamRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.SUMMONING_CIRCLE, SummoningCircleRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.GROUND_SLASH_ATTACK, GroundSlashAttackRenderer::new);
