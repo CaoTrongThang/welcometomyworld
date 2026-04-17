@@ -10,18 +10,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 @Mixin(LivingEntity.class)
 public class HostileEntityRegenMixin {
 
     @Unique
-    private HashSet<LivingEntity> enemies = new HashSet<>();
+    private final Map<LivingEntity, Integer> enemies = new HashMap<>();
 
     @Unique
     private int outCombatCounter = 0;
 
-    private int outCombatTime = 600;
+    private final int outCombatTime = 600;
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void tick(CallbackInfo ci) {
@@ -29,25 +31,40 @@ public class HostileEntityRegenMixin {
         if (entity.getWorld().isClient)
             return;
 
+        if (entity.getHealth() <= 0) {
+            return;
+        }
+
         if (this.outCombatTime > 0) {
             this.outCombatCounter--;
         }
 
+        // Cleanup enemies map
+        if (!enemies.isEmpty()) {
+            Iterator<Map.Entry<LivingEntity, Integer>> iterator = enemies.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<LivingEntity, Integer> entry = iterator.next();
+                LivingEntity enemy = entry.getKey();
+                int timer = entry.getValue();
+
+                if (timer <= 0 || !enemy.isAlive() || enemy.isRemoved()) {
+                    iterator.remove();
+                } else {
+                    entry.setValue(timer - 1);
+                }
+            }
+        }
+
         if (enemies.isEmpty())
             return;
+
         if (enemies.size() <= 3)
             return;
-
-        if (outCombatCounter <= 0 && !enemies.isEmpty()) {
-            enemies.clear();
-            return;
-        }
 
         if (entity instanceof HostileEntity) {
             if (entity.getWorld().getTickOrder() % 40 == 0) {
                 applyHealthRegen();
             }
-
         }
     }
 
@@ -58,7 +75,7 @@ public class HostileEntityRegenMixin {
 
         Entity attacker = source.getAttacker();
         if (attacker instanceof LivingEntity livingAttacker && !attacker.getWorld().isClient) {
-            enemies.add(livingAttacker);
+            enemies.put(livingAttacker, outCombatTime);
             this.outCombatCounter = outCombatTime;
         }
     }

@@ -175,9 +175,6 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
         if (source.getAttacker() instanceof LivingEntity attacker && isFriendly(attacker)) {
             return false;
         }
-        if (source.getAttacker() instanceof Voidan || source.getAttacker() instanceof VoidanTentacle) {
-            return false;
-        }
         return super.damage(source, amount);
     }
 
@@ -351,7 +348,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
         this.skillTick = 0;
         this.skillTotalTicks = skill.length;
         this.skillCooldowns[skill.id] = skill.cooldown;
-        this.globalSkillCooldown = (skill.id == EMERGE.id) ? 40 : 20;
+        this.globalSkillCooldown = (skill.id == EMERGE.id) ? 80 : 20;
         this.skillHitFired = false;
     }
 
@@ -505,7 +502,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
                 continue;
             double sqDist = t.squaredDistanceTo(impactX, t.getY(), impactZ);
             if (sqDist <= radius * radius) {
-                Unknown.dealUnknownDamage(this, t, damage);
+                Unknown.dealUnknownDamage(this, t, damage, 0.2f, 0.01f);
             }
         }
 
@@ -557,7 +554,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
         for (LivingEntity t : nearby) {
             if (isFriendly(t))
                 continue;
-            Unknown.dealUnknownDamage(this, t, damage);
+            Unknown.dealUnknownDamage(this, t, damage, 0.2f, 0.01f);
 
             if (applyEffects) {
                 t.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
@@ -576,7 +573,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
     private void shootBeam() {
         LivingEntity target = this.getTarget();
         if (target != null && target.isAlive() && !isFriendly(target) && this.getWorld() instanceof ServerWorld sw) {
-            Unknown.dealUnknownDamage(this, target, 15.0f);
+            Unknown.dealUnknownDamage(this, target, 15.0f, 0.2f, 0.01f);
 
             // Spawn a mini sonic boom particle trail towards the target's location
             net.minecraft.util.math.Vec3d startPos = this.getPos().add(0, 3.0, 0); // mouth height

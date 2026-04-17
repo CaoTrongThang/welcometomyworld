@@ -184,7 +184,6 @@ public abstract class MobEntityGearMixin {
     }
 
     private boolean checkChance(LivingEntity mob, float diffDiv, float dayDiv, float maxChance) {
-        LOGGER.info("Checking chance for mob: {}", getImprovedMobsDifficulty(mob));
         float difficulty = getImprovedMobsDifficulty(mob);
         float chance;
 

@@ -22,6 +22,7 @@ import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -258,7 +259,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 double dist = this.distanceTo(target);
                 Skill picked = null;
 
-                if (dist <= 4.0) {
+                if (dist <= 6.0) {
                     // Close range
                     picked = pickWeightedSkill(
                             new Object[] { HAND_SWING_LEFT_FRONT, 35f, true },
@@ -701,6 +702,16 @@ public class Voidan extends HostileEntity implements GeoEntity {
         }
     }
 
+    @Override
+    protected boolean shouldDropLoot() {
+        return true;
+    }
+
+    @Override
+    protected Identifier getLootTableId() {
+        return new Identifier("welcometomyworld", "entities/voidan");
+    }
+
     private void sendCameraShakeToNearbyPlayers(double radius, float intensity, int ticks) {
         if (this.getWorld().isClient())
             return;
@@ -802,8 +813,9 @@ public class Voidan extends HostileEntity implements GeoEntity {
             LivingEntity target = mob.getTarget();
             if (target != null) {
                 mob.getLookControl().lookAt(target, 30.0F, 30.0F);
-                // Keep some distance to allow skills to trigger properly
-                if (mob.squaredDistanceTo(target) > 2.0 * 2.0) {
+                // Keep some distance to prevent overlapping since Voidan is very large (5x5)
+                // Stop if distance center-to-center is <= 5.0 blocks (roughly 2 blocks gap)
+                if (mob.squaredDistanceTo(target) > 4.0 * 4.0) {
                     mob.getNavigation().startMovingTo(target, speed);
                 } else {
                     mob.getNavigation().stop();

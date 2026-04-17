@@ -125,8 +125,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
     private static final float SLAM_AFTER_JUMP_DAMAGE_MULTIPLIER = 2.5f;;
     private static final float GRAB_SLAM_DAMAGE_MULTIPLIER = 2.5f;
     private static final float KAMEHAMEHA_DAMAGE_MULTIPLIER = 1.5f;
-    private static final float SPEAR_STAB_DAMAGE_MULTIPLIER = 1.5f;
-    private static final float SPEAR_3_HIT_DAMAGE_MULTIPLIER = 1.5f;
+    private static final float SPEAR_STAB_DAMAGE_MULTIPLIER = 2.8f;
+    private static final float SPEAR_3_HIT_DAMAGE_MULTIPLIER = 2f;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private int dashTimer = 0;
@@ -1525,6 +1525,29 @@ public class Unknown extends HostileEntity implements GeoEntity {
         } else if (target instanceof TameableEntity || target instanceof CustomTameableEntity) {
             target.damage(attacker.getDamageSources().mobAttack(attacker),
                     amount + Math.min(target.getMaxHealth() * 0.03f, 500));
+        } else {
+            target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
+        }
+
+    }
+
+    public static void dealUnknownDamage(LivingEntity attacker, LivingEntity target, float amount,
+            float damageMultiplyHostileMobs, float damageMultiplyTamedEntity) {
+        if (target.isBlocking() && target.getActiveItem().getItem() instanceof ShieldItem) {
+            int shieldDamage = (int) (amount * 0.5f);
+            if (shieldDamage > 0) {
+                target.getActiveItem().damage(shieldDamage, target,
+                        (e) -> e.sendToolBreakStatus(target.getActiveHand()));
+            }
+        }
+        // this also deal additional damage if the target health is more than 100, deal
+        // more than 1% of the target health
+        if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
+            target.damage(attacker.getDamageSources().mobAttack(attacker),
+                    amount + Math.min(target.getMaxHealth() * damageMultiplyHostileMobs, 500));
+        } else if (target instanceof TameableEntity || target instanceof CustomTameableEntity) {
+            target.damage(attacker.getDamageSources().mobAttack(attacker),
+                    amount + Math.min(target.getMaxHealth() * damageMultiplyTamedEntity, 500));
         } else {
             target.damage(attacker.getDamageSources().mobAttack(attacker), amount);
         }

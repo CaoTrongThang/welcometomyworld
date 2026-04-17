@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.mixin.entity;
 
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.interfaces.IScaleEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -24,9 +25,18 @@ public abstract class LivingEntityMixin extends Entity implements IScaleEntity {
     @Shadow
     public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
 
+    @Shadow
+    public abstract void setHealth(float health);
+
+    @Shadow
+    public abstract boolean isAlive();
+
     public LivingEntityMixin(net.minecraft.entity.EntityType<?> type, World world) {
         super(type, world);
     }
+
+    @Unique
+    private static final ThreadLocal<Boolean> welcometomyworld$handlingDamage = ThreadLocal.withInitial(() -> false);
 
     @Unique
     private float welcometomyworld$scale = 1.0f;
@@ -41,6 +51,22 @@ public abstract class LivingEntityMixin extends Entity implements IScaleEntity {
     @Unique
     public float getScale() {
         return this.welcometomyworld$scale;
+    }
+
+    @Inject(method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
+    private void onDamageHeadRecursionGuard(net.minecraft.entity.damage.DamageSource source, float amount,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (welcometomyworld$handlingDamage.get()) {
+            cir.setReturnValue(false);
+        } else {
+            welcometomyworld$handlingDamage.set(true);
+        }
+    }
+
+    @Inject(method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z", at = @At("RETURN"))
+    private void onDamageReturnRecursionGuard(net.minecraft.entity.damage.DamageSource source, float amount,
+            CallbackInfoReturnable<Boolean> cir) {
+        welcometomyworld$handlingDamage.set(false);
     }
 
     private static boolean welcometomyworld$handling = false;
@@ -105,6 +131,27 @@ public abstract class LivingEntityMixin extends Entity implements IScaleEntity {
             welcometomyworld$scale += 0.01f;
             if (welcometomyworld$scale > 1.0f)
                 welcometomyworld$scale = 1.0f;
+        }
+
+        // Guard against NaN health or "stuck alive" state (health <= 0 but not dead).
+        // These states cause immortality because the entity never processes death
+        // correctly.
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!self.getWorld().isClient()) {
+            boolean isNaN = Float.isNaN(self.getHealth());
+            boolean isStuckAlive = self.getHealth() <= 0 && self.isAlive();
+
+            if (isNaN || isStuckAlive) {
+                boolean debugLog = com.trongthang.welcometomyworld.ConfigLoader.getInstance().oneShotDebugLog;
+                if (debugLog) {
+                    String reason = isNaN ? "NaN health" : "stuck alive with 0 health";
+                    WelcomeToMyWorld.LOGGER.error("[NaNHealthGuard] " + self.getType()
+                            + " UUID=" + self.getUuidAsString() + " has " + reason
+                            + " — killing it to prevent immortality.");
+                }
+                setHealth(0.0f);
+                self.kill();
+            }
         }
     }
 }

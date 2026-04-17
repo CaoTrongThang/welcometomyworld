@@ -413,5 +413,13 @@
         "attenuation_distance": 128
       }
     ]
+  },
+  "voidan_horn": {
+    "sounds": [
+      {
+        "name": "welcometomyworld:voidan/voidan_horn",
+        "attenuation_distance": 128
+      }
+    ]
   }
 }

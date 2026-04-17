@@ -107,6 +107,10 @@ public class ItemsManager {
                         new CaptureCageItem(new FabricItemSettings().rarity(Rarity.RARE)),
                         "capture_cage");
 
+        public static final Item VOIDAN_HORN = registerItem(
+                        new VoidanHornItem(new FabricItemSettings().rarity(Rarity.EPIC).maxCount(1)),
+                        "voidan_horn");
+
         public static Enchantment silenceEnchantment = new SilenceEnchantment();
 
         public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
@@ -199,6 +203,7 @@ public class ItemsManager {
                                         itemGroup.add(ItemsManager.VOID_WORM_BONE_BOOTS);
 
                                         itemGroup.add(ItemsManager.CAPTURE_CAGE);
+                                        itemGroup.add(ItemsManager.VOIDAN_HORN);
 
                                         itemGroup.add(FluidsManager.DEATH_WATER_BUCKET);
 
