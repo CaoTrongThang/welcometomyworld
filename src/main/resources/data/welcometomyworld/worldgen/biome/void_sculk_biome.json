@@ -3,16 +3,10 @@
     "temperature": 0.5,
     "downfall": 0.0,
     "effects": {
-        "fog_color": 0,
+        "fog_color": 147536,
         "water_color": 1713216,
         "water_fog_color": 32901,
         "sky_color": 0,
-        "ambient_particle": {
-            "options": {
-                "type": "minecraft:sculk_charge_pop"
-            },
-            "probability": 0.005
-        },
         "ambient_mood_settings": {
             "sound": "minecraft:ambient.cave",
             "tick_delay": 6000,
@@ -22,12 +16,6 @@
     },
     "spawners": {
         "monster": [
-            {
-                "type": "minecraft:warden",
-                "weight": 1,
-                "minCount": 1,
-                "maxCount": 1
-            },
             {
                 "type": "deeperdarker:sculk_centipede",
                 "weight": 5,

@@ -1,0 +1,14 @@
+{
+    "structures": [
+        {
+            "structure": "welcometomyworld:voidan_arena",
+            "weight": 1
+        }
+    ],
+    "placement": {
+        "type": "minecraft:random_spread",
+        "spacing": 64,
+        "separation": 32,
+        "salt": 105829374
+    }
+}

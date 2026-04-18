@@ -436,10 +436,10 @@ public class Voidan extends HostileEntity implements GeoEntity {
                     if (this.getWorld() instanceof ServerWorld sw) {
                         List<ServerPlayerEntity> players = sw
                                 .getPlayers(p -> p.distanceTo(this) < 30.0);
-                        for (ServerPlayerEntity p : players) {
-                            p.addStatusEffect(new StatusEffectInstance(
-                                    StatusEffects.DARKNESS, 200, 0, false, false));
-                        }
+                        // for (ServerPlayerEntity p : players) {
+                        // p.addStatusEffect(new StatusEffectInstance(
+                        // StatusEffects.DARKNESS, , 0, false, false));
+                        // }
 
                         // Particle effects
                         int particleCount = skillTick * 10;

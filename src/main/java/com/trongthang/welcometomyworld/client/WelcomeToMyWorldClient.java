@@ -80,6 +80,10 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         ScreenClientHandler.register();
         ClientScheduler.init();
 
+        net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry.getInstance().register(
+                com.trongthang.welcometomyworld.managers.ParticlesManager.VOID_DUST_PARTICLE,
+                com.trongthang.welcometomyworld.client.particles.VoidDustParticle.Factory::new);
+
         ClientPlayConnectionEvents.JOIN.register((handler, client, c) -> {
             preRenderChunks(c);
             removeMessagesFirstJoin = true;
@@ -234,6 +238,45 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
 
         com.trongthang.welcometomyworld.client.CameraShakeManager.tick();
         com.trongthang.welcometomyworld.client.HeavenTransitionManager.clientTick();
+        spawnVoidDust(client);
+    }
+
+    private void spawnVoidDust(MinecraftClient client) {
+        if (client.world == null || client.player == null)
+            return;
+
+        String dim = client.world.getRegistryKey().getValue().toString();
+        // Check if player is in the Void dimension
+        if (dim.equals("welcometomyworld:void_dim")) {
+            // Check if player is in the sculk biome specifically
+            boolean inSculkBiome = client.world.getBiome(client.player.getBlockPos())
+                    .matchesId(new net.minecraft.util.Identifier("welcometomyworld", "void_sculk_biome"));
+
+            // Check if player is in the nether biome to exclude it
+            boolean inNetherBiome = client.world.getBiome(client.player.getBlockPos())
+                    .matchesId(new net.minecraft.util.Identifier("welcometomyworld", "void_nether_biome"));
+
+            if (inNetherBiome)
+                return;
+
+            // Spawns 7-12 particles per tick in Sculk Biome, and 1-2 in general Void
+            // dimension
+            int particlesToSpawn = inSculkBiome ? (7 + client.world.random.nextInt(5))
+                    : (1 + client.world.random.nextInt(2));
+
+            for (int i = 0; i < particlesToSpawn; i++) {
+                double x = client.player.getX() + (client.world.random.nextDouble() - 0.5) * 30.0;
+                double y = client.player.getY() + (client.world.random.nextDouble() - 0.5) * 20.0;
+                double z = client.player.getZ() + (client.world.random.nextDouble() - 0.5) * 30.0;
+
+                BlockPos particlePos = BlockPos.ofFloored(x, y, z);
+                if (client.world.getBlockState(particlePos).isAir()) {
+                    client.world.addParticle(
+                            com.trongthang.welcometomyworld.managers.ParticlesManager.VOID_DUST_PARTICLE,
+                            x, y, z, 0, 0, 0);
+                }
+            }
+        }
     }
 
     private boolean lastScreenTerain = false;

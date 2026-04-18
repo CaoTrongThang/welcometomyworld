@@ -3,6 +3,8 @@ package com.trongthang.welcometomyworld.worldgen.structure;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.FallenKnight.FallenKnight;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
+import com.trongthang.welcometomyworld.managers.StructuresManager;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.NbtCompound;
@@ -21,12 +23,12 @@ import net.minecraft.world.ServerWorldAccess;
 
 public class FallenKnightCastlePiece extends SimpleStructurePiece {
     public FallenKnightCastlePiece(StructureTemplateManager manager, Identifier templateId, BlockPos pos) {
-        super(ModStructures.FALLEN_KNIGHT_CASTLE_PIECE, 0, manager, templateId, templateId.toString(),
+        super(StructuresManager.FALLEN_KNIGHT_CASTLE_PIECE, 0, manager, templateId, templateId.toString(),
                 createPlacementData(), pos);
     }
 
     public FallenKnightCastlePiece(StructureContext context, NbtCompound nbt) {
-        super(ModStructures.FALLEN_KNIGHT_CASTLE_PIECE, nbt, context.structureTemplateManager(),
+        super(StructuresManager.FALLEN_KNIGHT_CASTLE_PIECE, nbt, context.structureTemplateManager(),
                 (id) -> createPlacementData());
     }
 

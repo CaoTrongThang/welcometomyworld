@@ -47,8 +47,9 @@ public class LightmapMixin {
 
         boolean useCurve = cachedCurvePower > 1.001f || cachedCurvePower < 0.999f;
         float bloodAlpha = BloodMoonClient.overlayAlpha;
+        boolean isVoid = currentDim.toString().equals("welcometomyworld:void_dim");
 
-        if (!useCurve && bloodAlpha <= 0f) {
+        if (!useCurve && bloodAlpha <= 0f && !isVoid) {
             return;
         }
 
@@ -56,26 +57,9 @@ public class LightmapMixin {
         // We want pitch black at night (skyBrightness=0) or in caves (s=0),
         // but vanilla-like shadows during the day (skyBrightness=1, s=high).
         float skyBrightness = client.world.getDimension().hasSkyLight() ? client.world.getSkyBrightness(1.0f) : 0.0f;
-        int[][] powerTables = null;
 
         // Lessen the effect of the lightmap curve during the day
         float effectiveCurve = MathHelper.lerp(skyBrightness, cachedCurvePower, 1.15f);
-
-        if (useCurve) {
-            powerTables = new int[16][256];
-            for (int s = 0; s < 16; s++) {
-                // powerFactor 1.0 means sun is hitting this spot directly during the day.
-                // powerFactor 0.0 means it's pitch black (night or deep cave).
-                float powerFactor = (s / 15.0f) * skyBrightness;
-                float currentPower = MathHelper.lerp(powerFactor, effectiveCurve, 1.0f);
-
-                for (int i = 0; i < 256; i++) {
-                    float f = i / 255.0f;
-                    f = (float) Math.pow(f, currentPower);
-                    powerTables[s][i] = Math.min(255, Math.max(0, (int) (f * 255.0f)));
-                }
-            }
-        }
 
         for (int b = 0; b < 16; b++) {
             for (int s = 0; s < 16; s++) {
@@ -86,21 +70,53 @@ public class LightmapMixin {
                 int green = (color >> 8) & 0xFF;
                 int red = color & 0xFF;
 
-                if (useCurve && !(b == 15 && s == 15)) {
-                    int[] table = powerTables[s];
-                    red = table[red];
-                    green = table[green];
-                    blue = table[blue];
-                }
+                if (!(b == 15 && s == 15)) {
+                    // Combine both sky light and block light for the power factor
+                    float sPower = (s / 15.0f) * skyBrightness;
+                    float bPower = (b / 15.0f);
+                    float powerFactor = Math.max(sPower, bPower);
 
-                // Fix blue tint in Void dimension by desaturating dark colors
-                if (currentDim.toString().equals("welcometomyworld:void_dim") && !(b == 15 && s == 15)) {
-                    // If it's dark (low block light), force it to be more grayscale
-                    // This prevents the "blue" ambient light from vanilla/dimension effects
-                    if (b < 8) {
-                        int min = Math.min(red, Math.min(green, blue));
-                        // Shift towards the minimum value to kill the tint and darken it further
-                        red = green = blue = min;
+                    if (useCurve) {
+                        float currentPower = MathHelper.lerp(powerFactor, effectiveCurve, 1.0f);
+
+                        float luminance = (0.2126f * red + 0.7152f * green + 0.0722f * blue) / 255.0f;
+                        if (currentPower != 1.0f && luminance > 0.001f) {
+                            float newLuminance = (float) Math.pow(luminance, currentPower);
+
+                            // Scale all channels equally to preserve original hue/saturation
+                            float scale = newLuminance / luminance;
+                            red = Math.min(255, Math.max(0, (int) (red * scale)));
+                            green = Math.min(255, Math.max(0, (int) (green * scale)));
+                            blue = Math.min(255, Math.max(0, (int) (blue * scale)));
+                        }
+                    }
+
+                    // Handle Ambient Blue Tint and Force True Darkness:
+                    // Vanilla Minecraft adds an ambient minimum brightness (often bluish) even at
+                    // light level 0.
+                    // When powerFactor is very low, we fade out that ambient light to get pure
+                    // pitch black.
+                    if (isVoid || useCurve) {
+                        float crushEnd = isVoid ? 0.3f : 0.15f;
+
+                        if (powerFactor < crushEnd) {
+                            float lightRatio = powerFactor / crushEnd; // 0 at pure dark, 1 at edge of dark
+
+                            // 1. Remove the blue tint by desaturating towards the minimum channel value
+                            int minChannel = Math.min(red, Math.min(green, blue));
+
+                            // Blend towards grayscale (minChannel) as it gets darker
+                            float desatFactor = 1.0f - lightRatio; // 1.0 at pure dark, 0.0 at edge
+                            red = (int) MathHelper.lerp(desatFactor, (float) red, (float) minChannel);
+                            green = (int) MathHelper.lerp(desatFactor, (float) green, (float) minChannel);
+                            blue = (int) MathHelper.lerp(desatFactor, (float) blue, (float) minChannel);
+
+                            // 2. Crush brightness towards 0 for a true pitch-black darkness
+                            float brightnessCrush = (float) Math.pow(lightRatio, isVoid ? 1.5f : 1.25f);
+                            red = (int) (red * brightnessCrush);
+                            green = (int) (green * brightnessCrush);
+                            blue = (int) (blue * brightnessCrush);
+                        }
                     }
                 }
 

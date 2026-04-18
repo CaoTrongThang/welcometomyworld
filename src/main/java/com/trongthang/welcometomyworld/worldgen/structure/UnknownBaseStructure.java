@@ -1,6 +1,8 @@
 package com.trongthang.welcometomyworld.worldgen.structure;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
+import com.trongthang.welcometomyworld.managers.StructuresManager;
+
 import net.minecraft.structure.StructurePiecesCollector;
 import net.minecraft.structure.StructureTemplate;
 import net.minecraft.structure.StructureTemplateManager;
@@ -49,6 +51,6 @@ public class UnknownBaseStructure extends Structure {
 
     @Override
     public StructureType<?> getType() {
-        return ModStructures.UNKNOWN_BASE;
+        return StructuresManager.UNKNOWN_BASE;
     }
 }

@@ -16,14 +16,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.ServerWorldAccess;
 
-public class NetherMediumOutpostPiece extends SimpleStructurePiece {
-    public NetherMediumOutpostPiece(StructureTemplateManager manager, Identifier templateId, BlockPos pos) {
-        super(StructuresManager.NETHER_MEDIUM_OUTPOST_PIECE, 0, manager, templateId, templateId.toString(),
+public class VoidanArenaPiece extends SimpleStructurePiece {
+    public VoidanArenaPiece(StructureTemplateManager manager, Identifier templateId, BlockPos pos) {
+        super(StructuresManager.VOIDAN_ARENA_PIECE, 0, manager, templateId, templateId.toString(),
                 createPlacementData(), pos);
     }
 
-    public NetherMediumOutpostPiece(StructureContext context, NbtCompound nbt) {
-        super(StructuresManager.NETHER_MEDIUM_OUTPOST_PIECE, nbt, context.structureTemplateManager(),
+    public VoidanArenaPiece(StructureContext context, NbtCompound nbt) {
+        super(StructuresManager.VOIDAN_ARENA_PIECE, nbt, context.structureTemplateManager(),
                 (id) -> createPlacementData());
     }
 
@@ -31,12 +31,17 @@ public class NetherMediumOutpostPiece extends SimpleStructurePiece {
         return new StructurePlacementData()
                 .setRotation(BlockRotation.NONE)
                 .setMirror(BlockMirror.NONE)
-                .addProcessor(NetherMediumOutpostChestProcessor.INSTANCE)
                 .addProcessor(BlockIgnoreStructureProcessor.IGNORE_STRUCTURE_BLOCKS);
     }
 
     @Override
-    protected void handleMetadata(String metadata, BlockPos pos, ServerWorldAccess world,
-            Random random, BlockBox boundingBox) {
+    protected void writeNbt(StructureContext context, NbtCompound nbt) {
+        super.writeNbt(context, nbt);
+    }
+
+    @Override
+    protected void handleMetadata(String metadata, BlockPos pos, ServerWorldAccess world, Random random,
+            BlockBox boundingBox) {
+        // No custom handling needed since the arena only places blocks directly.
     }
 }

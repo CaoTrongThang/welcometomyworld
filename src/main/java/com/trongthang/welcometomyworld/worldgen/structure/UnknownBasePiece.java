@@ -3,6 +3,8 @@ package com.trongthang.welcometomyworld.worldgen.structure;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
+import com.trongthang.welcometomyworld.managers.StructuresManager;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.NbtCompound;
@@ -21,12 +23,12 @@ import net.minecraft.world.ServerWorldAccess;
 
 public class UnknownBasePiece extends SimpleStructurePiece {
     public UnknownBasePiece(StructureTemplateManager manager, Identifier templateId, BlockPos pos) {
-        super(ModStructures.UNKNOWN_BASE_PIECE, 0, manager, templateId, templateId.toString(),
+        super(StructuresManager.UNKNOWN_BASE_PIECE, 0, manager, templateId, templateId.toString(),
                 createPlacementData(), pos);
     }
 
     public UnknownBasePiece(StructureContext context, NbtCompound nbt) {
-        super(ModStructures.UNKNOWN_BASE_PIECE, nbt, context.structureTemplateManager(),
+        super(StructuresManager.UNKNOWN_BASE_PIECE, nbt, context.structureTemplateManager(),
                 (id) -> createPlacementData());
     }
 

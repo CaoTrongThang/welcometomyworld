@@ -4,6 +4,7 @@ import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.managers.StructuresManager;
 
 import net.minecraft.structure.StructurePiecesCollector;
+import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -15,11 +16,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import java.util.Optional;
 
-public class NetherMediumOutpostStructure extends Structure {
-    public static final Codec<NetherMediumOutpostStructure> CODEC = RecordCodecBuilder.create(instance -> instance
-            .group(Structure.configCodecBuilder(instance)).apply(instance, NetherMediumOutpostStructure::new));
+public class VoidanArenaStructure extends Structure {
+    public static final Codec<VoidanArenaStructure> CODEC = RecordCodecBuilder.create(instance -> instance
+            .group(Structure.configCodecBuilder(instance)).apply(instance, VoidanArenaStructure::new));
 
-    public NetherMediumOutpostStructure(Structure.Config config) {
+    public VoidanArenaStructure(Structure.Config config) {
         super(config);
     }
 
@@ -29,25 +30,17 @@ public class NetherMediumOutpostStructure extends Structure {
         int cx = chunkPos.getStartX() + 8;
         int cz = chunkPos.getStartZ() + 8;
 
-        // Target middle to top (100-150 is the ceiling range in void_dim)
-        // We'll search from the top down and try to find a surface above Y = 50 first.
         int y = context.chunkGenerator().getHeight(cx, cz, Heightmap.Type.WORLD_SURFACE_WG, context.world(),
                 context.noiseConfig());
 
-        // If the surface found is too low (likely the floor), we try to force a check
-        // for the ceiling
-        // if it exists but was somehow missed, or just keep it if that's the only
-        // option.
-        // However, the user specifically wants it higher.
-        // Let's ensure we are at a "high" surface if possible.
-
-        BlockPos centerPos = new BlockPos(cx, y, cz);
-
-        // If Y is too low, we might want to skip spawning this specific instance to
-        // keep it "high"
-        if (y < 50) {
+        // Skip if the surface is near the void floor — means no real terrain was found.
+        // Lower threshold than NetherMediumOutpost (50) since Void Sculk terrain sits
+        // lower.
+        if (y < 10) {
             return Optional.empty();
         }
+
+        BlockPos centerPos = new BlockPos(cx, y, cz);
 
         return Optional.of(new StructurePosition(centerPos, collector -> {
             addPieces(collector, context, centerPos);
@@ -55,12 +48,14 @@ public class NetherMediumOutpostStructure extends Structure {
     }
 
     private void addPieces(StructurePiecesCollector collector, Structure.Context context, BlockPos centerPos) {
-        Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, "nether_medium_outpost");
-        collector.addPiece(new NetherMediumOutpostPiece(context.structureTemplateManager(), id, centerPos));
+        StructureTemplateManager templateManager = context.structureTemplateManager();
+        Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, "voidan_arena");
+
+        collector.addPiece(new VoidanArenaPiece(templateManager, id, centerPos));
     }
 
     @Override
     public StructureType<?> getType() {
-        return StructuresManager.NETHER_MEDIUM_OUTPOST;
+        return StructuresManager.VOIDAN_ARENA;
     }
 }

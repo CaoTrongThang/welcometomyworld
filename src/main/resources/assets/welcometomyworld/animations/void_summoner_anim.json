@@ -138,10 +138,10 @@
 						},
 						"1.5": {
 							"pre": {
-								"vector": [0, 0, 0]
+								"vector": [162.5, 0, 0]
 							},
 							"post": {
-								"vector": [0, 0, 0]
+								"vector": [162.5, 0, 0]
 							},
 							"lerp_mode": "catmullrom"
 						}
@@ -165,7 +165,10 @@
 				"top_jaw": {
 					"rotation": {
 						"0.0": {
-							"vector": [0, 0, 0]
+							"post": {
+								"vector": [162.5, 0, 0]
+							},
+							"lerp_mode": "catmullrom"
 						},
 						"0.25": {
 							"vector": [170, 0, 0]

@@ -229,6 +229,7 @@ public class ItemsManager {
                                         itemGroup.add(BlocksManager.GLOWING_WHITE_GRASS);
 
                                         itemGroup.add(BlocksManager.VOID_BLOCK);
+                                        itemGroup.add(BlocksManager.VOIDAN_SUMMONER);
                                 });
         }
 }

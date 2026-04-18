@@ -1,6 +1,8 @@
 package com.trongthang.welcometomyworld.worldgen.structure;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
+import com.trongthang.welcometomyworld.managers.StructuresManager;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.structure.StructurePlacementData;
@@ -39,6 +41,6 @@ public class FallenKnightChestProcessor extends StructureProcessor {
 
     @Override
     protected StructureProcessorType<?> getType() {
-        return ModStructures.FALLEN_KNIGHT_CHEST_PROCESSOR;
+        return StructuresManager.FALLEN_KNIGHT_CHEST_PROCESSOR;
     }
 }

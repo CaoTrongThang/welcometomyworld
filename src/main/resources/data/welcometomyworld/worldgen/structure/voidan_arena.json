@@ -1,0 +1,7 @@
+{
+    "type": "welcometomyworld:voidan_arena",
+    "biomes": "welcometomyworld:void_sculk_biome",
+    "step": "surface_structures",
+    "spawn_overrides": {},
+    "terrain_adaptation": "beard_thin"
+}
