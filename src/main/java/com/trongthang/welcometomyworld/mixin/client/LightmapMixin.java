@@ -61,6 +61,15 @@ public class LightmapMixin {
         // Lessen the effect of the lightmap curve during the day
         float effectiveCurve = MathHelper.lerp(skyBrightness, cachedCurvePower, 1.15f);
 
+        float nightVisionFactor = 0.0f;
+        if (client.player != null
+                && client.player.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.NIGHT_VISION)) {
+            int duration = client.player.getStatusEffect(net.minecraft.entity.effect.StatusEffects.NIGHT_VISION)
+                    .getDuration();
+            nightVisionFactor = duration > 200 ? 1.0f
+                    : 0.7f + MathHelper.sin(((float) duration - delta) * 3.1415927f * 0.2f) * 0.3f;
+        }
+
         for (int b = 0; b < 16; b++) {
             for (int s = 0; s < 16; s++) {
                 int color = this.image.getColor(b, s);
@@ -78,6 +87,7 @@ public class LightmapMixin {
 
                     if (useCurve) {
                         float currentPower = MathHelper.lerp(powerFactor, effectiveCurve, 1.0f);
+                        currentPower = MathHelper.lerp(nightVisionFactor, currentPower, 1.0f);
 
                         float luminance = (0.2126f * red + 0.7152f * green + 0.0722f * blue) / 255.0f;
                         if (currentPower != 1.0f && luminance > 0.001f) {
@@ -98,9 +108,10 @@ public class LightmapMixin {
                     // pitch black.
                     if (isVoid || useCurve) {
                         float crushEnd = isVoid ? 0.3f : 0.15f;
+                        float effectivePowerFactor = Math.max(powerFactor, nightVisionFactor);
 
-                        if (powerFactor < crushEnd) {
-                            float lightRatio = powerFactor / crushEnd; // 0 at pure dark, 1 at edge of dark
+                        if (effectivePowerFactor < crushEnd) {
+                            float lightRatio = effectivePowerFactor / crushEnd; // 0 at pure dark, 1 at edge of dark
 
                             // 1. Remove the blue tint by desaturating towards the minimum channel value
                             int minChannel = Math.min(red, Math.min(green, blue));

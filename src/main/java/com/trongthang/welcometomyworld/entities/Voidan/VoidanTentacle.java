@@ -21,6 +21,8 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
@@ -502,7 +504,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
                 continue;
             double sqDist = t.squaredDistanceTo(impactX, t.getY(), impactZ);
             if (sqDist <= radius * radius) {
-                Unknown.dealUnknownDamage(this, t, damage, 0.2f, 0.01f);
+                Unknown.dealUnknownDamage(this, t, damage, 0.002f, 0.01f);
             }
         }
 
@@ -554,7 +556,7 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
         for (LivingEntity t : nearby) {
             if (isFriendly(t))
                 continue;
-            Unknown.dealUnknownDamage(this, t, damage, 0.2f, 0.01f);
+            Unknown.dealUnknownDamage(this, t, damage, 0.002f, 0.01f);
 
             if (applyEffects) {
                 t.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
@@ -573,17 +575,17 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
     private void shootBeam() {
         LivingEntity target = this.getTarget();
         if (target != null && target.isAlive() && !isFriendly(target) && this.getWorld() instanceof ServerWorld sw) {
-            Unknown.dealUnknownDamage(this, target, 15.0f, 0.2f, 0.01f);
+            Unknown.dealUnknownDamage(this, target, 15.0f, 0.002f, 0.01f);
 
             // Spawn a mini sonic boom particle trail towards the target's location
-            net.minecraft.util.math.Vec3d startPos = this.getPos().add(0, 3.0, 0); // mouth height
-            net.minecraft.util.math.Vec3d targetPos = target.getEyePos();
-            net.minecraft.util.math.Vec3d dir = targetPos.subtract(startPos);
-            net.minecraft.util.math.Vec3d dirNormalized = dir.normalize();
+            Vec3d startPos = this.getPos().add(0, 3.0, 0); // mouth height
+            Vec3d targetPos = target.getEyePos();
+            Vec3d dir = targetPos.subtract(startPos);
+            Vec3d dirNormalized = dir.normalize();
 
-            int distance = net.minecraft.util.math.MathHelper.floor(dir.length()) + 2;
+            int distance = MathHelper.floor(dir.length()) + 2;
             for (int i = 1; i < distance; i++) {
-                net.minecraft.util.math.Vec3d pos = startPos.add(dirNormalized.multiply(i));
+                Vec3d pos = startPos.add(dirNormalized.multiply(i));
                 sw.spawnParticles(ParticleTypes.SONIC_BOOM, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
             }
 
