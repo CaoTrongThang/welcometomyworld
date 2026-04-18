@@ -14,7 +14,8 @@
     "client.CameraMixin",
     "client.OctoLibTrailNullGuardMixin",
     "client.OctolibTrailBufferNullMixin",
-    "client.LivingEntityRendererMixin"
+    "client.LivingEntityRendererMixin",
+    "client.MythsOfTheSeaCrashFixMixin"
   ],
   "injectors": {
     "defaultRequire": 1

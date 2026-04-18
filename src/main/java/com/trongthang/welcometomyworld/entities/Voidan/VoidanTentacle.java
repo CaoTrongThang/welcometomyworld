@@ -88,8 +88,8 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 3000.0D) // Quite tanky
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.0D) // No movement
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 2000.0D)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.0D)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 30.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0D)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0D);
