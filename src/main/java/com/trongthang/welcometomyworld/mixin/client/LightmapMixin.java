@@ -58,13 +58,16 @@ public class LightmapMixin {
         float skyBrightness = client.world.getDimension().hasSkyLight() ? client.world.getSkyBrightness(1.0f) : 0.0f;
         int[][] powerTables = null;
 
+        // Lessen the effect of the lightmap curve during the day
+        float effectiveCurve = MathHelper.lerp(skyBrightness, cachedCurvePower, 1.15f);
+
         if (useCurve) {
             powerTables = new int[16][256];
             for (int s = 0; s < 16; s++) {
                 // powerFactor 1.0 means sun is hitting this spot directly during the day.
                 // powerFactor 0.0 means it's pitch black (night or deep cave).
                 float powerFactor = (s / 15.0f) * skyBrightness;
-                float currentPower = MathHelper.lerp(powerFactor, cachedCurvePower, 1.0f);
+                float currentPower = MathHelper.lerp(powerFactor, effectiveCurve, 1.0f);
 
                 for (int i = 0; i < 256; i++) {
                     float f = i / 255.0f;

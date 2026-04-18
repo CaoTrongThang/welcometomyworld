@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=north": {
+            "model": "welcometomyworld:block/voidan_summoner"
+        },
+        "facing=east": {
+            "model": "welcometomyworld:block/voidan_summoner",
+            "y": 90
+        },
+        "facing=south": {
+            "model": "welcometomyworld:block/voidan_summoner",
+            "y": 180
+        },
+        "facing=west": {
+            "model": "welcometomyworld:block/voidan_summoner",
+            "y": 270
+        }
+    }
+}

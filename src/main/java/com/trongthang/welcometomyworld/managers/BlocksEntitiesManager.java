@@ -42,6 +42,15 @@ public class BlocksEntitiesManager {
                                                                         BlocksManager.PURPLE_PORTAL_ACTIVATOR)
                                                         .build(null));
 
+        public static final BlockEntityType<com.trongthang.welcometomyworld.blockentities.VoidanSummonerBlockEntity> VOIDAN_SUMMONER_BLOCK_ENTITY = Registry
+                        .register(
+                                        Registries.BLOCK_ENTITY_TYPE,
+                                        new Identifier(WelcomeToMyWorld.MOD_ID, "voidan_summoner_block_entity"),
+                                        BlockEntityType.Builder
+                                                        .create(com.trongthang.welcometomyworld.blockentities.VoidanSummonerBlockEntity::new,
+                                                                        BlocksManager.VOIDAN_SUMMONER)
+                                                        .build(null));
+
         public static void initialize() {
                 LOGGER.info("Registering Block Entities...");
         }

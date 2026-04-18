@@ -515,12 +515,29 @@ public class Voidan extends HostileEntity implements GeoEntity {
 
                             BlockPos spawnPos = BlockPos.ofFloored(
                                     waveCenter.x + (perpX * spread * i) + randX,
-                                    waveCenter.y,
+                                    this.getY(),
                                     waveCenter.z + (perpZ * spread * i) + randZ);
 
-                            // Drop them safely on the surface
-                            BlockPos surfacePos = sw.getTopPosition(
-                                    net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, spawnPos);
+                            // Find local surface near Voidan instead of the absolute roof
+                            BlockPos surfacePos = spawnPos;
+                            boolean found = false;
+                            for (int yOffset = 0; yOffset <= 4; yOffset++) {
+                                BlockPos checkUp = spawnPos.up(yOffset);
+                                if (Utils.isSafeSpawn(sw, checkUp)) {
+                                    surfacePos = checkUp;
+                                    found = true;
+                                    break;
+                                }
+                                BlockPos checkDown = spawnPos.down(yOffset);
+                                if (Utils.isSafeSpawn(sw, checkDown)) {
+                                    surfacePos = checkDown;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                surfacePos = spawnPos; // fallback
+                            }
 
                             VoidanTentacle tentacle = new VoidanTentacle(EntitiesManager.VOIDAN_TENTACLE, sw);
                             tentacle.refreshPositionAndAngles(surfacePos,

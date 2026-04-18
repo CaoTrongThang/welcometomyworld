@@ -117,6 +117,12 @@ public class BlocksManager {
                                         .strength(3.0f, 6.0f)
                                         .requiresTool().nonOpaque()));
 
+        public static final Block VOIDAN_SUMMONER = registerBlock("voidan_summoner",
+                        new com.trongthang.welcometomyworld.blocks.VoidanSummonerBlock(
+                                        FabricBlockSettings.copyOf(Blocks.COAL_BLOCK)
+                                                        .strength(3.0f, 6.0f)
+                                                        .requiresTool().nonOpaque()));
+
         private static Block registerAnimatedBlock(String name, Block block) {
                 Registry.register(Registries.ITEM, new Identifier(WelcomeToMyWorld.MOD_ID, name),
                                 new com.trongthang.welcometomyworld.items.PurplePortalActivatorItem(block,

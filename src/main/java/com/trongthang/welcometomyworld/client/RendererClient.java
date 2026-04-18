@@ -136,5 +136,8 @@ public class RendererClient implements ClientModInitializer {
                 BlockEntityRendererFactories.register(BlocksEntitiesManager.VOID_BLOCK_ENTITY, VoidBlockRenderer::new);
                 BlockEntityRendererFactories.register(BlocksEntitiesManager.PURPLE_PORTAL_ACTIVATOR_BLOCK_ENTITY,
                                 PurplePortalActivatorRenderer::new);
+                BlockEntityRendererFactories.register(BlocksEntitiesManager.VOIDAN_SUMMONER_BLOCK_ENTITY,
+                                com.trongthang.welcometomyworld.entities.client.blocks.VoidanSummonerRenderer::new);
+
         }
 }
