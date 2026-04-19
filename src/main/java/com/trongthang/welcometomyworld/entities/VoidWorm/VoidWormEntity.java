@@ -144,7 +144,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    public static final Skill ROAR = new Skill(1, 80, 800);
+    public static final Skill ROAR = new Skill(1, 80, 1200);
     public static final Skill CHARGE_ATTACK = new Skill(2, 60, 250);
     public static final Skill CRYSTAL_BARRAGE = new Skill(3, 300, 2000);
     public static final Skill GRAB_ATTACK = new Skill(4, 200, 3000);
@@ -523,7 +523,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
             if (skillId == 2) { // CHARGE_ATTACK
                 if (target != null && target.isAlive()) {
                     if (isPreparing) {
-                        double targetYHover = target.getY() + 40.0D;
+                        double targetYHover = target.getY() + 30.0D;
                         Vec3d dir = new Vec3d(target.getX() - this.getX(), targetYHover - this.getY(),
                                 target.getZ() - this.getZ());
                         double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
@@ -712,7 +712,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     skillTick++;
 
                     double targetX = target.getX();
-                    double targetY = target.getY() + 40.0D; // Pick destination higher than target
+                    double targetY = target.getY() + 25.0D; // Pick destination higher than target
                     double targetZ = target.getZ();
 
                     if (isPreparing) {
@@ -817,7 +817,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     skillTick++;
 
                     if (isPreparing) {
-                        double targetYHover = target.getY() + 40.0D;
+                        double targetYHover = target.getY() + 25.0D;
                         Vec3d dir = new Vec3d(target.getX() - this.getX(), targetYHover - this.getY(),
                                 target.getZ() - this.getZ());
                         double distXZ = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
@@ -1469,7 +1469,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     // target.
     // Skills are the only way the worm closes in on the player.
     static class BossFlightGoal extends Goal {
-        private static final double ORBIT_RADIUS = 50;
+        private static final double ORBIT_RADIUS = 30;
         private final VoidWormEntity worm;
         Vec3d wanderTarget = null;
 
@@ -1706,7 +1706,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean shouldRender(double distance) {
-        return true; // Always render if we are tracked by the client!
+        return true;
     }
 
     private static String wanderTargetLog(VoidWormEntity worm) {
