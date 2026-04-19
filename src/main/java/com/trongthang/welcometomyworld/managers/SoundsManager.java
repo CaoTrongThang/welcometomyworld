@@ -83,6 +83,8 @@ public class SoundsManager {
     public static final SoundEvent EMERGE_VOIDAN_TENTACLE = registerSoundEvent("emerge_voidan_tentacle");
     public static final SoundEvent VOIDAN_HORN = registerSoundEvent("voidan_horn");
 
+    public static final SoundEvent GIANT_FALL = registerSoundEvent("giant_fall");
+
     private static SoundEvent registerSoundEvent(String name) {
         Identifier id = new Identifier(WelcomeToMyWorld.MOD_ID, name);
         return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));

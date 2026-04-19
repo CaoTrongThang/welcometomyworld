@@ -170,8 +170,8 @@ public class EntitiesManager {
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm"),
                         FabricEntityTypeBuilder.<VoidWormEntity>create(SpawnGroup.MONSTER, VoidWormEntity::new)
-                                        .dimensions(EntityDimensions.fixed(8.0f, 8.0f))
-                                        .trackRangeBlocks(258)
+                                        .dimensions(EntityDimensions.fixed(12.0f, 12.0f))
+                                        .trackRangeBlocks(320)
                                         .trackedUpdateRate(2)
                                         .build());
 
@@ -179,8 +179,8 @@ public class EntitiesManager {
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_body"),
                         FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
-                                        .dimensions(EntityDimensions.fixed(6.0f, 6.0f))
-                                        .trackRangeBlocks(258)
+                                        .dimensions(EntityDimensions.fixed(10.0f, 10.0f))
+                                        .trackRangeBlocks(320)
                                         .trackedUpdateRate(2)
                                         .build());
 
@@ -188,8 +188,8 @@ public class EntitiesManager {
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_tail"),
                         FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
-                                        .dimensions(EntityDimensions.fixed(6.0f, 6.0f))
-                                        .trackRangeBlocks(258)
+                                        .dimensions(EntityDimensions.fixed(10.0f, 10.0f))
+                                        .trackRangeBlocks(320)
                                         .trackedUpdateRate(2)
                                         .build());
 

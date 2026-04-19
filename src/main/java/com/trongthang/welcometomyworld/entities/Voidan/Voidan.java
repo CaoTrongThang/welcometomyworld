@@ -100,6 +100,13 @@ public class Voidan extends HostileEntity implements GeoEntity {
     public static final Skill SONIC_BOOM = new Skill(5, 20, 200);
     public static final Skill EMERGE = new Skill(6, 68, 0);
     public static final Skill ROAR = new Skill(7, 70, 3000);
+    public static final Skill GORE_PREPARE = new Skill(8, 10, 1000);
+    public static final Skill GORE = new Skill(9, 20, 0);
+    public static final Skill GORE_COMPLETE = new Skill(10, 10, 0);
+    public static final Skill GORE_STUN_WHEN_HIT_WALLS = new Skill(11, 120, 0);
+
+    private int goreChargeCount = 0;
+    private int howManyTimeHitWalls = 0;
 
     private boolean hasEmerged = false;
 
@@ -194,6 +201,14 @@ public class Voidan extends HostileEntity implements GeoEntity {
                         return state.setAndContinue(RawAnimation.begin().thenPlay("emerge"));
                     case 7:
                         return state.setAndContinue(RawAnimation.begin().thenPlay("roar"));
+                    case 8:
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("gore_prepare"));
+                    case 9:
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("gore"));
+                    case 10:
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("gore_complete"));
+                    case 11:
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("gore_stun_when_hit_walls"));
                 }
             } else {
                 prevSkillId[0] = 0;
@@ -239,17 +254,20 @@ public class Voidan extends HostileEntity implements GeoEntity {
             skillTick++;
             int skillId = this.dataTracker.get(SKILL_ID);
 
-            // Face the target while using a skill
+            // Face the target while using a skill, except during the active charge phase of
+            // GORE
             LivingEntity target = getTarget();
             if (target != null && target.isAlive()) {
-                this.getLookControl().lookAt(target, 30.0F, 30.0F);
+                if ((skillId != 9 || skillTick < 3) && skillId != 11) {
+                    this.getLookControl().lookAt(target, 30.0F, 30.0F);
 
-                double dx = target.getX() - this.getX();
-                double dz = target.getZ() - this.getZ();
-                float targetYaw = (float) (Math.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
-                this.setYaw(targetYaw);
-                this.bodyYaw = targetYaw;
-                this.headYaw = targetYaw;
+                    double dx = target.getX() - this.getX();
+                    double dz = target.getZ() - this.getZ();
+                    float targetYaw = (float) (Math.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                    this.setYaw(targetYaw);
+                    this.bodyYaw = targetYaw;
+                    this.headYaw = targetYaw;
+                }
             }
 
             // Handle skill effects...
@@ -274,17 +292,20 @@ public class Voidan extends HostileEntity implements GeoEntity {
                             new Object[] { HAND_SWING_LEFT_FRONT, 35f, true },
                             new Object[] { HAND_SWING_RIGHT_FRONT, 35f, true },
                             new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 1000f, true },
+                            new Object[] { GORE_PREPARE, 800f, true },
                             new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 8.0) {
                     // Mid range
                     picked = pickWeightedSkill(
                             new Object[] { SLAM_GROUND, 100f, true },
                             new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 1000f, true },
+                            new Object[] { GORE_PREPARE, 800f, true },
                             new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 15.0) {
                     // Far range
                     picked = pickWeightedSkill(
                             new Object[] { SONIC_BOOM, 100f, true },
+                            new Object[] { GORE_PREPARE, 800f, true },
                             new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 30.0) {
                     // Very Far range
@@ -560,6 +581,137 @@ public class Voidan extends HostileEntity implements GeoEntity {
                     }
                 }
                 break;
+            case 8: // GORE_PREPARE
+                if (skillTick == 0) {
+                    this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                            SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
+                }
+                break;
+            case 9: // GORE
+                if (skillTick >= 3 && skillTick < 18) {
+                    Vec3d forward = this.getRotationVec(1.0F).normalize();
+
+                    // Trailing smoke
+                    if (this.getWorld() instanceof ServerWorld sw) {
+                        sw.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, this.getX(), this.getY() + 1.0,
+                                this.getZ(), 5, 0.4, 0.4, 0.4, 0.02);
+                        sw.spawnParticles(ParticleTypes.LARGE_SMOKE, this.getX() - forward.x, this.getY() + 0.5,
+                                this.getZ() - forward.z, 3, 0.2, 0.2, 0.2, 0.01);
+                    }
+
+                    if (this.horizontalCollision) {
+                        // Hit a wall
+                        if (this.getWorld() instanceof ServerWorld sw) {
+                            BlockPos wallPos = BlockPos.ofFloored(this.getX() + forward.x * 1.5, this.getY() + 1,
+                                    this.getZ() + forward.z * 1.5);
+                            BlockState wallState = sw.getBlockState(wallPos);
+
+                            sw.spawnParticles(ParticleTypes.EXPLOSION, this.getX() + forward.x, this.getY() + 1,
+                                    this.getZ() + forward.z, 2, 0.5, 0.5, 0.5, 0.0);
+
+                            if (!wallState.isAir()) {
+                                for (int i = 0; i < 4; i++) {
+                                    com.trongthang.welcometomyworld.entities.BlockSlamGroundEntity effectEntity = EntitiesManager.BLOCK_SLAM_GROUND
+                                            .create(sw);
+                                    if (effectEntity != null) {
+                                        effectEntity.setBlockState(wallState);
+                                        effectEntity.setPosition(wallPos.getX() + 0.5 - forward.x * 0.5,
+                                                wallPos.getY() + 0.5 + (sw.random.nextDouble() - 0.5),
+                                                wallPos.getZ() + 0.5 - forward.z * 0.5);
+
+                                        // Rotate based on direction
+                                        float yaw = (float) Math.toDegrees(Math.atan2(-forward.x, forward.z)); // Opposite
+                                                                                                               // direction
+                                        effectEntity.setYaw(yaw);
+                                        effectEntity.setPitch(90f + sw.random.nextFloat() * 20 - 10);
+
+                                        // Blast outward from wall
+                                        effectEntity.setVelocity(
+                                                -forward.x * 0.3 + (sw.random.nextDouble() - 0.5) * 0.2,
+                                                0.3 + sw.random.nextDouble() * 0.2,
+                                                -forward.z * 0.3 + (sw.random.nextDouble() - 0.5) * 0.2);
+                                        sw.spawnEntity(effectEntity);
+                                    }
+                                }
+                            }
+                            this.playSound(SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, 1.0F, 1.0F);
+                            sendCameraShakeToNearbyPlayers(15.0, 1.5f, 10);
+                        }
+                        this.setVelocity(0, this.getVelocity().y, 0);
+                        this.velocityModified = true;
+
+                        howManyTimeHitWalls++;
+                        if (howManyTimeHitWalls > 2) { // trigger instantly for testing
+                            howManyTimeHitWalls = 0;
+                            triggerSkill(GORE_STUN_WHEN_HIT_WALLS);
+                            return;
+                        }
+
+                        skillTick = 18; // End the charge
+                    } else {
+                        // Avoid void check
+                        double lookX = this.getX() + forward.x * 2.5;
+                        double lookZ = this.getZ() + forward.z * 2.5;
+                        BlockPos nextPos = BlockPos.ofFloored(lookX, this.getY(), lookZ);
+                        boolean safe = false;
+                        for (int y = -4; y <= 2; y++) {
+                            if (!this.getWorld().getBlockState(nextPos.up(y)).isAir()) {
+                                safe = true;
+                                break;
+                            }
+                        }
+
+                        if (safe) {
+                            // Charge faster! at least 2.5
+                            this.setVelocity(forward.x * 2.5, this.getVelocity().y, forward.z * 2.5);
+                            this.velocityModified = true;
+                        } else {
+                            // stop if edge
+                            this.setVelocity(0, this.getVelocity().y, 0);
+                            this.velocityModified = true;
+                        }
+                    }
+
+                    if (!skillHitFired) {
+                        Box hitBox = this.getBoundingBox().expand(2.0);
+                        List<LivingEntity> targets = this.getWorld().getEntitiesByClass(LivingEntity.class, hitBox,
+                                e -> e != this && e.isAlive());
+                        if (!targets.isEmpty()) {
+                            for (LivingEntity t : targets) {
+                                Unknown.dealUnknownDamage(this, t, atk * 1.5f);
+                                t.takeKnockback(2.0, this.getX() - t.getX(), this.getZ() - t.getZ());
+                            }
+                            this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                    SoundsManager.FALLEN_KNIGHT_GROUND_IMPACT_NO_DELAY, this.getSoundCategory(), 1.0F,
+                                    1.0F);
+                            skillHitFired = true;
+                        }
+                    }
+                } else if (skillTick >= 18) {
+                    this.setVelocity(0, this.getVelocity().y, 0);
+                    this.velocityModified = true;
+                }
+                break;
+            case 10: // GORE_COMPLETE
+                break;
+            case 11: // GORE_STUN_WHEN_HIT_WALLS
+                if (skillTick == 10) {
+                    this.playSound(SoundsManager.GIANT_FALL, 1.0F, 1.0F);
+                    if (this.getWorld() instanceof ServerWorld sw) {
+                        Vec3d backward = this.getRotationVec(1.0F).normalize().multiply(-1.5);
+                        sw.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                                this.getX() + backward.x,
+                                this.getY() + 1.0,
+                                this.getZ() + backward.z,
+                                15, 0.4, 0.4, 0.4, 0.05);
+                        sw.spawnParticles(ParticleTypes.LARGE_SMOKE,
+                                this.getX() + backward.x,
+                                this.getY() + 0.5,
+                                this.getZ() + backward.z,
+                                10, 0.3, 0.3, 0.3, 0.02);
+                    }
+                }
+                break;
         }
     }
 
@@ -585,6 +737,23 @@ public class Voidan extends HostileEntity implements GeoEntity {
                 this.dataTracker.set(IS_USING_SKILL, false);
                 this.dataTracker.set(SKILL_ID, 0);
                 triggerSkill(ROAR);
+                break;
+            case 8: // GORE_PREPARE
+                goreChargeCount = 0;
+                triggerSkill(GORE);
+                break;
+            case 9: // GORE
+                goreChargeCount++;
+                if (goreChargeCount < 5 && this.random.nextDouble() < 0.6) {
+                    triggerSkill(GORE);
+                } else {
+                    triggerSkill(GORE_COMPLETE);
+                }
+                break;
+            case 10: // GORE_COMPLETE
+            case 11: // GORE_STUN_WHEN_HIT_WALLS
+                this.dataTracker.set(IS_USING_SKILL, false);
+                this.dataTracker.set(SKILL_ID, 0);
                 break;
             default:
                 this.dataTracker.set(IS_USING_SKILL, false);
@@ -777,7 +946,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
         this.skillTick = 0;
         this.skillTotalTicks = skill.length;
         this.skillCooldowns[skill.id] = skill.cooldown;
-        this.globalSkillCooldown = 40; // 2 seconds between ANY skills
+        this.globalSkillCooldown = 20; // 1s
         this.skillHitFired = false;
 
         this.getNavigation().stop();

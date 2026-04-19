@@ -262,36 +262,39 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
             target = history.get(history.size() - 1);
         }
 
+        // --- PROXIMITY CLAMP ---
+        // Only clamp when it strays TOO FAR (prevent gaps). Do not enforce min gap to
+        // allow natural curving!
+        if (this.entityInFront != null && this.entityInFront.isAlive()) {
+            Vec3d frontPos = this.entityInFront.getPos();
+            double actualDist = target.distanceTo(frontPos);
+            double maxAllowedGap = this.followDistance * 1.4; // allow gentle slack but no massive gaps
+
+            if (actualDist > maxAllowedGap) {
+                // Determine direction from target TO the entity in front
+                Vec3d dir = frontPos.subtract(target).normalize();
+                if (dir.lengthSquared() < 0.01) {
+                    dir = new Vec3d(0, 1, 0);
+                }
+                // Reposition target to be exactly followDistance away
+                target = frontPos.subtract(dir.multiply(this.followDistance));
+            }
+        }
+
         Vec3d myPos = this.getPos();
 
         // Snap-back: if we're wildly displaced (e.g. chunk was unloaded), teleport
         // instantly
         double distSq = myPos.squaredDistanceTo(target);
-        if (distSq > followDistance * followDistance * 25.0) {
-            this.setPosition(target.x, target.y, target.z);
-            this.velocityModified = true;
-            prevPos = target;
-            return;
-        }
-
-        // Direct proximity clamp: Ensure we never stray too far from the part directly
-        // in front of us
-        if (this.entityInFront != null && this.entityInFront.isAlive()) {
-            double actualDist = target.distanceTo(this.entityInFront.getPos());
-            double maxAllowedGap = followDistance * 1.5;
-            if (actualDist > maxAllowedGap) {
-                // We're too far from the entity in front! Teleport closer.
-                Vec3d dir = this.entityInFront.getPos().subtract(target).normalize();
-                if (dir.lengthSquared() < 0.01) {
-                    dir = new Vec3d(0, 1, 0);
-                }
-                target = this.entityInFront.getPos().subtract(dir.multiply(followDistance));
-            }
-        }
 
         // Snap directly to the trail point — no lerp, no gap
         this.setPosition(target.x, target.y, target.z);
         this.velocityModified = true;
+
+        if (distSq > followDistance * followDistance * 25.0) {
+            prevPos = target;
+            return;
+        }
 
         // Derive rotation from actual movement this tick
         if (prevPos != null) {
@@ -377,6 +380,19 @@ public class VoidWormPartEntity extends HostileEntity implements GeoEntity {
     @Override
     public boolean isPushable() {
         return false;
+    }
+
+    @Override
+    public boolean isCollidable() {
+        return true;
+    }
+
+    @Override
+    public boolean collidesWith(Entity other) {
+        if (other instanceof VoidWormPartEntity || other instanceof VoidWormEntity) {
+            return false;
+        }
+        return true;
     }
 
     @Override

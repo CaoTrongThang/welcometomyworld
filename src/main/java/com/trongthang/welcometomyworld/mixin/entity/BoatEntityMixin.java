@@ -13,7 +13,9 @@ public abstract class BoatEntityMixin {
         if (type != null) {
             return type;
         } else {
-            WelcomeToMyWorld.LOGGER.info("Player's placing a NULL variant boat, set the boat back to OAK BOAT");
+            WelcomeToMyWorld.LOGGER.error("==================WELCOMETOMYWORLD, FIXING CRASH=========================");
+            WelcomeToMyWorld.LOGGER.error("Player's placing a NULL variant boat, set the boat back to OAK BOAT");
+            WelcomeToMyWorld.LOGGER.error("======================================================");
             return BoatEntity.Type.OAK;
         }
     }

@@ -69,6 +69,8 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private int autoRegenHealth = 50;
     private int autoRegenCooldown = 100;
 
+    private boolean wasUnderground = false;
+
     public List<Vec3d> getPosHistory() {
         if (historyDirty || posHistorySnapshot == null) {
             posHistorySnapshot = List.copyOf(posHistoryDeque);
@@ -103,7 +105,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    private static final float PART_DISTANCE = 8f;
+    private static final float PART_DISTANCE = 12f;
 
     // Custom visual pitch to bypass vanilla LookControl pitch resetting
     public float visualPitch = 0.0f;
@@ -413,11 +415,30 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                 skillsHandler();
             }
 
+            int surfaceY = serverWorld.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                    (int) this.getX(), (int) this.getZ());
+            boolean isUnderground = this.getY() < surfaceY;
+
+            if (isUnderground != this.wasUnderground) {
+                // Transitioned between underground and above ground
+                if (this.getVelocity().lengthSquared() > 0.05) {
+                    serverWorld.spawnParticles(net.minecraft.particle.ParticleTypes.LARGE_SMOKE,
+                            this.getX(), surfaceY, this.getZ(),
+                            300, 4.0, 1.0, 4.0, 0.1);
+                    serverWorld.spawnParticles(net.minecraft.particle.ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                            this.getX(), surfaceY, this.getZ(),
+                            200, 3.0, 1.0, 3.0, 0.1);
+                    serverWorld.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION,
+                            this.getX(), surfaceY, this.getZ(),
+                            5, 2.0, 1.0, 2.0, 0.0);
+                }
+            }
+
+            this.wasUnderground = isUnderground;
+
             // Trigger rumble when diving underground and moving fast
             if (this.age % 10 == 0) {
-                int surfaceY = serverWorld.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
-                        (int) this.getX(), (int) this.getZ());
-                if (this.getY() < surfaceY && this.getVelocity().lengthSquared() > 0.05) {
+                if (isUnderground && this.getVelocity().lengthSquared() > 0.05) {
                     sendCameraShakeToNearbyPlayers(40.0, 0.5f, 20);
                 }
             }
@@ -936,7 +957,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     double targetY = target.getY() + altitudeOffset;
                     double targetZ = target.getZ();
 
-                    double radius = 10.0;
+                    double radius = 16.0;
 
                     if (isPreparing) {
                         // Phase 1: Fly to a point on the orbit circle
@@ -1176,6 +1197,11 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
+    @Override
+    public boolean isCollidable() {
+        return true;
+    }
+
     private void dealAoeDamage(double radius, float amount) {
         net.minecraft.util.math.Box box = this.getBoundingBox().expand(radius);
         List<LivingEntity> entities = this.getWorld().getEntitiesByClass(LivingEntity.class, box, entity -> {
@@ -1194,8 +1220,10 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public boolean collidesWith(Entity other) {
+        if (other instanceof VoidWormPartEntity || other == this) {
+            return false;
+        }
 
-        super.collidesWith(other);
         // if in the grab skill, return false
         if (this.isUsingSkill() && this.getSkillId() == 4) { // Changed from 5 to 4 (GRAB_ATTACK)
             Unknown.dealUnknownDamage(this, (LivingEntity) other,

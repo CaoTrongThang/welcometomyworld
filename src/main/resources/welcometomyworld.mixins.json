@@ -50,7 +50,9 @@
 		"world.VoidSpawnRestrictionMixin",
 		"entity.LivingEntityMixin",
 		"entity.WitherSkullNoGriefMixin",
-		"misc.RocksMixinRemoveFromMyDimension"
+		"misc.RocksMixinRemoveFromMyDimension",
+		"world.ChunkSerializerMixin",
+		"world.PalettedContainerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
