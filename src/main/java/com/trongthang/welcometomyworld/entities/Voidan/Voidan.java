@@ -292,14 +292,14 @@ public class Voidan extends HostileEntity implements GeoEntity {
                             new Object[] { HAND_SWING_LEFT_FRONT, 35f, true },
                             new Object[] { HAND_SWING_RIGHT_FRONT, 35f, true },
                             new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 1000f, true },
-                            new Object[] { GORE_PREPARE, 800f, true },
+                            new Object[] { GORE_PREPARE, 800f, this.getHealth() < this.getMaxHealth() * 0.8f },
                             new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 8.0) {
                     // Mid range
                     picked = pickWeightedSkill(
                             new Object[] { SLAM_GROUND, 100f, true },
                             new Object[] { HAND_SWING_180_FRONT_THEN_SLAM_GROUND, 1000f, true },
-                            new Object[] { GORE_PREPARE, 800f, true },
+                            new Object[] { GORE_PREPARE, 800f, this.getHealth() < this.getMaxHealth() * 0.8f },
                             new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 15.0) {
                     // Far range

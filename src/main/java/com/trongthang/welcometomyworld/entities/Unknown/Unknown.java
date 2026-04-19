@@ -105,6 +105,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
     public static final Skill UNKNOWN_SPEAR_STAB = new Skill(23, 35, 120);
     public static final Skill UNKNOWN_SPEAR_3_HITS = new Skill(24, 70, 160);
     public static final Skill TOSS_ITEM = new Skill(25, 25, 200);
+    public static final Skill TAUNT = new Skill(26, 40, 1200); // 60s cooldown, cosmetic only
 
     private static final int PUNCH_HIT_TICK = 20;
     private static final int LEG_TRIP_HIT_TICK = 8;
@@ -299,7 +300,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
         return null;
     }
 
-    private int tauntCooldown = 0;
     private ItemStack stolenItemCandidate = ItemStack.EMPTY;
 
     public Unknown(EntityType<? extends HostileEntity> entityType, World world) {
@@ -420,6 +420,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_spear_3_hits"));
                     case 25: // TOSS_ITEM
                         return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_take_and_toss_item"));
+                    case 26: // TAUNT
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_taunt"));
                 }
             }
             prevSkillId[0] = 0;
@@ -533,6 +535,7 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     Skill picked = pickWeightedSkill(
                             new Object[] { JUMP_HIGH, 30f, true },
                             new Object[] { PUNCH, 20f, true },
+                            new Object[] { TAUNT, 20f, dist > 30.0 },
                             new Object[] { KAMEHAMEHA, 30f, healthFraction() <= 0.6f });
                     if (picked != null)
                         triggerSkill(picked);
@@ -541,29 +544,14 @@ public class Unknown extends HostileEntity implements GeoEntity {
                 } else {
                     Skill picked = pickWeightedSkill(
                             new Object[] { UNKNOWN_SUMMONING_CIRCLE, 50f, healthFraction() <= 0.4f },
-                            new Object[] { JUMP_HIGH, 50f, true });
+                            new Object[] { JUMP_HIGH, 50f, true },
+                            new Object[] { TAUNT, 30f, true });
                     if (picked != null)
                         triggerSkill(picked);
                 }
             }
         }
 
-        // // --- Taunt logic ---
-        // if (globalSkillCooldown > 0 && tauntCooldown <= 0 && !isUsingSkill()) {
-        // tauntCooldown = 200;
-        // LivingEntity tauntTarget = this.getTarget();
-        // if (tauntTarget != null && tauntTarget.isAlive()) {
-        // double distSq = this.squaredDistanceTo(tauntTarget);
-        // if (distSq > 10.0 * 10.0) {
-        // this.dataTracker.set(IS_TAUNTING, true);
-        // this.getLookControl().lookAt(tauntTarget, 30.0F, 30.0F);
-        // } else {
-        // this.dataTracker.set(IS_TAUNTING, false);
-        // }
-        // } else {
-        // this.dataTracker.set(IS_TAUNTING, false);
-        // }
-        // }
     }
 
     /** Called by UnknownDodgeGoal on the server. */
@@ -1293,6 +1281,8 @@ public class Unknown extends HostileEntity implements GeoEntity {
                     }
                 }
                 break;
+            case 26: // TAUNT — cosmetic only, no effects
+                break;
         }
     }
 
@@ -1494,14 +1484,6 @@ public class Unknown extends HostileEntity implements GeoEntity {
             dashTimer--;
             if (dashTimer == 0)
                 this.dataTracker.set(DASH_DIR, 0);
-        }
-
-        if (tauntCooldown > 0) {
-            tauntCooldown--;
-            if (tauntCooldown == 100) { // 100 ticks (5 seconds total elapsed since start) to allow it to fully finish
-                                        // and blend
-                this.dataTracker.set(IS_TAUNTING, false);
-            }
         }
 
         if (!this.getWorld().isClient()) {

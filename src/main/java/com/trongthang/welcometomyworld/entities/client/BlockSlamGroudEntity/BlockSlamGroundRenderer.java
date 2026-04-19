@@ -1,22 +1,15 @@
 package com.trongthang.welcometomyworld.entities.client.BlockSlamGroudEntity;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.entities.BlockSlamGroundEntity;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.block.BlockRenderManager;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.random.Random;
-
-import java.util.HashMap;
 
 public class BlockSlamGroundRenderer extends EntityRenderer<BlockSlamGroundEntity> {
 
@@ -42,8 +35,14 @@ public class BlockSlamGroundRenderer extends EntityRenderer<BlockSlamGroundEntit
         // (half-buried)
         matrices.translate(-0.5, -0.5, -0.5);
 
+        // When sinking into ground, getBlockPos() ends up inside a solid block
+        // (light=0).
+        // Sample from above as well and take the brighter of the two.
+        int blockLight = Math.max(
+                WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getBlockPos()),
+                WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getBlockPos().up()));
         MinecraftClient.getInstance().getBlockRenderManager().renderBlockAsEntity(state, matrices, vertexConsumers,
-                15728640, OverlayTexture.DEFAULT_UV);
+                blockLight, OverlayTexture.DEFAULT_UV);
 
         matrices.pop();
     }

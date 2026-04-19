@@ -421,13 +421,5 @@
         "attenuation_distance": 128
       }
     ]
-  },
-  "giant_fall": {
-    "sounds": [
-      {
-        "name": "welcometomyworld:giant_fall",
-        "attenuation_distance": 128
-      }
-    ]
   }
 }
