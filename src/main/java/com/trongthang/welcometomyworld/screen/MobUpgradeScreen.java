@@ -4,244 +4,295 @@ import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.tameablePacket.TameableEntityInterface;
 import com.trongthang.welcometomyworld.classes.tameablePacket.UpdateMobStatPacket;
 import io.netty.buffer.Unpooled;
+import io.wispforest.owo.ui.base.BaseOwoScreen;
+import io.wispforest.owo.ui.component.ButtonComponent;
+import io.wispforest.owo.ui.component.Components;
+import io.wispforest.owo.ui.component.LabelComponent;
+import io.wispforest.owo.ui.container.Containers;
+import io.wispforest.owo.ui.container.FlowLayout;
+import io.wispforest.owo.ui.core.Color;
+import io.wispforest.owo.ui.core.HorizontalAlignment;
+import io.wispforest.owo.ui.core.Insets;
+import io.wispforest.owo.ui.core.Sizing;
+import io.wispforest.owo.ui.core.Surface;
+import io.wispforest.owo.ui.core.VerticalAlignment;
+import io.wispforest.owo.ui.core.OwoUIAdapter;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
+import org.jetbrains.annotations.NotNull;
 
-public class MobUpgradeScreen extends Screen {
+public class MobUpgradeScreen extends BaseOwoScreen<FlowLayout> {
     public final TameableEntity tameableEntity;
     private final TameableEntityInterface entityInterface;
-    private float rotationAngle = 0; // Current rotation angle of the mob
+    private float rotationAngle = 0;
 
-    private int statsBoxWidth = 220; // Width of the stats box
-    private int statsBoxHeight = 140; // Height of the stats box
+    private LabelComponent pointsLabel;
 
-    private int buttonsOffset = -25;
+    private LabelComponent damageLabel;
+    private LabelComponent damageLevelLabel;
+    private ButtonComponent damageBtn;
+
+    private LabelComponent healthLabel;
+    private LabelComponent healthLevelLabel;
+    private ButtonComponent healthBtn;
+
+    private LabelComponent defenseLabel;
+    private LabelComponent defenseLevelLabel;
+    private ButtonComponent defenseBtn;
+
+    private LabelComponent speedLabel;
+    private LabelComponent speedLevelLabel;
+    private ButtonComponent speedBtn;
+
+    private LabelComponent xpLabel;
+    private FlowLayout xpBarFill;
+
+    // Discord-style Dark Theme colors
+    private static final int DISCORD_BG = 0xFF2B2D31; // Dark gray background
+    private static final int DISCORD_BORDER = 0xFF1E1F22; // Darker border
+    private static final int DISCORD_TEXT = 0xFFFFFFFF; // White text
+    private static final int DISCORD_LEVEL_TEXT = 0xFFFEE75C; // Yellowish for levels
 
     public MobUpgradeScreen(TameableEntity tameableEntity) {
-        super(Text.of("Mob Upgrade Screen"));
+        super(Text.of("Let's Upgrade Your Companion!"));
         this.tameableEntity = tameableEntity;
         this.entityInterface = (TameableEntityInterface) tameableEntity;
     }
 
     @Override
-    protected void init() {
-        super.init();
-
-        // Calculate the box dimensions
-        int boxX = this.width / 2 + 40; // Stats box on the right side
-        int boxY = this.height / 2 - statsBoxHeight / 2;
-
-        int buttonSpacing = 25; // Space between buttons and stats
-
-        // Add buttons inside the box
-        addButton("+", "damage", 1, boxX + buttonsOffset, boxY + 20);
-        addButton("+", "health", 1, boxX + buttonsOffset, boxY + 20 + buttonSpacing);
-        addButton("+", "defense", 1, boxX + buttonsOffset, boxY + 20 + 2 * buttonSpacing);
-        addButton("+", "speed", 1, boxX + buttonsOffset, boxY + 20 + 3 * buttonSpacing);
-
-
+    protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
+        return OwoUIAdapter.create(this, Containers::verticalFlow);
     }
 
-    private void addButton(String symbol, String statName, int amount, int x, int y) {
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.of(symbol),
-                        button -> {
-                            // Send the packet to the server
-                            UpdateMobStatPacket packet = new UpdateMobStatPacket(tameableEntity.getId(), statName, amount);
-                            ClientPlayNetworking.send(WelcomeToMyWorld.UPDATE_MOB_STAT, packet.encode(new PacketByteBuf(Unpooled.buffer())));
-                        })
-                .position(x, y) // Position inside the box
-                .size(20, 20) // Smaller square buttons
-                .build());
+    @Override
+    protected void build(FlowLayout rootComponent) {
+        rootComponent
+                .surface(Surface.VANILLA_TRANSLUCENT)
+                .horizontalAlignment(HorizontalAlignment.CENTER)
+                .verticalAlignment(VerticalAlignment.CENTER);
+
+        // A thick outer box to hold everything
+        FlowLayout outerBox = Containers.horizontalFlow(Sizing.content(), Sizing.content());
+        outerBox.surface(Surface.flat(DISCORD_BG).and(Surface.outline(DISCORD_BORDER)))
+                .padding(Insets.of(5))
+                .verticalAlignment(VerticalAlignment.CENTER);
+
+        // Header Title (We can put it on top of the outerbox)
+        rootComponent.child(
+                Components.label(tameableEntity.getName())
+                        .shadow(true)
+                        .margins(Insets.bottom(15)));
+
+        // Left Panel - Mob Preview area
+        FlowLayout leftPanel = Containers.verticalFlow(Sizing.fixed(160), Sizing.fixed(200));
+        leftPanel.surface(Surface.flat(DISCORD_BG).and(Surface.outline(DISCORD_BORDER)))
+                .horizontalAlignment(HorizontalAlignment.CENTER)
+                .verticalAlignment(VerticalAlignment.BOTTOM)
+                .margins(Insets.right(5));
+
+        pointsLabel = Components.label(Text.literal("Points: 0")).color(Color.ofRgb(DISCORD_TEXT)).shadow(true);
+
+        // XP Bar directly under the mob in the left panel according to sketch
+        FlowLayout xpBarContainer = Containers.verticalFlow(Sizing.content(), Sizing.content());
+        xpBarContainer.horizontalAlignment(HorizontalAlignment.CENTER).margins(Insets.vertical(10));
+
+        xpLabel = Components.label(Text.literal("0 / 0")).color(Color.ofRgb(DISCORD_TEXT)).shadow(true);
+        xpBarContainer.child(xpLabel.margins(Insets.bottom(2)));
+
+        FlowLayout xpBarBackground = Containers.horizontalFlow(Sizing.fixed(140), Sizing.fixed(10));
+        // Add padding of 1 so the fill respects the outline border!
+        xpBarBackground.surface(Surface.flat(0xFF111111).and(Surface.outline(DISCORD_BORDER)))
+                .padding(Insets.of(1));
+
+        xpBarFill = Containers.horizontalFlow(Sizing.fixed(0), Sizing.fill(100));
+        xpBarFill.surface(Surface.flat(0xFF2ECC71)); // Discord green
+
+        xpBarBackground.child(xpBarFill);
+        xpBarContainer.child(xpBarBackground);
+
+        leftPanel.child(pointsLabel.margins(Insets.bottom(5)));
+        leftPanel.child(xpBarContainer);
+
+        // Right Panel - Stats Box
+        FlowLayout rightPanel = Containers.verticalFlow(Sizing.fixed(220), Sizing.fixed(200));
+        rightPanel.surface(Surface.flat(DISCORD_BG).and(Surface.outline(DISCORD_BORDER)))
+                .padding(Insets.of(15))
+                .verticalAlignment(VerticalAlignment.CENTER);
+
+        // Damage Row (Attack)
+        damageLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_TEXT)).shadow(true);
+        damageLevelLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_LEVEL_TEXT)).shadow(true);
+        damageBtn = Components.button(Text.literal("+"), button -> {
+            UpdateMobStatPacket packet = new UpdateMobStatPacket(tameableEntity.getId(), "damage", 1);
+            ClientPlayNetworking.send(WelcomeToMyWorld.UPDATE_MOB_STAT,
+                    packet.encode(new PacketByteBuf(Unpooled.buffer())));
+        });
+        rightPanel.child(createStatRow("attack", damageLabel, damageLevelLabel, damageBtn));
+
+        // Health Row
+        healthLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_TEXT)).shadow(true);
+        healthLevelLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_LEVEL_TEXT)).shadow(true);
+        healthBtn = Components.button(Text.literal("+"), button -> {
+            UpdateMobStatPacket packet = new UpdateMobStatPacket(tameableEntity.getId(), "health", 1);
+            ClientPlayNetworking.send(WelcomeToMyWorld.UPDATE_MOB_STAT,
+                    packet.encode(new PacketByteBuf(Unpooled.buffer())));
+        });
+        rightPanel.child(createStatRow("health", healthLabel, healthLevelLabel, healthBtn));
+
+        // Defense Row
+        defenseLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_TEXT)).shadow(true);
+        defenseLevelLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_LEVEL_TEXT)).shadow(true);
+        defenseBtn = Components.button(Text.literal("+"), button -> {
+            UpdateMobStatPacket packet = new UpdateMobStatPacket(tameableEntity.getId(), "defense", 1);
+            ClientPlayNetworking.send(WelcomeToMyWorld.UPDATE_MOB_STAT,
+                    packet.encode(new PacketByteBuf(Unpooled.buffer())));
+        });
+        rightPanel.child(createStatRow("defense", defenseLabel, defenseLevelLabel, defenseBtn));
+
+        // Speed Row
+        speedLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_TEXT)).shadow(true);
+        speedLevelLabel = Components.label(Text.literal("")).color(Color.ofRgb(DISCORD_LEVEL_TEXT)).shadow(true);
+        speedBtn = Components.button(Text.literal("+"), button -> {
+            UpdateMobStatPacket packet = new UpdateMobStatPacket(tameableEntity.getId(), "speed", 1);
+            ClientPlayNetworking.send(WelcomeToMyWorld.UPDATE_MOB_STAT,
+                    packet.encode(new PacketByteBuf(Unpooled.buffer())));
+        });
+        rightPanel.child(createStatRow("speed", speedLabel, speedLevelLabel, speedBtn));
+
+        outerBox.child(leftPanel);
+        outerBox.child(rightPanel);
+        rootComponent.child(outerBox);
+
+        updateDynamicUI(); // Initialize values
+    }
+
+    private FlowLayout createStatRow(String iconName, LabelComponent nameLabel, LabelComponent levelLabel,
+            ButtonComponent btn) {
+        FlowLayout row = Containers.horizontalFlow(Sizing.fill(100), Sizing.content());
+        row.verticalAlignment(VerticalAlignment.CENTER);
+        row.margins(Insets.bottom(15)); // spacing between rows
+
+        // Icon Box (Placeholder for the PNGs)
+        FlowLayout iconWrapper = Containers.horizontalFlow(Sizing.fixed(24), Sizing.fixed(24));
+        iconWrapper.surface(Surface.flat(DISCORD_BG).and(Surface.outline(DISCORD_BORDER)));
+
+        Identifier iconId = new Identifier(WelcomeToMyWorld.MOD_ID, "textures/gui/" + iconName + ".png");
+        // Using texture component. Note: user needs to put raw 16x16 PNGs there!
+        iconWrapper.child(Components.texture(iconId, 0, 0, 16, 16, 16, 16).sizing(Sizing.fixed(16), Sizing.fixed(16))
+                .margins(Insets.of(4)));
+
+        // Fixed sizing to prevent overflowing layout and clipping the button
+        FlowLayout labelContainer = Containers.horizontalFlow(Sizing.fixed(125), Sizing.content());
+        labelContainer.margins(Insets.left(10));
+        labelContainer.child(nameLabel.margins(Insets.right(5)));
+        labelContainer.child(levelLabel);
+
+        row.child(iconWrapper);
+        row.child(labelContainer);
+
+        btn.sizing(Sizing.fixed(24), Sizing.fixed(24)); // Squarish button like bedrock
+        row.child(btn);
+
+        return row;
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Clear the screen with a background color
-        this.renderBackground(context);
+        updateDynamicUI();
+        super.render(context, mouseX, mouseY, delta);
 
-        rotationAngle += delta * 2; // Rotate 45 degrees per second
+        rotationAngle += delta * 2;
         if (rotationAngle >= 360) {
-            rotationAngle -= 360; // Reset angle to avoid overflow
+            rotationAngle -= 360;
         }
 
-        // Draw the mob model on the left
         drawMobModel(context);
+    }
 
-        // Draw the mob name and available points at the top center
-        drawTitleAndPoints(context);
+    private void updateDynamicUI() {
+        if (pointsLabel == null)
+            return; // Before build is fully complete
 
-        // Draw the stats box on the right
-        drawStatsBox(context);
+        int points = entityInterface.getPointAvailalble();
+        pointsLabel.text(Text.literal("Points: " + points));
 
-        // Draw experience and current level at the bottom center
-        drawExperienceBar(context);
+        // Highlight green if points available, otherwise dark text
+        if (points > 0) {
+            pointsLabel.color(Color.ofRgb(0x2ECC71)); // Discord green
+        } else {
+            pointsLabel.color(Color.ofRgb(DISCORD_TEXT));
+        }
 
-        // Call the super method to render other elements (like buttons)
-        super.render(context, mouseX, mouseY, delta);
+        boolean hasPoints = points > 0;
+        damageBtn.active = hasPoints;
+        healthBtn.active = hasPoints;
+        defenseBtn.active = hasPoints;
+        speedBtn.active = hasPoints;
+
+        String damageValue = String.format("%.1f",
+                tameableEntity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
+        damageLabel.text(Text.literal("Damage [" + damageValue + "]:"));
+        damageLevelLabel.text(Text.literal("Lv" + entityInterface.getDamageLevel()));
+
+        String healthValue = String.format("%.1f",
+                tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH));
+        healthLabel.text(Text.literal("Health [" + healthValue + "]:"));
+        healthLevelLabel.text(Text.literal("Lv" + entityInterface.getHealthLevel()));
+
+        String defenseValue = String.format("%.1f",
+                tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR));
+        defenseLabel.text(Text.literal("Defense [" + defenseValue + "]:"));
+        defenseLevelLabel.text(Text.literal("Lv" + entityInterface.getDefenseLevel()));
+
+        String speedValue = String.format("%.2f",
+                tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
+        speedLabel.text(Text.literal("Speed [" + speedValue + "]:"));
+        speedLevelLabel.text(Text.literal("Lv" + entityInterface.getSpeedLevel()));
+
+        float currentExp = entityInterface.getCurrentLevelExp();
+        float requiredExp = entityInterface.getNextLevelRequireExp();
+        float fillPercentage = MathHelper.clamp(currentExp / requiredExp, 0, 1);
+
+        xpLabel.text(Text.literal((int) currentExp + " / " + (int) requiredExp));
+
+        // Use 138 scaled width because we added padding 1 to the background 140 pixel
+        // container
+        xpBarFill.sizing(Sizing.fixed((int) (138 * fillPercentage)), Sizing.fill(100));
     }
 
     private void drawMobModel(DrawContext context) {
-        // Get the entity renderer for the mob
         EntityRenderDispatcher dispatcher = this.client.getEntityRenderDispatcher();
-
-        // Get the mob's dimensions (size)
         float mobWidth = tameableEntity.getDimensions(tameableEntity.getPose()).width;
         float mobHeight = tameableEntity.getDimensions(tameableEntity.getPose()).height;
 
-        // Define maximum dimensions for the mob on the screen
-        float maxWidth = 80; // Max width in pixels
-        float maxHeight = 120; // Max height in pixels
-
-        // Calculate the scaling factor to fit within the max dimensions
+        float maxWidth = 80;
+        float maxHeight = 100;
         float scaleX = maxWidth / mobWidth;
         float scaleY = maxHeight / mobHeight;
-        float scale = Math.min(scaleX, scaleY); // Use the smaller scale to maintain aspect ratio
+        float scale = Math.min(scaleX, scaleY);
+        scale = MathHelper.clamp(scale, 20, 40);
 
-        // Clamp the scale to ensure the mob isn't too small or too big
-        scale = MathHelper.clamp(scale, 20, 40); // Minimum scale: 5, Maximum scale: 15
+        int modelX = this.width / 2 - 110;
+        int modelY = this.height / 2 + 30; // Just slightly above points/xp
 
-        // Calculate the position of the mob model relative to the stats box
-        int statsBoxX = this.width / 2 + 40; // X position of the stats box
-        int statsBoxY = this.height / 2 - statsBoxHeight / 2; // Y position of the stats box
-
-        // Position the model horizontally based on its scaled width
-        int modelX = statsBoxX - (int) (mobWidth * scale + 100); // Add padding based on scaled width
-
-        // Position the model vertically based on its scaled height
-        int modelY = statsBoxY + statsBoxHeight / 2 + (int) (mobHeight * scale / 2); // Center the model vertically
-
-        // Push the matrix stack to isolate transformations
         MatrixStack matrices = context.getMatrices();
         matrices.push();
-
-        // Translate the model to the desired position
-        matrices.translate(modelX, modelY, 100); // Move the model to the desired position
-
-        // Scale the model (maintain aspect ratio)
+        matrices.translate(modelX, modelY, 100);
         matrices.scale(scale, scale, scale);
-
-        // Rotate the model to face the camera
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180)); // Rotate horizontally to face the camera
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180)); // Flip the model vertically if needed
-
-        // Apply continuous rotation around the Y-axis
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
+        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotationAngle));
 
-        // Render the mob model
         dispatcher.render(tameableEntity, 0, 0, 0, 0, 1, matrices, context.getVertexConsumers(), 15728880);
-
-        // Pop the matrix stack to restore the original state
         matrices.pop();
-    }
-
-    private void drawTitleAndPoints(DrawContext context) {
-        // Get the mob's name and available points
-        String title = tameableEntity.getName().getString();
-        int points = entityInterface.getPointAvailalble();
-        String pointsLabel = " - Points: "; // Label for the points
-        String pointsValue = String.valueOf(points); // The actual number of points
-
-        // Calculate the position of the title and points
-        int titleWidth = this.textRenderer.getWidth(title);
-        int pointsLabelWidth = this.textRenderer.getWidth(pointsLabel);
-        int pointsValueWidth = this.textRenderer.getWidth(pointsValue);
-
-        // Total width of the combined text
-        int totalWidth = titleWidth + pointsLabelWidth + pointsValueWidth;
-
-        // Center the entire text horizontally
-        int titleX = this.width / 2 - totalWidth / 2; // Start X for the title
-        int titleY = this.height / 2 - statsBoxHeight / 2 - 40; // Above the stats box
-
-        // Draw the mob's name in white
-        context.drawTextWithShadow(this.textRenderer, title, titleX, titleY, 0xFFFFFF);
-
-        // Draw the " - Points: " label in white
-        int pointsLabelX = titleX + titleWidth; // Start X for the points label
-        context.drawTextWithShadow(this.textRenderer, pointsLabel, pointsLabelX, titleY, 0xFFFFFF);
-
-        // Determine the color for the points value
-        int pointsColor = points > 0 ? 0xFF00FF00 : 0xFFFFFF; // Green if > 0, white otherwise
-
-        // Draw the points value in the determined color
-        int pointsValueX = pointsLabelX + pointsLabelWidth; // Start X for the points value
-        context.drawTextWithShadow(this.textRenderer, pointsValue, pointsValueX, titleY, pointsColor);
-    }
-
-    private void drawStatsBox(DrawContext context) {
-        int boxX = this.width / 2; // Stats box on the right side
-        int boxY = this.height / 2 - statsBoxHeight / 2;
-
-        // Draw the background box
-        context.fill(boxX, boxY, boxX + statsBoxWidth, boxY + statsBoxHeight, 0xFF222222); // Dark gray background
-        context.drawBorder(boxX, boxY, statsBoxWidth, statsBoxHeight, 0xFFFFFFFF); // White border
-
-        // Format the attribute values to one decimal place
-
-
-        String damageValue = String.format("%.1f", tameableEntity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
-        String healthValue = String.format("%.1f", tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH));
-        String defenseValue = String.format("%.1f", tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR));
-        String speedValue = String.format("%.2f", tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
-
-        // Draw stats inside the box
-        drawStatInBox(context, "Damage Level [" + damageValue + "]: ", entityInterface.getDamageLevel(), boxX + 40, boxY + 25);
-        drawStatInBox(context, "Health Level [" + healthValue + "]: ", entityInterface.getHealthLevel(), boxX + 40, boxY + 50);
-        drawStatInBox(context, "Defense Level [" + defenseValue + "]: ", entityInterface.getDefenseLevel(), boxX + 40, boxY + 75);
-        drawStatInBox(context, "Speed Level [" + speedValue + "]: ", entityInterface.getSpeedLevel(), boxX + 40, boxY + 100);
-    }
-
-    private void drawStatInBox(DrawContext context, String label, Object value, int x, int y) {
-        int labelColor = 0xFFFFFFFF; // Light gray for labels
-        int valueColor = 0xFFFFD700; // Gold for values
-
-        // Draw the label
-        context.drawTextWithShadow(this.textRenderer, label, x, y, labelColor);
-
-        // Draw the value
-        String valueString = value.toString();
-        int valueWidth = this.textRenderer.getWidth(valueString);
-        context.drawTextWithShadow(this.textRenderer, valueString, x + this.textRenderer.getWidth(label), y, valueColor);
-    }
-
-    private void drawExperienceBar(DrawContext context) {
-        // Calculate the position of the experience bar
-        int barX = this.width / 2 - 100; // Center the bar horizontally
-        int barY = this.height / 2 + statsBoxHeight / 2 + 40; // Below the stats box
-        int barWidth = 200; // Total width of the bar
-        int barHeight = 10; // Height of the bar
-
-        // Get the current and required experience
-        float currentExp = entityInterface.getCurrentLevelExp();
-        float requiredExp = entityInterface.getNextLevelRequireExp();
-
-        // Calculate the fill percentage (clamp between 0 and 1)
-        float fillPercentage = MathHelper.clamp(currentExp / requiredExp, 0, 1);
-
-        // Draw the background of the bar (dark gray)
-        context.fill(barX, barY, barX + barWidth, barY + barHeight, 0xFF222222); // Dark gray background
-
-        // Draw the filled portion of the bar (green)
-        int fillWidth = (int) (barWidth * fillPercentage); // Width of the filled portion
-        context.fill(barX, barY, barX + fillWidth, barY + barHeight, 0xFF00FF00); // Green fill
-
-        // Draw the experience text on top of the bar
-        String expText = (int) currentExp + " / " + (int) requiredExp;
-        int textWidth = this.textRenderer.getWidth(expText);
-        int textX = barX + (barWidth - textWidth) / 2; // Center the text horizontally
-        int textY = barY - 12; // Position the text above the bar
-
-        context.drawTextWithShadow(this.textRenderer, expText, textX, textY, 0xFFFFFF); // White text
     }
 }

@@ -100,7 +100,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
     public static final Skill SONIC_BOOM = new Skill(5, 20, 200);
     public static final Skill EMERGE = new Skill(6, 68, 0);
     public static final Skill ROAR = new Skill(7, 70, 3000);
-    public static final Skill GORE_PREPARE = new Skill(8, 10, 1000);
+    public static final Skill GORE_PREPARE = new Skill(8, 10, 1200);
     public static final Skill GORE = new Skill(9, 20, 0);
     public static final Skill GORE_COMPLETE = new Skill(10, 10, 0);
     public static final Skill GORE_STUN_WHEN_HIT_WALLS = new Skill(11, 120, 0);
@@ -305,7 +305,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
                     // Far range
                     picked = pickWeightedSkill(
                             new Object[] { SONIC_BOOM, 100f, true },
-                            new Object[] { GORE_PREPARE, 800f, true },
+                            new Object[] { GORE_PREPARE, 800f, this.getHealth() < this.getMaxHealth() * 0.8f },
                             new Object[] { ROAR, 1000f, true });
                 } else if (dist <= 30.0) {
                     // Very Far range
@@ -641,7 +641,7 @@ public class Voidan extends HostileEntity implements GeoEntity {
                         this.velocityModified = true;
 
                         howManyTimeHitWalls++;
-                        if (howManyTimeHitWalls > 2) { // trigger instantly for testing
+                        if (howManyTimeHitWalls > 0) { // trigger instantly for testing
                             howManyTimeHitWalls = 0;
                             triggerSkill(GORE_STUN_WHEN_HIT_WALLS);
                             return;
