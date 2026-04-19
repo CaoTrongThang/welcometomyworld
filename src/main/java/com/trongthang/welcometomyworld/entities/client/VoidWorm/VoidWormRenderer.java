@@ -22,7 +22,7 @@ public class VoidWormRenderer extends GeoEntityRenderer<VoidWormEntity> {
 
         public VoidWormRenderer(EntityRendererFactory.Context renderManager) {
                 super(renderManager, new VoidWormModel());
-                this.withScale(5.0f, 5.0f);
+                this.withScale(3.5f, 3.5f);
 
                 this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
         }

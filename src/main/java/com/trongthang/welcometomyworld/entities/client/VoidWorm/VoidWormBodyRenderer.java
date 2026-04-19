@@ -22,7 +22,7 @@ public class VoidWormBodyRenderer extends GeoEntityRenderer<VoidWormPartEntity> 
 
         public VoidWormBodyRenderer(EntityRendererFactory.Context renderManager) {
                 super(renderManager, new VoidWormBodyModel());
-                this.withScale(3.0f, 3.0f);
+                this.withScale(2.0f, 2.0f);
         }
 
         @Override

@@ -23,7 +23,7 @@ public class VoidWormTailRenderer extends GeoEntityRenderer<VoidWormPartEntity> 
 
         public VoidWormTailRenderer(EntityRendererFactory.Context renderManager) {
                 super(renderManager, new VoidWormTailModel());
-                this.withScale(4f, 4f);
+                this.withScale(3f, 3f);
                 this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
         }
 

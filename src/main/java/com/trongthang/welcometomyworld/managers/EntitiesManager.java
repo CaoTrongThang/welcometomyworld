@@ -171,7 +171,7 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm"),
                         FabricEntityTypeBuilder.<VoidWormEntity>create(SpawnGroup.MONSTER, VoidWormEntity::new)
                                         .dimensions(EntityDimensions.fixed(12.0f, 12.0f))
-                                        .trackRangeBlocks(320)
+                                        .trackRangeBlocks(256)
                                         .trackedUpdateRate(2)
                                         .build());
 
@@ -180,7 +180,7 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_body"),
                         FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
                                         .dimensions(EntityDimensions.fixed(10.0f, 10.0f))
-                                        .trackRangeBlocks(320)
+                                        .trackRangeBlocks(256)
                                         .trackedUpdateRate(2)
                                         .build());
 
@@ -189,7 +189,7 @@ public class EntitiesManager {
                         new Identifier(WelcomeToMyWorld.MOD_ID, "void_worm_tail"),
                         FabricEntityTypeBuilder.<VoidWormPartEntity>create(SpawnGroup.MONSTER, VoidWormPartEntity::new)
                                         .dimensions(EntityDimensions.fixed(10.0f, 10.0f))
-                                        .trackRangeBlocks(320)
+                                        .trackRangeBlocks(256)
                                         .trackedUpdateRate(2)
                                         .build());
 

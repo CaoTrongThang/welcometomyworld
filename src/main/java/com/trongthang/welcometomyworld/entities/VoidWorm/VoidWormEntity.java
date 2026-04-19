@@ -105,7 +105,7 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         }
     }
 
-    private static final float PART_DISTANCE = 12f;
+    private static final float PART_DISTANCE = 8f;
 
     // Custom visual pitch to bypass vanilla LookControl pitch resetting
     public float visualPitch = 0.0f;
