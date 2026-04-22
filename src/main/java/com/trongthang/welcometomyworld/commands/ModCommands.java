@@ -21,7 +21,8 @@ public class ModCommands {
                                                 false);
                                 return 1;
                             }))
-                    .then(BloodMoonCommand.build()));
+                    .then(BloodMoonCommand.build())
+                    .then(ItemTagsCommand.build()));
         });
     }
 }

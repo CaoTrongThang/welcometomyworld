@@ -38,19 +38,27 @@ public class IntroOfTheWorldHandler {
     byte phantomSpawnAmount = 8;
     public boolean alreadySpawnedPhantom = false;
 
-    private int slownessTimeInTickAfterLand = 280;
-
     public static boolean firstTimeLoadChunkIntro = false;
 
-    public void teleportPlayersToSkyFirstJoin(ServerPlayerEntity player) {
-        // teleport player to the sky
+    public void teleportPlayersToSkyFirstJoin(ServerPlayerEntity player, PlayerData playerData) {
+        // Teleport player to the sky
         Vec3d skyPosition = new Vec3d(player.getX(), 400, player.getZ());
         player.teleport(skyPosition.x, skyPosition.y, skyPosition.z);
-        // player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE,
-        // 160, 128));
-        // player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 40,
-        // 0));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 150, 4));
+
+        // Determine their fate right at the start if not already determined
+        if (playerData.playerFirstIntroDeathChance == 0) {
+            playerData.playerFirstIntroDeathChance = rand.nextDouble();
+        }
+
+        // Give them effects that last LONG enough to survive the whole fall (1200 ticks
+        // = 60 seconds)
+        // If they are in the 85% that survives, give them absolute protection.
+        if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, 255, false, false));
+        }
+
+        // Give everyone slow falling initially
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 120, 4, false, false));
 
         // Set player scale to small
         if (player instanceof IScaleEntity scaleEntity) {
@@ -72,9 +80,7 @@ public class IntroOfTheWorldHandler {
 
         PlayerData playerData = dataHandler.playerDataMap.get(player.getUuid());
 
-        // Intro sequence only applies in the Overworld.
-        // If a player's intro isn't done and they're not in the Overworld, mark it
-        // complete so they never get the intro when they eventually return here.
+        // Handle wrong dimension or creative mode escapes
         if (!player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
             if (playerData != null && !playerData.firstTouchGround) {
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
@@ -82,195 +88,161 @@ public class IntroOfTheWorldHandler {
             return;
         }
 
-        ServerWorld world = player.getServerWorld();
+        if (player.isCreative() && (!playerData.firstTouchGround || !playerData.firstTeleportedToSky)) {
+            dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
+            return;
+        }
 
         if (!firstTimeLoadChunkIntro) {
             firstTimeLoadChunkIntro = true;
         }
 
-        if (!playerData.firstTouchGround || !playerData.firstTeleportedToSky
-                || !playerData.completeOriginSelectingScreen || !playerData.completeLoadingTerrainScreen) {
-            if (player.isCreative()) {
-                dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
-                return;
-            }
+        ServerWorld world = player.getServerWorld();
+
+        // Screen completion checks (Origin / Terrain Loading)
+        if (compatityChecker.originMod && !playerData.completeOriginSelectingScreen) {
+            teleportPlayersToSkyFirstJoin(player, playerData);
+            if (playerData.firstTouchGround)
+                playerData.completeOriginSelectingScreen = true;
+            return;
+        }
+
+        if (!playerData.completeLoadingTerrainScreen) {
+            teleportPlayersToSkyFirstJoin(player, playerData);
+            if (playerData.firstTouchGround)
+                playerData.completeLoadingTerrainScreen = true;
+            return;
+        }
+
+        // Time limit check
+        if (!playerData.firstTouchGround) {
             playerData.introTimeLimit--;
             if (playerData.introTimeLimit <= 0) {
                 dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
                 return;
             }
-            ;
         }
 
-        if (playerData.playerFirstIntroDeathChance == 0) {
-            playerData.playerFirstIntroDeathChance = rand.nextDouble(0, 1);
-        }
-
-        if (compatityChecker.originMod) {
-            if (!playerData.completeOriginSelectingScreen) {
-                teleportPlayersToSkyFirstJoin(player);
-
-                if (playerData.firstTouchGround) {
-                    playerData.completeOriginSelectingScreen = true;
-                }
-
-                return;
-            }
-        }
-        if (!playerData.completeLoadingTerrainScreen) {
-            teleportPlayersToSkyFirstJoin(player);
-
-            if (playerData.firstTouchGround) {
-                playerData.completeLoadingTerrainScreen = true;
-            }
-
-            return;
-        }
-
+        // ---------------------------------------------------------
+        // PHASE 1: Initialization in the Sky
+        // ---------------------------------------------------------
         if (!playerData.firstTeleportedToSky) {
-            if (player.getWorld().getRegistryKey().equals(World.OVERWORLD)) {
-                teleportPlayersToSkyFirstJoin(player);
+            teleportPlayersToSkyFirstJoin(player, playerData);
 
-                if (!playerData.completeSpawningParticles) {
-                    for (int x = 1; x < 40; x++) {
-                        Utils.addRunAfter(() -> {
-                            Utils.spawnCircleParticles(player);
-                        }, x);
-                    }
-                    playerData.completeSpawningParticles = true;
+            if (!playerData.completeSpawningParticles) {
+                for (int x = 1; x < 40; x++) {
+                    Utils.addRunAfter(() -> Utils.spawnCircleParticles(player), x);
                 }
-
-                Utils.UTILS.sendTextAfter(player, "!!!", 20);
-
-                for (int x = 0; x < rand.nextInt(10, 20); x++) {
-                    Utils.addRunAfter(() -> {
-                        Utils.summonLightning(player.getBlockPos(), player.getServerWorld(), true);
-                    }, rand.nextInt(5, 20));
+                playerData.completeSpawningParticles = true;
+                if (ConfigLoader.getInstance().enableDialogAfterIntro) {
+                    Utils.UTILS.sendTextAfter(player, "!!!", 20);
                 }
-
-                if (!alreadySpawnedPhantom) {
-                    spawnPhantom(player.getServerWorld(), player);
-                    alreadySpawnedPhantom = true;
-                }
-            } else {
-                playerData.firstTouchGround = true;
-                dataHandler.playerDataMap.put(player.getUuid(), PlayerData.CreateExistPlayer());
-                Utils.grantAdvancement(player, "welcome_to_easycraft");
             }
-        }
-        ;
 
-        if (!playerData.firstTeleportedToSky && player.getY() >= 350) {
-            playerData.firstTeleportedToSky = true;
-            ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
+            for (int x = 0; x < rand.nextInt(10, 20); x++) {
+                Utils.addRunAfter(() -> Utils.summonLightning(player.getBlockPos(), world, true), rand.nextInt(5, 20));
+            }
 
-            com.trongthang.welcometomyworld.entities.RiftPortalEntity portal = EntitiesManager.RIFT_PORTAL_ENTITY
-                    .create(world);
-            if (portal != null) {
-                portal.setPosition(player.getX(), player.getY() - 5f, player.getZ());
-                world.spawnEntity(portal);
+            if (!alreadySpawnedPhantom) {
+                spawnPhantom(world, player);
+                alreadySpawnedPhantom = true;
+            }
+
+            // Spawn the rift portal once when they are high up
+            if (player.getY() >= 350) {
+                playerData.firstTeleportedToSky = true;
+                ServerPlayNetworking.send(player, PLAY_BLOCK_PORTAL_TRAVEL, PacketByteBufs.empty());
+                com.trongthang.welcometomyworld.entities.RiftPortalEntity portal = EntitiesManager.RIFT_PORTAL_ENTITY
+                        .create(world);
+                if (portal != null) {
+                    portal.setPosition(player.getX(), player.getY() - 4f, player.getZ());
+                    world.spawnEntity(portal);
+                }
             }
         }
 
-        if (playerData.firstTouchGround || !playerData.firstTeleportedToSky)
+        // If intro is already done, do nothing
+        if (playerData.firstTouchGround)
             return;
 
-        if (playerData.completeOriginSelectingScreen && !playerData.completeSpawningParticles) {
-            Utils.spawnCircleParticles(player);
-            for (int x = 1; x < 40; x++) {
-                Utils.addRunAfter(() -> {
-                    Utils.spawnCircleParticles(player);
-                }, x);
-            }
+        // ---------------------------------------------------------
+        // PHASE 2: Mid-Air Falling Logic
+        // ---------------------------------------------------------
 
-            playerData.completeSpawningParticles = true;
+        boolean meantToSurvive = playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro;
 
-            Utils.UTILS.sendTextAfter(player, "!!!");
+        // Ground Radar: If surviving, inject hidden resistance just before impact
+        if (meantToSurvive && isGroundNearby(player, 15, 20)) {
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 220, 255, false, false));
         }
 
-        if ((player.getHealth() <= 0 || player.isDead()) && !playerData.introDeathByGod) {
-            Utils.UTILS.sendTextAfter(player, "That was... bad.", 20);
+        // Check if player died mid-air (or upon impact if meant to die)
+        if (player.getHealth() <= 0 || player.isDead()) {
+            handleIntroDeath(player, playerData);
+            return;
+        }
+
+        // ---------------------------------------------------------
+        // PHASE 3: Touchdown!
+        // ---------------------------------------------------------
+        if (Utils.isPlayerStandingOnBlock(player) || player.isOnGround()) {
+
+            // Clean up sky effects
+            // player.removeStatusEffect(StatusEffects.RESISTANCE); // Let it last through
+            // the bounce and dizzy phase
+            player.removeStatusEffect(StatusEffects.SLOW_FALLING);
+
+            // Double check safety: Reset fall distance exactly on the landing tick
+            if (meantToSurvive)
+                player.fallDistance = 0.0f;
+
+            // Create explosion
+            BlockPos landingPos = player.getBlockPos();
+            world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F,
+                    World.ExplosionSourceType.TNT);
+
+            // Small bounce
+            player.setVelocity(player.getVelocity().x, 1.2, player.getVelocity().z);
+            player.velocityModified = true;
+
+            // Apply post-landing effects
+            Utils.addRunAfter(
+                    () -> player
+                            .addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4, false, false)),
+                    20);
+
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 3, false, false));
+
+            // Cosmetics
+            spawnLandEffect(player);
+            SpawnParticles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
+
+            // Mark completed
             playerData.firstTouchGround = true;
             playerData.firstTeleportedToSky = true;
-            Utils.grantAdvancement(player, "a_rough_start");
             playerData.completeLoadingTerrainScreen = true;
-            return;
-        }
+            playerData.introMessageAfterDeath = true;
 
-        // LOGGER.info("world.getBlockState(player.getBlockPos().down(40)).isAir(): {}",
-        // world.getBlockState(player.getBlockPos().down(40)).isAir());
-        // LOGGER.info("playerData.playerFirstIntroDeathChance: {}",
-        // playerData.playerFirstIntroDeathChance);
-        // LOGGER.info("playersDeathChanceInTheIntro: {}",
-        // playersDeathChanceInTheIntro);
-
-        if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
-            if (!world.getBlockState(player.getBlockPos().down(40)).isAir()) {
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 200, 255));
-            }
-            if (Utils.isPlayerStandingOnBlock(player)) {
-                if ((player.getHealth() <= 0 || player.isDead()) && !playerData.introDeathByGod) {
-                    Utils.UTILS.sendTextAfter(player, "That was... bad.", 20);
-                    playerData.firstTouchGround = true;
-                    playerData.firstTeleportedToSky = true;
-                    Utils.grantAdvancement(player, "a_rough_start");
-                    playerData.completeLoadingTerrainScreen = true;
-                    return;
-                }
-
-                // Create an explosion at the player's landing position
-                BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
-                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F,
-                        World.ExplosionSourceType.TNT);
-
-                player.setVelocity(player.getVelocity().x, 1.2, player.getVelocity().z); // Small upward bounce
-                player.velocityModified = true; // Ensure the velocity is synced to the client
-                Utils.addRunAfter(() -> {
-                    player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4));
-                }, 20);
-                player.addStatusEffect(
-                        new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 3));
-
-                spawnLandEffect(player);
-                SpawnParticles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
-                // Set the player’s "firstLandFromSky" to true
-                playerData.firstTouchGround = true;
-                playerData.firstTeleportedToSky = true;
-                playerData.introMessageAfterDeath = true;
-
-                Utils.grantAdvancement(player, "successfully_landed");
+            Utils.grantAdvancement(player, "successfully_landed");
+            if (ConfigLoader.getInstance().enableDialogAfterIntro) {
                 introMessages(player, false);
-                playerData.completeLoadingTerrainScreen = true;
-            }
-        } else {
-            if (Utils.isPlayerStandingOnBlock(player) && player.getHealth() > 0) {
-                BlockPos landingPos = new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ());
-                world.createExplosion(player, landingPos.getX(), landingPos.getY(), landingPos.getZ(), 6F,
-                        World.ExplosionSourceType.TNT);
-                playerData.completeLoadingTerrainScreen = true;
-                player.setVelocity(player.getVelocity().x, 1.2, player.getVelocity().z); // Small upward bounce
-                player.velocityModified = true; // Ensure the velocity is synced to the client
-                Utils.addRunAfter(() -> {
-                    player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4));
-                }, 20);
-                player.addStatusEffect(
-                        new StatusEffectInstance(StatusEffects.SLOWNESS, slownessTimeInTickAfterLand, 2));
-
-                spawnLandEffect(player);
-                SpawnParticles.spawnExpandingParticleSquare(world, player, 2, 5, 20, ParticleTypes.END_ROD);
-                // Set the player’s "firstLandFromSky" to true
-                playerData.firstTouchGround = true;
-                playerData.firstTeleportedToSky = true;
-                playerData.introMessageAfterDeath = true;
-
-                Utils.grantAdvancement(player, "successfully_landed");
-                introMessages(player, false);
+            } else {
+                Utils.grantAdvancement(player, "welcome_to_easycraft");
             }
         }
     }
 
+    private void handleIntroDeath(ServerPlayerEntity player, PlayerData playerData) {
+        if (!playerData.introDeathByGod) {
+            Utils.UTILS.sendTextAfter(player, "That was... bad.", 20);
+            playerData.firstTouchGround = true;
+            playerData.firstTeleportedToSky = true;
+            playerData.completeLoadingTerrainScreen = true;
+            Utils.grantAdvancement(player, "a_rough_start");
+        }
+    }
+
     private void spawnLandEffect(ServerPlayerEntity player) {
-        // Create a particle effect around the zombie to simulate a glowing effect
         ServerWorld world = player.getServerWorld();
         for (int i = 0; i < 20; i++) {
             world.spawnParticles(
@@ -291,7 +263,12 @@ public class IntroOfTheWorldHandler {
 
                 if (!playerData.introMessageAfterDeath) {
                     playerData.introMessageAfterDeath = true;
-                    introMessages(serverPlayerEntity1, true);
+                    if (ConfigLoader.getInstance().enableDialogAfterIntro) {
+                        introMessages(serverPlayerEntity1, true);
+                    } else {
+                        Utils.grantAdvancement(serverPlayerEntity1, "a_rough_start");
+                        Utils.grantAdvancement(serverPlayerEntity1, "welcome_to_easycraft");
+                    }
                 }
             });
 
@@ -692,5 +669,17 @@ public class IntroOfTheWorldHandler {
             phantom.refreshPositionAndAngles(spawnPos, world.getRandom().nextFloat() * 360F, 0);
             world.spawnEntity(phantom);
         }
+    }
+
+    private boolean isGroundNearby(ServerPlayerEntity player, int minDistance, int maxDistance) {
+        World world = player.getWorld();
+        BlockPos.Mutable mutablePos = player.getBlockPos().mutableCopy();
+
+        for (int i = minDistance; i <= maxDistance; i++) {
+            if (!world.getBlockState(mutablePos.set(player.getX(), player.getY() - i, player.getZ())).isAir()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -34,10 +34,14 @@ public class ConfigLoader {
         @SerializedName("modpackVersion")
         public String modpackVersion = "0.0.0";
 
-        // the falling intro and stuff to the world
+        // the falling intro
         @Expose
         @SerializedName("enableIntroOfTheWorld")
         public boolean enableIntroOfTheWorld = true;
+
+        @Expose
+        @SerializedName("enableDialogAfterIntro")
+        public boolean enableDialogAfterIntro = false;
 
         @Expose
         @SerializedName("clearItemsBeforeGivingStartingItems")

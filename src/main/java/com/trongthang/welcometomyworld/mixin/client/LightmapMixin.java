@@ -15,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.world.biome.Biome;
 
 @Mixin(LightmapTextureManager.class)
 public class LightmapMixin {
@@ -35,8 +37,17 @@ public class LightmapMixin {
         }
 
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null) {
+        if (client.world == null || client.player == null) {
             return;
+        }
+
+        // Skip lightmap modification if player is in candy_cavity biome
+        RegistryEntry<Biome> biomeEntry = client.world.getBiome(client.player.getBlockPos());
+        if (biomeEntry.getKey().isPresent()) {
+            Identifier biomeId = biomeEntry.getKey().get().getValue();
+            if (biomeId.toString().equals("alexscaves:candy_cavity")) {
+                return;
+            }
         }
         Identifier currentDim = client.world.getRegistryKey().getValue();
         if (!currentDim.equals(cachedDimension)) {

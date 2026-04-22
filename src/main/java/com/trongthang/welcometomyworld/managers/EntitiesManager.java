@@ -334,26 +334,13 @@ public class EntitiesManager {
                 BiomeModifications.addSpawn(
                                 context -> {
                                         Identifier biomeId = context.getBiomeKey().getValue();
-                                        // Only allow spawns in biomes from the "twilightforest" namespace
-                                        // and exclude the "stream" biome.
-                                        return biomeId.getNamespace().equals("void_dim")
-                                                        && !biomeId.getPath().equals("void_sculk_biome")
-                                                        && !biomeId.getPath().equals("void_nether_biome");
+                                        return biomeId.equals(new Identifier("betterend", "dragon_graveyards"))
+                                                        || biomeId.equals(
+                                                                        new Identifier("betterend", "dust_wastelands"));
                                 },
                                 SpawnGroup.CREATURE,
                                 WANDERER,
-                                1,
-                                1,
-                                1);
-
-                BiomeModifications.addSpawn(
-                                context -> {
-                                        Identifier biomeId = context.getBiomeKey().getValue();
-                                        return biomeId.getNamespace().equals("void_dim");
-                                },
-                                SpawnGroup.CREATURE,
-                                WANDERER,
-                                1,
+                                8,
                                 1,
                                 1);
 
