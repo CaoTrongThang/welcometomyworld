@@ -140,8 +140,8 @@ public class VoidanTentacle extends HostileEntity implements GeoEntity {
     @Override
     protected void initDataTracker() {
         super.initDataTracker();
-        this.dataTracker.startTracking(IS_USING_SKILL, true);
-        this.dataTracker.startTracking(SKILL_ID, 1);
+        this.dataTracker.startTracking(IS_USING_SKILL, false);
+        this.dataTracker.startTracking(SKILL_ID, 0);
         this.dataTracker.startTracking(SKILL_TRIGGER, 0);
     }
 

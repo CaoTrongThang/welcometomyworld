@@ -75,6 +75,8 @@ public class VoidanHornItem extends Item implements GeoItem {
                 tentacle.refreshPositionAndAngles(surfacePos.getX() + 0.5, surfacePos.getY(), surfacePos.getZ() + 0.5,
                         user.getYaw(), 0.0f);
                 tentacle.setSummoner(user);
+                tentacle.initialize(sw, sw.getLocalDifficulty(surfacePos),
+                        net.minecraft.entity.SpawnReason.MOB_SUMMONED, null, null);
                 sw.spawnEntity(tentacle);
             }
         }, ticks);
