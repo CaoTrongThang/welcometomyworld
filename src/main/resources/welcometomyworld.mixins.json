@@ -52,7 +52,8 @@
 		"entity.WitherSkullNoGriefMixin",
 		"misc.RocksMixinRemoveFromMyDimension",
 		"world.ChunkSerializerMixin",
-		"world.PalettedContainerMixin"
+		"world.PalettedContainerMixin",
+		"world.VillageExtraGolemsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

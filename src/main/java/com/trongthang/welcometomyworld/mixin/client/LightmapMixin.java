@@ -45,7 +45,7 @@ public class LightmapMixin {
         RegistryEntry<Biome> biomeEntry = client.world.getBiome(client.player.getBlockPos());
         if (biomeEntry.getKey().isPresent()) {
             Identifier biomeId = biomeEntry.getKey().get().getValue();
-            if (biomeId.toString().equals("alexscaves:candy_cavity")) {
+            if (biomeId.toString().contains("alexscaves")) {
                 return;
             }
         }
