@@ -111,6 +111,7 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static BossesSpawningHandler bossesSpawningHandler = new BossesSpawningHandler();
     public static LightningsStrikePlayersInRain lightningsStrikePlayersInRain = new LightningsStrikePlayersInRain();
     public static FallingSkeletonSpawner fallingSkeletonSpawner = new FallingSkeletonSpawner();
+    public static ItemPurgeHandler itemPurgeHandler = new ItemPurgeHandler();
 
     MinecraftServer server;
 
@@ -179,6 +180,8 @@ public class WelcomeToMyWorld implements ModInitializer {
                             PacketByteBufs.empty());
                 }
             }
+
+            itemPurgeHandler.onPlayerJoin(serverPlayNetworkHandler.getPlayer());
         });
 
         PlayerBlockBreakEvents.AFTER.register((world, playerEntity, blockPos, blockState, blockEntity) -> {
@@ -334,6 +337,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         PetTeleportManager.onServerTick(server);
 
         Utils.onServerTick(server);
+        itemPurgeHandler.onServerTick(server);
         SpawnMonstersPackEveryMins.spawnMonsters(server);
         fallingSkeletonSpawner.tick(server);
     }

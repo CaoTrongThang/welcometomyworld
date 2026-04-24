@@ -105,6 +105,17 @@ public class Utils {
         }, ticks);
     }
 
+    public void sendMessageToAllPlayers(MinecraftServer server, String text) {
+        Text message = Text.literal("").styled(style -> style.withColor(Formatting.WHITE))
+                .append(Text.literal("? Unknown:").styled(style -> style.withColor(Formatting.YELLOW)))
+                .append(Text.literal(" " + text).styled(style -> style.withColor(Formatting.WHITE)));
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            player.sendMessage(message);
+            ServerPlayNetworking.send(player, PLAY_BLOCK_LEVER_CLICK, PacketByteBufs.empty());
+        }
+    }
+
     public static void spawnCircleParticles(ServerPlayerEntity player) {
         int particleCount = 30; // Number of particles in the circle
         double radius = 2; // Radius of the circle
