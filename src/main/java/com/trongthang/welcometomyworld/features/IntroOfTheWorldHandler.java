@@ -350,19 +350,26 @@ public class IntroOfTheWorldHandler {
                 if (player == null)
                     return;
 
-                ItemStack summonGolem = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_spawner", 1);
-                ItemStack golemController = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_control", 1);
+                ServerWorld world = player.getServerWorld();
+                com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem tinyGolem = EntitiesManager.TINY_GOLEM
+                        .create(world);
+                if (tinyGolem != null) {
+                    BlockPos spawnPos = findSpawnPosition(player, 3);
+                    if (spawnPos == null)
+                        spawnPos = player.getBlockPos().add(1, 0, 1);
 
-                if (summonGolem != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, summonGolem, 2);
-                }
+                    tinyGolem.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
+                            player.getYaw(), 0);
+                    tinyGolem.setTamed(true);
+                    tinyGolem.setOwner(player);
+                    world.spawnEntity(tinyGolem);
 
-                if (golemController != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, golemController, 3);
+                    tinyGolem.onSummon();
                 }
             }, 21 * 20);
 
-            Utils.UTILS.sendTextAfter(player, "That Golem will be a great help. Consider it your new best friend.",
+            Utils.UTILS.sendTextAfter(player,
+                    "Being friend with a Golem, could be a new experience. That Golem will be a great help.",
                     24 * 20);
 
             Utils.UTILS.sendTextAfter(player,
@@ -371,7 +378,7 @@ public class IntroOfTheWorldHandler {
             Utils.addRunAfter(() -> {
                 ItemStack book = GiveStartingItemsHandler.getModdedItems("ftbquests:book", 1);
                 if (book != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, book, 4);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, book, 2);
                 }
             }, 32 * 20);
 
@@ -405,22 +412,26 @@ public class IntroOfTheWorldHandler {
                 if (player == null)
                     return;
 
-                ItemStack summonGolem = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_spawner", 1);
-                ItemStack golemController = GiveStartingItemsHandler.getModdedItems("advancedgolems:golem_control", 1);
+                ServerWorld world = player.getServerWorld();
+                com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem tinyGolem = EntitiesManager.TINY_GOLEM
+                        .create(world);
+                if (tinyGolem != null) {
+                    BlockPos spawnPos = player.getBlockPos().add(rand.nextInt(-2, 2), 0, rand.nextInt(-2, 2));
 
-                if (summonGolem != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, summonGolem, 2);
-                }
+                    tinyGolem.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
+                            player.getYaw(), 0);
+                    tinyGolem.setTamed(true);
+                    tinyGolem.setOwner(player);
+                    world.spawnEntity(tinyGolem);
 
-                if (golemController != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, golemController, 3);
+                    tinyGolem.onSummon();
                 }
             }, 14 * 20);
 
             Utils.UTILS.sendTextAfter(player,
-                    "Here you go—a, we've a 'friend' to keep you company, and a controller so you can guide it.",
+                    "Here you go—a, we've a 'friend' to keep you company, trust me, it's reliable.",
                     15 * 20);
-            Utils.UTILS.sendTextAfter(player, "Well, maybe 'friendship' isn't the healthiest way to describe this...",
+            Utils.UTILS.sendTextAfter(player, "Being friend with a Golem, could be a new experience.",
                     18 * 20);
 
             Utils.UTILS.sendTextAfter(player, "There's more, i think there's something for you to eat...", 21 * 20);
@@ -428,28 +439,28 @@ public class IntroOfTheWorldHandler {
             Utils.addRunAfter(() -> {
                 ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:cheese_wheel", 1);
                 if (food != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 4);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 2);
                 }
             }, 23 * 20);
 
             Utils.addRunAfter(() -> {
                 ItemStack food = GiveStartingItemsHandler.getModdedItems("expandeddelight:chocolate_cooke", 1);
                 if (food != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 1);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 3);
                 }
-            }, 25 * 20);
+            }, 27 * 20);
 
             Utils.addRunAfter(() -> {
                 ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:steamed_rice", 5);
                 if (food != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 5);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 4);
                 }
             }, 27 * 20);
 
             Utils.addRunAfter(() -> {
                 ItemStack food = GiveStartingItemsHandler.getModdedItems("croptopia:cooked_bacon", 1);
                 if (food != null) {
-                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 6);
+                    GiveStartingItemsHandler.giveItemToPlayerSlot(player, food, 5);
                 }
             }, 29 * 20);
 
@@ -593,28 +604,6 @@ public class IntroOfTheWorldHandler {
                 (int) Math.floor(player.getX() + xOffset),
                 (int) Math.floor(player.getY() + 1.5), // Head height
                 (int) Math.floor(player.getZ() + zOffset));
-    }
-
-    private static boolean isPositionSafe(World world, BlockPos pos) {
-        // Check if position is within world bounds
-        if (!world.isInBuildLimit(pos))
-            return false;
-
-        // Check if block is passable and has space
-        return world.getBlockState(pos).isAir() &&
-                world.getBlockState(pos.up()).isAir();
-    }
-
-    private static BlockPos findSafeBelow(World world, BlockPos startPos) {
-        // Check up to 5 blocks below
-        for (int i = 0; i < 5; i++) {
-            BlockPos checkPos = startPos.down(i);
-            if (isPositionSafe(world, checkPos)) {
-                return checkPos;
-            }
-        }
-
-        return null;
     }
 
     public void spawnPhantom(ServerWorld world, PlayerEntity player) {

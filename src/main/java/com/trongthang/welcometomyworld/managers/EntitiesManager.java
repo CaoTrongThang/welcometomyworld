@@ -110,6 +110,15 @@ public class EntitiesManager {
                                         .fireImmune()
                                         .build());
 
+        public static final EntityType<com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem> TINY_GOLEM = Registry
+                        .register(
+                                        Registries.ENTITY_TYPE,
+                                        new Identifier(WelcomeToMyWorld.MOD_ID, "tiny_golem"),
+                                        FabricEntityTypeBuilder.create(SpawnGroup.CREATURE,
+                                                        com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem::new)
+                                                        .dimensions(EntityDimensions.changing(0.6f, 1.1f))
+                                                        .build());
+
         public static final EntityType<Voidan> VOIDAN = Registry.register(
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "voidan"),
@@ -232,6 +241,8 @@ public class EntitiesManager {
                 FabricDefaultAttributeRegistry.register(BLOSSOM, Blossom.setAttributes());
 
                 FabricDefaultAttributeRegistry.register(UNKNOWN, Unknown.setAttributes());
+                FabricDefaultAttributeRegistry.register(TINY_GOLEM,
+                                com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem.setAttributes());
                 FabricDefaultAttributeRegistry.register(VOIDAN, Voidan.setAttributes());
                 FabricDefaultAttributeRegistry.register(VOIDAN_TENTACLE, VoidanTentacle.setAttributes());
 

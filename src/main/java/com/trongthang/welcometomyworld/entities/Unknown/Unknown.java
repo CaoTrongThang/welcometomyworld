@@ -18,7 +18,9 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.PathAwareEntity;
+
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
@@ -57,7 +59,7 @@ import net.minecraft.particle.ItemStackParticleEffect;
 import net.minecraft.item.PotionItem;
 import net.minecraft.potion.PotionUtil;
 
-public class Unknown extends HostileEntity implements GeoEntity {
+public class Unknown extends PathAwareEntity implements GeoEntity {
 
     // 0 = NONE, 1 = LEFT, 2 = RIGHT — synced to client every tick via DataTracker
     private static final TrackedData<Integer> DASH_DIR = DataTracker.registerData(Unknown.class,
@@ -302,19 +304,34 @@ public class Unknown extends HostileEntity implements GeoEntity {
 
     private ItemStack stolenItemCandidate = ItemStack.EMPTY;
 
-    public Unknown(EntityType<? extends HostileEntity> entityType, World world) {
+    public Unknown(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
-        return HostileEntity.createHostileAttributes()
+        return MobEntity.createMobAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 99999.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 60.0D) // 0 for testing
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 60.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 50f)
                 .add(EntityAttributes.GENERIC_ARMOR, 30f)
                 .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 20f);
+    }
+
+    @Override
+    public void checkDespawn() {
+        if (this.getWorld().getDifficulty() == net.minecraft.world.Difficulty.PEACEFUL
+                && this.isDisallowedInPeaceful()) {
+            this.discard();
+        } else {
+            this.despawnCounter = 0;
+        }
+    }
+
+    @Override
+    public boolean cannotDespawn() {
+        return true;
     }
 
     @Override

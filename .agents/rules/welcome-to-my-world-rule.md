@@ -2,16 +2,16 @@
 trigger: always_on
 ---
 
-The User is making a mod for Minecraft Fabric 1.20.1, it adds mobs, dimensions,..., see what are they up to and help them!
+The User is making a mod for Minecraft Fabric 1.20.1, it adds mobs, dimensions,..., Currently they're adding a new friendly mob that will be owned by the player, it can wear armors and hold weapon, using Geckolib, similar to the Unknown boss but easier, see what are they up to and help them!
 
 Remember these rules:
 
 - You are running on: Windows 11.
 - Shell: Use PowerShell ONLY (NOT cmd, NOT bash).
 - Java may NOT be in the PATH.
-- Limit your searching. Do not try to read the source code of other mods or search endlessly. If a search takes too long, STOP and ask - the user to show you the class.
+- Limit your searching. DO NOT try to read the source code of other mods or search endlessly (Get-ChildItem). STOP and ask - the user to show you the class.
 - Always prioritize PowerShell-native commands.
-- Avoid tools that are not exist on a default system (e.g., jar, unzip, bash, grep). Prefer Expand-Archive for .zip/.jar files.
+- Avoid tools that are not exist on a default system (e.g., jar, unzip, bash, grep, javap). Prefer Expand-Archive for .zip/.jar files.
 - Use correct, unescaped Windows paths (e.g., C:\path\to\file, do not use \\ or \").
 - Never assume environment variables or tools exist unless explicitly specified.
 - Use explicit .exe extensions for native Windows commands (e.g., use curl.exe instead of curl to avoid PowerShell alias conflicts).

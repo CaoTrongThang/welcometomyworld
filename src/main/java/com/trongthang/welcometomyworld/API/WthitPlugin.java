@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld.API;
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
 import com.trongthang.welcometomyworld.entities.PurplePortalEntity;
 import com.trongthang.welcometomyworld.entities.RiftPortalEntity;
+import com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem;
 import com.trongthang.welcometomyworld.entities.Unknown.Unknown;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormEntity;
 import com.trongthang.welcometomyworld.entities.VoidWorm.VoidWormPartEntity;
@@ -64,10 +65,13 @@ public class WthitPlugin implements IWailaPlugin {
     public static class EntityComponentProvider implements IEntityComponentProvider {
         @Override
         public void appendHead(ITooltip tooltip, IEntityAccessor accessor, IPluginConfig config) {
-            if (accessor.getEntity() instanceof StrongTameableEntityDefault entity) {
+            Entity entity = accessor.getEntity();
+            if (entity instanceof StrongTameableEntityDefault && !(entity instanceof TinyGolem)) {
                 MutableText name = Text.literal(entity.getType().getName().getString());
-                if (!entity.isTamed() || entity.getOwner() == null) {
-                    name.append(String.format(" (Tame Chance: %d%%)", (int) entity.getTameChance()));
+                if (!((StrongTameableEntityDefault) entity).isTamed()
+                        || ((StrongTameableEntityDefault) entity).getOwner() == null) {
+                    name.append(String.format(" (Tame Chance: %d%%)", (int) ((StrongTameableEntityDefault) entity)
+                            .getTameChance()));
                 }
                 if (entity.getScoreboardTeam() != null) {
                     name = Team.decorateName(entity.getScoreboardTeam(), name);

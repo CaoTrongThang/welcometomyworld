@@ -119,6 +119,8 @@ public class RendererClient implements ClientModInitializer {
                 EntityRendererRegistry.register(EntitiesManager.BLOSSOM, BlossomRenderer::new);
 
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN, UnknownRenderer::new);
+                EntityRendererRegistry.register(EntitiesManager.TINY_GOLEM,
+                                com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolemRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.VOIDAN, VoidanRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.VOIDAN_TENTACLE, VoidanTentacleRenderer::new);
                 EntityRendererRegistry.register(EntitiesManager.UNKNOWN_BEAM, UnknownBeamRenderer::new);
