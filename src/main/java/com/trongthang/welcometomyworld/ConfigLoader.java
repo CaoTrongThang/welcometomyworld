@@ -232,6 +232,8 @@ public class ConfigLoader {
                         // Default valid mobs
                         specificMobs.put("welcometomyworld:void_worm",
                                         new MobSettingsConfig(false, false, false, false, false, false, false, false));
+                        specificMobs.put("welcometomyworld:tiny_golem",
+                                        new MobSettingsConfig(false, false, false, false, false, false, false, false));
                         specificMobs.put("welcometomyworld:unknown",
                                         new MobSettingsConfig(false, false, false, false, false, false, false, false));
                         specificMobs.put("minecraft:zombie", new MobSettingsConfig());

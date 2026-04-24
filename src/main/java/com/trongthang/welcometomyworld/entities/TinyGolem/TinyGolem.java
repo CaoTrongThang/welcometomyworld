@@ -74,7 +74,7 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
         return MobEntity.createMobAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 30.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.18D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 5.0D)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.5f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32f);
     }
@@ -299,8 +299,8 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
 
         // Single Source of Truth for sitting state to prevent any desync
         if (this.isSitting() && state == STATE_IDLE) {
-            setState(STATE_SIT_IDLE); // Fallback: put into sit idle if it should be sitting
-            state = STATE_SIT_IDLE;
+            setState(STATE_SIT); // Use STATE_SIT to trigger transition effects
+            state = STATE_SIT;
         } else if (!this.isSitting() && (state == STATE_SIT || state == STATE_SIT_IDLE)) {
             setState(STATE_IDLE); // Fallback: put into idle if it broke out of sitting
             state = STATE_IDLE;
@@ -328,13 +328,14 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
                 }
                 break;
             case STATE_SIT:
-                if (stateTickLocal == 23) {
+                if (stateTickLocal == 29) {
                     if (this.getWorld() instanceof ServerWorld sw) {
                         Vec3d look = this.getRotationVec(1.0F);
                         sw.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE,
                                 this.getX() + look.x * 0.5, this.getY(), this.getZ() + look.z * 0.5,
                                 10, 0.2, 0.1, 0.2, 0.05);
-                        this.playSound(SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.5f, 1.5f);
+                        sw.playSound(null, this.getX(), this.getY(), this.getZ(),
+                                SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, this.getSoundCategory(), 1.0f, 1.5f);
                     }
                 }
                 if (stateTickLocal >= 30) {
