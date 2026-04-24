@@ -50,15 +50,14 @@ public class IntroOfTheWorldHandler {
             playerData.playerFirstIntroDeathChance = rand.nextDouble();
         }
 
-        // Give them effects that last LONG enough to survive the whole fall (1200 ticks
-        // = 60 seconds)
-        // If they are in the 85% that survives, give them absolute protection.
         if (playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro) {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, 255, false, false));
         }
 
         // Give everyone slow falling initially
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 120, 4, false, false));
+
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 30, 0, false, false));
 
         // Set player scale to small
         if (player instanceof IScaleEntity scaleEntity) {
@@ -172,7 +171,7 @@ public class IntroOfTheWorldHandler {
         boolean meantToSurvive = playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro;
 
         // Ground Radar: If surviving, inject hidden resistance just before impact
-        if (meantToSurvive && isGroundNearby(player, 15, 20)) {
+        if (meantToSurvive && isGroundNearby(player, 0, 35)) {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 220, 255, false, false));
         }
 
@@ -354,7 +353,7 @@ public class IntroOfTheWorldHandler {
                 com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem tinyGolem = EntitiesManager.TINY_GOLEM
                         .create(world);
                 if (tinyGolem != null) {
-                    BlockPos spawnPos = findSpawnPosition(player, 3);
+                    BlockPos spawnPos = findSpawnPosition(player, 1);
                     if (spawnPos == null)
                         spawnPos = player.getBlockPos().add(1, 0, 1);
 
@@ -364,12 +363,14 @@ public class IntroOfTheWorldHandler {
                     tinyGolem.setOwner(player);
                     world.spawnEntity(tinyGolem);
 
+                    tinyGolem.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 120, 0, false, false));
+
                     tinyGolem.onSummon();
                 }
             }, 21 * 20);
 
             Utils.UTILS.sendTextAfter(player,
-                    "Being friend with a Golem, could be a new experience. That Golem will be a great help.",
+                    "A TINY GOLEM!, being friend with a Golem, could be a new experience. That Golem will be a great help.",
                     24 * 20);
 
             Utils.UTILS.sendTextAfter(player,
@@ -416,13 +417,17 @@ public class IntroOfTheWorldHandler {
                 com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem tinyGolem = EntitiesManager.TINY_GOLEM
                         .create(world);
                 if (tinyGolem != null) {
-                    BlockPos spawnPos = player.getBlockPos().add(rand.nextInt(-2, 2), 0, rand.nextInt(-2, 2));
+                    BlockPos spawnPos = findSpawnPosition(player, 1);
+                    if (spawnPos == null)
+                        spawnPos = player.getBlockPos().add(1, 0, 1);
 
                     tinyGolem.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
                             player.getYaw(), 0);
                     tinyGolem.setTamed(true);
                     tinyGolem.setOwner(player);
                     world.spawnEntity(tinyGolem);
+
+                    tinyGolem.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 120, 0, false, false));
 
                     tinyGolem.onSummon();
                 }
@@ -662,10 +667,13 @@ public class IntroOfTheWorldHandler {
 
     private boolean isGroundNearby(ServerPlayerEntity player, int minDistance, int maxDistance) {
         World world = player.getWorld();
-        BlockPos.Mutable mutablePos = player.getBlockPos().mutableCopy();
+        BlockPos.Mutable mutablePos = new BlockPos.Mutable(
+                (int) Math.floor(player.getX()),
+                (int) Math.floor(player.getY()),
+                (int) Math.floor(player.getZ()));
 
         for (int i = minDistance; i <= maxDistance; i++) {
-            if (!world.getBlockState(mutablePos.set(player.getX(), player.getY() - i, player.getZ())).isAir()) {
+            if (!world.getBlockState(mutablePos.setY((int) Math.floor(player.getY()) - i)).isAir()) {
                 return true;
             }
         }

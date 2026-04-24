@@ -53,7 +53,8 @@
 		"misc.RocksMixinRemoveFromMyDimension",
 		"world.ChunkSerializerMixin",
 		"world.PalettedContainerMixin",
-		"world.VillageExtraGolemsMixin"
+		"world.VillageExtraGolemsMixin",
+		"misc.AttributesLibCrashFixMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

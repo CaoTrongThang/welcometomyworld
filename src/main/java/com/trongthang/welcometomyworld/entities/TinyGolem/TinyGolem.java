@@ -6,7 +6,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
-
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -19,6 +19,7 @@ import net.minecraft.item.Items;
 
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -156,7 +157,7 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack itemStack = player.getStackInHand(hand);
 
-        if (!this.isTamed() && itemStack.isOf(Items.IRON_INGOT)) {
+        if (!this.isTamed() && itemStack.isOf(Items.COPPER_INGOT)) {
             if (!player.getAbilities().creativeMode) {
                 itemStack.decrement(1);
             }
@@ -262,7 +263,7 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
 
     @Override
     public Item healingFood() {
-        return Items.IRON_INGOT;
+        return Items.COPPER_INGOT;
     }
 
     @Override
@@ -328,7 +329,7 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
                 }
                 break;
             case STATE_SIT:
-                if (stateTickLocal == 29) {
+                if (stateTickLocal == 24) {
                     if (this.getWorld() instanceof ServerWorld sw) {
                         Vec3d look = this.getRotationVec(1.0F);
                         sw.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE,
@@ -427,7 +428,7 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
                 state.getController().transitionLength(0);
                 return state.setAndContinue(RawAnimation.begin().thenPlay("emerge"));
             } else if (entityState == STATE_SIT) {
-                state.getController().transitionLength(5);
+                state.getController().transitionLength(0);
                 return state.setAndContinue(RawAnimation.begin().thenPlay("sit"));
             } else if (entityState == STATE_SIT_IDLE) {
                 state.getController().transitionLength(0);
@@ -460,4 +461,11 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return this.cache;
     }
+
+    @Override
+    @Nullable
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return SoundEvents.ENTITY_IRON_GOLEM_HURT;
+    }
+
 }

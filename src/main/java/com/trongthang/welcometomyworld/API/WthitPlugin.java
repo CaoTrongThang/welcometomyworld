@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.API;
 
 import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
+import com.trongthang.welcometomyworld.entities.BlockSlamGroundEntity;
 import com.trongthang.welcometomyworld.entities.PurplePortalEntity;
 import com.trongthang.welcometomyworld.entities.RiftPortalEntity;
 import com.trongthang.welcometomyworld.entities.TinyGolem.TinyGolem;
@@ -30,6 +31,8 @@ public class WthitPlugin implements IWailaPlugin {
         registrar.addComponent(new UnknownComponentProvider(), TooltipPosition.BODY, Unknown.class);
 
         registrar.override(new PortalComponentProvider(), PurplePortalEntity.class, 0);
+        registrar.override(new PortalComponentProvider(), BlockSlamGroundEntity.class, 0);
+
         registrar.override(new PortalComponentProvider(), RiftPortalEntity.class, 0);
         registrar.override(new VoidWormPartComponentProvider(), VoidWormPartEntity.class, 0);
     }
