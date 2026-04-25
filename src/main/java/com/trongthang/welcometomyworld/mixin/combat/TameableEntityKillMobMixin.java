@@ -92,9 +92,15 @@ public class TameableEntityKillMobMixin {
 
                     Text message = Text.literal("")
                             .formatted(Formatting.WHITE)
-                            .append(Text.literal("Your " + mobName + " leveled up to "))
+                            .append(Text.literal("Your "))
+                            .append(Text.literal(mobName).formatted(Formatting.YELLOW))
+                            .append(Text.literal(" leveled up to "))
                             .append(Text.literal(String.valueOf(newLevel))
-                                    .formatted(Formatting.YELLOW));
+                                    .formatted(Formatting.YELLOW))
+                            .append(Text.literal(", look at it and press ["))
+                            .append(Text.keybind("key.welcometomyworld.open_mob_stats")
+                                    .formatted(Formatting.YELLOW))
+                            .append(Text.literal("] to open the upgrade menu!"));
 
                     player.sendMessage(message, false);
                 }

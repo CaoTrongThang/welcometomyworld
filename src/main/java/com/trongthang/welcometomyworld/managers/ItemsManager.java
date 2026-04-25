@@ -72,8 +72,8 @@ public class ItemsManager {
                         "voidan_tentacle", 0x041820,
                         0x2f114c);
         public static final Item TINY_GOLEM_SPAWN_EGG = registerSpawnEgg(EntitiesManager.TINY_GOLEM,
-                        "tiny_golem", 0x242424,
-                        0x2db4e8);
+                        "tiny_golem", 0xffffff,
+                        0xD74511);
 
         public static final Item UNKNOWN_HOOD = registerItem(new EffectArmorItem(CustomArmorMaterial.UNKNOWN_GEAR,
                         ArmorItem.Type.HELMET, new FabricItemSettings().rarity(Rarity.EPIC), EffectsManager.VOID_SIGHT),

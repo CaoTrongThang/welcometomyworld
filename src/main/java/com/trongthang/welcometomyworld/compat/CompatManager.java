@@ -6,6 +6,7 @@ public class CompatManager {
     public static final boolean TRINKETS_LOADED = FabricLoader.getInstance().isModLoaded("trinkets");
     public static final boolean IMPROVED_MOBS_LOADED = FabricLoader.getInstance().isModLoaded("improvedmobs");
     public static final boolean CARRY_ON_LOADED = FabricLoader.getInstance().isModLoaded("carryon");
+    public static final boolean WEAPON_LEVELING_LOADED = FabricLoader.getInstance().isModLoaded("weaponleveling");
 
     public static boolean isTrinketsLoaded() {
         return TRINKETS_LOADED;
@@ -17,6 +18,10 @@ public class CompatManager {
 
     public static boolean isCarryOnLoaded() {
         return CARRY_ON_LOADED;
+    }
+
+    public static boolean isWeaponLevelingLoaded() {
+        return WEAPON_LEVELING_LOADED;
     }
 
     private static java.lang.reflect.Method getCarryDataMethod = null;

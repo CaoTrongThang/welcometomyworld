@@ -23,6 +23,9 @@ public class ModMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.endsWith("DifficultyDataMixin")) {
             return CompatManager.isImprovedMobsLoaded();
         }
+        if (mixinClassName.contains("weaponleveling")) {
+            return CompatManager.isWeaponLevelingLoaded();
+        }
         return true;
     }
 

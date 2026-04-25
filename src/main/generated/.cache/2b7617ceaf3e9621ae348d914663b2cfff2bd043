@@ -1,2 +1,7 @@
-// 1.20.1	2026-04-08T01:24:34.7294042	Welcome To My World/Tags for minecraft:item
+// 1.20.1	2026-04-25T20:31:35.0862984	Welcome To My World/Tags for minecraft:item
 7f45c5cf1798a1b10980fe8666ad21f3cf193e32 data\welcometomyworld\tags\items\talismans.json
+79f933e0d97c6d2f2359884351301c8c637757c1 data\c\tags\items\helmets.json
+35f4228a00ba49e0ef651729923d2703536c819a data\c\tags\items\boots.json
+3075d2c60edc0c04a2b27c41ac5707039aa05c5f data\minecraft\tags\items\swords.json
+51a15d5273b9b47e33744e7d29d9cde5bfd10c4f data\c\tags\items\leggings.json
+29aeafa6c5244da53b8878d4ce3f874cd5fa644c data\c\tags\items\chestplates.json

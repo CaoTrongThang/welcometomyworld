@@ -54,7 +54,10 @@
 		"world.ChunkSerializerMixin",
 		"world.PalettedContainerMixin",
 		"world.VillageExtraGolemsMixin",
-		"misc.AttributesLibCrashFixMixin"
+		"misc.AttributesLibCrashFixMixin",
+		"entity.HostileEntityTargetTameableMobsMixin",
+		"accessor.MobEntityAccessor",
+		"weaponleveling.LevelingLogicMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

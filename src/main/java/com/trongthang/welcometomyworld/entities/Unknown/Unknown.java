@@ -1488,6 +1488,10 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
     public void tick() {
         super.tick();
 
+        if (this.getWorld().isClient()) {
+            return;
+        }
+
         if (immunityTimer > 0)
             immunityTimer--;
 

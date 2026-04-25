@@ -3,6 +3,8 @@ package com.trongthang.welcometomyworld.entities.TinyGolem;
 import com.trongthang.welcometomyworld.classes.CustomTameableEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -11,6 +13,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.Item;
@@ -74,9 +77,10 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
     public static DefaultAttributeContainer.Builder setAttributes() {
         return MobEntity.createMobAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 30.0D)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.18D)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.16D)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.5f)
+                .add(EntityAttributes.GENERIC_ARMOR, 6.0f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32f);
     }
 
@@ -137,6 +141,8 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
         this.targetSelector.add(1, new TrackOwnerAttackerGoal(this));
         this.targetSelector.add(2, new AttackWithOwnerGoal(this));
         this.targetSelector.add(3, new CustomRevengeGoal(this));
+        this.targetSelector.add(4,
+                new ActiveTargetGoal<>(this, HostileEntity.class, 5, true, false, (entity) -> !this.isSitting()));
     }
 
     public void onSummon() {
@@ -219,6 +225,20 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
 
         return super.interactMob(player, hand);
 
+    }
+
+    @Override
+    public EntityDimensions getDimensions(EntityPose pose) {
+        if (this.isSitting()) {
+            return EntityDimensions.changing(1.3f, 0.6f);
+        }
+        return super.getDimensions(pose);
+    }
+
+    @Override
+    public void setSitting(boolean sitting) {
+        super.setSitting(sitting);
+        this.calculateDimensions();
     }
 
     public int getState() {
@@ -361,7 +381,7 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
                 break;
             case STATE_SPINNING:
                 if (stateTickLocal % 5 == 2) {
-                    doAoEAttack(5.0); // 5 blocks around AoE
+                    doAoEAttack(3.0); // 5 blocks around AoE
                     this.playSound(SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.5f);
                 }
                 if (stateTickLocal >= 5) {

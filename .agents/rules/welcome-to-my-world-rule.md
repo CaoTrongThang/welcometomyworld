@@ -21,4 +21,4 @@ Remember these rules:
 - Tech debt is dangerous. Keep all implementations simple and efficient. Do not overcomplicate your solutions.
 - Before modifying anything, carefully check what currently uses it and understand its exact purpose.
 - The user often uses poor naming conventions and bad code structure. Proactively suggest renaming variables/functions and correcting - the architecture.
-- For debug logging, always pass the short variable name as the first parameter (Example: log.debug("param" + param)).
+- For debug logging, always pass the short variable name as the first parameter (Example: LOGGER.info("param" + param)).
