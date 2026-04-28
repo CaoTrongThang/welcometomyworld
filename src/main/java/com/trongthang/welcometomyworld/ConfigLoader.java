@@ -26,14 +26,6 @@ public class ConfigLoader {
                         "Welcome to My World Mod Configuration.",
                         "Standard JSON doesn't support comments, so we use these '_info' fields for documentation.");
 
-        @Expose
-        @SerializedName("urlToSendChart")
-        public String urlToSendChart = "none";
-
-        @Expose
-        @SerializedName("modpackVersion")
-        public String modpackVersion = "0.0.0";
-
         // the falling intro
         @Expose
         @SerializedName("enableIntroOfTheWorld")

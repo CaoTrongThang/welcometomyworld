@@ -222,7 +222,6 @@ public class WelcomeToMyWorld implements ModInitializer {
         BalanceSpawnWeight.register();
         MobsGearsUp.register();
         PortalManager.initialize();
-        startScheduledSender();
         NoTeleportWithBoat.register();
 
         // // Register a listener for when the server has started
@@ -237,10 +236,6 @@ public class WelcomeToMyWorld implements ModInitializer {
         // LOGGER.info("\"" + id + "\"");
         // });
         // });
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            EXECUTOR.shutdown();
-        }));
     }
 
     private void performAllActionsFirstJoin(ServerPlayerEntity player) {
@@ -359,74 +354,5 @@ public class WelcomeToMyWorld implements ModInitializer {
                     }
                     return net.minecraft.util.ActionResult.PASS;
                 });
-    }
-
-    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
-
-    private void startScheduledSender() {
-        SCHEDULER.scheduleAtFixedRate(() -> {
-            if (server != null && !ConfigLoader.getInstance().urlToSendChart.equalsIgnoreCase("none")) {
-                Collection<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-                if (!onlinePlayers.isEmpty()) {
-                    sendPlayerDataBatch(onlinePlayers);
-                }
-            }
-        }, 0, 20, TimeUnit.SECONDS); // Send every 15 seconds
-    }
-
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(1);
-
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
-
-    public static void sendPlayerDataBatch(Collection<ServerPlayerEntity> players) {
-        String url = ConfigLoader.getInstance().urlToSendChart;
-        String modpackName = "ESC";
-        String modpackVersion = ConfigLoader.getInstance().modpackVersion;
-
-        EXECUTOR.submit(() -> {
-            try {
-                StringBuilder jsonBuilder = new StringBuilder();
-                jsonBuilder.append("{\"players\":[");
-
-                boolean first = true;
-                for (ServerPlayerEntity player : players) {
-                    if (!first) {
-                        jsonBuilder.append(",");
-                    }
-                    jsonBuilder.append(String.format(
-                            "{\"playerName\":\"%s\"," +
-                                    "\"currentDay\":%d," +
-                                    "\"modpackName\":\"%s\"," +
-                                    "\"version\":\"%s\"}",
-                            player.getName().getString(),
-                            dayAndNightCounterAnimationHandler.currentDay,
-                            modpackName,
-                            modpackVersion));
-                    first = false;
-                }
-
-                jsonBuilder.append("]}");
-                String json = jsonBuilder.toString();
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(json))
-                        .build();
-
-                HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                        .thenAccept(response -> {
-                            if (response.statusCode() != 200) {
-                                LOGGER.warn("log(\"Batch update failed status code\", {})", response.statusCode());
-                            }
-                        })
-                        .exceptionally(e -> {
-                            LOGGER.error("log(\"Batch update error\", {})", e.getMessage());
-                            return null;
-                        });
-            } catch (Exception e) {
-                LOGGER.error("log(\"Batch update setup error\", {})", e.getMessage());
-            }
-        });
     }
 }

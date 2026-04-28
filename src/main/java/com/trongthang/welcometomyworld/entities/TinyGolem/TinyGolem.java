@@ -96,15 +96,16 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
         this.goalSelector.add(1, new SwimGoal(this));
         this.goalSelector.add(2, new SitGoal(this));
         // Add a goal to stop typical movement while performing skills
+        // Only chase and attack when not on cooldown
         this.goalSelector.add(3, new MeleeAttackGoal(this, 1.2D, false) {
             @Override
             public boolean canStart() {
-                return getState() == STATE_IDLE && super.canStart();
+                return TinyGolem.this.globalCooldown <= 0 && getState() == STATE_IDLE && super.canStart();
             }
 
             @Override
             public boolean shouldContinue() {
-                return getState() == STATE_IDLE && super.shouldContinue();
+                return TinyGolem.this.globalCooldown <= 0 && getState() == STATE_IDLE && super.shouldContinue();
             }
 
             @Override
@@ -112,15 +113,42 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
                 double d = this.getSquaredMaxAttackDistance(target);
                 if (squaredDistance <= d && this.getCooldown() <= 0) {
                     this.resetCooldown();
-                    // trigger attack
-                    if (TinyGolem.this.globalCooldown <= 0) {
-                        if (TinyGolem.this.random.nextFloat() < 0.2f) { // 20% chance to spin attack
-                            TinyGolem.this.setState(STATE_PREPARE_SPIN);
-                        } else {
-                            TinyGolem.this.setState(STATE_ATTACK);
-                        }
+                    if (TinyGolem.this.random.nextFloat() < 0.2f) {
+                        TinyGolem.this.setState(STATE_PREPARE_SPIN);
+                    } else {
+                        TinyGolem.this.setState(STATE_ATTACK);
                     }
                 }
+            }
+        });
+        // While on cooldown, back away from the target to ~2 blocks
+        this.goalSelector.add(3, new Goal() {
+            private static final double SAFE_DIST = 2.0;
+
+            @Override
+            public boolean canStart() {
+                if (TinyGolem.this.globalCooldown <= 0 || TinyGolem.this.getState() != STATE_IDLE)
+                    return false;
+                LivingEntity target = TinyGolem.this.getTarget();
+                return target != null && TinyGolem.this.squaredDistanceTo(target) < SAFE_DIST * SAFE_DIST;
+            }
+
+            @Override
+            public boolean shouldContinue() {
+                if (TinyGolem.this.globalCooldown <= 0 || TinyGolem.this.getState() != STATE_IDLE)
+                    return false;
+                LivingEntity target = TinyGolem.this.getTarget();
+                return target != null && TinyGolem.this.squaredDistanceTo(target) < SAFE_DIST * SAFE_DIST;
+            }
+
+            @Override
+            public void tick() {
+                LivingEntity target = TinyGolem.this.getTarget();
+                if (target == null)
+                    return;
+                Vec3d away = TinyGolem.this.getPos().subtract(target.getPos()).normalize();
+                Vec3d flee = TinyGolem.this.getPos().add(away.multiply(SAFE_DIST + 0.5));
+                TinyGolem.this.getNavigation().startMovingTo(flee.x, flee.y, flee.z, 1.2);
             }
         });
         this.goalSelector.add(4, new CustomFollowOwnerGoal(this, 1.0D, 5.0F, 10.0F, false));
@@ -225,6 +253,11 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
 
         return super.interactMob(player, hand);
 
+    }
+
+    @Override
+    public boolean handleFallDamage(float fallDistance, float damageMultiplier, DamageSource damageSource) {
+        return false;
     }
 
     @Override

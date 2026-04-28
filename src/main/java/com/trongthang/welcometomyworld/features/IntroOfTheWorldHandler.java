@@ -54,10 +54,10 @@ public class IntroOfTheWorldHandler {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, 255, false, false));
         }
 
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 40, 0, false, false));
+
         // Give everyone slow falling initially
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 120, 4, false, false));
-
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 30, 0, false, false));
 
         // Set player scale to small
         if (player instanceof IScaleEntity scaleEntity) {
@@ -172,7 +172,7 @@ public class IntroOfTheWorldHandler {
 
         // Ground Radar: If surviving, inject hidden resistance just before impact
         if (meantToSurvive && isGroundNearby(player, 0, 35)) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 220, 255, false, false));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 300, 255, false, false));
         }
 
         // Check if player died mid-air (or upon impact if meant to die)
@@ -210,7 +210,7 @@ public class IntroOfTheWorldHandler {
                             .addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 40, 4, false, false)),
                     20);
 
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 3, false, false));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 220, 3, false, false));
 
             // Cosmetics
             spawnLandEffect(player);

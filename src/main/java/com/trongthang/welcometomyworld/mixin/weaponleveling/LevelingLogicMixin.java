@@ -72,7 +72,7 @@ public class LevelingLogicMixin {
             double baseBonus = (health * health) / 72.0;
 
             // 2. High-Health Cubic Boost
-            double extraHealth = Math.max(0, health - 100);
+            double extraHealth = Math.max(0, health - 80);
             double highHealthBonus = (extraHealth * extraHealth * extraHealth) / 30000.0;
 
             // 3. Safety Cap

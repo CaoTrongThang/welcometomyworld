@@ -58,7 +58,7 @@ repositories {
     maven { url 'https://maven.blamejared.com' }
     maven { url "https://maven.firstdarkdev.xyz/snapshots" } // LDLib, Photon
     maven { url = "https://maven.kyrptonaught.dev" }
-
+    maven { url "https://maven.llamalad7.dev/releases" }
 }
 
 fabricApi {
@@ -99,7 +99,8 @@ dependencies {
     modImplementation "net.kyrptonaught:customportalapi:0.0.1-beta65-1.20"
     include "net.kyrptonaught:customportalapi:0.0.1-beta65-1.20"
 
-
+    implementation "io.github.llamalad7:mixinextras-fabric:0.5.4"
+    annotationProcessor "io.github.llamalad7:mixinextras-fabric:0.5.4"
 }
 
 processResources {

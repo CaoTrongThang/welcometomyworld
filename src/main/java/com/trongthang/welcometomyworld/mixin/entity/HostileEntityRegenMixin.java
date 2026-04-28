@@ -4,6 +4,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.player.PlayerEntity;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -61,7 +64,7 @@ public class HostileEntityRegenMixin {
         if (enemies.size() <= 3)
             return;
 
-        if (entity instanceof HostileEntity) {
+        if (!(entity instanceof TameableEntity) && !(entity instanceof PlayerEntity)) {
             if (entity.getWorld().getTickOrder() % 40 == 0) {
                 applyHealthRegen();
             }
@@ -88,7 +91,7 @@ public class HostileEntityRegenMixin {
         int additionalEnemies = enemyCount - 3;
 
         float regenPercentage = Math.min(additionalEnemies * 0.0001f, 0.01f);
-        float regenAmount = Math.min(maxHealth * regenPercentage, 150);
+        float regenAmount = Math.min(maxHealth * regenPercentage, 130);
 
         entity.setHealth(Math.min(entity.getHealth() + regenAmount, maxHealth));
     }
