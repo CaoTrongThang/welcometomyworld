@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,13 +33,6 @@ import static com.trongthang.welcometomyworld.GlobalVariables.EXP_MULTIPLIER_EAC
  */
 @Mixin(LivingEntity.class)
 public class TameableEntityKillMobMixin {
-
-    /**
-     * Shares are stored here so LevelingLogicMixin can read them
-     * when WeaponLeveling fires updateForKill inside the same onDeath call.
-     * Map<playerUUID, share (0.0–1.0)>
-     */
-    public static final ThreadLocal<Map<UUID, Float>> PENDING_SHARES = ThreadLocal.withInitial(HashMap::new);
 
     @Inject(method = "onDeath", at = @At("HEAD"))
     public void onDeath(DamageSource damageSource, CallbackInfo ci) {
@@ -60,7 +52,7 @@ public class TameableEntityKillMobMixin {
             return;
 
         // Pre-fill pending shares map for LevelingLogicMixin
-        Map<UUID, Float> pendingShares = PENDING_SHARES.get();
+        Map<UUID, Float> pendingShares = DamageTracker.PENDING_SHARES.get();
         pendingShares.clear();
 
         for (Map.Entry<UUID, Float> entry : contributions.entrySet()) {
@@ -72,9 +64,23 @@ public class TameableEntityKillMobMixin {
             if (attacker == null)
                 continue;
 
-            if (attacker instanceof PlayerEntity) {
+            if (attacker instanceof PlayerEntity player) {
                 // Gear XP for players is handled by LevelingLogicMixin via PENDING_SHARES
                 pendingShares.put(attackerUuid, share);
+
+                // Force WeaponLeveling to process this player if they are not the actual killer
+                Entity actualKiller = damageSource.getAttacker();
+                if (actualKiller == null || !actualKiller.getUuid().equals(attackerUuid)) {
+                    try {
+                        Class<?> clazz = Class.forName("net.weaponleveling.util.LevelingLogic");
+                        java.lang.reflect.Method method = clazz.getMethod("updateForKill", LivingEntity.class,
+                                DamageSource.class, net.minecraft.item.ItemStack.class);
+                        DamageSource fakeSource = serverWorld.getDamageSources().playerAttack(player);
+                        method.invoke(null, victim, fakeSource, null);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
 
             } else if (attacker instanceof TameableEntity tameableEntity) {
                 String tameableId = net.minecraft.registry.Registries.ENTITY_TYPE

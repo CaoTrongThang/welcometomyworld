@@ -18,11 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntity.class)
 public class LivingEntityDamageTrackerMixin {
 
-    @Inject(method = "damage", at = @At("RETURN"))
+    @Inject(method = "damage", at = @At("HEAD"))
     private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        // Only record if damage actually landed
-        if (!cir.getReturnValue())
-            return;
+        // Record damage attempt before checking onDeath.
+        // This ensures the fatal blow is tracked before getAndClear() is called.
 
         LivingEntity victim = (LivingEntity) (Object) this;
 

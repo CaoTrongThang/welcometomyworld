@@ -1,7 +1,6 @@
 package com.trongthang.welcometomyworld.mixin.entity;
 
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.MerchantEntity;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -31,33 +30,5 @@ public abstract class VillagerEntityMixin extends MerchantEntity {
     @Override
     public boolean cannotDespawn() {
         return true;
-    }
-
-    @Inject(method = "checkDespawn", at = @At("HEAD"), cancellable = true)
-    private void onCheckDespawn(CallbackInfo ci) {
-        ci.cancel();
-    }
-
-    @Inject(method = "remove", at = @At("HEAD"))
-    private void onRemove(Entity.RemovalReason reason, CallbackInfo ci) {
-        if (!this.getWorld().isClient) {
-            WelcomeToMyWorld.LOGGER.info("Villager " + this.getUuidAsString() + " removed. Reason: " + reason);
-            // Log stack trace to see what called remove
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-            for (int i = 0; i < Math.min(stackTrace.length, 15); i++) {
-                WelcomeToMyWorld.LOGGER.info("  at " + stackTrace[i]);
-            }
-        }
-    }
-
-    @Inject(method = "discard", at = @At("HEAD"))
-    private void onDiscard(CallbackInfo ci) {
-        if (!this.getWorld().isClient) {
-            WelcomeToMyWorld.LOGGER.info("Villager " + this.getUuidAsString() + " discarded.");
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-            for (int i = 0; i < Math.min(stackTrace.length, 15); i++) {
-                WelcomeToMyWorld.LOGGER.info("  at " + stackTrace[i]);
-            }
-        }
     }
 }

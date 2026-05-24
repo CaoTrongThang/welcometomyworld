@@ -64,8 +64,8 @@ public class SpawnMonstersPackEveryMins {
             Pair.of("wandering_orc:orc_warlock", 2));
 
     public static List<Pair<String, Integer>> mutantMonsterPackComposition = List.of(
-            Pair.of("mutantmonsters:mutant_zombie", 4),
-            Pair.of("mutantmonsters:mutant_skeleton", 3),
+            Pair.of("mutantmonsters:mutant_zombie", 1),
+            Pair.of("mutantmonsters:mutant_skeleton", 4),
             Pair.of("mutantmonsters:mutant_enderman", 1));
 
     public static List<Pair<String, Integer>> pillagerPackComposition = List.of(

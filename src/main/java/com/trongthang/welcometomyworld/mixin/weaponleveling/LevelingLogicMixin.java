@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.mixin.weaponleveling;
 
-import com.trongthang.welcometomyworld.mixin.combat.TameableEntityKillMobMixin;
+import com.trongthang.welcometomyworld.Utilities.DamageTracker;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
@@ -39,7 +39,7 @@ public class LevelingLogicMixin {
         }
         // Resolve damage share for this player attacker
         if (source != null && source.getAttacker() instanceof PlayerEntity player) {
-            Float share = TameableEntityKillMobMixin.PENDING_SHARES.get().get(player.getUuid());
+            Float share = DamageTracker.PENDING_SHARES.get().get(player.getUuid());
             CURRENT_DAMAGE_SHARE.set(share != null ? share : 1.0f);
         } else {
             CURRENT_DAMAGE_SHARE.set(1.0f);

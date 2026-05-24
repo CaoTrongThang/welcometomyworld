@@ -14,6 +14,13 @@ public class DamageTracker {
     // Map<victimUUID, Map<attackerUUID, totalDamageDealt>>
     private static final Map<UUID, Map<UUID, Float>> tracker = new HashMap<>();
 
+    /**
+     * Stores pending damage shares (playerUUID -> share 0.0-1.0) so that
+     * LevelingLogicMixin can read them when WeaponLeveling fires updateForKill.
+     * Populated by TameableEntityKillMobMixin on death, cleared after use.
+     */
+    public static final ThreadLocal<Map<UUID, Float>> PENDING_SHARES = ThreadLocal.withInitial(HashMap::new);
+
     public static void recordDamage(UUID victim, UUID attacker, float amount) {
         tracker.computeIfAbsent(victim, k -> new HashMap<>())
                 .merge(attacker, amount, (a, b) -> a + b);
