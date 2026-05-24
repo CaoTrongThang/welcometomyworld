@@ -140,8 +140,8 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
     private final int[] skillCooldowns = new int[100];
 
     private static final float DODGE_CHANCE = 0.45f;
+    private int combatTicks = 0;
 
-    private int autoRegenHealth = 50;
     private int autoRegenCooldown = 100;
 
     private static final String[] CALM_DOWN_MESSAGES = {
@@ -1495,9 +1495,16 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
         if (immunityTimer > 0)
             immunityTimer--;
 
-        if (this.age % autoRegenCooldown == 0) {
+        if (this.getTarget() != null) {
+            combatTicks = 400;
+        } else {
+            if (combatTicks > 0)
+                combatTicks--;
+        }
+
+        if (this.age % autoRegenCooldown == 0 && combatTicks <= 0) {
             if (this.getHealth() < this.getMaxHealth()) {
-                this.heal(autoRegenHealth);
+                this.heal(this.getMaxHealth() * 0.05f);
             }
         }
 
@@ -1615,6 +1622,9 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
         }
 
         boolean result = super.damage(source, amount);
+        if (result) {
+            combatTicks = 400;
+        }
 
         // Smarter targeting: if we are hit by a new attacker, check if we should switch
         if (result && source.getAttacker() instanceof LivingEntity attacker) {

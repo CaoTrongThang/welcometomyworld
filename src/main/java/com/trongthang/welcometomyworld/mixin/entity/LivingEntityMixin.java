@@ -36,9 +36,6 @@ public abstract class LivingEntityMixin extends Entity implements IScaleEntity {
     }
 
     @Unique
-    private static final ThreadLocal<Boolean> welcometomyworld$handlingDamage = ThreadLocal.withInitial(() -> false);
-
-    @Unique
     private float welcometomyworld$scale = 1.0f;
 
     @Override
@@ -51,22 +48,6 @@ public abstract class LivingEntityMixin extends Entity implements IScaleEntity {
     @Unique
     public float getScale() {
         return this.welcometomyworld$scale;
-    }
-
-    @Inject(method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
-    private void onDamageHeadRecursionGuard(net.minecraft.entity.damage.DamageSource source, float amount,
-            CallbackInfoReturnable<Boolean> cir) {
-        if (welcometomyworld$handlingDamage.get()) {
-            cir.setReturnValue(false);
-        } else {
-            welcometomyworld$handlingDamage.set(true);
-        }
-    }
-
-    @Inject(method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z", at = @At("RETURN"))
-    private void onDamageReturnRecursionGuard(net.minecraft.entity.damage.DamageSource source, float amount,
-            CallbackInfoReturnable<Boolean> cir) {
-        welcometomyworld$handlingDamage.set(false);
     }
 
     private static boolean welcometomyworld$handling = false;

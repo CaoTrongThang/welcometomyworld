@@ -2,6 +2,8 @@ package com.trongthang.welcometomyworld.features;
 
 import com.trongthang.welcometomyworld.classes.PlayerData;
 import com.trongthang.welcometomyworld.Utilities.Utils;
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
+import com.trongthang.welcometomyworld.Utilities.ModDamageSources;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -24,31 +26,31 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 public class PunchingBlocksPenalties {
 
     List<Block> nonDamagingBlocks = List.of(
-            Blocks.SNOW_BLOCK
-    );
+            Blocks.SNOW_BLOCK);
 
     public static class BreakBlockProtection {
         public BlockPos blockPos;
         public int cooldown = 8;
 
-        public BreakBlockProtection(BlockPos blockPos){
+        public BreakBlockProtection(BlockPos blockPos) {
             this.blockPos = blockPos;
         }
 
-        public void decreaseCooldown(int num){
+        public void decreaseCooldown(int num) {
             this.cooldown -= num;
         }
     }
 
-    //Immune damage from breaking block for a while after broke 1
+    // Immune damage from breaking block for a while after broke 1
     private static ConcurrentHashMap<ServerPlayerEntity, BreakBlockProtection> immunePunchPenalties = new ConcurrentHashMap<>();
 
     public void handlePunchingBlock() {
         ServerTickEvents.END_SERVER_TICK.register((t) -> {
-            if(immunePunchPenalties.isEmpty()) return;
+            if (immunePunchPenalties.isEmpty())
+                return;
 
-            for(ServerPlayerEntity p : immunePunchPenalties.keySet()){
-                if(immunePunchPenalties.get(p).cooldown > 0){
+            for (ServerPlayerEntity p : immunePunchPenalties.keySet()) {
+                if (immunePunchPenalties.get(p).cooldown > 0) {
                     immunePunchPenalties.get(p).decreaseCooldown(1);
                 } else {
                     immunePunchPenalties.remove(p);
@@ -56,51 +58,52 @@ public class PunchingBlocksPenalties {
             }
         });
 
-        PlayerBlockBreakEvents.BEFORE.register((a,b,c,d,e) -> {
-            if(a.isClient) return true;
+        PlayerBlockBreakEvents.BEFORE.register((a, b, c, d, e) -> {
+            if (a.isClient)
+                return true;
 
             double armor = b.getAttributeValue(EntityAttributes.GENERIC_ARMOR);
-            if(armor < 10){
+            if (armor < 10) {
                 immunePunchPenalties.putIfAbsent((ServerPlayerEntity) b, new BreakBlockProtection(c));
             }
 
             return true;
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(PLAYER_BREAKING_BLOCK,
+                (server, p, handler, buf, responseSender) -> {
+                    // Read all data from the buffer immediately
+                    int x = buf.readInt();
+                    int y = buf.readInt();
+                    int z = buf.readInt();
+                    UUID playerUuid = buf.readUuid();
 
-        ServerPlayNetworking.registerGlobalReceiver(PLAYER_BREAKING_BLOCK, (server, p, handler, buf, responseSender) -> {
-            // Read all data from the buffer immediately
-            int x = buf.readInt();
-            int y = buf.readInt();
-            int z = buf.readInt();
-            UUID playerUuid = buf.readUuid();
+                    // Defer execution to the server thread
+                    server.execute(() -> {
+                        ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerUuid);
+                        if (player != null) {
+                            BlockPos blockPos = new BlockPos(x, y, z);
 
-            // Defer execution to the server thread
-            server.execute(() -> {
-                ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerUuid);
-                if (player != null) {
-                    BlockPos blockPos = new BlockPos(x, y, z);
-
-                    if(immunePunchPenalties.containsKey(player)){
-                        if(blockPos.equals(immunePunchPenalties.get(player).blockPos)){
-                            applyPunchingBlockDamage(server, player, blockPos);
+                            if (immunePunchPenalties.containsKey(player)) {
+                                if (blockPos.equals(immunePunchPenalties.get(player).blockPos)) {
+                                    applyPunchingBlockDamage(server, player, blockPos);
+                                }
+                            } else {
+                                applyPunchingBlockDamage(server, player, blockPos);
+                            }
                         }
-                    } else {
-                        applyPunchingBlockDamage(server, player, blockPos);
-                    }
-                }
-            });
-        });
+                    });
+                });
     }
-
 
     private void applyPunchingBlockDamage(MinecraftServer server, ServerPlayerEntity player, BlockPos blockPos) {
         World world = player.getWorld();
         BlockState blockState = world.getBlockState(blockPos);
 
-        if (blockState.isAir() || blockState.getBlock() == Blocks.WATER) return;
+        if (blockState.isAir() || blockState.getBlock() == Blocks.WATER)
+            return;
 
-        if (!nonDamagingBlocks.contains(blockState.getBlock())){
+        if (!nonDamagingBlocks.contains(blockState.getBlock())) {
             float hardness = blockState.getHardness(world, blockPos);
 
             if (hardness > 0) {
@@ -110,11 +113,13 @@ public class PunchingBlocksPenalties {
                         ? damage
                         : (!player.getMainHandStack().isSuitableFor(blockState) ? damage / 2 : 0);
 
-                if(finalDamageIfHasSomethingOnHand > 20){
+                if (finalDamageIfHasSomethingOnHand > 20) {
                     finalDamageIfHasSomethingOnHand = 20;
                 }
+
                 if (finalDamageIfHasSomethingOnHand > 1.1) {
-                    player.damage(player.getWorld().getDamageSources().generic(), finalDamageIfHasSomethingOnHand);
+                    player.damage(ModDamageSources.create(player.getWorld(), ModDamageSources.PUNCH_BLOCK),
+                            finalDamageIfHasSomethingOnHand);
 
                     PlayerData p = dataHandler.playerDataMap.get(player.getUuid());
                     if (!p.firstPunchingBlocksDamage) {

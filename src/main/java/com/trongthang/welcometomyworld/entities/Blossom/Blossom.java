@@ -114,6 +114,7 @@ public class Blossom extends StrongTameableEntityDefault {
     private int maxStatsScale = 8;
 
     public BlockPos patrolCenterPos = null;
+    private net.minecraft.registry.RegistryKey<net.minecraft.world.World> patrolDimension = null;
 
     public int animationTimeout = 0;
     public static final int DEFAULT_ANIMATION_TIMEOUT = 15;
@@ -121,7 +122,7 @@ public class Blossom extends StrongTameableEntityDefault {
     private int ultimateCooldown = 400;
     private int defaultUltimateCooldown = 4800;
 
-    private int healCooldownCounter = 200;
+    private int healCooldownCounter = 2400;
     private float selfHealPercent = 0.1f;
     private float groupHealPercent = 0.03f;
 
@@ -233,10 +234,13 @@ public class Blossom extends StrongTameableEntityDefault {
         this.targetSelector.add(2, new CustomAttackWithOwnerGoal(this));
         this.targetSelector.add(3, new CustomRevengeGoal(this).setGroupRevenge());
 
-        if (!this.isTamed() && this.getOwner() == null) {
-            this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true);
-            this.targetSelector.add(4, this.hostileTargetGoal);
-        }
+        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true) {
+            @Override
+            public boolean canStart() {
+                return !Blossom.this.isSitting() && super.canStart();
+            }
+        };
+        this.targetSelector.add(4, this.hostileTargetGoal);
     }
 
     @Override
@@ -248,12 +252,7 @@ public class Blossom extends StrongTameableEntityDefault {
         // WelcomeToMyWorld.LOGGER.info("[CLIENT] DEATH: " + this.isDead());
         //// WelcomeToMyWorld.LOGGER.info("[CLIENT] SITTING: " +
         // this.isInSittingPose());
-        // } else {
-        // WelcomeToMyWorld.LOGGER.info("[SERVER] DEATH: " + this.isDead());
-        //// WelcomeToMyWorld.LOGGER.info("[SERVER] SITTING: " +
-        // this.isInSittingPose());
         // }
-
         if (!this.getWorld().isClient) {
             if (this.getIsGreeting()) {
                 // Force stay still
@@ -402,7 +401,6 @@ public class Blossom extends StrongTameableEntityDefault {
 
                             // Randomly choose between Regeneration or Resistance
                             boolean useRegen = this.random.nextFloat() < 0.7f;
-                            int totalBuff = 0;
                             for (LivingEntity ally : allies) {
                                 StatusEffect effect = useRegen ? REGENERATION : RESISTANCE;
 
@@ -412,15 +410,14 @@ public class Blossom extends StrongTameableEntityDefault {
 
                                 int amplifier = useRegen ? regenAmplifier : resistanceAmplifier;
 
-                                if (amplifier > 0) {
-                                    totalBuff++;
+                                if (amplifier >= 0) {
                                     ally.addStatusEffect(new StatusEffectInstance(
-                                            effect,
-                                            BUFF_DURATION,
-                                            amplifier,
-                                            false,
-                                            true,
-                                            true));
+                                            effect, // effect
+                                            BUFF_DURATION, // duration
+                                            amplifier, // amplifier
+                                            false, // ambient
+                                            true, // showParticles
+                                            true)); // showIcon
 
                                     // Spawn matching particles
                                     spawnBuffParticles(ally.getWorld(), ally.getPos(), effect);
@@ -432,7 +429,7 @@ public class Blossom extends StrongTameableEntityDefault {
                                 ally.setHealth(ally.getHealth() + (ally.getMaxHealth() * this.groupHealPercent));
                             }
 
-                            this.healCooldownCounter = Math.min(totalBuff * 200, this.defaultHealCooldown);
+                            this.healCooldownCounter = this.defaultHealCooldown;
 
                             if (!allies.isEmpty()) {
                                 spawnBuffCircle(this.getWorld(), this.getBlockPos(),
@@ -891,17 +888,17 @@ public class Blossom extends StrongTameableEntityDefault {
         if (!this.getWorld().isClient) {
             if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner()
                     && player.isSneaking()) {
-                this.patrolCenterPos = this.getBlockPos();
                 boolean newVal = !this.getIsPatrolling();
-                WelcomeToMyWorld.LOGGER.info("damage: toggling setIsPatrolling to " + newVal + " via sneak-attack for "
-                        + this.getName().getString());
                 this.setIsPatrolling(newVal);
 
                 if (this.getIsPatrolling()) {
+                    this.patrolCenterPos = this.getBlockPos();
+                    this.patrolDimension = this.getWorld().getRegistryKey();
                     this.targetSelector.add(1, this.hostileTargetGoal);
                 } else {
                     this.targetSelector.remove(this.hostileTargetGoal);
                     this.patrolCenterPos = null;
+                    this.patrolDimension = null;
                 }
 
                 return super.damage(source, 0);
@@ -1107,6 +1104,9 @@ public class Blossom extends StrongTameableEntityDefault {
             homePos.add(NbtDouble.of(this.patrolCenterPos.getZ()));
             nbt.put("patrolPos", homePos);
         }
+        if (this.patrolDimension != null) {
+            nbt.putString("patrolDimension", this.patrolDimension.getValue().toString());
+        }
     }
 
     @Override
@@ -1126,6 +1126,13 @@ public class Blossom extends StrongTameableEntityDefault {
                     (int) homePos.getDouble(2));
         } else {
             this.patrolCenterPos = null;
+        }
+        if (nbt.contains("patrolDimension")) {
+            this.patrolDimension = net.minecraft.registry.RegistryKey.of(
+                    net.minecraft.registry.RegistryKeys.WORLD,
+                    new net.minecraft.util.Identifier(nbt.getString("patrolDimension")));
+        } else {
+            this.patrolDimension = null;
         }
     }
 
@@ -1244,7 +1251,15 @@ public class Blossom extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            return mob.getIsPatrolling() && mob.patrolCenterPos != null;
+            if (!mob.getIsPatrolling() || mob.patrolCenterPos == null)
+                return false;
+            if (mob.patrolDimension != null && !mob.getWorld().getRegistryKey().equals(mob.patrolDimension)) {
+                mob.setIsPatrolling(false);
+                mob.patrolCenterPos = null;
+                mob.patrolDimension = null;
+                return false;
+            }
+            return true;
         }
 
         @Override
@@ -1267,6 +1282,14 @@ public class Blossom extends StrongTameableEntityDefault {
 
         @Override
         public void tick() {
+            // Cancel patrol if mob was teleported to a different dimension
+            if (mob.patrolDimension != null && !mob.getWorld().getRegistryKey().equals(mob.patrolDimension)) {
+                mob.setIsPatrolling(false);
+                mob.patrolCenterPos = null;
+                mob.patrolDimension = null;
+                return;
+            }
+
             // Keep the mob loaded while patrolling
             if (mob.getWorld() instanceof ServerWorld serverWorld) {
                 serverWorld.getChunkManager().addTicket(ChunkTicketType.PORTAL, new ChunkPos(mob.getBlockPos()), 2,
@@ -1337,7 +1360,6 @@ public class Blossom extends StrongTameableEntityDefault {
                 return;
             }
             if (mob.teleportTo(target.x, target.y, target.z)) {
-                WelcomeToMyWorld.LOGGER.info("PatrollingGoal: teleport successful.");
                 cooldown = 100;
                 mob.setTarget(null);
                 mob.getNavigation().stop();

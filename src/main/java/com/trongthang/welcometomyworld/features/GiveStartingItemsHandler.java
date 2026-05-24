@@ -41,34 +41,39 @@ public class GiveStartingItemsHandler {
 
         MinecraftServer server = player.getServer();
         ItemStack sandwich = getModdedItems("croptopia:blt", 1); // Change to mod's item ID and quantity
-        ItemStack purrifiedWater = new ItemStack(Items.POTION);
-        purrifiedWater.getOrCreateNbt().putString("Potion", "minecraft:purified_water");
-        // ItemStack gamingConsole = getModdedItems("gamediscs:gaming_console", 1);
-        // ItemStack gameDisc = getModdedItems("gamediscs:game_disc_flappy_bird", 1);
+        ItemStack purifiedWater = getModdedItems("survivaloverhaul:purified_water", 1);
+        ItemStack gamingConsole = getModdedItems("gamediscs:gaming_console", 1);
+        ItemStack gameDisc = getModdedItems("gamediscs:game_disc_flappy_bird", 1);
+        ItemStack bandage = getModdedItems("survivaloverhaul:bandage", 1);
 
         if (sandwich != null) {
             server.execute(() -> {
                 player.getInventory().insertStack(sandwich);
             });
         }
-        if (purrifiedWater != null) {
+        if (purifiedWater != null) {
             server.execute(() -> {
-                player.getInventory().insertStack(purrifiedWater);
+                player.getInventory().insertStack(purifiedWater);
             });
         }
 
-        // if (gamingConsole != null) {
-        // server.execute(() -> {
-        // player.getInventory().insertStack(9, gamingConsole);
-        // });
-        // }
+        if (bandage != null) {
+            server.execute(() -> {
+                player.getInventory().insertStack(8, bandage);
+            });
+        }
 
-        // if (gameDisc != null) {
-        // server.execute(() -> {
-        // player.getInventory().insertStack(10, gameDisc);
-        // });
+        if (gamingConsole != null) {
+            server.execute(() -> {
+                player.getInventory().insertStack(9, gamingConsole);
+            });
+        }
 
-        // }
+        if (gameDisc != null) {
+            server.execute(() -> {
+                player.getInventory().insertStack(10, gameDisc);
+            });
+        }
 
         LOGGER.info("Gave starting items to player {}", player.getEntityName());
     }

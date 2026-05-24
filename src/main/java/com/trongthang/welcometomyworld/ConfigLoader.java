@@ -140,7 +140,7 @@ public class ConfigLoader {
 
                 @Expose
                 @SerializedName("bloodMoonChance")
-                public float bloodMoonChance = 0.06f;
+                public float bloodMoonChance = 0.03f;
 
                 @Expose
                 @SerializedName("bloodMoonWorldWhitelist")

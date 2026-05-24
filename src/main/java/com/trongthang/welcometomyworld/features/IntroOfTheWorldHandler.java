@@ -17,12 +17,14 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.PhantomEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -54,7 +56,7 @@ public class IntroOfTheWorldHandler {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, 255, false, false));
         }
 
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 40, 0, false, false));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 30, 0, false, false));
 
         // Give everyone slow falling initially
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 120, 4, false, false));
@@ -64,11 +66,10 @@ public class IntroOfTheWorldHandler {
             scaleEntity.setScale(0.00f);
 
             // Sync to client
-            net.minecraft.network.PacketByteBuf buf = net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+            PacketByteBuf buf = PacketByteBufs.create();
             buf.writeInt(player.getId());
             buf.writeFloat(0.01f);
-            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
-                    com.trongthang.welcometomyworld.WelcomeToMyWorld.SYNC_SCALE_PACKET, buf);
+            ServerPlayNetworking.send(player, SYNC_SCALE_PACKET, buf);
         }
     }
 
@@ -171,7 +172,7 @@ public class IntroOfTheWorldHandler {
         boolean meantToSurvive = playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro;
 
         // Ground Radar: If surviving, inject hidden resistance just before impact
-        if (meantToSurvive && isGroundNearby(player, 0, 35)) {
+        if (meantToSurvive && isGroundNearby(player, 50)) {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 300, 255, false, false));
         }
 
@@ -665,16 +666,20 @@ public class IntroOfTheWorldHandler {
         }
     }
 
-    private boolean isGroundNearby(ServerPlayerEntity player, int minDistance, int maxDistance) {
+    private boolean isGroundNearby(ServerPlayerEntity player, int maxDistance) {
         World world = player.getWorld();
-        BlockPos.Mutable mutablePos = new BlockPos.Mutable(
-                (int) Math.floor(player.getX()),
-                (int) Math.floor(player.getY()),
-                (int) Math.floor(player.getZ()));
+        int px = (int) Math.floor(player.getX());
+        int py = (int) Math.floor(player.getY());
+        int pz = (int) Math.floor(player.getZ());
 
-        for (int i = minDistance; i <= maxDistance; i++) {
-            if (!world.getBlockState(mutablePos.setY((int) Math.floor(player.getY()) - i)).isAir()) {
-                return true;
+        // Check a 3x3 area to account for horizontal movement and entity width
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                // Use Motion Blocking heightmap to find ground level in 1 lookup per column
+                int groundY = world.getTopY(Heightmap.Type.MOTION_BLOCKING, px + dx, pz + dz);
+                if (py - groundY <= maxDistance) {
+                    return true;
+                }
             }
         }
         return false;

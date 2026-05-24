@@ -63,7 +63,7 @@ public abstract class PhantomAIMixin extends Entity implements PhantomGrabber {
             return;
 
         PhantomEntity phantom = (PhantomEntity) (Object) this;
-        if (phantom.getPhantomSize() < 9) {
+        if (phantom.getPhantomSize() < 9 || phantom.getHealth() < phantom.getMaxHealth() / 3) {
             canGrab = false;
             return;
         }
@@ -108,7 +108,11 @@ public abstract class PhantomAIMixin extends Entity implements PhantomGrabber {
             if (target instanceof PlayerEntity && phantom.isAlive()) {
                 PlayerEntity player = (PlayerEntity) target;
                 if (!player.isCreative() && !player.isSpectator() && !player.isDead()) {
-                    if (phantom.distanceTo(player) <= 5.0 && phantom.getHealth() >= phantom.getMaxHealth() / 3) {
+                    double dist = phantom.distanceTo(player);
+                    double grabRange = 5.0 + (phantom.getWidth() / 2.0);
+                    boolean canGrab = dist <= grabRange;
+
+                    if (canGrab && phantom.getHealth() >= phantom.getMaxHealth() / 3) {
                         player.startRiding(phantom, true);
                         this.isGrabbing = true;
                     }
@@ -121,8 +125,7 @@ public abstract class PhantomAIMixin extends Entity implements PhantomGrabber {
     protected void updatePassengerPosition(Entity passenger, Entity.PositionUpdater positionUpdater) {
         super.updatePassengerPosition(passenger, positionUpdater);
         if (passenger instanceof PlayerEntity) {
-            // Position the player below the phantom as if being carried by its claws
-            double yOffset = this.getY() - passenger.getHeight() * 0.8;
+            double yOffset = this.getY() - 1.8;
             positionUpdater.accept(passenger, this.getX(), yOffset, this.getZ());
         }
     }

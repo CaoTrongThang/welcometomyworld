@@ -441,7 +441,8 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
 
         List<LivingEntity> hitEntities = this.getWorld().getEntitiesByClass(LivingEntity.class, hitBox,
                 e -> e != this && e.isAlive() && !e.isTeammate(this)
-                        && (this.getOwner() == null || !e.equals(this.getOwner())));
+                        && (this.getOwner() == null || !e.equals(this.getOwner()))
+                        && (!this.isTamed() || !(e instanceof PlayerEntity)));
 
         for (LivingEntity target : hitEntities) {
             float damage = (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
@@ -460,7 +461,8 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
 
         List<LivingEntity> hitEntities = this.getWorld().getEntitiesByClass(LivingEntity.class, hitBox,
                 e -> e != this && e.isAlive() && !e.isTeammate(this)
-                        && (this.getOwner() == null || !e.equals(this.getOwner())));
+                        && (this.getOwner() == null || !e.equals(this.getOwner()))
+                        && (!this.isTamed() || !(e instanceof PlayerEntity)));
 
         for (LivingEntity target : hitEntities) {
             float damage = (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);

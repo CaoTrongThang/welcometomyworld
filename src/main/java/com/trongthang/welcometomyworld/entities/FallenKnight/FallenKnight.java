@@ -99,6 +99,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     private int patrolRadius = 7;
     public BlockPos patrolCenterPos = null;
+    private net.minecraft.registry.RegistryKey<net.minecraft.world.World> patrolDimension = null;
 
     public int animationTimeout = 0;
     public static final int DEFAULT_ANIMATION_TIMEOUT = 15;
@@ -819,10 +820,12 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 this.setIsPatrolling(!this.getIsPatrolling());
 
                 if (this.getIsPatrolling()) {
+                    this.patrolDimension = this.getWorld().getRegistryKey();
                     this.targetSelector.add(1, this.hostileTargetGoal);
                 } else {
                     this.targetSelector.remove(this.hostileTargetGoal);
                     this.patrolCenterPos = null;
+                    this.patrolDimension = null;
                 }
 
                 return super.damage(source, 0);
@@ -897,6 +900,9 @@ public class FallenKnight extends StrongTameableEntityDefault {
             homePos.add(NbtDouble.of(this.patrolCenterPos.getZ()));
             nbt.put("patrolPos", homePos);
         }
+        if (this.patrolDimension != null) {
+            nbt.putString("patrolDimension", this.patrolDimension.getValue().toString());
+        }
     }
 
     @Override
@@ -911,6 +917,13 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     (int) homePos.getDouble(2));
         } else {
             this.patrolCenterPos = null;
+        }
+        if (nbt.contains("patrolDimension")) {
+            this.patrolDimension = net.minecraft.registry.RegistryKey.of(
+                    net.minecraft.registry.RegistryKeys.WORLD,
+                    new net.minecraft.util.Identifier(nbt.getString("patrolDimension")));
+        } else {
+            this.patrolDimension = null;
         }
     }
 
@@ -1119,7 +1132,15 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            return mob.getIsPatrolling() && mob.patrolCenterPos != null;
+            if (!mob.getIsPatrolling() || mob.patrolCenterPos == null)
+                return false;
+            if (mob.patrolDimension != null && !mob.getWorld().getRegistryKey().equals(mob.patrolDimension)) {
+                mob.setIsPatrolling(false);
+                mob.patrolCenterPos = null;
+                mob.patrolDimension = null;
+                return false;
+            }
+            return true;
         }
 
         @Override
@@ -1129,6 +1150,14 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public void tick() {
+            // Cancel patrol if mob was teleported to a different dimension
+            if (mob.patrolDimension != null && !mob.getWorld().getRegistryKey().equals(mob.patrolDimension)) {
+                mob.setIsPatrolling(false);
+                mob.patrolCenterPos = null;
+                mob.patrolDimension = null;
+                return;
+            }
+
             // Keep the mob loaded while patrolling
             if (mob.getWorld() instanceof ServerWorld serverWorld) {
                 serverWorld.getChunkManager().addTicket(ChunkTicketType.PORTAL, new ChunkPos(mob.getBlockPos()), 2,

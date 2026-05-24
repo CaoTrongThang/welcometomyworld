@@ -66,7 +66,6 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
     private List<Vec3d> posHistorySnapshot = new ArrayList<>();
     private boolean historyDirty = false;
 
-    private int autoRegenHealth = 50;
     private int autoRegenCooldown = 100;
 
     private boolean wasUnderground = false;
@@ -374,9 +373,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
         this.noClip = true; // Ensure it stays true
         this.setNoGravity(true); // Ensure it stays set
 
-        if (this.age % autoRegenCooldown == 0) {
+        if (this.age % autoRegenCooldown == 0 && combatTicks <= 0) {
             if (this.getHealth() < this.getMaxHealth()) {
-                this.heal(autoRegenHealth);
+                this.heal(this.getMaxHealth() * 0.05f);
             }
         }
 

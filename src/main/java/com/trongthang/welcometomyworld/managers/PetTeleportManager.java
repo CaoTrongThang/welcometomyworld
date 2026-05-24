@@ -55,15 +55,14 @@ public class PetTeleportManager {
                 double distance = mob.distanceTo(owner);
                 boolean differentDimension = !mob.getWorld().getRegistryKey().equals(owner.getWorld().getRegistryKey());
 
-                if (differentDimension || distance > 128) {
-                    if (differentDimension) {
-                        mob.moveToWorld(owner.getServerWorld());
-                    }
-
+                if (!differentDimension && distance > 128) {
                     mob.refreshPositionAndAngles(owner.getX(), owner.getY(), owner.getZ(), mob.getYaw(),
                             mob.getPitch());
-                    petData.lastKnownPos = owner.getBlockPos();
-                    petData.dimension = owner.getWorld().getRegistryKey().getValue().toString();
+
+                    PetData data = petDataMap.get(mob.getUuid());
+                    if (data != null) {
+                        data.lastKnownPos = owner.getBlockPos();
+                    }
                 }
             }
         }

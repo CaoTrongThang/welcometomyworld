@@ -28,10 +28,10 @@ import static com.trongthang.welcometomyworld.GlobalConfig.*;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER;
 
 public class BossesSpawningHandler {
-    public int checkInterval = 5000;
+    public int checkInterval = 3000;
     public int counter = 0;
 
-    public double bossSpawnChance = 0.2;
+    public double bossSpawnChance = 0.3;
 
     public int glowEffectDuration = 400;
 

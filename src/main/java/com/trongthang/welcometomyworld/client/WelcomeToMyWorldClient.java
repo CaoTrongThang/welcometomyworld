@@ -89,11 +89,15 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
             removeMessagesFirstJoin = true;
             stopSendingLoadingTerrainScreen = false;
             messageCounter = 0;
+            BloodMoonClient.isBloodMoon = false;
+            BloodMoonClient.overlayAlpha = 0f;
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             stopSendingOriginsScreen = false;
             stopSendingLoadingTerrainScreen = false;
+            BloodMoonClient.isBloodMoon = false;
+            BloodMoonClient.overlayAlpha = 0f;
         });
 
         if (compatityChecker.OriginCheck()) {

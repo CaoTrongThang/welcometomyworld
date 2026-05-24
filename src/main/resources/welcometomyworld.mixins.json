@@ -57,7 +57,11 @@
 		"misc.AttributesLibCrashFixMixin",
 		"entity.HostileEntityTargetTameableMobsMixin",
 		"accessor.MobEntityAccessor",
-		"weaponleveling.LevelingLogicMixin"
+		"weaponleveling.LevelingLogicMixin",
+		"combat.ZenithDamageCapMixin",
+		"combat.LifestealNerfMixin",
+		"misc.FabricSkyboxesCrashFixMixin",
+		"misc.WakesCrashFixMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

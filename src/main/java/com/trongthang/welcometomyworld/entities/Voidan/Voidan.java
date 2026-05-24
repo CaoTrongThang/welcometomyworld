@@ -88,8 +88,9 @@ public class Voidan extends HostileEntity implements GeoEntity {
     private int skillTotalTicks = 0;
     private int skillTick = 0;
     private int globalSkillCooldown = 0;
-    private int autoRegenHealth = 50;
+
     private int autoRegenCooldown = 100;
+    private int combatTicks = 0;
 
     private final int[] skillCooldowns = new int[50]; // Increased buffer just in case we add up to 50 skills
 
@@ -231,9 +232,16 @@ public class Voidan extends HostileEntity implements GeoEntity {
         if (!this.getWorld().isClient()) {
             skillsHandler();
 
-            if (this.age % autoRegenCooldown == 0) {
+            if (this.getTarget() != null) {
+                combatTicks = 400;
+            } else {
+                if (combatTicks > 0)
+                    combatTicks--;
+            }
+
+            if (this.age % autoRegenCooldown == 0 && combatTicks <= 0) {
                 if (this.getHealth() < this.getMaxHealth()) {
-                    this.heal(autoRegenHealth);
+                    this.heal(this.getMaxHealth() * 0.05f);
                 }
             }
         }
@@ -393,7 +401,11 @@ public class Voidan extends HostileEntity implements GeoEntity {
         if (this.isUsingSkill() && this.dataTracker.get(SKILL_ID) == 6) { // Immune to damage while emerging
             return false;
         }
-        return super.damage(source, amount);
+        boolean result = super.damage(source, amount);
+        if (result) {
+            combatTicks = 400;
+        }
+        return result;
     }
 
     private void handleSkillEffects(int skillId) {

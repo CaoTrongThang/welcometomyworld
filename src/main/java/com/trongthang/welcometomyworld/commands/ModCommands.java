@@ -22,7 +22,9 @@ public class ModCommands {
                                 return 1;
                             }))
                     .then(BloodMoonCommand.build())
-                    .then(ItemTagsCommand.build()));
+                    .then(ItemTagsCommand.build())
+                    .then(WeaponStatsCommand.build())
+                    .then(DebugMusicCommand.build()));
         });
     }
 }

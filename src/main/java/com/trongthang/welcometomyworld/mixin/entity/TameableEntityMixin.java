@@ -14,7 +14,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static com.trongthang.welcometomyworld.GlobalVariables.DEFAULT_XP_TAMEABLE_MOB;
 
 @Mixin(TameableEntity.class)
-public class TameableEntityMixin implements TameableEntityInterface {
+public abstract class TameableEntityMixin extends net.minecraft.entity.passive.PassiveEntity
+        implements TameableEntityInterface {
+    protected TameableEntityMixin(
+            net.minecraft.entity.EntityType<? extends net.minecraft.entity.passive.PassiveEntity> entityType,
+            net.minecraft.world.World world) {
+        super(entityType, world);
+    }
+
+    @Override
+    public boolean canTarget(net.minecraft.entity.LivingEntity target) {
+        TameableEntity source = (TameableEntity) (Object) this;
+        if (source.isTamed() && target instanceof TameableEntity tameableTarget && tameableTarget.isTamed()) {
+            return false;
+        }
+        return super.canTarget(target);
+    }
+
     @Unique
     private int damageLevel = 0;
     @Unique

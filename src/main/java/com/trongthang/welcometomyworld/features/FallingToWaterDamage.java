@@ -26,10 +26,6 @@ public class FallingToWaterDamage {
             server.execute(() -> {
                 ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerUuid);
                 if (player != null) {
-                    if (isHoldingUmbrella(player)) {
-                        return;
-                    }
-
                     player.damage(player.getWorld().getDamageSources().fall(), damageAmount);
 
                     if ((player.getHealth()) <= 0) {
@@ -46,7 +42,6 @@ public class FallingToWaterDamage {
         Item umbrellaItem = Registries.ITEM.get(new Identifier("artifacts", "umbrella"));
 
         if (umbrellaItem == null || umbrellaItem == Items.AIR) {
-            LOGGER.info("Umbrella item not found in registry!");
             return false;
         }
 

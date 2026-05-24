@@ -14,11 +14,23 @@ public class AttributesLibCrashFixMixin {
     @WrapOperation(method = "getSortedModifiers", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Multimap;put(Ljava/lang/Object;Ljava/lang/Object;)Z"), remap = false)
     private static boolean preventCrashOnPut(Multimap<Object, Object> instance, Object key, Object value,
             Operation<Boolean> original) {
+        if (key == null || value == null) {
+            return false;
+        }
+
+        try {
+            if (key instanceof net.minecraft.entity.attribute.EntityAttribute attr) {
+                if (attr.getTranslationKey() == null)
+                    return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+
         try {
             return original.call(instance, key, value);
-        } catch (NullPointerException e) {
-            System.err
-                    .println("[WelcomeToMyWorld] Prevented Zenith Attributes NPE crash on attribute modifier sorting.");
+        } catch (Exception e) {
+            System.err.println("[WelcomeToMyWorld] Prevented Zenith Attributes crash on attribute modifier sorting.");
             return false;
         }
     }

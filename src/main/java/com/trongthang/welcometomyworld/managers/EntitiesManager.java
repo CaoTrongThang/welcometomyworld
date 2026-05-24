@@ -347,11 +347,15 @@ public class EntitiesManager {
                                         Identifier biomeId = context.getBiomeKey().getValue();
                                         return biomeId.equals(new Identifier("betterend", "dragon_graveyards"))
                                                         || biomeId.equals(
-                                                                        new Identifier("betterend", "dust_wastelands"));
+                                                                        new Identifier("betterend", "dust_wastelands"))
+                                                        || biomeId.equals(new Identifier("betternether",
+                                                                        "upside_down_forest"))
+                                                        || biomeId.equals(new Identifier("betternether",
+                                                                        "wart_forest_edge"));
                                 },
                                 SpawnGroup.CREATURE,
                                 WANDERER,
-                                8,
+                                10,
                                 1,
                                 1);
 

@@ -61,6 +61,7 @@
   "block.welcometomyworld.glowing_white_grass": "Glowing White Grass",
   "block.welcometomyworld.glowing_purple_grass": "Glowing Purple Grass",
   "block.welcometomyworld.void_block": "Void Block",
+  "block.welcometomyworld.voidan_summoner": "Voidan Summoner",
   "block.welcometomyworld.purple_portal_activator": "Purple Portal Activator",
   "item.welcometomyworld.unknown_hood": "Unknown's Hood",
   "item.welcometomyworld.unknown_cloak": "Unknown's Cloak",
@@ -76,5 +77,7 @@
   "category.welcometomyworld.keys": "Welcome To My World Keys",
   "key.welcometomyworld.open_mob_stats": "Open Mob Stats",
   "effect.welcometomyworld.void_sight": "Void Sight",
-  "item.welcometomyworld.capture_cage": "Capture Cage"
+  "item.welcometomyworld.capture_cage": "Capture Cage",
+  "death.attack.punch_block": "%1$s punched a block too hard",
+  "death.attack.punch_block.player": "%1$s punched a block too hard while fighting %2$s"
 }

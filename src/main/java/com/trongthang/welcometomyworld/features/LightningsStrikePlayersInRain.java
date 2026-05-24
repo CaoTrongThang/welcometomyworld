@@ -18,29 +18,31 @@ import static com.trongthang.welcometomyworld.WelcomeToMyWorld.random;
 import static com.trongthang.welcometomyworld.features.FallingToWaterDamage.isHoldingUmbrella;
 
 public class LightningsStrikePlayersInRain {
-    float strikeChances = 0.5f;
+    float strikeChances = 0.2f;
 
-    private int checkInterval = 80;
+    private int checkInterval = 100;
     private int counter = 0;
 
     public void onServerTick(MinecraftServer server) {
 
         counter++;
-        if (counter < checkInterval) return;
+        if (counter < checkInterval)
+            return;
         counter = 0;
 
         ServerWorld world = server.getOverworld();
 
-        if (!world.isRaining() && !world.isThundering()) return;
+        if (!world.isRaining() && !world.isThundering())
+            return;
 
-        if (world.getPlayers().isEmpty()) return;
+        if (world.getPlayers().isEmpty())
+            return;
 
         ServerPlayerEntity player = world.getPlayers().get(random.nextInt(world.getPlayers().size()));
 
         if (player.isSpectator() || player.isCreative() || player.hasStatusEffect(StatusEffects.LUCK)) {
             return;
         }
-
 
         BlockPos pos = player.getBlockPos();
         if (world.isSkyVisible(pos) && world.getBiome(pos).value().getPrecipitation(pos) != Biome.Precipitation.NONE) {

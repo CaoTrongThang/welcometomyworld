@@ -1,5 +1,6 @@
 package com.trongthang.welcometomyworld.mixin.combat;
 
+import com.trongthang.welcometomyworld.ConfigLoader;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 
 import net.minecraft.entity.Entity;
@@ -22,7 +23,7 @@ public class CombatBalanceMixin {
             at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private float modifyDamageAmount(float originalDamage, DamageSource source) {
         Entity attacker = source.getAttacker();
-        boolean showMobDamageLogs = com.trongthang.welcometomyworld.ConfigLoader
+        boolean showMobDamageLogs = ConfigLoader
                 .getInstance().damageBalancing.showMobDamageLogs;
 
         LivingEntity mob = (LivingEntity) (Object) this;
