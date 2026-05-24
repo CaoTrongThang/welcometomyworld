@@ -9,6 +9,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -195,28 +196,45 @@ public class WandererArrow extends PersistentProjectileEntity {
 
             for (LivingEntity target : damageTarget) {
                 if (this.getOwner() instanceof TameableEntity tameable) {
-                    if (tameable.getOwner() == target)
-                        continue;
-
-                    if (target instanceof TameableEntity targetTameable) {
-                        if (targetTameable.isTamed() && targetTameable.getOwner() != null) {
-                            if (targetTameable.getOwner() == tameable.getOwner())
+                    if (tameable.isTamed()) {
+                        if (target instanceof PlayerEntity) {
+                            if (tameable.getOwner() == target || tameable.getTarget() != target) {
                                 continue;
+                            }
                         }
+
+                        if (target instanceof TameableEntity targetTameable) {
+                            if (targetTameable.isTamed() && targetTameable.getOwner() != null) {
+                                if (targetTameable.getOwner() == tameable.getOwner()) {
+                                    if (tameable.getTarget() != target) {
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Untamed wanderer arrow checks
+                        if (tameable.getOwner() == target)
+                            continue;
                     }
                 }
 
-                // Handle FallenKnight-specific logic
+                // Handle Wanderer-specific logic
                 if (target instanceof Wanderer wanderer) {
-                    // Skip untamed vs. untamed damage
-                    if (!wanderer.isTamed()) {
-                        continue;
-                    }
-
-                    // Skip tamed vs. tamed damage if they have the same owner
-                    if (wanderer.isTamed() && this.getOwner() != null && wanderer.getOwner() != null) {
-                        if (this.getOwner().equals(wanderer.getOwner())) {
+                    if (this.getOwner() instanceof TameableEntity ownerTameable) {
+                        // Skip untamed vs. untamed damage
+                        if (!ownerTameable.isTamed() && !wanderer.isTamed()) {
                             continue;
+                        }
+
+                        // Skip tamed vs. tamed damage if they have the same owner
+                        if (ownerTameable.isTamed() && ownerTameable.getOwner() != null && wanderer.isTamed()
+                                && wanderer.getOwner() != null) {
+                            if (ownerTameable.getOwner().equals(wanderer.getOwner())) {
+                                if (ownerTameable.getTarget() != target) {
+                                    continue;
+                                }
+                            }
                         }
                     }
                 }

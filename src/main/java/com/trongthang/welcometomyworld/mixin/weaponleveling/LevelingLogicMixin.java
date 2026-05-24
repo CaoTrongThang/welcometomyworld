@@ -1,7 +1,9 @@
 package com.trongthang.welcometomyworld.mixin.weaponleveling;
 
+import com.trongthang.welcometomyworld.mixin.combat.TameableEntityKillMobMixin;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -21,12 +23,26 @@ public class LevelingLogicMixin {
      */
     private static final ThreadLocal<Float> CURRENT_MOB_HEALTH = new ThreadLocal<>();
 
+    /**
+     * Stores the damage share (0.0–1.0) for the player currently receiving gear XP.
+     * 1.0 = full XP (solo kill or no tracking data). Set in captureContext, cleared
+     * in releaseContext.
+     */
+    private static final ThreadLocal<Float> CURRENT_DAMAGE_SHARE = new ThreadLocal<>();
+
     @Inject(method = "updateForKill", at = @At("HEAD"))
     private static void welcometomyworld_captureContext(LivingEntity victim, DamageSource source,
             ItemStack specificStack,
             CallbackInfo ci) {
         if (victim != null) {
             CURRENT_MOB_HEALTH.set(victim.getMaxHealth());
+        }
+        // Resolve damage share for this player attacker
+        if (source != null && source.getAttacker() instanceof PlayerEntity player) {
+            Float share = TameableEntityKillMobMixin.PENDING_SHARES.get().get(player.getUuid());
+            CURRENT_DAMAGE_SHARE.set(share != null ? share : 1.0f);
+        } else {
+            CURRENT_DAMAGE_SHARE.set(1.0f);
         }
     }
 
@@ -35,6 +51,7 @@ public class LevelingLogicMixin {
             ItemStack specificStack,
             CallbackInfo ci) {
         CURRENT_MOB_HEALTH.remove();
+        CURRENT_DAMAGE_SHARE.remove();
     }
 
     /**
@@ -79,7 +96,13 @@ public class LevelingLogicMixin {
             int bonus = (int) Math.min(2000000, baseBonus + highHealthBonus);
             int totalXP = amount + bonus;
 
-            // 4. Strict Level Cap via Reflection
+            // 4. Multiply by damage share (proportional contribution to the kill)
+            Float share = CURRENT_DAMAGE_SHARE.get();
+            if (share != null) {
+                totalXP = (int) (totalXP * share);
+            }
+
+            // 5. Strict Level Cap via Reflection
             // Prevents WeaponLeveling's "while-loop" bypassing the level 500 config cap on
             // massive XP drops.
             try {

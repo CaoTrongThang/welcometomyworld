@@ -116,16 +116,6 @@ public class CaptureCageItem extends Item implements GeoItem {
             }
         }
 
-        if (entity instanceof CustomTameableEntity customTameable) {
-            if (customTameable.isTamed() && user.getUuid().equals(customTameable.getOwnerUuid())) {
-                if (!user.getWorld().isClient) {
-                    captureEntity(stack, customTameable, user);
-                    user.getItemCooldownManager().set(this, COOLDOWN);
-                }
-                return ActionResult.success(user.getWorld().isClient);
-            }
-        }
-
         return ActionResult.PASS;
     }
 

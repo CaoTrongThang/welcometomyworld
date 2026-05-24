@@ -99,7 +99,6 @@ public class Wanderer extends StrongTameableEntityDefault {
     public int animationTimeout = 0;
     public static final int DEFAULT_ANIMATION_TIMEOUT = 15;
 
-    private double healthDecreaseWhenTameablePercent = 0.02f;
     private float percentHealthToBeTamed = 0.15f;
 
     private int flipCooldown = 100;
@@ -192,7 +191,6 @@ public class Wanderer extends StrongTameableEntityDefault {
         this.targetSelector.add(1, new CustomTrackOwnerAttackGoal(this));
         this.targetSelector.add(2, new CustomAttackWithOwnerGoal(this));
         this.targetSelector.add(3, new CustomRevengeGoal(this).setGroupRevenge());
-        this.targetSelector.add(4, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
     }
 
     public void setAnimationStates() {
@@ -366,7 +364,7 @@ public class Wanderer extends StrongTameableEntityDefault {
                 if (this.isDrinkingHeal)
                     return;
 
-                if (distance > 35) {
+                if (distance > 25) {
                     this.useSkillCooldownCounter = 0;
                     timeout = 40;
                     Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
@@ -446,9 +444,6 @@ public class Wanderer extends StrongTameableEntityDefault {
                     int rand1 = WelcomeToMyWorld.random.nextInt(0, 100);
                     timeout = 25;
 
-                    boolean canFrontFlip = false;
-                    boolean canBackFlip = false;
-
                     int flipStrength = 5;
                     Vec3d backFlipDirection = new Vec3d(
                             this.getX() - this.getTarget().getX(),
@@ -458,29 +453,48 @@ public class Wanderer extends StrongTameableEntityDefault {
                             this.getTarget().getX() - this.getX(),
                             2, // Ignore Y component
                             this.getTarget().getZ() - this.getZ()).normalize();
-                    canFrontFlip = isFlipAreaClear(frontFlipDirection) && !isVoidBehind(frontFlipDirection, 20);
-                    canBackFlip = isFlipAreaClear(backFlipDirection) && !isVoidBehind(backFlipDirection, 20);
+
+                    boolean canFrontFlip = isFlipAreaClear(frontFlipDirection) && !isVoidBehind(frontFlipDirection, 20);
+                    boolean canBackFlip = isFlipAreaClear(backFlipDirection) && !isVoidBehind(backFlipDirection, 20);
+
+                    boolean flipPerformed = false;
 
                     if (this.flipCooldownCounter >= this.flipCooldown && (canBackFlip || canFrontFlip)) {
-                        this.flipCooldownCounter = 0;
                         if (rand1 <= 60) {
-
                             if (canBackFlip) {
                                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
                                 this.addVelocity(backFlipDirection.x * flipStrength, 0.8f,
                                         backFlipDirection.z * flipStrength);
-
+                                flipPerformed = true;
+                            } else if (canFrontFlip) {
+                                Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
+                                this.addVelocity(frontFlipDirection.x * flipStrength, 0.8f,
+                                        frontFlipDirection.z * flipStrength);
+                                flipPerformed = true;
                             }
                         } else {
                             if (canFrontFlip) {
                                 Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
                                 this.addVelocity(frontFlipDirection.x * flipStrength, 0.8f,
                                         frontFlipDirection.z * flipStrength);
+                                flipPerformed = true;
+                            } else if (canBackFlip) {
+                                Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.MOVEMENT, timeout);
+                                this.addVelocity(backFlipDirection.x * flipStrength, 0.8f,
+                                        backFlipDirection.z * flipStrength);
+                                flipPerformed = true;
                             }
+                        }
+
+                        if (flipPerformed) {
+                            this.flipCooldownCounter = 0;
+                            Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
+                                    SoundsManager.WANDERER_BACKFLIP, 0.4f,
+                                    WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                         }
                     }
 
-                    if (!canBackFlip && !canFrontFlip) {
+                    if (!flipPerformed) {
                         if (rand1 <= 50) {
                             timeout = 40;
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
@@ -503,14 +517,11 @@ public class Wanderer extends StrongTameableEntityDefault {
                             Utils.addRunAfter(() -> {
                                 shootArrow();
                             }, 18);
-                        } else if (rand1 >= 90) {
+                        } else {
                             timeout = 20;
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK4, timeout);
                             rainOfArrowsSkill(this.getTarget().getPos());
                         }
-                    } else {
-                        Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
-                                SoundsManager.WANDERER_BACKFLIP, 0.4f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.1f));
                     }
                     resetSkill(timeout);
                 }
@@ -823,18 +834,24 @@ public class Wanderer extends StrongTameableEntityDefault {
                 }
 
                 if (target instanceof PlayerEntity) {
-                    if (this.isTamed() || this.getOwner() != null) {
-                        continue;
+                    if (this.isTamed()) {
+                        if (target == this.getOwner() || this.getTarget() != target) {
+                            continue;
+                        }
                     }
                 }
 
                 if (target instanceof Wanderer knight) {
+                    // Skip untamed vs. untamed damage
                     if (!this.isTamed() && !knight.isTamed())
                         continue;
+                    // Skip tamed vs. tamed damage if they have the same owner
                     if (this.isTamed() && this.getOwner() != null &&
                             knight.isTamed() && knight.getOwner() != null &&
                             this.getOwner().equals(knight.getOwner())) {
-                        continue;
+                        if (this.getTarget() != target) {
+                            continue;
+                        }
                     }
                 }
                 float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
@@ -903,8 +920,11 @@ public class Wanderer extends StrongTameableEntityDefault {
         if (this.isTamed() && this.getOwner() == player) {
             this.setSitting(!this.isSitting());
             this.setIsPatrolling(false);
-            this.targetSelector.remove(this.hostileTargetGoal);
             this.setTarget(null);
+            this.setAttacker(null);
+            this.setIsUsingSkill(false);
+            this.shootingArrow = false;
+            this.isDrinkingHeal = false;
 
             return ActionResult.SUCCESS;
         }
@@ -919,8 +939,11 @@ public class Wanderer extends StrongTameableEntityDefault {
                 this.setOwner(player);
                 this.setTamed(true);
                 this.setSitting(false);
-                this.animationTimeout = 1;
                 this.setTarget(null);
+                this.setAttacker(null);
+                this.setIsUsingSkill(false);
+                this.shootingArrow = false;
+                this.isDrinkingHeal = false;
                 this.setCanBeTamed(false);
 
                 this.setHealth(this.getMaxHealth() / 2);

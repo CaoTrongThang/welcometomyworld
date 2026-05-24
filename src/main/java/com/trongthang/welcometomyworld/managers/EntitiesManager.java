@@ -355,7 +355,7 @@ public class EntitiesManager {
                                 },
                                 SpawnGroup.CREATURE,
                                 WANDERER,
-                                10,
+                                11,
                                 1,
                                 1);
 

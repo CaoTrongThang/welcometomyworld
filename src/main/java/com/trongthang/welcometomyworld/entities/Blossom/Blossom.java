@@ -122,11 +122,11 @@ public class Blossom extends StrongTameableEntityDefault {
     private int ultimateCooldown = 400;
     private int defaultUltimateCooldown = 4800;
 
-    private int healCooldownCounter = 2400;
+    private int healCooldownCounter = 1200;
     private float selfHealPercent = 0.1f;
     private float groupHealPercent = 0.03f;
 
-    private int defaultHealCooldown = 2400;
+    private int defaultHealCooldown = 7200;
 
     private int particleCounter = 0;
     private int particleCooldown = 10;
@@ -373,24 +373,61 @@ public class Blossom extends StrongTameableEntityDefault {
 
                 if (this.isTamed() || this.getOwner() != null) {
                     if (this.healCooldownCounter <= 0) {
-                        this.healCooldownCounter = this.defaultHealCooldown;
-                        this.useSkillCooldownCounter = 0;
-
-                        timeout = 41;
-
                         Box checkArea = new Box(this.getBlockPos()).expand(50);
                         List<LivingEntity> allies = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
                                 entity -> {
-                                    if (entity instanceof PlayerEntity) {
-                                        return true;
+                                    if (entity instanceof PlayerEntity player) {
+                                        if (this.isOwner(player)) {
+                                            return true;
+                                        }
                                     }
                                     if (entity instanceof TameableEntity tameable) {
-                                        if (tameable.getOwner() == this.getOwner()) {
+                                        if (tameable.isTamed() && java.util.Objects.equals(tameable.getOwnerUuid(),
+                                                this.getOwnerUuid())) {
                                             return true;
                                         }
                                     }
                                     return false;
                                 });
+
+                        // Check if any ally actually needs a buff
+                        boolean useRegen = this.random.nextFloat() < 0.7f;
+                        StatusEffect effect = useRegen ? REGENERATION : RESISTANCE;
+
+                        boolean hasEligibleAlly = false;
+                        for (LivingEntity ally : allies) {
+                            if (!ally.hasStatusEffect(effect) || ally.getHealth() < ally.getMaxHealth()) {
+                                hasEligibleAlly = true;
+                                break;
+                            }
+                        }
+
+                        if (!hasEligibleAlly) {
+                            // If no one needs the chosen buff, try checking the other one
+                            StatusEffect otherEffect = useRegen ? RESISTANCE : REGENERATION;
+                            for (LivingEntity ally : allies) {
+                                if (!ally.hasStatusEffect(otherEffect) || ally.getHealth() < ally.getMaxHealth()) {
+                                    hasEligibleAlly = true;
+                                    effect = otherEffect;
+                                    useRegen = !useRegen;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!hasEligibleAlly) {
+                            this.healCooldownCounter = 1200; // 60s cooldown if no one needs it
+                            this.useSkillCooldownCounter = 0;
+                            return;
+                        }
+
+                        // If we reach here, we have eligible allies
+                        this.healCooldownCounter = this.defaultHealCooldown;
+                        this.useSkillCooldownCounter = 0;
+
+                        timeout = 41;
+                        final StatusEffect finalEffect = effect;
+                        final boolean finalUseRegen = useRegen;
 
                         Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.HEAL, timeout);
 
@@ -399,47 +436,43 @@ public class Blossom extends StrongTameableEntityDefault {
                             int regenAmplifier = Math.min((int) (this.getMaxHealth() / 350), 10);
                             int resistanceAmplifier = Math.min((int) (this.getArmor() / 5f), 3);
 
-                            // Randomly choose between Regeneration or Resistance
-                            boolean useRegen = this.random.nextFloat() < 0.7f;
                             for (LivingEntity ally : allies) {
-                                StatusEffect effect = useRegen ? REGENERATION : RESISTANCE;
+                                boolean needsBuff = !ally.hasStatusEffect(finalEffect);
+                                boolean needsHeal = ally.getHealth() < ally.getMaxHealth();
 
-                                if (ally.hasStatusEffect(effect)) {
-                                    continue;
+                                if (needsBuff) {
+                                    int amplifier = finalUseRegen ? regenAmplifier : resistanceAmplifier;
+
+                                    if (amplifier >= 0) {
+                                        ally.addStatusEffect(new StatusEffectInstance(
+                                                finalEffect, // effect
+                                                BUFF_DURATION, // duration
+                                                amplifier, // amplifier
+                                                false, // ambient
+                                                true, // showParticles
+                                                true)); // showIcon
+
+                                        // Spawn matching particles
+                                        spawnBuffParticles(ally.getWorld(), ally.getPos(), finalEffect);
+                                    }
+                                    if (ally instanceof PlayerEntity) {
+                                        Utils.sendSoundPacketToClient(SoundsManager.BLOSSOM_BUFF, ally.getBlockPos());
+                                    }
                                 }
 
-                                int amplifier = useRegen ? regenAmplifier : resistanceAmplifier;
-
-                                if (amplifier >= 0) {
-                                    ally.addStatusEffect(new StatusEffectInstance(
-                                            effect, // effect
-                                            BUFF_DURATION, // duration
-                                            amplifier, // amplifier
-                                            false, // ambient
-                                            true, // showParticles
-                                            true)); // showIcon
-
-                                    // Spawn matching particles
-                                    spawnBuffParticles(ally.getWorld(), ally.getPos(), effect);
+                                if (needsHeal) {
+                                    ally.setHealth(ally.getHealth() + (ally.getMaxHealth() * this.groupHealPercent));
                                 }
-                                if (ally instanceof PlayerEntity) {
-                                    Utils.sendSoundPacketToClient(SoundsManager.BLOSSOM_BUFF, ally.getBlockPos());
-                                }
-
-                                ally.setHealth(ally.getHealth() + (ally.getMaxHealth() * this.groupHealPercent));
                             }
 
                             this.healCooldownCounter = this.defaultHealCooldown;
 
-                            if (!allies.isEmpty()) {
-                                spawnBuffCircle(this.getWorld(), this.getBlockPos(),
-                                        useRegen ? ParticleTypes.HAPPY_VILLAGER : ParticleTypes.TOTEM_OF_UNDYING);
-                            }
+                            spawnBuffCircle(this.getWorld(), this.getBlockPos(),
+                                    finalUseRegen ? ParticleTypes.HAPPY_VILLAGER : ParticleTypes.TOTEM_OF_UNDYING);
                         }, 20);
 
                         resetSkill(timeout);
-                        if (!allies.isEmpty())
-                            return;
+                        return;
                     }
                 }
 
@@ -701,14 +734,19 @@ public class Blossom extends StrongTameableEntityDefault {
 
                 if (target instanceof TameableEntity tameable) {
                     if (tameable.isTamed() && tameable.getOwnerUuid() != null) {
-                        if (tameable.getOwnerUuid().equals(this.getOwnerUuid()))
-                            continue;
+                        if (tameable.getOwnerUuid().equals(this.getOwnerUuid())) {
+                            if (this.getTarget() != target) {
+                                continue;
+                            }
+                        }
                     }
                 }
 
                 if (target instanceof PlayerEntity) {
-                    if (this.isTamed() || this.getOwnerUuid() != null) {
-                        continue;
+                    if (this.isTamed()) {
+                        if (this.getTarget() != target) {
+                            continue;
+                        }
                     }
                 }
 
@@ -829,6 +867,8 @@ public class Blossom extends StrongTameableEntityDefault {
             }
 
             this.setTarget(null);
+            this.setAttacker(null);
+            this.setIsUsingSkill(false);
 
             return ActionResult.SUCCESS;
         }
