@@ -1,7 +1,6 @@
 package com.trongthang.welcometomyworld.mixin.misc;
 
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -19,12 +18,9 @@ public class SculkWormHangFixMixin {
      *         synchronously during vibration occlusion checks.
      */
     @Inject(method = "isOccluded", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onIsOccluded(World world, Vec3d pos1, Vec3d pos2, CallbackInfoReturnable<Boolean> cir) {
-        if (world == null || pos1 == null || pos2 == null)
+    private void onIsOccluded(World world, BlockPos p1, BlockPos p2, CallbackInfoReturnable<Boolean> cir) {
+        if (world == null || p1 == null || p2 == null)
             return;
-
-        BlockPos p1 = BlockPos.ofFloored(pos1.x, pos1.y, pos1.z);
-        BlockPos p2 = BlockPos.ofFloored(pos2.x, pos2.y, pos2.z);
 
         // Check if the chunks for both positions are loaded.
         // If either is not loaded, we return true (occluded) to avoid synchronous chunk

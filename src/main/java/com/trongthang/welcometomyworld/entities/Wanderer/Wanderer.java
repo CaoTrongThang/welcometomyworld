@@ -92,7 +92,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     private int maxScale = 8;
 
-    private int patrolRadius = 7;
+    private int patrolRadius = 18;
     public BlockPos patrolCenterPos = null;
     private net.minecraft.registry.RegistryKey<net.minecraft.world.World> patrolDimension = null;
 
@@ -374,9 +374,9 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                         // Calculate the direction vector from the mob to the target
                         Vec3d mobToTargetDirection = new Vec3d(
-                                this.getTarget().getX() - this.getX(),
-                                this.getTarget().getY() - this.getY(),
-                                this.getTarget().getZ() - this.getZ()).normalize();
+                                this.getX() - this.getTarget().getX(),
+                                this.getY() - this.getTarget().getY(),
+                                this.getZ() - this.getTarget().getZ()).normalize();
 
                         // Scale the direction vector to determine the offset
                         Vec3d offset = mobToTargetDirection.multiply(2, 1, 2); // Scale X, Y, and Z appropriately
@@ -392,18 +392,16 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                     }, 6);
                     Utils.addRunAfter(this::createSwordSlashShockwavePolar, 17);
-                }
-                if (distance > 12 && distance <= 35) {
+                    resetSkill(timeout);
+                } else if (distance > 12) {
 
                     int rand = WelcomeToMyWorld.random.nextInt(0, 100);
                     timeout = 20;
 
                     if (rand <= 7) {
                         this.useSkillCooldownCounter = 0;
-                        {
-                            Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK4, timeout);
-                            rainOfArrowsSkill(this.getTarget().getPos());
-                        }
+                        Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK4, timeout);
+                        rainOfArrowsSkill(this.getTarget().getPos());
                     } else {
                         this.useSkillCooldownCounter = (int) (this.getAllSkillCooldown() - 30f);
                         Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(),
@@ -421,13 +419,11 @@ public class Wanderer extends StrongTameableEntityDefault {
                         }, 18);
                     }
                     resetSkill(timeout);
-                }
-
-                if (distance <= 12 && distance >= 8 || (this.getTarget().getY() > this.getY()
+                } else if (distance > 8 || (this.getTarget().getY() > this.getY()
                         && (Math.abs(this.getTarget().getY() - this.getY()) > 4))) {
                     int rand = WelcomeToMyWorld.random.nextInt(0, 100);
                     if (rand < 10) {
-
+                        timeout = 20;
                     } else {
                         int swordSlashTimeout = (int) Math.ceil(SWORD_SLASH_DURATION_MS / 51.0); // Calculate once
                         timeout = swordSlashTimeout;
@@ -437,9 +433,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                     this.useSkillCooldownCounter = 0;
                     resetSkill(timeout);
-                }
-
-                if (distance <= 8) {
+                } else {
                     this.useSkillCooldownCounter = 0;
                     int rand1 = WelcomeToMyWorld.random.nextInt(0, 100);
                     timeout = 25;
