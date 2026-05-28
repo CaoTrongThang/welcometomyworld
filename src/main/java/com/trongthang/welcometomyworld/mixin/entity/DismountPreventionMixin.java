@@ -53,8 +53,8 @@ public abstract class DismountPreventionMixin {
                 // If the phantom is explicitly grabbing the player
                 if (phantom instanceof PhantomGrabber grabber && grabber.welcomeToMyWorld$isGrabbingPlayer()) {
                     // Check drop conditions as safety stop for the cancellation
-                    if (player.isCreative() || player.isSpectator() || player.isDead() ||
-                            phantom.getHealth() < phantom.getMaxHealth() / 3 ||
+                    if (player.isCreative() || player.isSpectator() || !player.isAlive() ||
+                            !phantom.isAlive() || phantom.getHealth() < phantom.getMaxHealth() / 3 ||
                             phantom.getY() > 300 ||
                             !phantom.getWorld().isAir(phantom.getBlockPos().up(1)) ||
                             phantom.getPhantomSize() < 9) {

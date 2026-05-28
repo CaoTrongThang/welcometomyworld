@@ -42,4 +42,13 @@ public class LivingEntityDamageTrackerMixin {
             DamageTracker.recordDamage(victim.getUuid(), attacker.getUuid(), amount);
         }
     }
+
+    @Inject(method = "remove", at = @At("HEAD"))
+    private void onRemoved(Entity.RemovalReason reason,
+            org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (!entity.getWorld().isClient) {
+            DamageTracker.getAndClear(entity.getUuid());
+        }
+    }
 }

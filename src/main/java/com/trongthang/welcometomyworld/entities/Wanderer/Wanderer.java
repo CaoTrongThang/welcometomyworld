@@ -156,9 +156,9 @@ public class Wanderer extends StrongTameableEntityDefault {
     public static DefaultAttributeContainer.Builder setAttributes() {
         return MobEntity.createMobAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 300)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.14f)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.16f)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 25f)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 40f)
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 60f)
                 .add(EntityAttributes.GENERIC_ARMOR, 5)
                 .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10f)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f);
@@ -178,12 +178,12 @@ public class Wanderer extends StrongTameableEntityDefault {
     protected void initGoals() {
         super.initGoals();
 
-        this.goalSelector.add(1, new StopMoveAndLookWhenCanBeTamed(this));
+        this.goalSelector.add(0, new StopMoveAndLookWhenCanBeTamed(this));
+        this.goalSelector.add(1, new StopWhenUsingSkill(this));
         this.goalSelector.add(2, new SwimGoal(this));
-        this.goalSelector.add(3, new SitGoal(this));
+        this.goalSelector.add(3, new CustomSitGoal(this));
         this.goalSelector.add(4, new PatrollingGoal(this));
         this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 30, 40, false));
-        this.goalSelector.add(6, new StopWhenUsingSkill(this));
         this.goalSelector.add(8, new LargeEntityWanderGoal(this, 1.0, 1));
         this.goalSelector.add(9, new LookAtEntityGoal(this, LivingEntity.class, 15.0F)); // Increased range to 40
         this.goalSelector.add(11, new LookAroundGoal(this));
@@ -262,6 +262,12 @@ public class Wanderer extends StrongTameableEntityDefault {
         }
     }
 
+    private boolean isTooFarFromPatrolCenter() {
+        if (!this.getIsPatrolling() || this.patrolCenterPos == null)
+            return false;
+        return this.getPos().distanceTo(this.patrolCenterPos.toCenterPos()) > 20.0;
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -295,6 +301,9 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     private void usingSkillsHandler() {
         if (!this.getWorld().isClient && !this.getCanBeTamed() && !this.isInSittingPose()) {
+            if (isTooFarFromPatrolCenter())
+                return;
+
             if (this.flipCooldownCounter < this.flipCooldown) {
                 this.flipCooldownCounter++;
             }
@@ -818,36 +827,8 @@ public class Wanderer extends StrongTameableEntityDefault {
                 double angleDiff = Math.abs(MathHelper.wrapDegrees(Math.toDegrees(targetAngle - facingAngle)));
                 if (angleDiff > Math.toDegrees(halfArc))
                     continue;
-                // Additional checks for friendly fire etc.
-                if (this.getOwner() != null && target == this.getOwner())
+                if (!canHarm(target))
                     continue;
-                if (target instanceof TameableEntity tameable) {
-                    if (tameable.isTamed() && tameable.getOwner() != null &&
-                            tameable.getOwner() == this.getOwner())
-                        continue;
-                }
-
-                if (target instanceof PlayerEntity) {
-                    if (this.isTamed()) {
-                        if (target == this.getOwner() || this.getTarget() != target) {
-                            continue;
-                        }
-                    }
-                }
-
-                if (target instanceof Wanderer knight) {
-                    // Skip untamed vs. untamed damage
-                    if (!this.isTamed() && !knight.isTamed())
-                        continue;
-                    // Skip tamed vs. tamed damage if they have the same owner
-                    if (this.isTamed() && this.getOwner() != null &&
-                            knight.isTamed() && knight.getOwner() != null &&
-                            this.getOwner().equals(knight.getOwner())) {
-                        if (this.getTarget() != target) {
-                            continue;
-                        }
-                    }
-                }
                 float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
                 damageBlockingShield(target, damage);
 
@@ -914,6 +895,8 @@ public class Wanderer extends StrongTameableEntityDefault {
         if (this.isTamed() && this.getOwner() == player) {
             this.setSitting(!this.isSitting());
             this.setIsPatrolling(false);
+            this.targetSelector.remove(this.hostileTargetGoal);
+            this.targetSelector.remove(this.phantomTargetGoal);
             this.setTarget(null);
             this.setAttacker(null);
             this.setIsUsingSkill(false);
@@ -1015,10 +998,11 @@ public class Wanderer extends StrongTameableEntityDefault {
 
                 if (this.getIsPatrolling()) {
                     this.patrolDimension = this.getWorld().getRegistryKey();
-                    // Create and add the goal if it doesn't exist
                     this.targetSelector.add(1, this.hostileTargetGoal);
+                    this.targetSelector.add(1, this.phantomTargetGoal);
                 } else {
                     this.targetSelector.remove(this.hostileTargetGoal);
+                    this.targetSelector.remove(this.phantomTargetGoal);
                     this.patrolCenterPos = null;
                     this.patrolDimension = null;
                 }
@@ -1107,6 +1091,11 @@ public class Wanderer extends StrongTameableEntityDefault {
                     new net.minecraft.util.Identifier(nbt.getString("patrolDimension")));
         } else {
             this.patrolDimension = null;
+        }
+        // Re-add hostile target goals after world reload if patrolling
+        if (this.getIsPatrolling()) {
+            this.targetSelector.add(1, this.hostileTargetGoal);
+            this.targetSelector.add(1, this.phantomTargetGoal);
         }
     }
 
@@ -1245,10 +1234,10 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     public class PatrollingGoal extends Goal {
         private final Wanderer mob;
-        private final double maxTeleportDistance = 20.0; // Teleport if beyond this
+        private final double maxTeleportDistance = 22.0; // Teleport if beyond this
         private int cooldown = 0;
         // Add a max chase distance field
-        private final double maxChaseDistance = 14.0; // 2 * patrolRadius (7 * 2)
+        private final double maxChaseDistance = 25.0; // 2 * patrolRadius (18 * 2)
 
         public PatrollingGoal(Wanderer mob) {
             this.mob = mob;
@@ -1275,6 +1264,9 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         @Override
         public void tick() {
+            if (mob.getIsUsingSkill())
+                return;
+
             // Cancel patrol if mob was teleported to a different dimension
             if (mob.patrolDimension != null && !mob.getWorld().getRegistryKey().equals(mob.patrolDimension)) {
                 mob.setIsPatrolling(false);
@@ -1362,7 +1354,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.mob.isTamed() && !this.mob.isSitting() && !this.mob.getIsPatrolling()) {
+            if (this.mob.isTamed() && !this.mob.isSitting()) {
                 LivingEntity livingEntity = this.mob.getOwner();
                 if (livingEntity == null) {
                     return false;
@@ -1403,7 +1395,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.tameable.isTamed() && !this.tameable.isSitting() && !this.tameable.getIsPatrolling()) {
+            if (this.tameable.isTamed() && !this.tameable.isSitting()) {
                 LivingEntity livingEntity = this.tameable.getOwner();
                 if (livingEntity == null) {
                     return false;

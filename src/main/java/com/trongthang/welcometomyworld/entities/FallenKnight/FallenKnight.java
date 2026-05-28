@@ -185,7 +185,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         this.goalSelector.add(1, new StopMoveAndLookWhenCanBeTamed(this));
         this.goalSelector.add(2, new SwimGoal(this));
-        this.goalSelector.add(3, new SitGoal(this));
+        this.goalSelector.add(3, new CustomSitGoal(this));
         this.goalSelector.add(4, new PatrollingGoal(this));
         this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 30, 40, false));
         this.goalSelector.add(6, new StopWhenUsingSkill(this));
@@ -199,6 +199,12 @@ public class FallenKnight extends StrongTameableEntityDefault {
         this.targetSelector.add(4, new CustomRevengeGoal(this).setGroupRevenge());
         this.targetSelector.add(5, new ActiveTargetGoal<>(this, PlayerEntity.class, true,
                 (player) -> !this.isOwner((PlayerEntity) player)));
+    }
+
+    private boolean isTooFarFromPatrolCenter() {
+        if (!this.getIsPatrolling() || this.patrolCenterPos == null)
+            return false;
+        return this.getPos().distanceTo(this.patrolCenterPos.toCenterPos()) > 14.0;
     }
 
     @Override
@@ -293,6 +299,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     private void usingSkillsHandler() {
         if (!this.getWorld().isClient && !this.getCanBeTamed() && !this.isInSittingPose()) {
+            if (isTooFarFromPatrolCenter())
+                return;
             if (this.getIsUsingSkill()) {
                 return;
             }
@@ -580,44 +588,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
             }
 
             for (LivingEntity target : DamageTarget) {
-                if (target == this)
+                if (!canHarm(target))
                     continue;
-                if (this.getOwner() != null) {
-                    if (target == this.getOwner())
-                        continue;
-                }
-                if (target instanceof TameableEntity tameable) {
-                    if (tameable.isTamed() && tameable.getOwner() != null) {
-                        if (tameable.getOwner() == this.getOwner()) {
-                            if (this.getTarget() != target) {
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                if (target instanceof PlayerEntity) {
-                    if (this.isTamed()) {
-                        if (this.getTarget() != target) {
-                            continue;
-                        }
-                    }
-                }
-
-                // Handle FallenKnight-specific logic
-                if (target instanceof FallenKnight knight) {
-                    // Skip untamed vs. untamed damage
-                    if (!this.isTamed() && !knight.isTamed()) {
-                        continue;
-                    }
-
-                    // Skip tamed vs. tamed damage if they have the same owner
-                    if (this.isTamed() && this.getOwner() != null && knight.isTamed() && knight.getOwner() != null) {
-                        if (this.getOwner().equals(knight.getOwner())) {
-                            continue;
-                        }
-                    }
-                }
 
                 float damage = (float) this.getAttributes().getBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
                         * this.attack3DamageMultiply;
@@ -635,46 +607,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     entity -> true);
 
             for (LivingEntity target : targetDamage) {
-                if (target == this)
+                if (!canHarm(target))
                     continue;
-                if (this.getOwner() != null) {
-                    if (target == this.getOwner())
-                        continue;
-                }
-                if (target instanceof TameableEntity tameable) {
-                    if (tameable.isTamed() && tameable.getOwner() != null) {
-                        if (tameable.getOwner() == this.getOwner()) {
-                            if (this.getTarget() != target) {
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                if (target instanceof PlayerEntity) {
-                    if (this.isTamed()) {
-                        if (this.getTarget() != target) {
-                            continue;
-                        }
-                    }
-                }
-
-                // Handle FallenKnight-specific logic
-                if (target instanceof FallenKnight knight) {
-                    // Skip untamed vs. untamed damage
-                    if (!this.isTamed() && !knight.isTamed()) {
-                        continue;
-                    }
-
-                    // Skip tamed vs. tamed damage if they have the same owner
-                    if (this.isTamed() && this.getOwner() != null && knight.isTamed() && knight.getOwner() != null) {
-                        if (this.getOwner().equals(knight.getOwner())) {
-                            if (this.getTarget() != target) {
-                                continue;
-                            }
-                        }
-                    }
-                }
 
                 Vec3d knockbackDirection = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(),
                         target.getZ() - this.getZ()).normalize();
@@ -730,6 +664,8 @@ public class FallenKnight extends StrongTameableEntityDefault {
         if (this.isTamed() && this.getOwner() == player) {
             this.setSitting(!this.isSitting());
             this.setIsPatrolling(false);
+            this.targetSelector.remove(this.hostileTargetGoal);
+            this.targetSelector.remove(this.phantomTargetGoal);
             this.setTarget(null);
             this.setAttacker(null);
             this.setIsUsingSkill(false);
@@ -844,8 +780,10 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 if (this.getIsPatrolling()) {
                     this.patrolDimension = this.getWorld().getRegistryKey();
                     this.targetSelector.add(1, this.hostileTargetGoal);
+                    this.targetSelector.add(1, this.phantomTargetGoal);
                 } else {
                     this.targetSelector.remove(this.hostileTargetGoal);
+                    this.targetSelector.remove(this.phantomTargetGoal);
                     this.patrolCenterPos = null;
                     this.patrolDimension = null;
                 }
@@ -946,6 +884,11 @@ public class FallenKnight extends StrongTameableEntityDefault {
                     new net.minecraft.util.Identifier(nbt.getString("patrolDimension")));
         } else {
             this.patrolDimension = null;
+        }
+        // Re-add hostile target goals after world reload if patrolling
+        if (this.getIsPatrolling()) {
+            this.targetSelector.add(1, this.hostileTargetGoal);
+            this.targetSelector.add(1, this.phantomTargetGoal);
         }
     }
 
@@ -1259,7 +1202,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.mob.isTamed() && !this.mob.isSitting() && !this.mob.getIsPatrolling()) {
+            if (this.mob.isTamed() && !this.mob.isSitting()) {
                 LivingEntity livingEntity = this.mob.getOwner();
                 if (livingEntity == null) {
                     return false;
@@ -1300,7 +1243,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.tameable.isTamed() && !this.tameable.isSitting() && !this.tameable.getIsPatrolling()) {
+            if (this.tameable.isTamed() && !this.tameable.isSitting()) {
                 LivingEntity livingEntity = this.tameable.getOwner();
                 if (livingEntity == null) {
                     return false;

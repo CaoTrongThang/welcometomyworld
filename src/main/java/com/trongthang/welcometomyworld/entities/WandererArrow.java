@@ -1,6 +1,6 @@
 package com.trongthang.welcometomyworld.entities;
 
-import com.trongthang.welcometomyworld.entities.Wanderer.Wanderer;
+import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -8,8 +8,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -129,33 +127,8 @@ public class WandererArrow extends PersistentProjectileEntity {
 
         // Handle team-based or owner-based collision filtering for Tameable units like
         // Wanderers
-        if (owner instanceof TameableEntity ownerTameable) {
-            // Don't hit the owner of the shooter (e.g. the Player)
-            if (ownerTameable.getOwner() == target) {
-                return false;
-            }
-
-            // Don't hit other entities sharing the same owner
-            if (target instanceof TameableEntity targetTameable) {
-                if (targetTameable.isTamed() && targetTameable.getOwner() != null) {
-                    if (targetTameable.getOwner() == ownerTameable.getOwner()) {
-                        return false;
-                    }
-                }
-            }
-
-            // Specific check for Wanderer interactions
-            if (target instanceof Wanderer targetWanderer) {
-                // If both are untamed, they shouldn't hit each other (generic monster team)
-                if (!targetWanderer.isTamed() && !ownerTameable.isTamed()) {
-                    return false;
-                }
-
-                // If they have the same owner, they are on the same team
-                if (targetWanderer.getOwner() != null && targetWanderer.getOwner() == ownerTameable.getOwner()) {
-                    return false;
-                }
-            }
+        if (owner instanceof StrongTameableEntityDefault strongTameable) {
+            return strongTameable.canHarm(target);
         }
 
         return true;
@@ -195,48 +168,9 @@ public class WandererArrow extends PersistentProjectileEntity {
             }
 
             for (LivingEntity target : damageTarget) {
-                if (this.getOwner() instanceof TameableEntity tameable) {
-                    if (tameable.isTamed()) {
-                        if (target instanceof PlayerEntity) {
-                            if (tameable.getOwner() == target || tameable.getTarget() != target) {
-                                continue;
-                            }
-                        }
-
-                        if (target instanceof TameableEntity targetTameable) {
-                            if (targetTameable.isTamed() && targetTameable.getOwner() != null) {
-                                if (targetTameable.getOwner() == tameable.getOwner()) {
-                                    if (tameable.getTarget() != target) {
-                                        continue;
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // Untamed wanderer arrow checks
-                        if (tameable.getOwner() == target)
-                            continue;
-                    }
-                }
-
-                // Handle Wanderer-specific logic
-                if (target instanceof Wanderer wanderer) {
-                    if (this.getOwner() instanceof TameableEntity ownerTameable) {
-                        // Skip untamed vs. untamed damage
-                        if (!ownerTameable.isTamed() && !wanderer.isTamed()) {
-                            continue;
-                        }
-
-                        // Skip tamed vs. tamed damage if they have the same owner
-                        if (ownerTameable.isTamed() && ownerTameable.getOwner() != null && wanderer.isTamed()
-                                && wanderer.getOwner() != null) {
-                            if (ownerTameable.getOwner().equals(wanderer.getOwner())) {
-                                if (ownerTameable.getTarget() != target) {
-                                    continue;
-                                }
-                            }
-                        }
-                    }
+                if (this.getOwner() instanceof StrongTameableEntityDefault strongTameable) {
+                    if (!strongTameable.canHarm(target))
+                        continue;
                 }
 
                 if (this.getOwner() instanceof LivingEntity ownerEntity) {

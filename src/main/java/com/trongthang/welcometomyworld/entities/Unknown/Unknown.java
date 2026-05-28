@@ -1,65 +1,66 @@
 package com.trongthang.welcometomyworld.entities.Unknown;
 
-import net.minecraft.entity.ai.goal.Goal;
-
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.trongthang.welcometomyworld.WelcomeToMyWorld;
+import com.trongthang.welcometomyworld.classes.tameablePacket.StrongTameableEntityDefault;
+import net.minecraft.advancement.Advancement;
+import net.minecraft.advancement.AdvancementProgress;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.WanderAroundGoal;
+import net.minecraft.entity.ai.goal.*;
+import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-
 import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.PotionItem;
+import net.minecraft.item.ShieldItem;
+import net.minecraft.particle.ItemStackParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.potion.PotionUtil;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ChunkTicketType;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.world.World;
-import net.minecraft.entity.ai.pathing.PathNodeType;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import com.trongthang.welcometomyworld.entities.UnknownBeamEntity;
 import com.trongthang.welcometomyworld.entities.GroundSlashAttackEntity;
 import com.trongthang.welcometomyworld.managers.EntitiesManager;
 import com.trongthang.welcometomyworld.Utilities.Utils;
 import com.trongthang.welcometomyworld.classes.CustomTameableEntity;
 import com.trongthang.welcometomyworld.managers.SoundsManager;
-
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import net.minecraft.util.math.random.Random;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ShieldItem;
-import net.minecraft.util.Hand;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.particle.ItemStackParticleEffect;
-import net.minecraft.item.PotionItem;
-import net.minecraft.potion.PotionUtil;
-
-public class Unknown extends PathAwareEntity implements GeoEntity {
+public class Unknown extends StrongTameableEntityDefault implements GeoEntity {
 
     // 0 = NONE, 1 = LEFT, 2 = RIGHT — synced to client every tick via DataTracker
     private static final TrackedData<Integer> DASH_DIR = DataTracker.registerData(Unknown.class,
@@ -76,6 +77,33 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
 
     private static final TrackedData<Boolean> IS_TAUNTING = DataTracker.registerData(Unknown.class,
             TrackedDataHandlerRegistry.BOOLEAN);
+
+    // TAMING_STATE: 0=none, 1=tameable_intro(80t), 2=tameable_loop,
+    // 3=standing_up(50t), 4=sitting
+    private static final TrackedData<Integer> TAMING_STATE = DataTracker.registerData(Unknown.class,
+            TrackedDataHandlerRegistry.INTEGER);
+
+    private static final String[] TAMING_INTRO_MESSAGES = {
+            "Ahhhh, I'm defeated...",
+            "You... are stronger than I thought...",
+            "Is this the end for me?",
+            "I... I can't believe it..."
+    };
+
+    private static final String[] TAMING_LOOP_MESSAGES = {
+            "You can kill me if you want...",
+            "Why do you hesitate?",
+            "Spare me? Why?",
+            "I am at your mercy now.",
+            "Do what you must, traveler."
+    };
+
+    private static final String[] TAMING_SUCCESS_MESSAGES = {
+            "Let's do this!",
+            "I sense a new purpose. Lead the way.",
+            "My blade is yours.",
+            "You won't regret showing me mercy."
+    };
 
     public static class Skill {
         public int id;
@@ -241,6 +269,14 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
     private int immunityTimer = 0;
     private boolean hasMetFriendly = false;
 
+    // --- Taming phase state (server-only except for tracked data) ---
+    private boolean tameablePhaseTriggered = false;
+    private int tameableAnimTick = 0;
+    private int standingUpTick = 0;
+    // --- Patrol state ---
+    public BlockPos patrolCenterPos = null;
+    private net.minecraft.registry.RegistryKey<net.minecraft.world.World> patrolDimension = null;
+
     private void sayRandomMessage(String[] messages, double chance) {
         if (!this.getWorld().isClient() && this.random.nextDouble() < chance && messages.length > 0) {
             String msg = messages[this.random.nextInt(messages.length)];
@@ -304,8 +340,14 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
 
     private ItemStack stolenItemCandidate = ItemStack.EMPTY;
 
-    public Unknown(EntityType<? extends PathAwareEntity> entityType, World world) {
+    public Unknown(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
+        this.hostileTargetGoal = new ActiveTargetGoal<>(this, HostileEntity.class, true) {
+            @Override
+            public boolean canStart() {
+                return !Unknown.this.isSitting() && super.canStart();
+            }
+        };
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
@@ -342,23 +384,31 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
         this.dataTracker.startTracking(SKILL_ID, 0);
         this.dataTracker.startTracking(SKILL_TRIGGER, 0);
         this.dataTracker.startTracking(IS_TAUNTING, false);
+        this.dataTracker.startTracking(TAMING_STATE, 0);
     }
 
     @Override
     protected void initGoals() {
         this.setPathfindingPenalty(PathNodeType.WATER, 0.0F);
 
-        // --- Attack goals ---
+        this.goalSelector.add(0, new StopWhenInTameablePhase(this));
+        this.goalSelector.add(0, new UnknownSitGoal(this));
         this.goalSelector.add(1, new StopMoveWhenUsingSkill(this));
         this.goalSelector.add(2, new ChaseTargetGoal(this, 1.2D));
+        this.goalSelector.add(3, new PatrollingGoal(this));
+        this.goalSelector.add(3, new CustomFollowOwnerGoal(this, 1.2D, 6.0F, 24.0F, false));
         this.goalSelector.add(4, new WanderAroundGoal(this, 1.0D));
         this.goalSelector.add(5, new LookAroundGoal(this));
 
-        // --- Target goals ---
-        this.targetSelector.add(1, new RevengeGoal(this));
-
-        // equip offhand with an item called "mobs_of_mythology:kobold_spear"
-        // how to get the item from the mod
+        this.targetSelector.add(1, new UnknownTrackOwnerAttackGoal(this));
+        this.targetSelector.add(2, new UnknownAttackWithOwnerGoal(this));
+        this.targetSelector.add(3, new CustomRevengeGoal(this));
+        this.targetSelector.add(4, new ActiveTargetGoal<>(this, HostileEntity.class, true) {
+            @Override
+            public boolean canStart() {
+                return !Unknown.this.isSitting() && Unknown.this.getIsPatrolling() && super.canStart();
+            }
+        });
     }
 
     @Override
@@ -377,6 +427,7 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
         int[] prevSkillId = { 0 };
         int[] prevSkillTrigger = { 0 };
         int[] prevDir = { 0 };
+        int[] prevTamingState = { 0 };
 
         // --- All animations in one controller for smooth cross-fading ---
         controllers.add(new AnimationController<>(this, "mainController", 5, state -> {
@@ -385,6 +436,28 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
             int skillId = this.dataTracker.get(SKILL_ID);
 
             state.getController().setAnimationSpeed(1.0D);
+
+            // --- Taming / sitting animations take highest priority ---
+            int tamingState = this.dataTracker.get(TAMING_STATE);
+            if (tamingState != 0) {
+                if (prevTamingState[0] != tamingState) {
+                    state.getController().forceAnimationReset();
+                    prevTamingState[0] = tamingState;
+                }
+                state.getController().transitionLength(0);
+                switch (tamingState) {
+                    case 1:
+                        return state.setAndContinue(RawAnimation.begin().thenPlay("unknown_tameable"));
+                    case 2:
+                        return state.setAndContinue(RawAnimation.begin().thenLoop("unknown_tameable_loopable"));
+                    case 3:
+                        return state.setAndContinue(
+                                RawAnimation.begin().thenPlay("unknown_tameable_standing_up_to_default_state"));
+                    case 4:
+                        return state.setAndContinue(RawAnimation.begin().thenLoop("unknown_sit"));
+                }
+            }
+            prevTamingState[0] = 0;
 
             if (isUsingSkill) {
                 int skillTrigger = this.dataTracker.get(SKILL_TRIGGER);
@@ -510,8 +583,18 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
             return;
         }
 
+        if (this.dataTracker.get(TAMING_STATE) != 0) {
+            return;
+        }
+
+        if (this.isTamed() && this.dataTracker.get(TAMING_STATE) == 4) {
+            return;
+        }
+
         // --- Trigger logic ---
         if (globalSkillCooldown <= 0 && !isUsingSkill()) {
+            if (isTooFarFromPatrolCenter())
+                return;
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive()) {
                 double dist = this.distanceTo(target);
@@ -1484,16 +1567,25 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
         }
     }
 
+    private boolean isTooFarFromPatrolCenter() {
+        if (!this.getIsPatrolling() || this.patrolCenterPos == null)
+            return false;
+        return this.getPos().distanceTo(this.patrolCenterPos.toCenterPos()) > 64.0;
+    }
+
     @Override
     public void tick() {
         super.tick();
 
-        if (this.getWorld().isClient()) {
+        if (this.getWorld().isClient) {
             return;
         }
 
-        if (immunityTimer > 0)
-            immunityTimer--;
+        handleTameablePhase();
+
+        if (this.isUsingSkill()) {
+            this.getNavigation().stop();
+        }
 
         if (this.getTarget() != null) {
             combatTicks = 400;
@@ -1514,6 +1606,9 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
                 this.dataTracker.set(DASH_DIR, 0);
         }
 
+        if (immunityTimer > 0)
+            immunityTimer--;
+
         if (!this.getWorld().isClient()) {
             skillsHandler();
         }
@@ -1527,6 +1622,12 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
                         (e) -> e.sendToolBreakStatus(target.getActiveHand()));
             }
         }
+        if (attacker instanceof StrongTameableEntityDefault strongTameable) {
+            if (strongTameable.isAlly(target)) {
+                return;
+            }
+        }
+
         // this also deal additional damage if the target health is more than 100, deal
         // more than 1% of the target health
         if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
@@ -1550,6 +1651,12 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
                         (e) -> e.sendToolBreakStatus(target.getActiveHand()));
             }
         }
+        if (attacker instanceof StrongTameableEntityDefault strongTameable) {
+            if (strongTameable.isAlly(target)) {
+                return;
+            }
+        }
+
         // this also deal additional damage if the target health is more than 100, deal
         // more than 1% of the target health
         if (!(target instanceof TameableEntity || target instanceof CustomTameableEntity) && target.getHealth() > 100) {
@@ -1568,9 +1675,44 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
     public boolean damage(DamageSource source, float amount) {
         if (immunityTimer > 0)
             return false;
+
+        if (this.dataTracker.get(TAMING_STATE) != 0) {
+            return false;
+        }
+
         LivingEntity currentTarget = this.getTarget();
 
         if (!this.getWorld().isClient() && source.getAttacker() instanceof PlayerEntity player) {
+
+            // --- Taming Trigger Logic ---
+            if (!tameablePhaseTriggered && !this.isTamed() && this.getHealth() <= 5000) {
+                if (!playerHasAdvancement(player, "tameable/friend_with_the_unknown")) {
+                    tameablePhaseTriggered = true;
+
+                    // Random roll against tameChance (0-100 scale usually)
+                    if (this.random.nextFloat() * 100 <= this.getTameChance()) {
+                        this.dataTracker.set(TAMING_STATE, 1);
+                        this.tameableAnimTick = 0;
+                        this.setTarget(null);
+                        this.setAttacker(null);
+                        this.getNavigation().stop();
+
+                        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                                SoundsManager.UNKNOWN_TAMEABLE, this.getSoundCategory(), 1.5F, 1.0F);
+
+                        return false; // Cancel current damage to go into taming phase
+                    }
+                }
+            }
+
+            if (this.isTamed() && player == this.getOwner() && player.isSneaking()) {
+                this.setIsPatrolling(!this.getIsPatrolling());
+                this.patrolCenterPos = this.getBlockPos();
+                this.patrolDimension = this.getWorld().getRegistryKey();
+
+                return false;
+            }
+
             if (hasMetFriendly) {
                 // Skip directly to revenge if already met
                 if (playerAttackCount < 3) {
@@ -1678,6 +1820,21 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
      * Deals damage to all LivingEntities (except self) within a radius.
      * Reusable for any ground-slam or AoE attack.
      */
+    private boolean isFriendly(LivingEntity target) {
+        java.util.UUID ownerUuid = this.getOwnerUuid();
+        if (ownerUuid == null)
+            return false;
+        if (target instanceof PlayerEntity player && player.getUuid().equals(ownerUuid))
+            return true;
+        if (target instanceof net.minecraft.entity.passive.TameableEntity tameable
+                && ownerUuid.equals(tameable.getOwnerUuid()))
+            return true;
+        if (target instanceof com.trongthang.welcometomyworld.classes.CustomTameableEntity cte
+                && ownerUuid.equals(cte.getOwnerUuid()))
+            return true;
+        return false;
+    }
+
     public List<LivingEntity> dealAoeGroundDamage(double radius, float damage, boolean createBlock) {
         if (this.getWorld().isClient())
             return List.of();
@@ -1686,6 +1843,8 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
                 LivingEntity.class, area, e -> e != this);
 
         for (LivingEntity target : nearby) {
+            if (isFriendly(target))
+                continue;
             dealUnknownDamage(this, target, damage);
         }
 
@@ -1783,7 +1942,8 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
                         (target.getZ() - closestZ) * (target.getZ() - closestZ);
 
                 if (distSq <= (width / 2.0) * (width / 2.0)) {
-                    dealUnknownDamage(this, target, damage);
+                    if (!isFriendly(target))
+                        dealUnknownDamage(this, target, damage);
                 }
             }
         }
@@ -1974,6 +2134,16 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
         super.writeCustomDataToNbt(nbt);
         nbt.putBoolean("HasMetFriendly", this.hasMetFriendly);
         nbt.putInt("PlayerAttackCount", this.playerAttackCount);
+
+        nbt.putBoolean("TameablePhaseTriggered", this.tameablePhaseTriggered);
+        if (this.patrolCenterPos != null) {
+            nbt.putInt("PatrolCenterX", this.patrolCenterPos.getX());
+            nbt.putInt("PatrolCenterY", this.patrolCenterPos.getY());
+            nbt.putInt("PatrolCenterZ", this.patrolCenterPos.getZ());
+        }
+        if (this.patrolDimension != null) {
+            nbt.putString("PatrolDimension", this.patrolDimension.getValue().toString());
+        }
     }
 
     @Override
@@ -1981,5 +2151,314 @@ public class Unknown extends PathAwareEntity implements GeoEntity {
         super.readCustomDataFromNbt(nbt);
         this.hasMetFriendly = nbt.getBoolean("HasMetFriendly");
         this.playerAttackCount = nbt.getInt("PlayerAttackCount");
+
+        this.tameablePhaseTriggered = nbt.getBoolean("TameablePhaseTriggered");
+        if (nbt.contains("PatrolCenterX")) {
+            this.patrolCenterPos = new BlockPos(nbt.getInt("PatrolCenterX"), nbt.getInt("PatrolCenterY"),
+                    nbt.getInt("PatrolCenterZ"));
+        }
+        if (nbt.contains("PatrolDimension")) {
+            this.patrolDimension = net.minecraft.registry.RegistryKey.of(RegistryKeys.WORLD,
+                    new Identifier(nbt.getString("PatrolDimension")));
+        }
+    }
+
+    private int tameablePhaseTimer = 0;
+
+    private void handleTameablePhase() {
+        int state = this.dataTracker.get(TAMING_STATE);
+        if (state == 1) { // intro
+            if (tameableAnimTick == 0) {
+                PlayerEntity player = this.getWorld().getClosestPlayer(this, 10);
+                if (player instanceof ServerPlayerEntity serverPlayer) {
+                    Utils.UTILS.sendTextAfter(serverPlayer,
+                            TAMING_INTRO_MESSAGES[this.random.nextInt(TAMING_INTRO_MESSAGES.length)], 0);
+                }
+                this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                        SoundsManager.FALLEN_KNIGHT_FALL, this.getSoundCategory(), 1.0F, 1.0F);
+            }
+            tameableAnimTick++;
+            if (tameableAnimTick >= 80) {
+                this.dataTracker.set(TAMING_STATE, 2);
+                tameableAnimTick = 0;
+            }
+        } else if (state == 2) { // loop (waiting for taming)
+            tameablePhaseTimer++;
+            if (tameablePhaseTimer % 200 == 0) { // Every 10s approximately
+                PlayerEntity player = this.getWorld().getClosestPlayer(this, 10);
+                if (player instanceof ServerPlayerEntity serverPlayer) {
+                    Utils.UTILS.sendTextAfter(serverPlayer,
+                            TAMING_LOOP_MESSAGES[this.random.nextInt(TAMING_LOOP_MESSAGES.length)], 0);
+                }
+            }
+            if (tameablePhaseTimer >= 4800) { // 4 minutes
+                PlayerEntity player = this.getWorld().getClosestPlayer(this, 10);
+                if (player instanceof ServerPlayerEntity serverPlayer) {
+                    Utils.UTILS.sendTextAfter(serverPlayer, "Enough of this!", 0);
+                }
+                this.dataTracker.set(TAMING_STATE, 3);
+                this.tameablePhaseTriggered = true;
+                this.setCanBeTamed(false);
+                this.tameableAnimTick = 0;
+                this.tameablePhaseTimer = 0;
+                this.standingUpTick = 0;
+            }
+        } else if (state == 3) { // standing up
+            standingUpTick++;
+            if (standingUpTick == 20) {
+                this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                        SoundsManager.WHOOSH_1, this.getSoundCategory(), 1.0F, 1.0F);
+            }
+            if (standingUpTick >= 50) {
+                this.dataTracker.set(TAMING_STATE, 0);
+                this.standingUpTick = 0;
+            }
+        }
+    }
+
+    @Override
+    public ActionResult interactMob(PlayerEntity player, Hand hand) {
+        ItemStack itemStack = player.getStackInHand(hand);
+
+        // If already tamed, handle sitting/patrol or healing
+        if (this.isTamed() && player.getUuid().equals(this.getOwnerUuid())) {
+            if (player.isSneaking()) {
+                return ActionResult.PASS;
+            }
+
+            this.setSitting(!this.isSitting());
+            this.setTarget(null);
+            this.setAttacker(null);
+            this.getNavigation().stop();
+
+            return ActionResult.success(this.getWorld().isClient);
+        }
+
+        // Taming logic during loopable phase
+        if (this.dataTracker.get(TAMING_STATE) == 2 && itemStack.isOf(Items.GOLDEN_APPLE)) {
+            if (!player.getAbilities().creativeMode) {
+                itemStack.decrement(1);
+            }
+
+            if (!this.getWorld().isClient) {
+                if (this.random.nextFloat() < 0.33f) {
+                    this.setOwner(player);
+                    this.dataTracker.set(TAMING_STATE, 3);
+                    this.standingUpTick = 0;
+                    this.getWorld().sendEntityStatus(this, (byte) 7); // Success particles
+
+                    // Reduce HP for tamed version
+                    this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(44999.0);
+                    this.setHealth(44999.0f);
+
+                    if (player instanceof ServerPlayerEntity serverPlayer) {
+                        Utils.UTILS.sendTextAfter(serverPlayer,
+                                TAMING_SUCCESS_MESSAGES[this.random.nextInt(TAMING_SUCCESS_MESSAGES.length)], 0);
+                    }
+                } else {
+                    this.getWorld().sendEntityStatus(this, (byte) 6); // Fail particles
+                }
+            }
+            return ActionResult.success(this.getWorld().isClient);
+        }
+
+        return super.interactMob(player, hand);
+    }
+
+    public void setOwner(PlayerEntity player) {
+        super.setOwner(player);
+    }
+
+    private boolean playerHasAdvancement(PlayerEntity player, String achievement) {
+        if (!(player instanceof ServerPlayerEntity serverPlayer))
+            return false;
+        Identifier id = new Identifier("welcometomyworld", achievement);
+        Advancement advancement = serverPlayer.server.getAdvancementLoader().get(id);
+        if (advancement == null)
+            return false;
+        AdvancementProgress progress = serverPlayer.getAdvancementTracker().getProgress(advancement);
+        return progress.isDone();
+    }
+
+    public boolean isTamed() {
+        return super.isTamed();
+    }
+
+    public void setIsPatrolling(boolean variant) {
+        super.setIsPatrolling(variant);
+    }
+
+    public boolean getIsPatrolling() {
+        return super.getIsPatrolling();
+    }
+
+    @Override
+    public void setSitting(boolean sitting) {
+        super.setSitting(sitting);
+        if (sitting) {
+            this.dataTracker.set(TAMING_STATE, 4);
+        } else {
+            if (this.dataTracker.get(TAMING_STATE) == 4) {
+                this.dataTracker.set(TAMING_STATE, 0);
+            }
+        }
+    }
+
+    @Override
+    public boolean isSitting() {
+        return super.isSitting();
+    }
+
+    // --- Goal classes ---
+    private static class StopWhenInTameablePhase extends Goal {
+        private final Unknown unknown;
+
+        public StopWhenInTameablePhase(Unknown unknown) {
+            this.unknown = unknown;
+            this.setControls(EnumSet.of(Goal.Control.MOVE));
+        }
+
+        @Override
+        public boolean canStart() {
+            return unknown.dataTracker.get(TAMING_STATE) != 0 && (unknown.dataTracker.get(TAMING_STATE) < 3)
+                    && !unknown.isTamed();
+        }
+
+        @Override
+        public void start() {
+            unknown.getNavigation().stop();
+        }
+
+        @Override
+        public void tick() {
+            unknown.getNavigation().stop();
+        }
+    }
+
+    public class UnknownSitGoal extends Goal {
+        private final Unknown mob;
+
+        public UnknownSitGoal(Unknown mob) {
+            this.mob = mob;
+            this.setControls(EnumSet.of(Goal.Control.MOVE));
+        }
+
+        @Override
+        public boolean canStart() {
+            return mob.isTamed() && mob.isSitting();
+        }
+
+        @Override
+        public void start() {
+            mob.getNavigation().stop();
+        }
+    }
+
+    public class PatrollingGoal extends Goal {
+        private final Unknown mob;
+        private int chunkTicketTimer = 0;
+
+        public PatrollingGoal(Unknown mob) {
+            this.mob = mob;
+            this.setControls(EnumSet.of(Goal.Control.MOVE));
+        }
+
+        @Override
+        public boolean canStart() {
+            return mob.isTamed() && mob.getIsPatrolling() && !mob.isSitting() && mob.patrolCenterPos != null;
+        }
+
+        @Override
+        public void tick() {
+            if (mob.getWorld().isClient())
+                return;
+            ServerWorld world = (ServerWorld) mob.getWorld();
+
+            // Dimension check and teleport
+            if (mob.patrolDimension != null && world.getRegistryKey() != mob.patrolDimension) {
+                ServerWorld targetWorld = world.getServer().getWorld(mob.patrolDimension);
+                if (targetWorld != null) {
+                    mob.teleport(targetWorld, mob.patrolCenterPos.getX(), mob.patrolCenterPos.getY(),
+                            mob.patrolCenterPos.getZ(), Set.of(), mob.getYaw(), mob.getPitch());
+                }
+                return;
+            }
+
+            // Load chunk
+            if (chunkTicketTimer <= 0) {
+                world.getChunkManager().addTicket(ChunkTicketType.PORTAL, new ChunkPos(mob.patrolCenterPos), 3,
+                        mob.patrolCenterPos);
+                chunkTicketTimer = 100;
+            } else {
+                chunkTicketTimer--;
+            }
+
+            // Distance based teleport back to center
+            if (mob.squaredDistanceTo(mob.patrolCenterPos.toCenterPos()) > 64 * 64) {
+                mob.refreshPositionAndAngles(mob.patrolCenterPos.getX(), mob.patrolCenterPos.getY(),
+                        mob.patrolCenterPos.getZ(), mob.getYaw(), mob.getPitch());
+                mob.getNavigation().stop();
+            }
+
+            // Wander within radius (15 radius)
+            if (mob.getNavigation().isIdle()) {
+                Random random = mob.getRandom();
+                if (random.nextInt(120) == 0) { // Approximately every 6s
+                    Vec3d target = new Vec3d(
+                            mob.patrolCenterPos.getX() + (random.nextDouble() - 0.5) * 30, // 15 radius
+                            mob.patrolCenterPos.getY(),
+                            mob.patrolCenterPos.getZ() + (random.nextDouble() - 0.5) * 30);
+                    mob.getNavigation().startMovingTo(target.x, target.y, target.z, 1.0D);
+                }
+            }
+        }
+    }
+
+    private static class UnknownTrackOwnerAttackGoal extends Goal {
+        private final Unknown unknown;
+
+        public UnknownTrackOwnerAttackGoal(Unknown unknown) {
+            this.unknown = unknown;
+        }
+
+        @Override
+        public boolean canStart() {
+            if (!unknown.isTamed() || unknown.isSitting())
+                return false;
+            LivingEntity owner = unknown.getOwner();
+            if (owner == null)
+                return false;
+            LivingEntity target = owner.getAttacking();
+            return target != null && target != unknown;
+        }
+
+        @Override
+        public void start() {
+            unknown.setTarget(unknown.getOwner().getAttacking());
+        }
+    }
+
+    private static class UnknownAttackWithOwnerGoal extends Goal {
+        private final Unknown unknown;
+
+        public UnknownAttackWithOwnerGoal(Unknown unknown) {
+            this.unknown = unknown;
+        }
+
+        @Override
+        public boolean canStart() {
+            if (!unknown.isTamed() || unknown.isSitting())
+                return false;
+            LivingEntity owner = unknown.getOwner();
+            if (owner == null)
+                return false;
+            LivingEntity target = owner.getAttacker();
+            return target != null && target != unknown;
+        }
+
+        @Override
+        public void start() {
+            unknown.setTarget(unknown.getOwner().getAttacker());
+        }
     }
 }

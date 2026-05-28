@@ -41,7 +41,7 @@ public class SpawnMonstersPackEveryMins {
     private static final int MAX_SPAWN_DISTANCE = 88;
 
     private static final int CAN_SPAWN_PACK_DAY = 35;
-    private static final double PACK_SPAWN_CHANCE = 0.7;
+    private static double PACK_SPAWN_CHANCE = 0.7;
     private static boolean CAN_SPAWN_BY_PACK = false;
 
     public static List<MonsterSpawn> monsters = List.of(
@@ -54,14 +54,14 @@ public class SpawnMonstersPackEveryMins {
             Pair.of("minecraft:skeleton", 5),
             Pair.of("minecraft:witch", 2));
 
-    public static List<Pair<String, Integer>> orcPackComposition = List.of(
-            Pair.of("wandering_orc:orc_warrior", 5),
-            Pair.of("wandering_orc:orc_archer", 5),
-            Pair.of("wandering_orc:troll", 2),
-            Pair.of("wandering_orc:troll_doctor", 2),
-            Pair.of("wandering_orc:orc_champion", 1),
-            Pair.of("wandering_orc:minotaur", 1),
-            Pair.of("wandering_orc:orc_warlock", 2));
+    // public static List<Pair<String, Integer>> orcPackComposition = List.of(
+    // Pair.of("wandering_orc:orc_warrior", 3),
+    // Pair.of("wandering_orc:orc_archer", 3),
+    // Pair.of("wandering_orc:troll", 1),
+    // Pair.of("wandering_orc:troll_doctor", 1),
+    // Pair.of("wandering_orc:orc_champion", 1),
+    // Pair.of("wandering_orc:minotaur", 1),
+    // Pair.of("wandering_orc:orc_warlock", 1));
 
     public static List<Pair<String, Integer>> mutantMonsterPackComposition = List.of(
             Pair.of("mutantmonsters:mutant_zombie", 1),
@@ -107,6 +107,11 @@ public class SpawnMonstersPackEveryMins {
         }
 
         int currentDay = dayAndNightCounterAnimationHandler.currentDay;
+
+        PACK_SPAWN_CHANCE = 0.7;
+        if (currentDay >= 70) {
+            PACK_SPAWN_CHANCE = Math.min(0.9, 0.7 + (currentDay - 70) * 0.002);
+        }
 
         if (COOLDOWN > MIN_COOLDOWN) {
             COOLDOWN -= currentDay * 3;
@@ -183,7 +188,13 @@ public class SpawnMonstersPackEveryMins {
         List<Pair<String, Integer>> packMonsters = null;
 
         if (packType == MonstersPackTypes.MUTANTS) {
-            packMonsters = mutantMonsterPackComposition;
+            int currentDay = dayAndNightCounterAnimationHandler.currentDay;
+            int bonus = currentDay / 50;
+
+            packMonsters = List.of(
+                    Pair.of("mutantmonsters:mutant_zombie", 1),
+                    Pair.of("mutantmonsters:mutant_skeleton", 4 + (bonus > 0 ? random.nextInt(bonus) : 0)),
+                    Pair.of("mutantmonsters:mutant_enderman", 1 + (bonus > 0 ? random.nextInt(bonus) : 0)));
         } else if (packType == MonstersPackTypes.VANILLA) {
             packMonsters = vanillaComposition;
         } else if (packType == MonstersPackTypes.PILLAGER) {

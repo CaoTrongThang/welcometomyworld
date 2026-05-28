@@ -164,9 +164,20 @@ public class UnknownBeamEntity extends Entity {
         for (float i = 0; i < length; i += 2.0f) {
             Vec3d point = start.add(direction.multiply(i));
             Box box = new Box(point.subtract(radius, radius, radius), point.add(radius, radius, radius));
+            java.util.UUID tamerUuid = (owner instanceof Unknown u) ? u.getOwnerUuid() : null;
             List<LivingEntity> targets = this.getWorld().getEntitiesByClass(LivingEntity.class, box, e -> {
                 if (owner != null && e.getUuid().equals(owner.getUuid()))
                     return false;
+                if (tamerUuid != null) {
+                    if (e instanceof net.minecraft.entity.player.PlayerEntity p && p.getUuid().equals(tamerUuid))
+                        return false;
+                    if (e instanceof net.minecraft.entity.passive.TameableEntity t
+                            && tamerUuid.equals(t.getOwnerUuid()))
+                        return false;
+                    if (e instanceof com.trongthang.welcometomyworld.classes.CustomTameableEntity c
+                            && tamerUuid.equals(c.getOwnerUuid()))
+                        return false;
+                }
                 return true;
             });
 

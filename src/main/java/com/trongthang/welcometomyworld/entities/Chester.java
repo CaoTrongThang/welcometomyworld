@@ -1,9 +1,6 @@
 package com.trongthang.welcometomyworld.entities;
 
-import com.trongthang.welcometomyworld.Utilities.Utils;
-import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.classes.AnimationName;
-import com.trongthang.welcometomyworld.managers.SoundsManager;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.EntityType;
@@ -11,14 +8,10 @@ import net.minecraft.entity.InventoryOwner;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.UntamedActiveTargetGoal;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -29,19 +22,15 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.ScreenHandler;
+
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EntityView;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -49,7 +38,7 @@ import java.util.function.Predicate;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.A_LIVING_CHEST_EATING_SOUND;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.A_LIVING_CHEST_EAT_ANIMATION;
 
-public class Chester extends Enderchester implements InventoryOwner, NamedScreenHandlerFactory {
+public class Chester extends Enderchester implements InventoryOwner {
 
     private final SimpleInventory inventory = new SimpleInventory(54);
     private Item tameFood = Items.BONE;
@@ -57,7 +46,6 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
     public Chester(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
     }
-
 
     @Override
     public ParticleEffect getParticleEffect() {
@@ -69,10 +57,7 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
         return Text.translatable("entity.welcometomyworld.chesterstomach");
     }
 
-    @Override
-    public void openMobChest(PlayerEntity player) {
-        player.openHandledScreen(this);
-    }
+    // Enderchester.openMobChest uses getChest(player) which we override below.
 
     public SimpleInventory getChest(PlayerEntity player) {
         return inventory;
@@ -81,9 +66,12 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
     @Override
     public void eatItemsOnGround() {
 
-        if (this.getWorld().isClient) return;
-        if (this.isDead()) return;
-        if (this.getIsSleepingData()) return;
+        if (this.getWorld().isClient)
+            return;
+        if (this.isDead())
+            return;
+        if (this.getIsSleepingData())
+            return;
 
         if (this.getServer() == null) {
             return;
@@ -92,18 +80,14 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
         Box checkArea = new Box(this.getBlockPos()).expand(EAT_AREA);
         List<ItemEntity> itemEntities = this.getWorld().getEntitiesByClass(ItemEntity.class, checkArea, entity -> true);
 
-        // Iterate through the found items
         boolean isAdded = false;
         for (ItemEntity itemEntity : itemEntities) {
             ItemStack stack = itemEntity.getStack();
-            // If the item is not something the mob hates, try to add it to the inventory
-            if (!hateItems.contains(stack.getItem())) {
+            if (!hateItems.contains(stack.getItem()) && isAllowedByFilter(stack)) {
                 boolean added = addItemToChest(this.inventory, stack);
-
-                // If the item was successfully added to the chest, remove it from the world
                 if (added) {
                     isAdded = true;
-                    itemEntity.discard();  // Remove the item from the world
+                    itemEntity.discard();
                 }
             }
         }
@@ -113,32 +97,30 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
             buf.writeInt(this.getId());
 
             startAnimation(AnimationName.EAT_ITEMS, 30);
-            if (this.getOwner() == null) {
-                for (ServerPlayerEntity p : this.getServer().getPlayerManager().getPlayerList()) {
-                    if (p.canSee(this)) {
-                        ServerPlayNetworking.send(p, A_LIVING_CHEST_EAT_ANIMATION, buf);
-                    }
-                }
-                Utils.playSound((ServerWorld) this.getWorld(), this.getBlockPos(), SoundsManager.ENDERCHESTER_MUNCH, 0.2f, WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
-            } else {
-                ServerPlayNetworking.send((ServerPlayerEntity) this.getOwner(), A_LIVING_CHEST_EATING_SOUND, PacketByteBufs.empty());
-                ServerPlayNetworking.send((ServerPlayerEntity) this.getOwner(), A_LIVING_CHEST_EAT_ANIMATION, buf);
-            }
 
+            // Sync animation and sound to all nearby players
+            for (ServerPlayerEntity p : ((ServerWorld) this.getWorld()).getPlayers()) {
+                if (p.canSee(this) || p.squaredDistanceTo(this) < 1024) {
+                    ServerPlayNetworking.send(p, A_LIVING_CHEST_EAT_ANIMATION, buf);
+                    ServerPlayNetworking.send(p, A_LIVING_CHEST_EATING_SOUND, PacketByteBufs.empty());
+                }
+            }
         }
     }
 
     @Override
     public void initGoals() {
         super.initGoals();
-        this.targetSelector.add(5, new UntamedActiveTargetGoal<>(this, LivingEntity.class, false, (t) -> !(t instanceof PlayerEntity) && !(t instanceof Enderchester)));
+        this.targetSelector.add(5, new UntamedActiveTargetGoal<>(this, LivingEntity.class, false,
+                (t) -> !(t instanceof PlayerEntity) && !(t instanceof Enderchester)));
     }
 
     @Override
     public void setTamed(boolean tamed) {
         super.setTamed(tamed);
 
-        this.targetSelector.remove(new UntamedActiveTargetGoal<>(this, LivingEntity.class, false, (t) -> !(t instanceof PlayerEntity) && !(t instanceof Enderchester)));
+        this.targetSelector.remove(new UntamedActiveTargetGoal<>(this, LivingEntity.class, false,
+                (t) -> !(t instanceof PlayerEntity) && !(t instanceof Enderchester)));
     }
 
     @Override
@@ -200,12 +182,5 @@ public class Chester extends Enderchester implements InventoryOwner, NamedScreen
     public Item getTameFood() {
         return this.tameFood;
     }
-
-    @Nullable
-    @Override
-    public ScreenHandler createMenu(int syncId, PlayerInventory playerInv, PlayerEntity player) {
-        return GenericContainerScreenHandler.createGeneric9x6(syncId, playerInv, inventory);
-    }
-
 
 }

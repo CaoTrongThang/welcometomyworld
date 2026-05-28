@@ -9,6 +9,9 @@ import com.trongthang.welcometomyworld.screen.MobUpgradeScreen;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.gui.screen.ingame.HandledScreens;
+import com.trongthang.welcometomyworld.screen.ChesterFilterScreen;
+import com.trongthang.welcometomyworld.screen.ChesterFilterScreenHandler;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -79,6 +82,10 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         SoundsClientHandler.register();
         ScreenClientHandler.register();
         ClientScheduler.init();
+
+        HandledScreens.<ChesterFilterScreenHandler, ChesterFilterScreen>register(
+                com.trongthang.welcometomyworld.WelcomeToMyWorld.CHESTER_FILTER_HANDLER,
+                ChesterFilterScreen::new);
 
         net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry.getInstance().register(
                 com.trongthang.welcometomyworld.managers.ParticlesManager.VOID_DUST_PARTICLE,

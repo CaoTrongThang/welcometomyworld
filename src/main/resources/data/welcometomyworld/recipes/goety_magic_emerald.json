@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AAA",
+    "ADA",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:quartz"
+    },
+    "D": {
+      "item": "minecraft:emerald_block"
+    }
+  },
+  "result": {
+    "item": "goety:magic_emerald",
+    "count": 1
+  }
+}

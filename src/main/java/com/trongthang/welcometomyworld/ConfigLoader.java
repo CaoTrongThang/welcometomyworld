@@ -52,6 +52,10 @@ public class ConfigLoader {
         public boolean oneShotDebugLog = false;
 
         @Expose
+        @SerializedName("showPlayerDamageDebugLogs")
+        public boolean showPlayerDamageDebugLogs = false;
+
+        @Expose
         @SerializedName("enableCustomAnimations")
         public boolean enableCustomAnimations = true;
 

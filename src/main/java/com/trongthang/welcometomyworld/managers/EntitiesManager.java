@@ -283,7 +283,7 @@ public class EntitiesManager {
                                 },
                                 SpawnGroup.CREATURE,
                                 EntitiesManager.CHESTER,
-                                12,
+                                20,
                                 1,
                                 1);
 
@@ -293,7 +293,7 @@ public class EntitiesManager {
                                                         .equals(new Identifier("betterend", "shadow_forest"));
                                 },
                                 SpawnGroup.CREATURE,
-                                EntitiesManager.ENDERCHESTER, 9,
+                                EntitiesManager.ENDERCHESTER, 10,
                                 1,
                                 1);
 
@@ -355,7 +355,7 @@ public class EntitiesManager {
                                 },
                                 SpawnGroup.CREATURE,
                                 WANDERER,
-                                11,
+                                20,
                                 1,
                                 1);
 
@@ -366,7 +366,7 @@ public class EntitiesManager {
                                                                 new Identifier("regions_unexplored", "rocky_meadow")),
                                 SpawnGroup.CREATURE,
                                 EntitiesManager.BLOSSOM,
-                                11,
+                                30,
                                 1,
                                 1);
         }

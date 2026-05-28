@@ -22,7 +22,7 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EnderChestInventory;
+
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,13 +31,13 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+
+import com.trongthang.welcometomyworld.screen.ChesterFilterScreenHandler;
+import static com.trongthang.welcometomyworld.WelcomeToMyWorld.CHESTER_FILTER_HANDLER;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -56,7 +56,9 @@ import static com.trongthang.welcometomyworld.Utilities.SpawnParticles.spawnPart
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 import static com.trongthang.welcometomyworld.client.ClientData.LAST_INTERACTED_MOB_ID;
 
-public class Enderchester extends TameableEntity implements StartAnimation {
+import com.trongthang.welcometomyworld.classes.CustomTameableEntity;
+
+public class Enderchester extends CustomTameableEntity implements StartAnimation {
 
     ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
 
@@ -70,6 +72,8 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     List<Item> hateItems = List.of(
             Items.DIRT,
             Items.GRASS_BLOCK);
+
+    protected final SimpleInventory filterInventory = new SimpleInventory(10);
 
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState walkAnimationState = new AnimationState();
@@ -137,9 +141,10 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     public static DefaultAttributeContainer.Builder setAttributes() {
         // Start with WolfEntity's default attributes
         return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 40)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 500)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.15f)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 12f);
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 40f)
+                .add(EntityAttributes.GENERIC_ARMOR, 20f);
     }
 
     @Override
@@ -180,7 +185,7 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         this.goalSelector.add(3, new SwimGoal(this));
         this.goalSelector.add(5, new SleepingNoMove(this));
         this.goalSelector.add(6, new StopMovementGoalWhenOpeningChest(this));
-        this.goalSelector.add(7, new FollowOwnerGoal(this, 3, 8.0F, 2.0F, false));
+        this.goalSelector.add(7, new CustomFollowOwnerGoal(this, 1.0, 10.0F, 32.0F, false));
         this.goalSelector.add(8, new FleeFromNearbyPlayersGoal(this, 15, 2.8));
         this.goalSelector.add(9, new MeleeAttackGoal(this, 2.2, true));
         this.goalSelector.add(10, new WanderAroundFarGoal(this, 1.0));
@@ -217,11 +222,11 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         }
 
         // Reset max health to your custom value after taming
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(100);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(1000);
         this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.15f);
-        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(30);
+        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(50);
 
-        this.setHealth(50);
+        this.setHealth(1000);
     }
 
     private void setupAnimationStates() {
@@ -245,7 +250,7 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
             if (animationTimeout <= 0) {
                 if (!this.getIsOpeningChestData()) {
-                    if (!isSitting()) {
+                    if (!this.isInSittingPose()) {
                         if (isMoving) {
                             if (!walkAnimationState.isRunning()) {
                                 startAnimation(AnimationName.WALK);
@@ -293,6 +298,18 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putInt("sleepDurationCurrent", this.sleepDurationCurrent);
+        // Save filter
+        net.minecraft.nbt.NbtList filterList = new net.minecraft.nbt.NbtList();
+        for (int i = 0; i < filterInventory.size(); i++) {
+            ItemStack stack = filterInventory.getStack(i);
+            if (!stack.isEmpty()) {
+                NbtCompound tag = new NbtCompound();
+                tag.putByte("Slot", (byte) i);
+                stack.writeNbt(tag);
+                filterList.add(tag);
+            }
+        }
+        nbt.put("FilterInventory", filterList);
     }
 
     // Load inventory from NBT
@@ -300,6 +317,17 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
         this.sleepDurationCurrent = nbt.getInt("sleepDurationCurrent");
+        // Load filter
+        filterInventory.clear();
+        net.minecraft.nbt.NbtList filterList = nbt.getList("FilterInventory",
+                net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < filterList.size(); i++) {
+            NbtCompound tag = filterList.getCompound(i);
+            int slot = tag.getByte("Slot") & 0xFF;
+            if (slot < filterInventory.size()) {
+                filterInventory.setStack(slot, ItemStack.fromNbt(tag));
+            }
+        }
     }
 
     @Override
@@ -458,14 +486,20 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
         // Client-side preview (UI, animation, etc.)
         if (world.isClient) {
-            // If the mob is tamed and the player is the owner, show the chest UI (preview)
+            // If the mob is tamed and the player is the owner
             if (this.isTamed() && this.getOwner() == player) {
-                LAST_INTERACTED_MOB_ID = this.getId();
-                this.chestIsClose = false;
+                if (player.isSneaking()) {
+                    LAST_INTERACTED_MOB_ID = this.getId();
+                    this.chestIsClose = false;
 
-                // Open mob chest preview on the client side
-                openMobChest(player);
-                return ActionResult.SUCCESS;
+                    // Open mob chest preview on the client side
+                    openMobChest(player);
+                    return ActionResult.SUCCESS;
+                } else {
+                    // Regular interaction just returns success to indicate it's handled (sitting
+                    // toggle is server-side)
+                    return ActionResult.SUCCESS;
+                }
             }
 
             // If the mob is sleeping and the player is holding the correct food, consume
@@ -479,16 +513,26 @@ public class Enderchester extends TameableEntity implements StartAnimation {
 
         // Server-side logic (gameplay-related)
         if (this.isTamed() && this.getOwner() == player) {
-            // Update mob chest state and animation only on the server side
-            LAST_INTERACTED_MOB_ID = this.getId();
-            this.setIsOpeningChestData(true); // Trigger the chest opening animation
-            this.chestIsClose = false;
-            this.animationTimeout = 1;
+            if (player.isSneaking()) {
+                // Shift + Right-click -> Open Inventory
+                LAST_INTERACTED_MOB_ID = this.getId();
+                this.setIsOpeningChestData(true); // Trigger the chest opening animation
+                this.chestIsClose = false;
+                this.animationTimeout = 1;
 
-            // Open the mob chest (this may trigger an actual network packet to the client)
-            openMobChest(player);
+                // Open the mob chest
+                openMobChest(player);
+                return ActionResult.SUCCESS;
+            } else {
+                // Right-click -> Toggle Sitting
+                boolean newSitting = !this.isSitting();
+                this.setSitting(newSitting);
+                this.setInSittingPose(newSitting);
+                this.navigation.stop();
+                this.setTarget(null);
 
-            return ActionResult.SUCCESS;
+                return ActionResult.SUCCESS;
+            }
         }
 
         // If the mob is sleeping and the player is holding the tame food
@@ -503,6 +547,7 @@ public class Enderchester extends TameableEntity implements StartAnimation {
                 this.setTamed(true);
                 this.setIsSleepingData(false);
                 this.setSitting(false);
+                this.setInSittingPose(false);
                 this.animationTimeout = 1;
 
                 // Show particle effects (for all players in range, not just the one
@@ -537,19 +582,22 @@ public class Enderchester extends TameableEntity implements StartAnimation {
     }
 
     public void openMobChest(PlayerEntity player) {
-        EnderChestInventory enderChestInventory = player.getEnderChestInventory();
-        player.openHandledScreen(
-                new SimpleNamedScreenHandlerFactory(
-                        (syncId, inventory, playerx) -> GenericContainerScreenHandler.createGeneric9x3(syncId,
-                                inventory, enderChestInventory),
-                        Text.translatable("container.enderchest")));
+        SimpleInventory chestInv = this.getChest(player);
+        int chestRows = chestInv.size() / 9;
+        player.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
+                (syncId, playerInv, playerx) -> new ChesterFilterScreenHandler(
+                        CHESTER_FILTER_HANDLER, syncId, playerInv,
+                        chestInv, this.filterInventory, chestRows),
+                this.getDisplayName()));
     }
 
     @Override
     public boolean damage(DamageSource source, float amount) {
         // Check if the attacker is the owner
         if (source.getAttacker() instanceof PlayerEntity player && player == this.getOwner() && player.isSneaking()) {
-            this.setSitting(!this.isSitting());
+            boolean sitting = !this.isSitting();
+            this.setSitting(sitting);
+            this.setInSittingPose(sitting);
             return false; // Prevent damage if the owner hits the mob
         }
 
@@ -627,14 +675,11 @@ public class Enderchester extends TameableEntity implements StartAnimation {
         boolean isAdded = false;
         for (ItemEntity itemEntity : itemEntities) {
             ItemStack stack = itemEntity.getStack();
-            // If the item is not something the mob hates, try to add it to the inventory
-            if (!hateItems.contains(stack.getItem())) {
+            if (!hateItems.contains(stack.getItem()) && isAllowedByFilter(stack)) {
                 boolean added = addItemToChest(enderChestInventory, stack);
-
-                // If the item was successfully added to the chest, remove it from the world
                 if (added) {
                     isAdded = true;
-                    itemEntity.discard(); // Remove the item from the world
+                    itemEntity.discard();
                 }
             }
         }
@@ -644,10 +689,38 @@ public class Enderchester extends TameableEntity implements StartAnimation {
             buf.writeInt(this.getId());
 
             startAnimation(AnimationName.EAT_ITEMS, 30);
-            ServerPlayNetworking.send((ServerPlayerEntity) this.getOwner(), A_LIVING_CHEST_EAT_ANIMATION, buf);
-            ServerPlayNetworking.send((ServerPlayerEntity) this.getOwner(), A_LIVING_CHEST_EATING_SOUND,
-                    PacketByteBufs.empty());
+
+            // Sync animation and sound to all nearby players
+            for (ServerPlayerEntity p : ((ServerWorld) this.getWorld()).getPlayers()) {
+                if (p.canSee(this) || p.squaredDistanceTo(this) < 1024) {
+                    ServerPlayNetworking.send(p, A_LIVING_CHEST_EAT_ANIMATION, buf);
+                    ServerPlayNetworking.send(p, A_LIVING_CHEST_EATING_SOUND, PacketByteBufs.empty());
+                }
+            }
         }
+    }
+
+    public SimpleInventory getFilterInventory() {
+        return filterInventory;
+    }
+
+    /**
+     * Returns true if the stack is allowed by the filter.
+     * If all filter slots are empty, everything is allowed (original behavior).
+     * If at least one slot is filled, only matching items are allowed.
+     */
+    protected boolean isAllowedByFilter(ItemStack stack) {
+        boolean hasFilter = false;
+        for (int i = 0; i < filterInventory.size(); i++) {
+            ItemStack filter = filterInventory.getStack(i);
+            if (!filter.isEmpty()) {
+                hasFilter = true;
+                if (filter.isOf(stack.getItem())) {
+                    return true;
+                }
+            }
+        }
+        return !hasFilter; // empty filter = allow all
     }
 
     public SimpleInventory getChest(PlayerEntity player) {

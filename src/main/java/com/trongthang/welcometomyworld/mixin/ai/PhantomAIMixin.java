@@ -84,8 +84,8 @@ public abstract class PhantomAIMixin extends Entity implements PhantomGrabber {
                 PlayerEntity currentLiftPlayer = (PlayerEntity) passenger;
 
                 // Drop conditions
-                if (currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator() || currentLiftPlayer.isDead() ||
-                        phantom.getHealth() < phantom.getMaxHealth() / 3 ||
+                if (currentLiftPlayer.isCreative() || currentLiftPlayer.isSpectator() || !currentLiftPlayer.isAlive() ||
+                        !phantom.isAlive() || phantom.getHealth() < phantom.getMaxHealth() / 3 ||
                         !phantom.getWorld().isAir(phantom.getBlockPos().up(1)) ||
                         phantom.getY() > maxHeight) {
                     phantom.removeAllPassengers();
@@ -107,7 +107,7 @@ public abstract class PhantomAIMixin extends Entity implements PhantomGrabber {
 
             if (target instanceof PlayerEntity && phantom.isAlive()) {
                 PlayerEntity player = (PlayerEntity) target;
-                if (!player.isCreative() && !player.isSpectator() && !player.isDead()) {
+                if (!player.isCreative() && !player.isSpectator() && player.isAlive()) {
                     double dist = phantom.distanceTo(player);
                     double grabRange = 5.0 + (phantom.getWidth() / 2.0);
                     boolean canGrab = dist <= grabRange;
@@ -124,7 +124,7 @@ public abstract class PhantomAIMixin extends Entity implements PhantomGrabber {
     @Override
     protected void updatePassengerPosition(Entity passenger, Entity.PositionUpdater positionUpdater) {
         super.updatePassengerPosition(passenger, positionUpdater);
-        if (passenger instanceof PlayerEntity) {
+        if (passenger instanceof PlayerEntity && isGrabbing && this.isAlive() && passenger.isAlive()) {
             double yOffset = this.getY() - 1.8;
             positionUpdater.accept(passenger, this.getX(), yOffset, this.getZ());
         }

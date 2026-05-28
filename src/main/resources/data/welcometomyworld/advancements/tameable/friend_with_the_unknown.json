@@ -1,0 +1,23 @@
+{
+    "parent": "welcometomyworld:root",
+    "display": {
+        "title": {
+            "text": "Friend With The Unknown"
+        },
+        "description": {
+            "text": "Earned the trust of The Unknown."
+        },
+        "icon": {
+            "item": "minecraft:golden_apple"
+        },
+        "frame": "challenge",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "tamed": {
+            "trigger": "minecraft:impossible"
+        }
+    }
+}

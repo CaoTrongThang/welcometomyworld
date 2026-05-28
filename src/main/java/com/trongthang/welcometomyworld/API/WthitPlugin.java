@@ -91,7 +91,9 @@ public class WthitPlugin implements IWailaPlugin {
             if (accessor.getEntity() instanceof Unknown entity) {
 
                 if (entity.getHealth() >= entity.getMaxHealth() * 0.9f) {
-                    tooltip.setLine(WailaConstants.OBJECT_NAME_TAG, Text.literal("§k" + generateRandomGlitchString(8)));
+                    tooltip.setLine(WailaConstants.OBJECT_NAME_TAG,
+                            Text.literal("§k" + generateRandomGlitchString(8) + "§r (Tame Chance: "
+                                    + (int) ((StrongTameableEntityDefault) entity).getTameChance() + "%)"));
                 }
             }
         }

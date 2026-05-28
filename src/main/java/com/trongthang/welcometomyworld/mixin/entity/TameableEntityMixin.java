@@ -25,7 +25,7 @@ public abstract class TameableEntityMixin extends net.minecraft.entity.passive.P
     @Override
     public boolean canTarget(net.minecraft.entity.LivingEntity target) {
         TameableEntity source = (TameableEntity) (Object) this;
-        if (source.isTamed() && target instanceof TameableEntity tameableTarget && tameableTarget.isTamed()) {
+        if (com.trongthang.welcometomyworld.Utilities.AllyUtils.isAlly(source, target)) {
             return false;
         }
         return super.canTarget(target);

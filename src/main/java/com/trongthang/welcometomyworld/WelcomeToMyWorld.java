@@ -25,6 +25,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
+import net.minecraft.screen.ScreenHandlerType;
+import com.trongthang.welcometomyworld.screen.ChesterFilterScreenHandler;
+import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -96,6 +99,8 @@ public class WelcomeToMyWorld implements ModInitializer {
     public static final Identifier HEAVEN_TRANSITION_PACKET = new Identifier(MOD_ID, "heaven_transition");
     public static final Identifier SYNC_SCALE_PACKET = new Identifier(MOD_ID, "sync_scale");
 
+    public static ScreenHandlerType<ChesterFilterScreenHandler> CHESTER_FILTER_HANDLER;
+
     public static DeathCounter deathCounter = new DeathCounter();
 
     public static FallingToWaterDamage fallingToWaterDamage = new FallingToWaterDamage();
@@ -119,6 +124,10 @@ public class WelcomeToMyWorld implements ModInitializer {
     public void onInitialize() {
 
         ModCommands.register();
+
+        CHESTER_FILTER_HANDLER = ScreenHandlerRegistry.registerSimple(
+                new Identifier(MOD_ID, "chester_filter"),
+                ChesterFilterScreenHandler::new);
 
         ModTagsManager.registerTags();
         ConfigLoader.loadConfig();

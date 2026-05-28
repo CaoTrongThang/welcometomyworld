@@ -1,6 +1,7 @@
 package com.trongthang.welcometomyworld.client;
 
 import com.trongthang.welcometomyworld.entities.Enderchester;
+import com.trongthang.welcometomyworld.screen.ChesterFilterScreen;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -14,9 +15,12 @@ import static com.trongthang.welcometomyworld.client.ClientData.LAST_INTERACTED_
 public class ScreenClientHandler {
     public static void register() {
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-            if ((screen.getTitle().equals(Text.translatable("container.enderchest")) || screen.getTitle().equals(Text.translatable("entity.welcometomyworld.chesterstomach"))) && LAST_INTERACTED_MOB_ID != -1) {
-                ScreenEvents.remove(screen).register(removedScreen -> {
+            boolean isChesterScreen = screen instanceof ChesterFilterScreen;
+            boolean isOldScreen = screen.getTitle().equals(Text.translatable("container.enderchest"))
+                    || screen.getTitle().equals(Text.translatable("entity.welcometomyworld.chesterstomach"));
 
+            if ((isChesterScreen || isOldScreen) && LAST_INTERACTED_MOB_ID != -1) {
+                ScreenEvents.remove(screen).register(removedScreen -> {
                     PacketByteBuf buf = PacketByteBufs.create();
                     buf.writeInt(LAST_INTERACTED_MOB_ID);
                     ClientPlayNetworking.send(A_LIVING_CHEST_MOUTH_CLOSE, buf);

@@ -28,6 +28,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.PhantomEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -240,7 +241,21 @@ public class Blossom extends StrongTameableEntityDefault {
                 return !Blossom.this.isSitting() && super.canStart();
             }
         };
+        this.phantomTargetGoal = new ActiveTargetGoal<>(this, PhantomEntity.class, true) {
+            @Override
+            public boolean canStart() {
+                return !Blossom.this.isSitting() && super.canStart();
+            }
+        };
         this.targetSelector.add(4, this.hostileTargetGoal);
+        this.targetSelector.add(4, this.phantomTargetGoal);
+    }
+
+    private boolean isTooFarFromPatrolCenter() {
+        if (!this.getIsPatrolling() || this.patrolCenterPos == null)
+            return false;
+        return this.getPos().distanceTo(this.patrolCenterPos.toCenterPos()) > 30.0; // Consistent with its patrol
+                                                                                    // teleportDistance
     }
 
     @Override
@@ -346,195 +361,191 @@ public class Blossom extends StrongTameableEntityDefault {
     }
 
     private void usingSkillsHandler() {
-        if (!this.getWorld().isClient && !this.getIsGreeting()) {
-            if (this.ultimateCooldown > 0) {
-                this.ultimateCooldown--;
-            }
-
-            if (this.healCooldownCounter > 0) {
-                this.healCooldownCounter--;
-            }
-
-            if (!this.isInSittingPose()) {
-                if (this.getIsUsingSkill()) {
-                    if (this.getTarget() != null) {
-                        this.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, this.getTarget().getPos());
-                    }
-                    return;
-                }
-
-                if (this.useSkillCooldownCounter < this.getAllSkillCooldown() && !this.getIsUsingSkill()) {
+        if (!this.getWorld().isClient && !this.isInSittingPose()) {
+            if (isTooFarFromPatrolCenter()) {
+                if (this.useSkillCooldownCounter < this.getAllSkillCooldown()) {
                     this.useSkillCooldownCounter++;
-                    return;
+                }
+            } else {
+                if (this.ultimateCooldown > 0) {
+                    this.ultimateCooldown--;
                 }
 
-                ServerWorld world = (ServerWorld) this.getWorld();
-                int timeout = 0;
+                if (this.healCooldownCounter > 0) {
+                    this.healCooldownCounter--;
+                }
 
-                if (this.isTamed() || this.getOwner() != null) {
-                    if (this.healCooldownCounter <= 0) {
-                        Box checkArea = new Box(this.getBlockPos()).expand(50);
-                        List<LivingEntity> allies = this.getWorld().getEntitiesByClass(LivingEntity.class, checkArea,
-                                entity -> {
-                                    if (entity instanceof PlayerEntity player) {
-                                        if (this.isOwner(player)) {
-                                            return true;
-                                        }
-                                    }
-                                    if (entity instanceof TameableEntity tameable) {
-                                        if (tameable.isTamed() && java.util.Objects.equals(tameable.getOwnerUuid(),
-                                                this.getOwnerUuid())) {
-                                            return true;
-                                        }
-                                    }
-                                    return false;
-                                });
-
-                        // Check if any ally actually needs a buff
-                        boolean useRegen = this.random.nextFloat() < 0.7f;
-                        StatusEffect effect = useRegen ? REGENERATION : RESISTANCE;
-
-                        boolean hasEligibleAlly = false;
-                        for (LivingEntity ally : allies) {
-                            if (!ally.hasStatusEffect(effect) || ally.getHealth() < ally.getMaxHealth()) {
-                                hasEligibleAlly = true;
-                                break;
-                            }
+                if (!this.getIsGreeting()) {
+                    if (this.getIsUsingSkill()) {
+                        if (this.getTarget() != null) {
+                            this.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, this.getTarget().getPos());
                         }
+                        return;
+                    }
 
-                        if (!hasEligibleAlly) {
-                            // If no one needs the chosen buff, try checking the other one
-                            StatusEffect otherEffect = useRegen ? RESISTANCE : REGENERATION;
+                    if (this.useSkillCooldownCounter < this.getAllSkillCooldown() && !this.getIsUsingSkill()) {
+                        this.useSkillCooldownCounter++;
+                        return;
+                    }
+
+                    ServerWorld world = (ServerWorld) this.getWorld();
+                    int timeout = 0;
+
+                    if (this.isTamed() || this.getOwner() != null) {
+                        if (this.healCooldownCounter <= 0) {
+                            Box checkArea = new Box(this.getBlockPos()).expand(50);
+                            List<LivingEntity> allies = this.getWorld().getEntitiesByClass(LivingEntity.class,
+                                    checkArea,
+                                    this::isAlly);
+
+                            // Check if any ally actually needs a buff
+                            boolean useRegen = this.random.nextFloat() < 0.7f;
+                            StatusEffect effect = useRegen ? REGENERATION : RESISTANCE;
+
+                            boolean hasEligibleAlly = false;
                             for (LivingEntity ally : allies) {
-                                if (!ally.hasStatusEffect(otherEffect) || ally.getHealth() < ally.getMaxHealth()) {
+                                if (!ally.hasStatusEffect(effect) || ally.getHealth() < ally.getMaxHealth()) {
                                     hasEligibleAlly = true;
-                                    effect = otherEffect;
-                                    useRegen = !useRegen;
                                     break;
                                 }
                             }
-                        }
 
-                        if (!hasEligibleAlly) {
-                            this.healCooldownCounter = 1200; // 60s cooldown if no one needs it
-                            this.useSkillCooldownCounter = 0;
-                            return;
-                        }
-
-                        // If we reach here, we have eligible allies
-                        this.healCooldownCounter = this.defaultHealCooldown;
-                        this.useSkillCooldownCounter = 0;
-
-                        timeout = 41;
-                        final StatusEffect finalEffect = effect;
-                        final boolean finalUseRegen = useRegen;
-
-                        Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.HEAL, timeout);
-
-                        Utils.addRunAfter(() -> {
-                            // Calculate buff parameters based on stats
-                            int regenAmplifier = Math.min((int) (this.getMaxHealth() / 350), 10);
-                            int resistanceAmplifier = Math.min((int) (this.getArmor() / 5f), 3);
-
-                            for (LivingEntity ally : allies) {
-                                boolean needsBuff = !ally.hasStatusEffect(finalEffect);
-                                boolean needsHeal = ally.getHealth() < ally.getMaxHealth();
-
-                                if (needsBuff) {
-                                    int amplifier = finalUseRegen ? regenAmplifier : resistanceAmplifier;
-
-                                    if (amplifier >= 0) {
-                                        ally.addStatusEffect(new StatusEffectInstance(
-                                                finalEffect, // effect
-                                                BUFF_DURATION, // duration
-                                                amplifier, // amplifier
-                                                false, // ambient
-                                                true, // showParticles
-                                                true)); // showIcon
-
-                                        // Spawn matching particles
-                                        spawnBuffParticles(ally.getWorld(), ally.getPos(), finalEffect);
+                            if (!hasEligibleAlly) {
+                                // If no one needs the chosen buff, try checking the other one
+                                StatusEffect otherEffect = useRegen ? RESISTANCE : REGENERATION;
+                                for (LivingEntity ally : allies) {
+                                    if (!ally.hasStatusEffect(otherEffect) || ally.getHealth() < ally.getMaxHealth()) {
+                                        hasEligibleAlly = true;
+                                        effect = otherEffect;
+                                        useRegen = !useRegen;
+                                        break;
                                     }
-                                    if (ally instanceof PlayerEntity) {
-                                        Utils.sendSoundPacketToClient(SoundsManager.BLOSSOM_BUFF, ally.getBlockPos());
-                                    }
-                                }
-
-                                if (needsHeal) {
-                                    ally.setHealth(ally.getHealth() + (ally.getMaxHealth() * this.groupHealPercent));
                                 }
                             }
 
+                            if (!hasEligibleAlly) {
+                                this.healCooldownCounter = 1200; // 60s cooldown if no one needs it
+                                this.useSkillCooldownCounter = 0;
+                                return;
+                            }
+
+                            // If we reach here, we have eligible allies
                             this.healCooldownCounter = this.defaultHealCooldown;
-
-                            spawnBuffCircle(this.getWorld(), this.getBlockPos(),
-                                    finalUseRegen ? ParticleTypes.HAPPY_VILLAGER : ParticleTypes.TOTEM_OF_UNDYING);
-                        }, 20);
-
-                        resetSkill(timeout);
-                        return;
-                    }
-                }
-
-                if (this.getTarget() != null) {
-                    if (this.healCooldownCounter <= 0) {
-                        if (this.getHealth() < this.getMaxHealth() * 0.9f) {
                             this.useSkillCooldownCounter = 0;
-                            this.healCooldownCounter = this.defaultHealCooldown;
 
-                            timeout = 37;
-                            Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.SELF_HEAL, timeout);
+                            timeout = 41;
+                            final StatusEffect finalEffect = effect;
+                            final boolean finalUseRegen = useRegen;
+
+                            Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.HEAL, timeout);
 
                             Utils.addRunAfter(() -> {
-                                this.setHealth(this.getHealth() + (this.getMaxHealth() * this.selfHealPercent));
-                            }, 10);
+                                // Calculate buff parameters based on stats
+                                int regenAmplifier = Math.min((int) (this.getMaxHealth() / 350), 10);
+                                int resistanceAmplifier = Math.min((int) (this.getArmor() / 5f), 3);
+
+                                for (LivingEntity ally : allies) {
+                                    boolean needsBuff = !ally.hasStatusEffect(finalEffect);
+                                    boolean needsHeal = ally.getHealth() < ally.getMaxHealth();
+
+                                    if (needsBuff) {
+                                        int amplifier = finalUseRegen ? regenAmplifier : resistanceAmplifier;
+
+                                        if (amplifier >= 0) {
+                                            ally.addStatusEffect(new StatusEffectInstance(
+                                                    finalEffect, // effect
+                                                    BUFF_DURATION, // duration
+                                                    amplifier, // amplifier
+                                                    false, // ambient
+                                                    true, // showParticles
+                                                    true)); // showIcon
+
+                                            // Spawn matching particles
+                                            spawnBuffParticles(ally.getWorld(), ally.getPos(), finalEffect);
+                                        }
+                                        if (ally instanceof PlayerEntity) {
+                                            Utils.sendSoundPacketToClient(SoundsManager.BLOSSOM_BUFF,
+                                                    ally.getBlockPos());
+                                        }
+                                    }
+
+                                    if (needsHeal) {
+                                        ally.setHealth(
+                                                ally.getHealth() + (ally.getMaxHealth() * this.groupHealPercent));
+                                    }
+                                }
+
+                                this.healCooldownCounter = this.defaultHealCooldown;
+
+                                spawnBuffCircle(this.getWorld(), this.getBlockPos(),
+                                        finalUseRegen ? ParticleTypes.HAPPY_VILLAGER : ParticleTypes.TOTEM_OF_UNDYING);
+                            }, 20);
 
                             resetSkill(timeout);
-
-                            spawnBuffCircle(this.getWorld(), this.getBlockPos(), ParticleTypes.HEART);
                             return;
                         }
                     }
 
-                    if (this.ultimateCooldown <= 0) {
-                        this.ultimateCooldown = this.defaultUltimateCooldown;
-                        this.useSkillCooldownCounter = 0;
+                    if (this.getTarget() != null) {
+                        if (this.healCooldownCounter <= 0) {
+                            if (this.getHealth() < this.getMaxHealth() * 0.9f) {
+                                this.useSkillCooldownCounter = 0;
+                                this.healCooldownCounter = this.defaultHealCooldown;
 
-                        timeout = 200;
-                        Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
+                                timeout = 37;
+                                Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.SELF_HEAL, timeout);
 
-                        if (!world.isRaining() && !world.isThundering()) {
-                            world.setWeather(0, 200, true, true);
+                                Utils.addRunAfter(() -> {
+                                    this.setHealth(this.getHealth() + (this.getMaxHealth() * this.selfHealPercent));
+                                }, 10);
 
-                            Utils.addRunAfter(() -> {
-                                world.setWeather(0, 0, false, false);
-                            }, 220);
+                                resetSkill(timeout);
+
+                                spawnBuffCircle(this.getWorld(), this.getBlockPos(), ParticleTypes.HEART);
+                                return;
+                            }
                         }
 
-                        for (int x = 0; x < 20; x++) {
-                            Utils.addRunAfter(() -> {
-                                if (this.isDead())
-                                    return;
+                        if (this.ultimateCooldown <= 0) {
+                            this.ultimateCooldown = this.defaultUltimateCooldown;
+                            this.useSkillCooldownCounter = 0;
 
+                            timeout = 200;
+                            Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
+
+                            if (!world.isRaining() && !world.isThundering()) {
+                                world.setWeather(0, 200, true, true);
+
+                                Utils.addRunAfter(() -> {
+                                    world.setWeather(0, 0, false, false);
+                                }, 220);
+                            }
+
+                            for (int x = 0; x < 20; x++) {
+                                Utils.addRunAfter(() -> {
+                                    if (this.isDead())
+                                        return;
+
+                                    createShockwave();
+                                    if (this.getTarget() == null)
+                                        return;
+                                }, 100 + (x * 5));
+                            }
+
+                            resetSkill(timeout);
+                        } else {
+                            timeout = 40;
+                            Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK, timeout);
+
+                            Utils.addRunAfter(() -> {
                                 createShockwave();
                                 if (this.getTarget() == null)
                                     return;
-                            }, 100 + (x * 5));
+                            }, 20);
+
+                            this.useSkillCooldownCounter = 0;
+                            resetSkill(timeout);
                         }
-
-                        resetSkill(timeout);
-                    } else {
-                        timeout = 40;
-                        Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK, timeout);
-
-                        Utils.addRunAfter(() -> {
-                            createShockwave();
-                            if (this.getTarget() == null)
-                                return;
-                        }, 20);
-
-                        this.useSkillCooldownCounter = 0;
-                        resetSkill(timeout);
                     }
                 }
             }
@@ -727,42 +738,8 @@ public class Blossom extends StrongTameableEntityDefault {
             }
 
             for (LivingEntity target : damageTarget) {
-                if (target == this)
+                if (!canHarm(target))
                     continue;
-                if (this.isOwner(target))
-                    continue;
-
-                if (target instanceof TameableEntity tameable) {
-                    if (tameable.isTamed() && tameable.getOwnerUuid() != null) {
-                        if (tameable.getOwnerUuid().equals(this.getOwnerUuid())) {
-                            if (this.getTarget() != target) {
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                if (target instanceof PlayerEntity) {
-                    if (this.isTamed()) {
-                        if (this.getTarget() != target) {
-                            continue;
-                        }
-                    }
-                }
-
-                if (target instanceof Blossom mob) {
-                    // Skip untamed vs. untamed damage
-                    if (!this.isTamed() && !mob.isTamed()) {
-                        continue;
-                    }
-
-                    // Skip tamed vs. tamed damage if they have the same owner
-                    if (this.isTamed() && this.getOwnerUuid() != null && mob.isTamed() && mob.getOwnerUuid() != null) {
-                        if (this.getOwnerUuid().equals(mob.getOwnerUuid())) {
-                            continue;
-                        }
-                    }
-                }
 
                 boolean invisToSky = true;
                 BlockPos targetHeadPos = target.getBlockPos().add(0, 1, 0);
@@ -859,6 +836,7 @@ public class Blossom extends StrongTameableEntityDefault {
             this.navigation.stop();
             this.setIsPatrolling(false);
             this.targetSelector.remove(this.hostileTargetGoal);
+            this.targetSelector.remove(this.phantomTargetGoal);
 
             if (this.isSitting()) {
                 this.setNoGravity(false);
@@ -935,8 +913,10 @@ public class Blossom extends StrongTameableEntityDefault {
                     this.patrolCenterPos = this.getBlockPos();
                     this.patrolDimension = this.getWorld().getRegistryKey();
                     this.targetSelector.add(1, this.hostileTargetGoal);
+                    this.targetSelector.add(1, this.phantomTargetGoal);
                 } else {
                     this.targetSelector.remove(this.hostileTargetGoal);
+                    this.targetSelector.remove(this.phantomTargetGoal);
                     this.patrolCenterPos = null;
                     this.patrolDimension = null;
                 }
@@ -1173,6 +1153,12 @@ public class Blossom extends StrongTameableEntityDefault {
                     new net.minecraft.util.Identifier(nbt.getString("patrolDimension")));
         } else {
             this.patrolDimension = null;
+        }
+
+        // Re-add hostile target goals after world reload if patrolling
+        if (this.getIsPatrolling()) {
+            this.targetSelector.add(1, this.hostileTargetGoal);
+            this.targetSelector.add(1, this.phantomTargetGoal);
         }
     }
 
@@ -1494,7 +1480,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.mob.isTamed() && !this.mob.isSitting() && !this.mob.getIsPatrolling()) {
+            if (this.mob.isTamed() && !this.mob.isSitting()) {
                 LivingEntity livingEntity = this.mob.getOwner();
                 if (livingEntity == null) {
                     return false;
@@ -1535,7 +1521,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
-            if (this.tameable.isTamed() && !this.tameable.isSitting() && !this.tameable.getIsPatrolling()) {
+            if (this.tameable.isTamed() && !this.tameable.isSitting()) {
                 LivingEntity livingEntity = this.tameable.getOwner();
                 if (livingEntity == null) {
                     return false;
@@ -1585,6 +1571,9 @@ public class Blossom extends StrongTameableEntityDefault {
 
         @Override
         public boolean canStart() {
+            if (this.tameable.getIsPatrolling()) {
+                return false;
+            }
             if (!this.tameable.isTamed()) {
                 return false;
             } else {

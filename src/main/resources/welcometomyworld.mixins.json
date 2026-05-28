@@ -64,7 +64,9 @@
 		"misc.FabricSkyboxesCrashFixMixin",
 		"misc.WakesCrashFixMixin",
 		"misc.SculkWormHangFixMixin",
-		"entity.VillagerEntityMixin"
+		"entity.VillagerEntityMixin",
+		"combat.PlayerDamageDebugMixin",
+		"misc.DisableMutantEndermanGriefing"
 	],
 	"injectors": {
 		"defaultRequire": 1
