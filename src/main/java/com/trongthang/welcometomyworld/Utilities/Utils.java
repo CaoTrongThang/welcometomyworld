@@ -322,6 +322,11 @@ public class Utils {
                         blockPos.getZ(),
                         world.random.nextFloat() * 360F, 0);
 
+                if (world instanceof net.minecraft.world.ServerWorldAccess serverWorldAccess) {
+                    mobEntity.initialize(serverWorldAccess, world.getLocalDifficulty(blockPos), SpawnReason.NATURAL,
+                            null, null);
+                }
+
                 // Add the mob to the world
                 world.spawnEntity(mobEntity);
             } else {

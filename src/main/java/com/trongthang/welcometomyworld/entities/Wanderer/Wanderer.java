@@ -50,12 +50,12 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 //PORTALER: This mob is a portal that can move and can switch portal randomly, players can go to the portal to go to the end or the nether
 public class Wanderer extends StrongTameableEntityDefault {
 
-    ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
+    HashMap<AnimationName, AnimationState> animationHashMap = new HashMap<>();
 
     private static final int WALK_CYCLE_DURATION_MS = 2670;
     private static final int[] FOOTSTEP_TIMINGS_MS = { 1250, 2250 };
@@ -271,10 +271,13 @@ public class Wanderer extends StrongTameableEntityDefault {
     @Override
     public void tick() {
         super.tick();
-        setAnimationStates();
-        usingSkillsHandler();
 
-        if (!this.getWorld().isClient) {
+        if (this.getWorld().isClient) {
+            setAnimationStates();
+            handleAnimationSoundsAndEffect();
+        } else {
+            usingSkillsHandler();
+
             if (this.getTarget() != null) {
                 if (!this.getCanBeTamed()) {
                     if (!this.shootingArrow) {
@@ -295,8 +298,6 @@ public class Wanderer extends StrongTameableEntityDefault {
                 this.setIsUsingSkill(false);
             }
         }
-
-        handleAnimationSoundsAndEffect();
     }
 
     private void usingSkillsHandler() {
@@ -948,19 +949,10 @@ public class Wanderer extends StrongTameableEntityDefault {
     }
 
     public void startAnimation(AnimationName name) {
-        AnimationName na = null;
-
-        for (AnimationName n : animationHashMap.keySet()) {
-            if (n.equals(name)) {
-                na = n;
-                animationHashMap.get(n).stop();
-            } else {
-                animationHashMap.get(n).stop();
-            }
-        }
-
-        if (na != null) {
-            animationHashMap.get(na).start(this.age);
+        animationHashMap.values().forEach(AnimationState::stop);
+        AnimationState state = animationHashMap.get(name);
+        if (state != null) {
+            state.start(this.age);
             animationTimeout = DEFAULT_ANIMATION_TIMEOUT;
         }
     }

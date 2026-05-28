@@ -48,6 +48,7 @@ public class WandererModel<T extends Wanderer> extends SinglePartEntityModel<T> 
         private final ModelPart left_leg;
         private final ModelPart left_leg_down;
         private final ModelPart sword;
+        private final ModelPart[] animatedParts;
 
         public WandererModel(ModelPart root) {
                 this.wanderer = root.getChild("wanderer");
@@ -84,6 +85,10 @@ public class WandererModel<T extends Wanderer> extends SinglePartEntityModel<T> 
                 this.left_leg = hip_down.getChild("left_leg");
                 this.left_leg_down = left_leg.getChild("left_leg_down");
                 this.sword = hip_down.getChild("sword");
+
+                java.util.List<ModelPart> partsList = new java.util.ArrayList<>();
+                this.getPart().traverse().forEach(partsList::add);
+                this.animatedParts = partsList.toArray(new ModelPart[0]);
         }
 
         public static TexturedModelData getTexturedModelData() {
@@ -378,7 +383,8 @@ public class WandererModel<T extends Wanderer> extends SinglePartEntityModel<T> 
         @Override
         public void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw,
                         float headPitch) {
-                this.getPart().traverse().forEach(ModelPart::resetTransform);
+                for (ModelPart part : animatedParts)
+                        part.resetTransform();
                 this.setHeadAngles(headYaw, headPitch);
 
                 this.updateAnimation(entity.walkAnimationState, WandererAnimations.WALK, animationProgress, 1f);

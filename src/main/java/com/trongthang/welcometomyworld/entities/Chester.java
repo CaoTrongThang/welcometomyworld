@@ -97,6 +97,7 @@ public class Chester extends Enderchester implements InventoryOwner {
             buf.writeInt(this.getId());
 
             startAnimation(AnimationName.EAT_ITEMS, 30);
+            this.eatingTimeout = 30;
 
             // Sync animation and sound to all nearby players
             for (ServerPlayerEntity p : ((ServerWorld) this.getWorld()).getPlayers()) {

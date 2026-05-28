@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import net.minecraft.entity.mob.PathAwareEntity;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,116 +21,119 @@ import java.util.stream.Collectors;
 import static com.trongthang.welcometomyworld.features.HostileMobsAwareness.TRACKED_MOBS;
 
 @Mixin(HostileEntity.class)
-public class HostileFollowPlayersMixin {
-    private static final int COOLDOWN = 600;
-    private int cooldownTimer = 300;
+public abstract class HostileFollowPlayersMixin extends PathAwareEntity {
 
-    private static final int maxGoToCooldown = 300;
-    private int goToCounter = 0;
+    protected HostileFollowPlayersMixin(EntityType<? extends PathAwareEntity> entityType, World world) {
+        super(entityType, world);
+    }
 
-    private static final double MAX_DISTANCE_SQ = 120.0 * 120.0;
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void onInit(EntityType<? extends HostileEntity> entityType, World world, CallbackInfo ci) {
+        if (!world.isClient()) {
+            this.goalSelector.add(5, new TrackPlayerGoal((HostileEntity) (Object) this));
+        }
+    }
 
-    private Vec3d targetPos = null;
-    private UUID targetPlayer = null;
+    private static class TrackPlayerGoal extends net.minecraft.entity.ai.goal.Goal {
+        private final HostileEntity mob;
+        private static final int INITIAL_COOLDOWN = 600;
+        private int cooldownTimer = 300;
+        private static final int MAX_GOTO_COOLDOWN = 300;
+        private int goToCounter = 0;
+        private static final double MAX_DISTANCE_SQ = 120.0 * 120.0;
 
-    @Inject(method = "tickMovement", at = @At("HEAD"))
-    private void onTick(CallbackInfo ci) {
-        HostileEntity mob = (HostileEntity) (Object) this;
+        private Vec3d targetPos = null;
+        private UUID targetPlayer = null;
 
-        if (mob.getTarget() != null) {
-            return;
+        public TrackPlayerGoal(HostileEntity mob) {
+            this.mob = mob;
+            this.setControls(java.util.EnumSet.of(net.minecraft.entity.ai.goal.Goal.Control.MOVE));
         }
 
-        if (targetPos != null) {
-            if (mob.getTarget() != null) {
-                reset();
-                return;
+        @Override
+        public boolean canStart() {
+            if (cooldownTimer > 0) {
+                cooldownTimer--;
+                return false;
+            }
+            cooldownTimer = INITIAL_COOLDOWN;
+
+            if (!mob.getWorld().isNight() || mob.getWorld().getRegistryKey() != World.OVERWORLD
+                    || mob.getTarget() != null) {
+                return false;
             }
 
-            goToTargetPos(mob);
-
-            goToCounter++;
-            if (goToCounter > maxGoToCooldown) {
-                reset();
+            Identifier mobId = EntityType.getId(mob.getType());
+            if (!TRACKED_MOBS.contains(mobId)) {
+                return false;
             }
 
-            return;
+            updatePlayerTarget();
+            return targetPos != null;
         }
 
-        if (cooldownTimer-- <= 0) {
-            cooldownTimer = COOLDOWN;
-            if (mob.getWorld().isNight() && !mob.getWorld().isClient() && mob.getTarget() == null
-                    && mob.getWorld().getRegistryKey() == World.OVERWORLD) {
-                if (shouldTrackPlayer(mob)) {
-                    updatePlayerTarget(mob);
+        @Override
+        public boolean shouldContinue() {
+            if (mob.getTarget() != null || targetPos == null || goToCounter > MAX_GOTO_COOLDOWN) {
+                return false;
+            }
 
-                    ServerPlayerEntity player = mob.getServer().getPlayerManager().getPlayer(targetPlayer);
-                    if (player != null) {
-                        if (mob.distanceTo(player) > 50) {
-                            reset();
-                        }
-                    }
+            if (mob.squaredDistanceTo(targetPos) < 225.0) { // 15 blocks squared
+                return false;
+            }
+
+            if (targetPlayer != null && mob.getServer() != null) {
+                ServerPlayerEntity player = mob.getServer().getPlayerManager().getPlayer(targetPlayer);
+                if (player != null && mob.distanceTo(player) > 50) {
+                    return false;
                 }
             }
-        }
-    }
 
-    private void reset() {
-        goToCounter = 0;
-        targetPos = null;
-        targetPlayer = null;
-    }
-
-    private boolean shouldTrackPlayer(HostileEntity mob) {
-        // 1. Get entity type ID
-        Identifier mobId = EntityType.getId(mob.getType());
-
-        // 2. Check against our tracking list
-        boolean isTrackable = TRACKED_MOBS.contains(mobId);
-
-        // 3. Environment checks
-        boolean validWorld = mob.getWorld().getRegistryKey() == World.OVERWORLD
-                && mob.getWorld().isNight();
-
-        // 4. State checks
-        boolean validState = !mob.getWorld().isClient()
-                && mob.getTarget() == null;
-
-        return isTrackable && validWorld && validState;
-    }
-
-    private void updatePlayerTarget(HostileEntity mob) {
-        if (targetPos != null || targetPlayer != null)
-            return;
-
-        World world = mob.getWorld();
-        List<ServerPlayerEntity> players = ((ServerWorld) world).getPlayers();
-
-        List<ServerPlayerEntity> validPlayers = players.stream()
-                .filter(p -> !p.isCreative() && !p.isSpectator() && p.isAlive())
-                .filter(p -> p.squaredDistanceTo(mob) <= MAX_DISTANCE_SQ
-                        && p.getWorld().getRegistryKey() == World.OVERWORLD)
-                .collect(Collectors.toList());
-
-        if (!validPlayers.isEmpty()) {
-            ServerPlayerEntity target = validPlayers.get(world.random.nextInt(validPlayers.size()));
-            targetPos = target.getPos().add(0, 1, 0);
-            targetPlayer = target.getUuid();
-        } else {
-            reset();
-        }
-    }
-
-    private void goToTargetPos(HostileEntity mob) {
-        if (Math.abs(targetPos.getX() - mob.getX()) < 15 || Math.abs(targetPos.getZ() - mob.getZ()) < 15) {
-            reset();
-            return;
+            return true;
         }
 
-        mob.getNavigation().startMovingTo(
-                targetPos.getX(),
-                targetPos.getY(),
-                targetPos.getZ(),
-                1.1f);
+        @Override
+        public void start() {
+            goToCounter = 0;
+            if (targetPos != null) {
+                mob.getNavigation().startMovingTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), 1.1f);
+            }
+        }
+
+        @Override
+        public void tick() {
+            goToCounter++;
+            if (targetPos != null && mob.getNavigation().isIdle()) {
+                mob.getNavigation().startMovingTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), 1.1f);
+            }
+        }
+
+        @Override
+        public void stop() {
+            goToCounter = 0;
+            targetPos = null;
+            targetPlayer = null;
+            mob.getNavigation().stop();
+        }
+
+        private void updatePlayerTarget() {
+            World world = mob.getWorld();
+            if (!(world instanceof ServerWorld serverWorld))
+                return;
+
+            List<ServerPlayerEntity> validPlayers = serverWorld.getPlayers().stream()
+                    .filter(p -> !p.isCreative() && !p.isSpectator() && p.isAlive())
+                    .filter(p -> p.squaredDistanceTo(mob) <= MAX_DISTANCE_SQ)
+                    .collect(Collectors.toList());
+
+            if (!validPlayers.isEmpty()) {
+                ServerPlayerEntity target = validPlayers.get(world.random.nextInt(validPlayers.size()));
+                targetPos = target.getPos().add(0, 1, 0);
+                targetPlayer = target.getUuid();
+            } else {
+                targetPos = null;
+                targetPlayer = null;
+            }
+        }
     }
 }

@@ -37,6 +37,7 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
         private final ModelPart right_leg_foot;
         private final ModelPart portal;
         private final ModelPart frames;
+        private final ModelPart[] animatedParts;
 
         public FallenKnightModel(ModelPart root) {
                 this.fallen_knight = root.getChild("fallen_knight");
@@ -61,6 +62,10 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
                 this.right_leg_foot = right_leg.getChild("right_leg_foot");
                 this.portal = fallen_knight.getChild("portal");
                 this.frames = portal.getChild("frames");
+
+                java.util.List<ModelPart> partsList = new java.util.ArrayList<>();
+                this.getPart().traverse().forEach(partsList::add);
+                this.animatedParts = partsList.toArray(new ModelPart[0]);
         }
 
         public static TexturedModelData getTexturedModelData() {
@@ -245,7 +250,8 @@ public class FallenKnightModel<T extends FallenKnight> extends SinglePartEntityM
         @Override
         public void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw,
                         float headPitch) {
-                this.getPart().traverse().forEach(ModelPart::resetTransform);
+                for (ModelPart part : animatedParts)
+                        part.resetTransform();
 
                 this.updateAnimation(entity.walkAnimationState, FallenKnightModelAnimation.WALK, animationProgress, 1f);
                 this.updateAnimation(entity.idleAnimationState, FallenKnightModelAnimation.IDLE, animationProgress, 1f);

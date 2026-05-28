@@ -50,14 +50,14 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
 
 //PORTALER: This mob is a portal that can move and can switch portal randomly, players can go to the portal to go to the end or the nether
 public class FallenKnight extends StrongTameableEntityDefault {
 
-    ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
+    HashMap<AnimationName, AnimationState> animationHashMap = new HashMap<>();
 
     private static final int WALK_CYCLE_DURATION_MS = 4000;
     private static final int[] FOOTSTEP_TIMINGS_MS = { 1080, 3210 };
@@ -210,28 +210,21 @@ public class FallenKnight extends StrongTameableEntityDefault {
     @Override
     public void tick() {
         super.tick();
-        setAnimationStates();
 
-        // if (this.getWorld().isClient) {
-        // WelcomeToMyWorld.LOGGER.info("[CLIENT] SITTING: " + this.isInSittingPose());
-        // } else {
-        // WelcomeToMyWorld.LOGGER.info("[SERVER] SITTING: " + this.isInSittingPose());
-        // }
-
-        if (!this.getWorld().isClient) {
+        if (this.getWorld().isClient) {
+            setAnimationStates();
+            handleAnimationSoundsAndEffect();
+        } else {
             if (this.getTarget() != null) {
                 if (this.getTarget().isDead()) {
                     this.setTarget(null);
                 }
             }
+            if (this.canChangeTargetCounter < this.canChangeTargetCooldown) {
+                this.canChangeTargetCounter++;
+            }
+            usingSkillsHandler();
         }
-
-        if (this.canChangeTargetCounter < this.canChangeTargetCooldown) {
-            this.canChangeTargetCounter++;
-        }
-
-        usingSkillsHandler();
-        handleAnimationSoundsAndEffect();
     }
 
     public void setAnimationStates() {
@@ -719,18 +712,10 @@ public class FallenKnight extends StrongTameableEntityDefault {
     }
 
     public void startAnimation(AnimationName name) {
-        AnimationName na = null;
-
-        for (AnimationName n : animationHashMap.keySet()) {
-            if (n.equals(name)) {
-                na = n;
-            } else {
-                animationHashMap.get(n).stop();
-            }
-        }
-
-        if (na != null) {
-            animationHashMap.get(na).start(this.age);
+        animationHashMap.values().forEach(AnimationState::stop);
+        AnimationState state = animationHashMap.get(name);
+        if (state != null) {
+            state.start(this.age);
             animationTimeout = DEFAULT_ANIMATION_TIMEOUT;
         }
     }

@@ -233,7 +233,6 @@ public class SpawnMonstersPackEveryMins {
                 Entity entity = spawnMob(world, spawnPos.add(0, 2, 0), entry.first());
 
                 if (entity instanceof MobEntity mob) {
-                    mob.initialize(world, world.getLocalDifficulty(spawnPos), SpawnReason.NATURAL, null, null);
                     if (mob.canSee(player))
                         mob.setTarget(player);
 
@@ -308,7 +307,6 @@ public class SpawnMonstersPackEveryMins {
             }
 
             if (entity instanceof MobEntity mob) {
-                mob.initialize(world, world.getLocalDifficulty(spawnPos), SpawnReason.NATURAL, null, null);
             }
 
             if (entity instanceof MobEntity mob) {

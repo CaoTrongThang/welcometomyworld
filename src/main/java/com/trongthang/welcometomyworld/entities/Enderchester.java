@@ -50,7 +50,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 import static com.trongthang.welcometomyworld.Utilities.SpawnParticles.spawnParticlesAroundEntity;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
@@ -60,7 +60,7 @@ import com.trongthang.welcometomyworld.classes.CustomTameableEntity;
 
 public class Enderchester extends CustomTameableEntity implements StartAnimation {
 
-    ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
+    HashMap<AnimationName, AnimationState> animationHashMap = new HashMap<>();
 
     private static final TrackedData<Boolean> IS_SLEEPING = DataTracker.registerData(Enderchester.class,
             TrackedDataHandlerRegistry.BOOLEAN);
@@ -87,6 +87,7 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
     public final AnimationState attackAnimationState = new AnimationState();
 
     public int animationTimeout = 0;
+    public int eatingTimeout = 0;
     public boolean chestIsClose = true;
 
     public double chanceToSleep = 0.35;
@@ -412,6 +413,15 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
             return;
         }
 
+        if (!this.getWorld().isClient()) {
+            if (this.eatingTimeout > 0) {
+                this.eatingTimeout--;
+                this.getNavigation().stop();
+                this.setJumping(false);
+                this.setMovementSpeed(0f);
+            }
+        }
+
         if (!this.getCanSleepData()) {
             canSleepCounter++;
             if (canSleepCounter > canSleepCooldown) {
@@ -431,11 +441,6 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
 
         passiveHealingCounter++;
         if (passiveHealingCounter >= PASSIVE_HEALING_COOLDOWN) {
-            if (this.getOwner() == null) {
-                if (this.isTamed()) {
-                    this.setTamed(false);
-                }
-            }
             passiveHealingCounter = 0;
             this.setHealth(this.getHealth() + passiveHealingAmount);
         }
@@ -652,8 +657,9 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
         if (this.getIsSleepingData())
             return;
 
-        // Ensure the mob has an owner
-        if (this.getOwner() == null) {
+        // Ensure the mob has an owner and the owner is online to access Ender Chest
+        LivingEntity owner = this.getOwner();
+        if (owner == null) {
             return;
         }
 
@@ -661,7 +667,7 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
             return;
         }
 
-        var player = this.getServer().getPlayerManager().getPlayer(this.getOwner().getUuid());
+        ServerPlayerEntity player = this.getServer().getPlayerManager().getPlayer(owner.getUuid());
         if (player == null) {
             return;
         }
@@ -689,6 +695,7 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
             buf.writeInt(this.getId());
 
             startAnimation(AnimationName.EAT_ITEMS, 30);
+            this.eatingTimeout = 30;
 
             // Sync animation and sound to all nearby players
             for (ServerPlayerEntity p : ((ServerWorld) this.getWorld()).getPlayers()) {
@@ -760,18 +767,10 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
     }
 
     public void startAnimation(AnimationName name) {
-        AnimationName na = null;
-
-        for (AnimationName n : animationHashMap.keySet()) {
-            if (n.equals(name)) {
-                na = n;
-            } else {
-                animationHashMap.get(n).stop();
-            }
-        }
-
-        if (na != null) {
-            animationHashMap.get(na).start(this.age);
+        animationHashMap.values().forEach(AnimationState::stop);
+        AnimationState state = animationHashMap.get(name);
+        if (state != null) {
+            state.start(this.age);
             animationTimeout = DEFAULT_ANIMATION_TIMEOUT;
         }
     }

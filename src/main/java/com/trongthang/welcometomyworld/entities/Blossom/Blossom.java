@@ -66,7 +66,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 import static com.trongthang.welcometomyworld.Utilities.SpawnParticles.spawnParticlesAroundEntity;
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.PLAY_BLOCK_LEVER_CLICK;
@@ -82,7 +82,7 @@ public class Blossom extends StrongTameableEntityDefault {
             "The blossoms whisper of your destiny...",
             "Together we shall nurture this world's balance");
 
-    ConcurrentHashMap<AnimationName, AnimationState> animationHashMap = new ConcurrentHashMap<>();
+    HashMap<AnimationName, AnimationState> animationHashMap = new HashMap<>();
 
     private static final TrackedData<Boolean> IS_GREETING = DataTracker.registerData(Blossom.class,
             TrackedDataHandlerRegistry.BOOLEAN);
@@ -261,14 +261,18 @@ public class Blossom extends StrongTameableEntityDefault {
     @Override
     public void tick() {
         super.tick();
-        setAnimationStates();
 
-        // if (this.getWorld().isClient) {
-        // WelcomeToMyWorld.LOGGER.info("[CLIENT] DEATH: " + this.isDead());
-        //// WelcomeToMyWorld.LOGGER.info("[CLIENT] SITTING: " +
-        // this.isInSittingPose());
-        // }
-        if (!this.getWorld().isClient) {
+        if (this.getWorld().isClient) {
+            setAnimationStates();
+
+            particleCounter++;
+            if (particleCounter > particleCooldown) {
+                particleCounter = 0;
+                spawnParticlesAroundEntity(this, ParticleTypes.HAPPY_VILLAGER, 1, 2);
+            }
+
+            handleAnimationSoundsAndEffect();
+        } else {
             if (this.getIsGreeting()) {
                 // Force stay still
                 this.setVelocity(Vec3d.ZERO);
@@ -284,9 +288,8 @@ public class Blossom extends StrongTameableEntityDefault {
                     this.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, this.greetingTarget.getEyePos());
                 }
 
-                // Initialize timer if not set
                 if (this.greetingTimer <= 0) {
-                    this.greetingTimer = 70; // Total duration of greeting
+                    this.greetingTimer = 70;
                 }
 
                 this.greetingTimer--;
@@ -298,70 +301,59 @@ public class Blossom extends StrongTameableEntityDefault {
                 return;
             }
 
-            if (this.getTarget() != null) {
-                if (this.getTarget().isDead()) {
-                    this.setTarget(null);
-                }
+            if (this.getTarget() != null && this.getTarget().isDead()) {
+                this.setTarget(null);
             }
-        } else {
-            particleCounter++;
-            if (particleCounter > particleCooldown) {
-                particleCounter = 0;
-                spawnParticlesAroundEntity(this, ParticleTypes.HAPPY_VILLAGER, 1, 2);
-            }
-        }
 
-        usingSkillsHandler();
-        handleAnimationSoundsAndEffect();
+            usingSkillsHandler();
+        }
     }
 
+    // Only called on the client side (guarded in tick)
     public void setAnimationStates() {
-        if (this.getWorld().isClient) {
-            if (this.getIsGreeting()) {
-                if (!greetingAnimationState.isRunning()) {
-                    ClientScheduler.schedule(() -> {
-                        spawnTeleportParticles(this.getX(), this.getY(), this.getZ());
-                        Utils.playClientSound(this.getBlockPos(), SoundsManager.BLOSSOM_LAUGH, 16, 0.3f,
-                                WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
-                        Utils.playClientSound(this.getBlockPos(), SoundsManager.BLOSSOM_WALK, 16, 0.8f,
-                                WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
-                    }, 10);
-
-                    spawnTeleportParticles(this.getX(), this.getY(), this.getZ());
-
-                    startAnimation(AnimationName.GRETTING);
-
-                    ClientScheduler.schedule(() -> {
-                        spawnTeleportParticles(this.getX(), this.getY(), this.getZ());
-                        Utils.playClientSound(this.getBlockPos(), SoundsManager.BLOSSOM_WALK, 16, 0.8f,
-                                WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
-                    }, 70);
-
-                }
-                return;
-            }
-            if (!this.getIsUsingSkill()) {
-                if (this.isInSittingPose()) {
-                    if (!sitAnimationState.isRunning()) {
-                        startAnimation(AnimationName.SIT);
-                    }
-                } else {
-                    if (animationTimeout <= 0 && !this.getIsUsingSkill()) {
-                        if (!walkAnimationState.isRunning()) {
-                            startAnimation(AnimationName.WALK);
-                        }
-                    }
-                }
-            }
-        }
-
         if (animationTimeout >= 0) {
             animationTimeout--;
         }
+
+        if (this.getIsGreeting()) {
+            if (!greetingAnimationState.isRunning()) {
+                ClientScheduler.schedule(() -> {
+                    spawnTeleportParticles(this.getX(), this.getY(), this.getZ());
+                    Utils.playClientSound(this.getBlockPos(), SoundsManager.BLOSSOM_LAUGH, 16, 0.3f,
+                            WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
+                    Utils.playClientSound(this.getBlockPos(), SoundsManager.BLOSSOM_WALK, 16, 0.8f,
+                            WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
+                }, 10);
+
+                spawnTeleportParticles(this.getX(), this.getY(), this.getZ());
+
+                startAnimation(AnimationName.GRETTING);
+
+                ClientScheduler.schedule(() -> {
+                    spawnTeleportParticles(this.getX(), this.getY(), this.getZ());
+                    Utils.playClientSound(this.getBlockPos(), SoundsManager.BLOSSOM_WALK, 16, 0.8f,
+                            WelcomeToMyWorld.random.nextFloat(0.8f, 1.2f));
+                }, 70);
+            }
+            return;
+        }
+
+        if (!this.getIsUsingSkill()) {
+            if (this.isInSittingPose()) {
+                if (!sitAnimationState.isRunning()) {
+                    startAnimation(AnimationName.SIT);
+                }
+            } else if (animationTimeout <= 0) {
+                if (!walkAnimationState.isRunning()) {
+                    startAnimation(AnimationName.WALK);
+                }
+            }
+        }
     }
 
+    // Only called on the server side (guarded in tick)
     private void usingSkillsHandler() {
-        if (!this.getWorld().isClient && !this.isInSittingPose()) {
+        if (!this.isInSittingPose()) {
             if (isTooFarFromPatrolCenter()) {
                 if (this.useSkillCooldownCounter < this.getAllSkillCooldown()) {
                     this.useSkillCooldownCounter++;
@@ -594,10 +586,8 @@ public class Blossom extends StrongTameableEntityDefault {
         }
     }
 
+    // Only called on the client side (guarded in tick)
     private void handleAnimationSoundsAndEffect() {
-        if (!this.getWorld().isClient)
-            return;
-
         if (attack2AnimationState.isRunning()) {
             handleAttack2Sounds();
         }
@@ -866,33 +856,19 @@ public class Blossom extends StrongTameableEntityDefault {
     }
 
     public void startAnimation(AnimationName name) {
-        AnimationName na = null;
-
-        for (AnimationName n : animationHashMap.keySet()) {
-            if (n.equals(name)) {
-                na = n;
-            } else {
-                animationHashMap.get(n).stop();
-            }
-        }
-
-        if (na != null) {
-            animationHashMap.get(na).start(this.age);
+        animationHashMap.values().forEach(AnimationState::stop);
+        AnimationState state = animationHashMap.get(name);
+        if (state != null) {
+            state.start(this.age);
             animationTimeout = DEFAULT_ANIMATION_TIMEOUT;
         }
     }
 
     public void startAnimation(AnimationName name, int timeout) {
-        AnimationName na = null;
-        for (AnimationName n : animationHashMap.keySet()) {
-            if (n.equals(name)) {
-                na = n;
-            } else {
-                animationHashMap.get(n).stop();
-            }
-        }
-        if (na != null) {
-            animationHashMap.get(na).start(this.age);
+        animationHashMap.values().forEach(AnimationState::stop);
+        AnimationState state = animationHashMap.get(name);
+        if (state != null) {
+            state.start(this.age);
             animationTimeout = timeout;
         }
     }

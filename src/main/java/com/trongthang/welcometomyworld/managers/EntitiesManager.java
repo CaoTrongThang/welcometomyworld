@@ -283,7 +283,7 @@ public class EntitiesManager {
                                 },
                                 SpawnGroup.CREATURE,
                                 EntitiesManager.CHESTER,
-                                20,
+                                40,
                                 1,
                                 1);
 
