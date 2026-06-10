@@ -8,37 +8,68 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.Difficulty;
 
+import java.util.Random;
+
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.dataHandler;
 
 public class DeathCounter {
 
-    public void startCountingDeaths(){
+    private static final Random RANDOM = new Random();
+
+    private static final String[] HARD_MODE_MESSAGES = {
+            "This is Hard mode! Your struggles are real.",
+            "Hard mode isn't just a label, it's a lifestyle. And yours seems to involve a lot of respawning.",
+            "The mobs in Hard mode really don't like you, do they?",
+            "Taking the 'Hard' in Hard mode very literally, I see.",
+            "Hard mode: where every mistake is a lesson, and you're getting a lot of lessons today.",
+            "Is it Hard mode, or are you just making it look hard?"
+    };
+
+    private static final String[] EASY_MODE_MESSAGES = {
+            "Aww, you're in Easy mode. Deaths don't count as much, right?",
+            "Easy mode: because sometimes you just want to feel powerful. Keyword: sometimes.",
+            "Even in Easy mode, the ground is still hard. Gravity doesn't care about difficulty.",
+            "Aww, the mobs were being gentle and you still found a way. Impressive."
+    };
+
+    private static final String[] GENERIC_DEATH_MESSAGES = {
+            "Death is just a temporary setback. A very frequent, very loud temporary setback.",
+            "I'd suggest a shield, but at this rate, you'd probably just lose it too.",
+            "Have you tried 'not' standing there?",
+            "Maybe the mobs are just trying to be your friends... very aggressively.",
+            "That looked like it hurt. From here, anyway.",
+            "Easycraft, what a name."
+    };
+
+    public void startCountingDeaths() {
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof PlayerEntity) {
                 ServerPlayerEntity player = entity.getServer().getPlayerManager().getPlayer(entity.getUuid());
                 PlayerData p = dataHandler.playerDataMap.get(entity.getUuid());
 
-                p.deaths++;  // Increment death counter
+                p.deaths++; // Increment death counter
 
                 // First death - Give apple and message
-                if(p.deaths == 1){
-                    if(!p.introMessageAfterDeath) return;
+                if (p.deaths == 1) {
+                    if (!p.introMessageAfterDeath)
+                        return;
 
-                    if(player.getWorld().getLevelProperties().isHardcore()){
+                    if (player.getWorld().getLevelProperties().isHardcore()) {
                         Utils.UTILS.sendTextAfter(player, "Congrats! Your first death and also your last...");
                     } else {
                         Utils.UTILS.sendTextAfter(player, "Congrats! Your first death!");
                     }
                 }
 
-                if(p.deaths == 100){
-                    Utils.UTILS.sendTextAfter(player, "Wow, 100 deaths already? You've truly mastered the art of dying.");
+                if (p.deaths == 100) {
+                    Utils.UTILS.sendTextAfter(player,
+                            "Wow, 100 deaths already? You've truly mastered the art of dying.");
                 }
-                if(p.deaths == 200){
+                if (p.deaths == 200) {
                     Utils.UTILS.sendTextAfter(player, "Still here after 200 deaths? I thought you'd give up by now!");
                 }
-                if(p.deaths == 300){
+                if (p.deaths == 300) {
                     ItemStack lovedItem = null;
                     // Check player's inventory for loved items
                     for (ItemStack itemStack : player.getInventory().main) {
@@ -47,26 +78,48 @@ public class DeathCounter {
                             break;
                         }
                     }
-                    if(lovedItem != null){
-                        Utils.UTILS.sendTextAfter(player, "300 deaths! You’ve been through so much, yet still carry that " + lovedItem.getName() + ". Impressive!");
+                    if (lovedItem != null) {
+                        Utils.UTILS.sendTextAfter(player,
+                                "300 deaths! You’ve been through so much, yet still carry that " + lovedItem.getName()
+                                        + ". Impressive!");
                     } else {
-                        Utils.UTILS.sendTextAfter(player, "300 deaths... and you still seem to find a way to survive. Incredible!");
+                        Utils.UTILS.sendTextAfter(player,
+                                "300 deaths... and you still seem to find a way to survive. Incredible!");
                     }
                 }
 
-                if(p.deaths == 1000){
-                    Utils.UTILS.sendTextAfter(player,"A thousand deaths, my friend. If this were a competition, you’d be *winning*. Have you tried not dying?", 4);
-                    Utils.UTILS.sendTextAfter(player,"The mobs are starting a fan club for you. I hear they’re planning a parade... you’re a legend.",  3);
+                if (p.deaths == 1000) {
+                    Utils.UTILS.sendTextAfter(player,
+                            "A thousand deaths, my friend. If this were a competition, you’d be *winning*. Have you tried not dying?",
+                            4);
+                    Utils.UTILS.sendTextAfter(player,
+                            "The mobs are starting a fan club for you. I hear they’re planning a parade... you’re a legend.",
+                            3);
                     checkSurroundings(player);
-                    Utils.UTILS.sendTextAfter(player,"I think, I'll be off for now, just have fun on your journey.",  6);
+                    Utils.UTILS.sendTextAfter(player, "I think, I'll be off for now, just have fun on your journey.",
+                            6);
                 }
 
                 // Death-based interactions with difficulty
                 Difficulty worldDifficulty = player.getWorld().getDifficulty();
-                if (worldDifficulty == Difficulty.HARD) {
-                    Utils.UTILS.sendTextAfter(player, "This is Hard mode! Your struggles are real.");
-                } else if (worldDifficulty == Difficulty.EASY) {
-                    Utils.UTILS.sendTextAfter(player, "Aww, you're in Easy mode. Deaths don't count as much, right?");
+
+                // 70% chance for difficulty specific message, 30% for generic (if not special
+                // case)
+                if (RANDOM.nextFloat() < 0.7f) {
+                    if (worldDifficulty == Difficulty.HARD) {
+                        Utils.UTILS.sendTextAfter(player,
+                                HARD_MODE_MESSAGES[RANDOM.nextInt(HARD_MODE_MESSAGES.length)]);
+                    } else if (worldDifficulty == Difficulty.EASY) {
+                        Utils.UTILS.sendTextAfter(player,
+                                EASY_MODE_MESSAGES[RANDOM.nextInt(EASY_MODE_MESSAGES.length)]);
+                    } else {
+                        // For Normal or other difficulties, just use generic
+                        Utils.UTILS.sendTextAfter(player,
+                                GENERIC_DEATH_MESSAGES[RANDOM.nextInt(GENERIC_DEATH_MESSAGES.length)]);
+                    }
+                } else {
+                    Utils.UTILS.sendTextAfter(player,
+                            GENERIC_DEATH_MESSAGES[RANDOM.nextInt(GENERIC_DEATH_MESSAGES.length)]);
                 }
 
                 // Special message if the player died near a specific block (e.g., bed)
@@ -76,16 +129,21 @@ public class DeathCounter {
             }
         });
     }
+
     private void checkSurroundings(ServerPlayerEntity player) {
         String biome = player.getWorld().getRegistryKey().getValue().getPath();
-        if(biome.contains("desert")) {
-            Utils.UTILS.sendTextAfter(player, "A thousand deaths in the desert? You’re either a masochist or *really* bad at navigating.");
-        } else if(biome.contains("forest")) {
-            Utils.UTILS.sendTextAfter(player, "A thousand deaths in the forest? Is the wood too comfortable, or are the mobs just really good at hiding?");
-        } else if(biome.contains("ocean")) {
-            Utils.UTILS.sendTextAfter(player, "1000 deaths at sea... Is it the endless blue that’s drawing you in, or just your *drowning* instincts?");
+        if (biome.contains("desert")) {
+            Utils.UTILS.sendTextAfter(player,
+                    "A thousand deaths in the desert? You’re either a masochist or *really* bad at navigating.");
+        } else if (biome.contains("forest")) {
+            Utils.UTILS.sendTextAfter(player,
+                    "A thousand deaths in the forest? Is the wood too comfortable, or are the mobs just really good at hiding?");
+        } else if (biome.contains("ocean")) {
+            Utils.UTILS.sendTextAfter(player,
+                    "1000 deaths at sea... Is it the endless blue that’s drawing you in, or just your *drowning* instincts?");
         } else {
-            Utils.UTILS.sendTextAfter(player, "I’ve got to hand it to you, surviving this long in a " + biome + " is almost an art form. Keep it up!");
+            Utils.UTILS.sendTextAfter(player, "I’ve got to hand it to you, surviving this long in a " + biome
+                    + " is almost an art form. Keep it up!");
         }
     }
 }
