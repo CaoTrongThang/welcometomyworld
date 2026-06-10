@@ -44,23 +44,28 @@ public class AllyUtils {
         // 1. Check if they share the same owner or if target is the owner
         if (source instanceof TameableEntity tameableSource) {
             LivingEntity owner = tameableSource.getOwner();
-            if (owner != null && target.equals(owner))
+            if (owner != null && target.equals(owner)) {
                 return true;
+            }
 
             if (target instanceof TameableEntity tameableTarget && tameableTarget.isTamed()) {
                 LivingEntity targetOwner = tameableTarget.getOwner();
-                if (owner != null && owner.equals(targetOwner))
+                if (owner != null && owner.equals(targetOwner)) {
                     return true;
+                }
             }
         }
 
-        // 2. Player is always an ally to tamed things
-        if (target instanceof PlayerEntity)
-            return true;
+        // 2. If source is tamed, players and other tamed mobs are allies
+        if (source instanceof TameableEntity tameableSource2 && tameableSource2.isTamed()) {
+            if (target instanceof PlayerEntity) {
+                return true;
+            }
 
-        // 3. Tamed animals are generally allies to players and other tamed things
-        if (target instanceof TameableEntity tameableTarget && tameableTarget.isTamed()) {
-            return true;
+            // 3. Tamed animals are generally allies to other tamed things
+            if (target instanceof TameableEntity tameableTarget && tameableTarget.isTamed()) {
+                return true;
+            }
         }
 
         // 4. Support Goety mod entities summoned by players

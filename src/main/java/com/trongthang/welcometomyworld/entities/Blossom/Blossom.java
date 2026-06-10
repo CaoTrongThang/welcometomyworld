@@ -728,8 +728,9 @@ public class Blossom extends StrongTameableEntityDefault {
             }
 
             for (LivingEntity target : damageTarget) {
-                if (!canHarm(target))
+                if (!canHarm(target)) {
                     continue;
+                }
 
                 boolean invisToSky = true;
                 BlockPos targetHeadPos = target.getBlockPos().add(0, 1, 0);
@@ -746,10 +747,15 @@ public class Blossom extends StrongTameableEntityDefault {
 
                 if (invisToSky) {
                     float damage = (float) this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * 1.5f;
+                    WelcomeToMyWorld.LOGGER.info(
+                            "createShockwave: damaging " + target.getType().getUntranslatedName() + " for " + damage);
 
                     if (!damageBlockingShield(target, damage)) {
                         target.damage(this.getWorld().getDamageSources().mobAttack(this), damage);
                     }
+                } else {
+                    WelcomeToMyWorld.LOGGER.info("createShockwave: skipped " + target.getType().getUntranslatedName()
+                            + " (not visible to sky)");
                 }
             }
         }
