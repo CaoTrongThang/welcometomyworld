@@ -192,7 +192,7 @@ public class SpawnMonstersPackEveryMins {
             int bonus = currentDay / 50;
 
             packMonsters = List.of(
-                    Pair.of("mutantmonsters:mutant_zombie", 1),
+                    Pair.of("mutantmonsters:mutant_zombie", 1 + (bonus > 0 ? random.nextInt(bonus) : 0)),
                     Pair.of("mutantmonsters:mutant_skeleton", 4 + (bonus > 0 ? random.nextInt(bonus) : 0)),
                     Pair.of("mutantmonsters:mutant_enderman", 1 + (bonus > 0 ? random.nextInt(bonus) : 0)));
         } else if (packType == MonstersPackTypes.VANILLA) {
@@ -236,8 +236,14 @@ public class SpawnMonstersPackEveryMins {
                     if (mob.canSee(player))
                         mob.setTarget(player);
 
-                    tryDiscardSpawnedMobAfterTime(world, (MobEntity) entity, COOLDOWN);
+                    tryDiscardSpawnedMobAfterTime(world, mob, COOLDOWN);
+
+                    // Ensure health is set to max health after potential attribute changes in
+                    // spawnMob/initialize
                     mob.setHealth(mob.getMaxHealth());
+
+                    // LOGGER.info("Spawned " + entry.first() + " with " + mob.getHealth() + "/" +
+                    // mob.getMaxHealth() + " health");
                 }
             }
         }
@@ -307,15 +313,15 @@ public class SpawnMonstersPackEveryMins {
             }
 
             if (entity instanceof MobEntity mob) {
-            }
-
-            if (entity instanceof MobEntity mob) {
                 if (mob.canSee(player)) {
                     mob.setTarget(player);
                 }
 
                 mob.setHealth(mob.getMaxHealth());
                 tryDiscardSpawnedMobAfterTime(world, mob, 2500);
+
+                // LOGGER.info("Spawned " + selectedMonster.getId() + " with " + mob.getHealth()
+                // + "/" + mob.getMaxHealth() + " health");
             }
         }
     }

@@ -305,36 +305,23 @@ public class Utils {
 
         Identifier mobIdentifier = new Identifier(mobId.toLowerCase());
         EntityType<?> entityType = Registries.ENTITY_TYPE.get(mobIdentifier);
-        Entity entity = null;
 
-        if (entityType != null) {
-            // entityType.spawn(player.getServer().getWorld(player.getWorld().getRegistryKey()),
-            // blockPos, null);
-
-            // Create the entity instance
-            entity = entityType.create(world);
-
-            if (entity instanceof MobEntity mobEntity) {
-                // Set the mob's position
-                mobEntity.refreshPositionAndAngles(
-                        blockPos.getX(),
-                        blockPos.getY(),
-                        blockPos.getZ(),
-                        world.random.nextFloat() * 360F, 0);
-
-                if (world instanceof net.minecraft.world.ServerWorldAccess serverWorldAccess) {
-                    mobEntity.initialize(serverWorldAccess, world.getLocalDifficulty(blockPos), SpawnReason.NATURAL,
-                            null, null);
-                }
-
-                // Add the mob to the world
-                world.spawnEntity(mobEntity);
-            } else {
-                LOGGER.info("Entity type " + mobId + " not found. Check if mod ID or entity ID is correct.");
-            }
+        if (entityType != null && world instanceof ServerWorld serverWorld) {
+            // Using EntityType.spawn is the standard way to spawn from eggs/commands
+            // it handles initialization, data loading, and synchronization correctly.
+            return entityType.spawn(
+                    serverWorld,
+                    null,
+                    null,
+                    blockPos,
+                    SpawnReason.SPAWN_EGG,
+                    true,
+                    false);
+        } else {
+            LOGGER.info("Entity type " + mobId + " not found or world is not ServerWorld.");
         }
 
-        return entity;
+        return null;
     }
 
     public static BlockPos findSafeSpawnHostileMobPositionAroundTheCenterPos(ServerWorld world, Vec3d centerPos,

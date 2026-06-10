@@ -183,7 +183,7 @@ public class Wanderer extends StrongTameableEntityDefault {
         this.goalSelector.add(2, new SwimGoal(this));
         this.goalSelector.add(3, new CustomSitGoal(this));
         this.goalSelector.add(4, new PatrollingGoal(this));
-        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 30, 40, false));
+        this.goalSelector.add(5, new CustomFollowOwnerGoal(this, 0.8, 20, 25, false));
         this.goalSelector.add(8, new LargeEntityWanderGoal(this, 1.0, 1));
         this.goalSelector.add(9, new LookAtEntityGoal(this, LivingEntity.class, 15.0F)); // Increased range to 40
         this.goalSelector.add(11, new LookAroundGoal(this));
@@ -1377,7 +1377,6 @@ public class Wanderer extends StrongTameableEntityDefault {
     public class CustomAttackWithOwnerGoal extends TrackTargetGoal {
         private final Wanderer tameable;
         private LivingEntity attacking;
-        private int lastAttackTime;
 
         public CustomAttackWithOwnerGoal(Wanderer tameable) {
             super(tameable, false);
@@ -1391,33 +1390,23 @@ public class Wanderer extends StrongTameableEntityDefault {
                 LivingEntity livingEntity = this.tameable.getOwner();
                 if (livingEntity == null) {
                     return false;
-                } else {
-                    this.attacking = livingEntity.getAttacking();
-                    int i = livingEntity.getLastAttackTime();
-                    if (this.attacking instanceof TameableEntity target) {
-                        if (target.getOwner() != null) {
-                            if (target.getOwner() == this.tameable.getOwner()) {
-                                return false;
-                            }
-                        }
-                    }
-                    return i != this.lastAttackTime && this.attacking != this.tameable
-                            && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
-                            && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
                 }
-            } else {
-                return false;
+                this.attacking = livingEntity.getAttacking();
+                if (this.attacking instanceof TameableEntity target) {
+                    if (target.getOwner() == this.tameable.getOwner()) {
+                        return false;
+                    }
+                }
+                return this.attacking != null && this.attacking != this.tameable
+                        && this.canTrack(this.attacking, TargetPredicate.createNonAttackable())
+                        && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
             }
+            return false;
         }
 
         @Override
         public void start() {
             this.mob.setTarget(this.attacking);
-            LivingEntity livingEntity = this.tameable.getOwner();
-            if (livingEntity != null) {
-                this.lastAttackTime = livingEntity.getLastAttackTime();
-            }
-
             super.start();
         }
     }

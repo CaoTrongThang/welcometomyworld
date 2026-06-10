@@ -27,11 +27,9 @@ public class PlayerTamedMobDamageMixin {
             return;
 
         if (targetEntity instanceof TameableEntity tameable && tameable.isTamed()) {
-            LivingEntity owner = tameable.getOwner();
-
-            if (owner != null && owner == attacker) {
-                if (tameable.getTarget() != null
-                        && !player.getAbilities().creativeMode) {
+            if (tameable.getTarget() != null
+                    && !player.getAbilities().creativeMode) {
+                if (com.trongthang.welcometomyworld.Utilities.AllyUtils.isAlly(player, targetEntity)) {
                     ci.setReturnValue(false);
                 }
             }

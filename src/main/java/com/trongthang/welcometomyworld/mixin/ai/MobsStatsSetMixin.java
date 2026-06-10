@@ -9,6 +9,8 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
+import net.minecraft.entity.attribute.ClampedEntityAttribute;
+import com.trongthang.welcometomyworld.mixin.accessor.ClampedEntityAttributeAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -41,6 +43,12 @@ public class MobsStatsSetMixin {
                                 EntityAttributeInstance healthAttr = mob
                                                 .getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
                                 if (healthAttr != null) {
+                                        if (EntityAttributes.GENERIC_MAX_HEALTH instanceof ClampedEntityAttribute clamped) {
+                                                ClampedEntityAttributeAccessor acc = (ClampedEntityAttributeAccessor) (Object) clamped;
+                                                if (acc.getMaxValue() < config.maxHealth) {
+                                                        acc.setMaxValue(config.maxHealth);
+                                                }
+                                        }
                                         healthAttr.setBaseValue(config.maxHealth);
                                         mob.setHealth(config.maxHealth);
                                 }

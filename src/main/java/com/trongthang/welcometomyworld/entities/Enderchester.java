@@ -186,7 +186,7 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
         this.goalSelector.add(3, new SwimGoal(this));
         this.goalSelector.add(5, new SleepingNoMove(this));
         this.goalSelector.add(6, new StopMovementGoalWhenOpeningChest(this));
-        this.goalSelector.add(7, new CustomFollowOwnerGoal(this, 1.0, 10.0F, 32.0F, false));
+        this.goalSelector.add(7, new CustomFollowOwnerGoal(this, 1.5, 10.0F, 32.0F, false));
         this.goalSelector.add(8, new FleeFromNearbyPlayersGoal(this, 15, 2.8));
         this.goalSelector.add(9, new MeleeAttackGoal(this, 2.2, true));
         this.goalSelector.add(10, new WanderAroundFarGoal(this, 1.0));
@@ -215,19 +215,22 @@ public class Enderchester extends CustomTameableEntity implements StartAnimation
 
     @Override
     public void setTamed(boolean tamed) {
-        byte b = this.dataTracker.get(TAMEABLE_FLAGS);
+        super.setTamed(tamed);
+
         if (tamed) {
-            this.dataTracker.set(TAMEABLE_FLAGS, (byte) (b | 4));
-        } else {
-            this.dataTracker.set(TAMEABLE_FLAGS, (byte) (b & -5));
+            // Apply initial tamed boosts only if they are not already applied (to avoid
+            // wiping upgrades)
+            if (this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).getBaseValue() < 1000) {
+                this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(1000);
+                this.setHealth(1000);
+            }
+            if (this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).getBaseValue() < 0.15f) {
+                this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.15f);
+            }
+            if (this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).getBaseValue() < 50) {
+                this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(50);
+            }
         }
-
-        // Reset max health to your custom value after taming
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(1000);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.15f);
-        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(50);
-
-        this.setHealth(1000);
     }
 
     private void setupAnimationStates() {

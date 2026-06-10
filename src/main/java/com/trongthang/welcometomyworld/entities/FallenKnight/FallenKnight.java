@@ -1218,7 +1218,6 @@ public class FallenKnight extends StrongTameableEntityDefault {
     public class CustomAttackWithOwnerGoal extends TrackTargetGoal {
         private final FallenKnight tameable;
         private LivingEntity attacking;
-        private int lastAttackTime;
 
         public CustomAttackWithOwnerGoal(FallenKnight tameable) {
             super(tameable, false);
@@ -1232,33 +1231,23 @@ public class FallenKnight extends StrongTameableEntityDefault {
                 LivingEntity livingEntity = this.tameable.getOwner();
                 if (livingEntity == null) {
                     return false;
-                } else {
-                    this.attacking = livingEntity.getAttacking();
-                    int i = livingEntity.getLastAttackTime();
-                    if (this.attacking instanceof TameableEntity target) {
-                        if (target.getOwner() != null) {
-                            if (target.getOwner() == this.tameable.getOwner()) {
-                                return false;
-                            }
-                        }
-                    }
-                    return i != this.lastAttackTime && this.attacking != this.tameable
-                            && this.canTrack(this.attacking, TargetPredicate.DEFAULT)
-                            && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
                 }
-            } else {
-                return false;
+                this.attacking = livingEntity.getAttacking();
+                if (this.attacking instanceof TameableEntity target) {
+                    if (target.getOwner() == this.tameable.getOwner()) {
+                        return false;
+                    }
+                }
+                return this.attacking != null && this.attacking != this.tameable
+                        && this.canTrack(this.attacking, TargetPredicate.createNonAttackable())
+                        && this.tameable.canAttackWithOwner(this.attacking, livingEntity);
             }
+            return false;
         }
 
         @Override
         public void start() {
             this.mob.setTarget(this.attacking);
-            LivingEntity livingEntity = this.tameable.getOwner();
-            if (livingEntity != null) {
-                this.lastAttackTime = livingEntity.getLastAttackTime();
-            }
-
             super.start();
         }
     }
