@@ -114,6 +114,15 @@ public class ServerPlayerEntityMixin implements IServerPlayerEntity {
 
         com.trongthang.welcometomyworld.WelcomeToMyWorld.LOGGER.info("Spawning new Void Worm boss: " + state.bossUuid);
         voidWorld.spawnEntity(newBoss);
+
+        String[] voidMessages = {
+                "The Void is trembling...",
+                "Something ancient awakens in the dark...",
+                "A colossal presence enters the void...",
+                "The abyss hungers..."
+        };
+        String randomMessage = voidMessages[voidWorld.getRandom().nextInt(voidMessages.length)];
+        Utils.sendMessageToAllPlayersAfter(voidWorld.getServer(), randomMessage, 60);
     }
 
     @Override

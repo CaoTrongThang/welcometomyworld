@@ -24,7 +24,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Heightmap;
+
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -171,9 +171,10 @@ public class IntroOfTheWorldHandler {
 
         boolean meantToSurvive = playerData.playerFirstIntroDeathChance > playersDeathChanceInTheIntro;
 
-        // Ground Radar: If surviving, inject hidden resistance just before impact
-        if (meantToSurvive && isGroundNearby(player, 50)) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 300, 255, false, false));
+        // If surviving, consistently inject hidden resistance to ensure they survive
+        // the impact
+        if (meantToSurvive) {
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 400, 255, false, false));
         }
 
         // Check if player died mid-air (or upon impact if meant to die)
@@ -666,22 +667,4 @@ public class IntroOfTheWorldHandler {
         }
     }
 
-    private boolean isGroundNearby(ServerPlayerEntity player, int maxDistance) {
-        World world = player.getWorld();
-        int px = (int) Math.floor(player.getX());
-        int py = (int) Math.floor(player.getY());
-        int pz = (int) Math.floor(player.getZ());
-
-        // Check a 3x3 area to account for horizontal movement and entity width
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                // Use Motion Blocking heightmap to find ground level in 1 lookup per column
-                int groundY = world.getTopY(Heightmap.Type.MOTION_BLOCKING, px + dx, pz + dz);
-                if (py - groundY <= maxDistance) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 }

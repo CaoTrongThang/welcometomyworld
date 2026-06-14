@@ -45,6 +45,7 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 import com.trongthang.welcometomyworld.managers.FluidsManager;
 
+import com.trongthang.welcometomyworld.client.commands.ModClientCommands;
 import java.util.List;
 
 import static com.trongthang.welcometomyworld.WelcomeToMyWorld.*;
@@ -82,6 +83,7 @@ public class WelcomeToMyWorldClient implements ClientModInitializer {
         SoundsClientHandler.register();
         ScreenClientHandler.register();
         ClientScheduler.init();
+        ModClientCommands.register();
 
         HandledScreens.<ChesterFilterScreenHandler, ChesterFilterScreen>register(
                 com.trongthang.welcometomyworld.WelcomeToMyWorld.CHESTER_FILTER_HANDLER,
