@@ -71,7 +71,8 @@
 		"entity.VillagerEntityMixin",
 		"combat.PlayerDamageDebugMixin",
 		"misc.DisableMutantEndermanGriefing",
-		"entity.HostileInfightingPreventionMixin"
+		"entity.HostileInfightingPreventionMixin",
+		"fixes.TreeBreakingUtilsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
