@@ -191,9 +191,9 @@ public class Blossom extends StrongTameableEntityDefault {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 150)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 300)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1f)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 23f)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 46f)
                 .add(EntityAttributes.GENERIC_FLYING_SPEED, 1f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64f)
                 .add(EntityAttributes.GENERIC_ARMOR, 4f)
@@ -504,14 +504,6 @@ public class Blossom extends StrongTameableEntityDefault {
 
                             timeout = 200;
                             Utils.sendAnimationPacket(this.getWorld(), this, AnimationName.ATTACK2, timeout);
-
-                            if (!world.isRaining() && !world.isThundering()) {
-                                world.setWeather(0, 200, true, true);
-
-                                Utils.addRunAfter(() -> {
-                                    world.setWeather(0, 0, false, false);
-                                }, 220);
-                            }
 
                             for (int x = 0; x < 20; x++) {
                                 Utils.addRunAfter(() -> {

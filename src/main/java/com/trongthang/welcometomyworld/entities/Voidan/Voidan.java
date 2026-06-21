@@ -130,9 +130,9 @@ public class Voidan extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 75666.0D) // Stronger basic stats
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 151332.0D) // Stronger basic stats
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 100.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8D)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0D)
                 .add(EntityAttributes.GENERIC_ARMOR, 35.0D)

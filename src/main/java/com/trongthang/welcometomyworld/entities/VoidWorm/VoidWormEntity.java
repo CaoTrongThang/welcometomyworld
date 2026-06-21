@@ -219,9 +219,9 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 142454.0D)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 284908.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 2.0D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50.0D)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 100.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 10.0f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 150.0D)
                 .add(EntityAttributes.GENERIC_ARMOR, 30.0D)

@@ -352,9 +352,9 @@ public class Unknown extends StrongTameableEntityDefault implements GeoEntity {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 99999.0D)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 199998.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.1D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 60.0D)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 120.0D)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 50f)
                 .add(EntityAttributes.GENERIC_ARMOR, 30f)

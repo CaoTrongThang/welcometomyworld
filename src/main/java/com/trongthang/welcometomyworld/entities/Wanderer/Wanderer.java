@@ -155,9 +155,9 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 300)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 600)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.16f)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 25f)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 60f)
                 .add(EntityAttributes.GENERIC_ARMOR, 5)
                 .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10f)
