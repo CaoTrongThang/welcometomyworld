@@ -44,8 +44,7 @@ public abstract class LifestealNerfMixin {
         // Only intercept upward changes (healing), not damage
         if (value > current && welcometomyworld$cachedBleedingEffect != null
                 && entity.hasStatusEffect(welcometomyworld$cachedBleedingEffect)) {
-            float healAmount = (value - current) * 0.3f;
-            return current + healAmount;
+            return current + (value - current) * 0.3f;
         }
         return value;
     }

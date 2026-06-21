@@ -78,7 +78,7 @@ public class EntitiesManager {
         public static final EntityType<Wanderer> WANDERER = Registry.register(
                         Registries.ENTITY_TYPE,
                         new Identifier(WelcomeToMyWorld.MOD_ID, "wanderer"),
-                        FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, Wanderer::new)
+                        FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, Wanderer::new)
                                         .fireImmune()
                                         .dimensions(EntityDimensions.changing(1.5f, 4f))
                                         .build());
@@ -281,7 +281,7 @@ public class EntitiesManager {
                                         return context.getBiomeKey().getValue()
                                                         .equals(new Identifier("regions_unexplored", "redwoods"));
                                 },
-                                SpawnGroup.CREATURE,
+                                SpawnGroup.MONSTER,
                                 EntitiesManager.CHESTER,
                                 40,
                                 1,
@@ -292,7 +292,7 @@ public class EntitiesManager {
                                         return context.getBiomeKey().getValue()
                                                         .equals(new Identifier("betterend", "shadow_forest"));
                                 },
-                                SpawnGroup.CREATURE,
+                                SpawnGroup.MONSTER,
                                 EntitiesManager.ENDERCHESTER, 10,
                                 1,
                                 1);
@@ -312,7 +312,7 @@ public class EntitiesManager {
                                                                         .equals(new Identifier("minecraft", "the_end"));
                                         return isValidBiome && EnderPest.totalEnderPests < EnderPest.MAX_ENDER_PESTS;
                                 },
-                                SpawnGroup.CREATURE,
+                                SpawnGroup.MONSTER,
                                 ENDER_PEST,
                                 1, 1, 1);
 
@@ -353,7 +353,7 @@ public class EntitiesManager {
                                                         || biomeId.equals(new Identifier("betternether",
                                                                         "wart_forest_edge"));
                                 },
-                                SpawnGroup.CREATURE,
+                                SpawnGroup.MONSTER,
                                 WANDERER,
                                 20,
                                 1,
@@ -364,7 +364,7 @@ public class EntitiesManager {
                                                 .equals(new Identifier("regions_unexplored", "magnolia_woodland"))
                                                 || context.getBiomeKey().getValue().equals(
                                                                 new Identifier("regions_unexplored", "rocky_meadow")),
-                                SpawnGroup.CREATURE,
+                                SpawnGroup.MONSTER,
                                 EntitiesManager.BLOSSOM,
                                 30,
                                 1,
