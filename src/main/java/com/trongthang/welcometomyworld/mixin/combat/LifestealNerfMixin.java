@@ -1,23 +1,17 @@
 package com.trongthang.welcometomyworld.mixin.combat;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-@Pseudo
 @Mixin(LivingEntity.class)
 public abstract class LifestealNerfMixin {
 
-    @Unique
-    private static EntityAttribute welcometomyworld$cachedLifestealAttr = null;
     @Unique
     private static StatusEffect welcometomyworld$cachedBleedingEffect = null;
     @Unique
@@ -28,26 +22,31 @@ public abstract class LifestealNerfMixin {
         if (welcometomyworld$attemptedResolve)
             return;
         welcometomyworld$attemptedResolve = true;
-        try {
-            welcometomyworld$cachedLifestealAttr = Registries.ATTRIBUTE
-                    .get(new Identifier("zenith_attributes", "life_steal"));
-            welcometomyworld$cachedBleedingEffect = Registries.STATUS_EFFECT.get(new Identifier("bleed", "bleeding"));
-        } catch (Exception ignored) {
-        }
+        welcometomyworld$cachedBleedingEffect = Registries.STATUS_EFFECT.get(new Identifier("bleed", "bleeding"));
     }
 
-    @Inject(method = "getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", at = @At("RETURN"), cancellable = true)
-    private void nerfLifeSteal(EntityAttribute attribute, CallbackInfoReturnable<Double> cir) {
+    @ModifyVariable(method = "heal", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private float nerfHealWhenBleeding(float amount) {
         welcometomyworld$resolve();
-
-        if (welcometomyworld$cachedLifestealAttr != null && attribute == welcometomyworld$cachedLifestealAttr) {
-            LivingEntity entity = (LivingEntity) (Object) this;
-
-            if (welcometomyworld$cachedBleedingEffect != null
-                    && entity.hasStatusEffect(welcometomyworld$cachedBleedingEffect)) {
-                // Nerf the value by 50% only when bleeding
-                cir.setReturnValue(cir.getReturnValue() * 0.3);
-            }
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (welcometomyworld$cachedBleedingEffect != null
+                && entity.hasStatusEffect(welcometomyworld$cachedBleedingEffect)) {
+            return amount * 0.3f;
         }
+        return amount;
+    }
+
+    @ModifyVariable(method = "setHealth", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private float nerfSetHealthWhenBleeding(float value) {
+        welcometomyworld$resolve();
+        LivingEntity entity = (LivingEntity) (Object) this;
+        float current = entity.getHealth();
+        // Only intercept upward changes (healing), not damage
+        if (value > current && welcometomyworld$cachedBleedingEffect != null
+                && entity.hasStatusEffect(welcometomyworld$cachedBleedingEffect)) {
+            float healAmount = (value - current) * 0.3f;
+            return current + healAmount;
+        }
+        return value;
     }
 }

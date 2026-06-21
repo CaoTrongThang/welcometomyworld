@@ -223,6 +223,7 @@ public class WelcomeToMyWorld implements ModInitializer {
         SoundsManager.registerSounds();
         ServerNetworking.register();
         SpawnEvents.register();
+        new AddLootTable().register();
         AwakeHandler.register();
         HostileMobsAwareness.registerEvents();
         DimensionRestrictionsHandler.registerEvents();
@@ -349,6 +350,7 @@ public class WelcomeToMyWorld implements ModInitializer {
     public void registerEvents() {
         bossesSpawningHandler.bossDropsRegister();
         introOfTheWorldHandler.registerIntroEvents();
+        PlayerDeathMobSpawner.registerEvents();
 
         net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT
                 .register((player, world, hand, entity, hitResult) -> {

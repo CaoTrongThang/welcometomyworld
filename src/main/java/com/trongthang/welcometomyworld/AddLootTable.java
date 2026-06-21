@@ -7,6 +7,11 @@ import net.minecraft.loot.LootPool;
 import net.minecraft.loot.condition.RandomChanceLootCondition;
 import net.minecraft.loot.entry.ItemEntry;
 import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
+import net.minecraft.loot.provider.number.UniformLootNumberProvider;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 
 public class AddLootTable {
     public void register() {
@@ -21,6 +26,17 @@ public class AddLootTable {
                                 .conditionally(RandomChanceLootCondition.builder(0.1f))) // 1% drop rate
                         .build();
                 supplier.pool(rareItemPool);
+            }
+
+            if (id.toString().equals("minecraft:entities/warden")) {
+                Item wardenTendril = Registries.ITEM.get(new Identifier("zenith", "warden_tendril"));
+                if (wardenTendril != Items.AIR) {
+                    LootPool wardenPool = LootPool.builder()
+                            .rolls(UniformLootNumberProvider.create(1.0f, 3.0f))
+                            .with(ItemEntry.builder(wardenTendril))
+                            .build();
+                    supplier.pool(wardenPool);
+                }
             }
 
         });
