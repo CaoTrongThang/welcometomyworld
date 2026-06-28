@@ -174,7 +174,7 @@ public class IntroOfTheWorldHandler {
         // If surviving, consistently inject hidden resistance to ensure they survive
         // the impact
         if (meantToSurvive) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 400, 255, false, false));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 500, 255, false, false));
         }
 
         // Check if player died mid-air (or upon impact if meant to die)

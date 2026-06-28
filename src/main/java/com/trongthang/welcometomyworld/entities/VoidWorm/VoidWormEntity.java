@@ -1614,20 +1614,23 @@ public class VoidWormEntity extends HostileEntity implements GeoEntity {
                     if (y > maxY)
                         y = maxY - worm.getRandom().nextDouble() * 40.0;
 
-                    // Clamp wander target within limits of (0, 50, 0)
-                    double dx_h = x - 0;
-                    double dz_h = z - 0;
-                    double dy_h = y - 50;
-                    double distXZ = Math.sqrt(dx_h * dx_h + dz_h * dz_h);
+                    if (worm.getWorld().getRegistryKey()
+                            .equals(com.trongthang.welcometomyworld.world.dimension.VoidDimension.VOID_DIM_LEVEL_KEY)) {
+                        // Clamp wander target within limits of (0, 50, 0)
+                        double dx_h = x - 0;
+                        double dz_h = z - 0;
+                        double dy_h = y - 50;
+                        double distXZ = Math.sqrt(dx_h * dx_h + dz_h * dz_h);
 
-                    if (distXZ > MAX_DISTANCE_XZ - 50 || Math.abs(dy_h) > MAX_DISTANCE_Y - 20) {
-                        if (distXZ > MAX_DISTANCE_XZ - 50) {
-                            double scale = (MAX_DISTANCE_XZ - 50) / distXZ;
-                            x = dx_h * scale;
-                            z = dz_h * scale;
-                        }
-                        if (Math.abs(dy_h) > MAX_DISTANCE_Y - 20) {
-                            y = 50 + Math.signum(dy_h) * (MAX_DISTANCE_Y - 20);
+                        if (distXZ > MAX_DISTANCE_XZ - 50 || Math.abs(dy_h) > MAX_DISTANCE_Y - 20) {
+                            if (distXZ > MAX_DISTANCE_XZ - 50) {
+                                double scale = (MAX_DISTANCE_XZ - 50) / distXZ;
+                                x = dx_h * scale;
+                                z = dz_h * scale;
+                            }
+                            if (Math.abs(dy_h) > MAX_DISTANCE_Y - 20) {
+                                y = 50 + Math.signum(dy_h) * (MAX_DISTANCE_Y - 20);
+                            }
                         }
                     }
 
