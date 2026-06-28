@@ -28,6 +28,8 @@
   "item.welcometomyworld.tiny_golem_spawn_egg": "Tiny Golem Spawn Egg",
   "enchantment.welcometomyworld.silence": "Silence",
   "enchantment.welcometomyworld.silence.desc": "This enchantment reduces the noises caused by players.",
+  "enchantment.welcometomyworld.life_steal": "Life Steal",
+  "enchantment.welcometomyworld.life_steal.desc": "Steal a small portion of the damage you deal as health. Higher levels increase both the steal rate and the heal cap.",
   "entity.welcometomyworld.a_living_log": "A Living Log",
   "entity.welcometomyworld.a_living_flower": "A Living Flower",
   "entity.welcometomyworld.enderchester": "Enderchester",

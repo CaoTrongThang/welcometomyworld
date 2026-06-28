@@ -27,10 +27,9 @@ public class LifeStealMixin {
         if (level <= 0)
             return;
 
-        // Store pre-attack health in a thread-local so the RETURN inject can read it
-        LifeStealMixin.welcometomyworld$preAttackHealth.set(livingTarget.getHealth());
-        LifeStealMixin.welcometomyworld$preAttackTarget.set(livingTarget);
-        LifeStealMixin.welcometomyworld$enchantLevel.set(level);
+        welcometomyworld$preAttackHealth.set(livingTarget.getHealth());
+        welcometomyworld$preAttackTarget.set(livingTarget);
+        welcometomyworld$enchantLevel.set(level);
     }
 
     @Inject(method = "attack", at = @At("RETURN"))
@@ -42,7 +41,6 @@ public class LifeStealMixin {
         float healthBefore = welcometomyworld$preAttackHealth.get();
         int level = welcometomyworld$enchantLevel.get();
 
-        // Clean up immediately
         welcometomyworld$preAttackTarget.set(null);
         welcometomyworld$preAttackHealth.set(0f);
         welcometomyworld$enchantLevel.set(0);
@@ -51,16 +49,13 @@ public class LifeStealMixin {
         if (actualDamage <= 0)
             return;
 
-        float stealFraction = LifeStealEnchantment.getStealFraction(level);
-        float healCap = LifeStealEnchantment.getHealCap(level);
-
-        float healAmount = Math.min(actualDamage * stealFraction, healCap);
+        float healAmount = Math.min(actualDamage * LifeStealEnchantment.getStealFraction(level),
+                LifeStealEnchantment.getHealCap(level));
 
         PlayerEntity player = (PlayerEntity) (Object) this;
         player.heal(healAmount);
     }
 
-    // ThreadLocals so this is safe under concurrent players
     @Unique
     private static final ThreadLocal<Float> welcometomyworld$preAttackHealth = ThreadLocal.withInitial(() -> 0f);
     @Unique
