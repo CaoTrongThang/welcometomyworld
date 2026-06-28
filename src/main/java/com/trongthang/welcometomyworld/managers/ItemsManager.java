@@ -3,6 +3,7 @@ package com.trongthang.welcometomyworld.managers;
 import com.trongthang.welcometomyworld.WelcomeToMyWorld;
 import com.trongthang.welcometomyworld.items.*;
 import com.trongthang.welcometomyworld.items.Weapons.Hammer;
+import com.trongthang.welcometomyworld.items.enchantments.LifeStealEnchantment;
 import com.trongthang.welcometomyworld.items.enchantments.SilenceEnchantment;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
@@ -115,6 +116,7 @@ public class ItemsManager {
                         "voidan_horn");
 
         public static Enchantment silenceEnchantment = new SilenceEnchantment();
+        public static LifeStealEnchantment lifeStealEnchantment = new LifeStealEnchantment();
 
         public static final ItemGroup WELCOME_TO_MY_WORLD_GROUP = FabricItemGroup.builder()
                         .displayName(Text.translatable("itemGroup.welcometomyworld.general"))
@@ -161,6 +163,8 @@ public class ItemsManager {
 
                 Registry.register(Registries.ENCHANTMENT, new Identifier(WelcomeToMyWorld.MOD_ID, "silence"),
                                 silenceEnchantment);
+                Registry.register(Registries.ENCHANTMENT, new Identifier(WelcomeToMyWorld.MOD_ID, "life_steal"),
+                                lifeStealEnchantment);
 
                 com.trongthang.welcometomyworld.compat.TrinketsCompat.registerTrinket(CREEPER_TALISMAN);
 
