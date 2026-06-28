@@ -223,7 +223,6 @@ public class WelcomeToMyWorld implements ModInitializer {
         SoundsManager.registerSounds();
         ServerNetworking.register();
         SpawnEvents.register();
-        new AddLootTable().register();
         AwakeHandler.register();
         HostileMobsAwareness.registerEvents();
         DimensionRestrictionsHandler.registerEvents();

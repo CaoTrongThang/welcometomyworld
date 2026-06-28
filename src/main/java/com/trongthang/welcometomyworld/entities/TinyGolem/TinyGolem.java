@@ -121,36 +121,7 @@ public class TinyGolem extends CustomTameableEntity implements GeoEntity {
                 }
             }
         });
-        // While on cooldown, back away from the target to ~2 blocks
-        this.goalSelector.add(3, new Goal() {
-            private static final double SAFE_DIST = 2.0;
 
-            @Override
-            public boolean canStart() {
-                if (TinyGolem.this.globalCooldown <= 0 || TinyGolem.this.getState() != STATE_IDLE)
-                    return false;
-                LivingEntity target = TinyGolem.this.getTarget();
-                return target != null && TinyGolem.this.squaredDistanceTo(target) < SAFE_DIST * SAFE_DIST;
-            }
-
-            @Override
-            public boolean shouldContinue() {
-                if (TinyGolem.this.globalCooldown <= 0 || TinyGolem.this.getState() != STATE_IDLE)
-                    return false;
-                LivingEntity target = TinyGolem.this.getTarget();
-                return target != null && TinyGolem.this.squaredDistanceTo(target) < SAFE_DIST * SAFE_DIST;
-            }
-
-            @Override
-            public void tick() {
-                LivingEntity target = TinyGolem.this.getTarget();
-                if (target == null)
-                    return;
-                Vec3d away = TinyGolem.this.getPos().subtract(target.getPos()).normalize();
-                Vec3d flee = TinyGolem.this.getPos().add(away.multiply(SAFE_DIST + 0.5));
-                TinyGolem.this.getNavigation().startMovingTo(flee.x, flee.y, flee.z, 1.2);
-            }
-        });
         this.goalSelector.add(4, new CustomFollowOwnerGoal(this, 1.0D, 5.0F, 10.0F, false));
         this.goalSelector.add(5, new WanderAroundFarGoal(this, 1.0D));
         this.goalSelector.add(6, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F) {
