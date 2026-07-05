@@ -73,7 +73,8 @@
 		"combat.PlayerDamageDebugMixin",
 		"misc.DisableMutantEndermanGriefing",
 		"entity.HostileInfightingPreventionMixin",
-		"fixes.TreeBreakingUtilsMixin"
+		"fixes.TreeBreakingUtilsMixin",
+		"world.LightningEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
