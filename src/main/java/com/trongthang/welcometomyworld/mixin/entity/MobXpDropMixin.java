@@ -1,16 +1,19 @@
 package com.trongthang.welcometomyworld.mixin.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(MobEntity.class)
+@Mixin(LivingEntity.class)
 public class MobXpDropMixin {
     @ModifyReturnValue(method = "getXpToDrop()I", at = @At("RETURN"))
     private int scaleXpBasedOnStats(int originalXp) {
-        MobEntity mob = (MobEntity) (Object) this;
+        if (!((Object) this instanceof MobEntity mob)) {
+            return originalXp;
+        }
 
         float maxHealth = mob.getMaxHealth();
         double armor = mob.getAttributeValue(EntityAttributes.GENERIC_ARMOR);

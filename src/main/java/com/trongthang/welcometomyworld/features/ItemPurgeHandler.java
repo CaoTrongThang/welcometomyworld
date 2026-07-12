@@ -17,7 +17,7 @@ public class ItemPurgeHandler {
     public void onServerTick(MinecraftServer server) {
         if (tickCounter == 1200) {
             Utils.UTILS.sendMessageToAllPlayers(server,
-                    "There're so many trashes across dimensions, I'll crash a powerful spell to purge it in 1 minute");
+                    "There're so many trashes across dimensions, I'll cast a powerful spell to purge it in 1 minute");
         }
 
         tickCounter--;
@@ -32,7 +32,7 @@ public class ItemPurgeHandler {
     public void onPlayerJoin(net.minecraft.server.network.ServerPlayerEntity player) {
         if (tickCounter > 0 && tickCounter <= 1200) {
             Utils.UTILS.sendTextAfter(player,
-                    "There're so many trashes across dimensions, I'll crash a powerful spell to purge it in "
+                    "There're so many trashes across dimensions, I'll cast a powerful spell to purge it in "
                             + NumberFormat.getInstance().format(tickCounter / 20) + " seconds");
         }
     }

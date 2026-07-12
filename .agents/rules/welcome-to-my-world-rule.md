@@ -6,6 +6,7 @@ The User is making a mod for Minecraft Fabric 1.20.1, it adds mobs, dimensions,.
 
 Remember these rules:
 
+- There's MCP server that you can use to read about THIS project
 - You are running on: Windows 11.
 - Shell: Use PowerShell ONLY (NOT cmd, NOT bash).
 - Java may NOT be in the PATH.
