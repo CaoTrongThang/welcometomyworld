@@ -112,7 +112,7 @@ public class Blossom extends StrongTameableEntityDefault {
 
     private int attackSkillRange = 6;
 
-    private int maxStatsScale = 8;
+    private int maxScale = 6;
 
     public BlockPos patrolCenterPos = null;
     private net.minecraft.registry.RegistryKey<net.minecraft.world.World> patrolDimension = null;
@@ -152,7 +152,7 @@ public class Blossom extends StrongTameableEntityDefault {
         animationHashMap.put(AnimationName.ATTACK2, attack2AnimationState);
 
         if (!this.getWorld().isClient && !this.getIsRandomFirstTime()) {
-            double scale = WelcomeToMyWorld.random.nextDouble(1, maxStatsScale);
+            double scale = WelcomeToMyWorld.random.nextDouble(1, maxScale);
             skillCooldownDecreasedBasedOnMobScale = scale;
 
             this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)

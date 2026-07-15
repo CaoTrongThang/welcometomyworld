@@ -95,7 +95,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
 
     private int attack3Range = 17;
 
-    private int maxScale = 8;
+    private int maxScale = 5;
 
     private int patrolRadius = 7;
     public BlockPos patrolCenterPos = null;
@@ -134,7 +134,7 @@ public class FallenKnight extends StrongTameableEntityDefault {
             this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(
                     this.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * (double) (scale / 3));
             this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR)
-                    .setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 5F));
+                    .setBaseValue(this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR) * (double) (scale / 4F));
             this.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).setBaseValue(
                     this.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS) * (double) (scale / 2.5F));
 
@@ -211,8 +211,9 @@ public class FallenKnight extends StrongTameableEntityDefault {
     public void tick() {
         super.tick();
 
+        setAnimationStates();
+
         if (this.getWorld().isClient) {
-            setAnimationStates();
             handleAnimationSoundsAndEffect();
         } else {
             if (this.getTarget() != null) {

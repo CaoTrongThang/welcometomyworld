@@ -238,29 +238,54 @@ public class MobUpgradeScreen extends BaseOwoScreen<FlowLayout> {
         defenseBtn.active = hasPoints;
         speedBtn.active = hasPoints;
 
-        String damageValue = String.format("%.1f",
-                tameableEntity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
-        damageLabel.text(Text.literal("Damage [" + damageValue + "]:"));
-        damageLevelLabel.text(Text.literal("Lv" + entityInterface.getDamageLevel()));
+        // check if there's no generic attribute
+        // NOTE: getAttributeValue(...) will throw if the attribute doesn't exist on
+        // this entity,
+        // so only query the value when hasAttribute(...) == true.
 
-        String healthValue = String.format("%.1f",
-                tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH));
-        healthLabel.text(Text.literal("Health [" + healthValue + "]:"));
-        healthLevelLabel.text(Text.literal("Lv" + entityInterface.getHealthLevel()));
+        if (tameableEntity.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE)) {
+            String damageValue = String.format("%.1f",
+                    tameableEntity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
+            damageLabel.text(Text.literal("Damage [" + damageValue + "]:"));
+            damageLevelLabel.text(Text.literal("Lv" + entityInterface.getDamageLevel()));
+        } else {
+            damageLabel.text(Text.literal("Damage [N/A]:"));
+            damageLevelLabel.text(Text.literal("Lv0"));
+        }
 
-        String defenseValue = String.format("%.1f",
-                tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR));
-        defenseLabel.text(Text.literal("Defense [" + defenseValue + "]:"));
-        defenseLevelLabel.text(Text.literal("Lv" + entityInterface.getDefenseLevel()));
+        if (tameableEntity.getAttributes().hasAttribute(EntityAttributes.GENERIC_MAX_HEALTH)) {
+            String healthValue = String.format("%.1f",
+                    tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH));
+            healthLabel.text(Text.literal("Health [" + healthValue + "]:"));
+            healthLevelLabel.text(Text.literal("Lv" + entityInterface.getHealthLevel()));
+        } else {
+            healthLabel.text(Text.literal("Health [N/A]:"));
+            healthLevelLabel.text(Text.literal("Lv0"));
+        }
 
-        String speedValue = String.format("%.2f",
-                tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
-        speedLabel.text(Text.literal("Speed [" + speedValue + "]:"));
-        speedLevelLabel.text(Text.literal("Lv" + entityInterface.getSpeedLevel()));
+        if (tameableEntity.getAttributes().hasAttribute(EntityAttributes.GENERIC_ARMOR)) {
+            String defenseValue = String.format("%.1f",
+                    tameableEntity.getAttributeBaseValue(EntityAttributes.GENERIC_ARMOR));
+            defenseLabel.text(Text.literal("Defense [" + defenseValue + "]:"));
+            defenseLevelLabel.text(Text.literal("Lv" + entityInterface.getDefenseLevel()));
+        } else {
+            defenseLabel.text(Text.literal("Defense [N/A]:"));
+            defenseLevelLabel.text(Text.literal("Lv0"));
+        }
+
+        if (tameableEntity.getAttributes().hasAttribute(EntityAttributes.GENERIC_MOVEMENT_SPEED)) {
+            String speedValue = String.format("%.2f",
+                    tameableEntity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED));
+            speedLabel.text(Text.literal("Speed [" + speedValue + "]:"));
+            speedLevelLabel.text(Text.literal("Lv" + entityInterface.getSpeedLevel()));
+        } else {
+            speedLabel.text(Text.literal("Speed [N/A]:"));
+            speedLevelLabel.text(Text.literal("Lv0"));
+        }
 
         float currentExp = entityInterface.getCurrentLevelExp();
         float requiredExp = entityInterface.getNextLevelRequireExp();
-        float fillPercentage = MathHelper.clamp(currentExp / requiredExp, 0, 1);
+        float fillPercentage = requiredExp <= 0 ? 0 : MathHelper.clamp(currentExp / requiredExp, 0, 1);
 
         xpLabel.text(Text.literal((int) currentExp + " / " + (int) requiredExp));
 

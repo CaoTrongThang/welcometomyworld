@@ -1,0 +1,3 @@
+- [ ] Update Wanderer constructor: after random max-health/stat scaling, reset canBeTamed/canBeTamedSet to false/false to avoid stale once-per-window tame lock after max-health/stat changes.
+- [ ] Update FallenKnight constructor: after random max-health/stat scaling, reset canBeTamed/canBeTamedSet to false/false similarly.
+- [ ] Build/test (gradle) to ensure compilation.

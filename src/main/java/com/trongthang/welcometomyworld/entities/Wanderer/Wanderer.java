@@ -90,7 +90,7 @@ public class Wanderer extends StrongTameableEntityDefault {
 
     private int useSkillCooldownCounter = 0;
 
-    private int maxScale = 8;
+    private int maxScale = 5;
 
     private int patrolRadius = 18;
     public BlockPos patrolCenterPos = null;
@@ -149,13 +149,19 @@ public class Wanderer extends StrongTameableEntityDefault {
 
             this.setHealth(this.getMaxHealth());
 
+            // Reset tameable state after stat scaling to avoid stale NBT/dataTracker
+            // locking the
+            // "once at <=15% health" tame roll.
+            this.setCanBeTamed(false);
+            this.setCanBeTamedSet(false);
+
             this.setIsRandomFirstTime(true);
         }
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 600)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 400)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.16f)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 50f)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 60f)
@@ -272,8 +278,9 @@ public class Wanderer extends StrongTameableEntityDefault {
     public void tick() {
         super.tick();
 
+        setAnimationStates();
+
         if (this.getWorld().isClient) {
-            setAnimationStates();
             handleAnimationSoundsAndEffect();
         } else {
             usingSkillsHandler();
